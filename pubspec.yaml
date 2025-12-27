@@ -1,6 +1,6 @@
 name: macbear_3d
-description: "A new Flutter package project."
-version: 0.0.1
+description: "Macbear 3D engine package project."
+version: 0.1.0
 homepage:
 
 environment:
@@ -8,13 +8,19 @@ environment:
   flutter: ">=1.17.0"
 
 dependencies:
+  build: ^4.0.3
   flutter:
     sdk: flutter
+  flutter_angle: ^0.3.8
+  http: ^1.6.0
+  oimo_physics: ^0.0.4
+  vector_math: ^2.2.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  build_runner: ^2.10.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

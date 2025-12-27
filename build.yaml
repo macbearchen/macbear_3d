@@ -1,0 +1,10 @@
+builders:
+  shader_builder:
+    import: "package:macbear_3d/builder/shader_builder.dart"
+    builder_factories: ["shaderBuilder"]
+    build_extensions:
+      "^lib/src/shaders/{{}}.vert": ["lib/src/shaders_gen/{{}}.vert.g.dart"]
+      "^lib/src/shaders/{{}}.frag": ["lib/src/shaders_gen/{{}}.frag.g.dart"]
+
+    auto_apply: root_package
+    build_to: source
