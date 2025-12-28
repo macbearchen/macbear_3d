@@ -1,0 +1,16 @@
+name: macbear_3d_example
+description: Example for macbear_3d
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  macbear_3d:
+    path: ../   # pub.dev 會自動處理
+
+flutter:
+  uses-material-design: true

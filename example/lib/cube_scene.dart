@@ -3,7 +3,7 @@ import 'dart:math';
 // Macbear3D engine
 import 'package:oimo_physics/oimo_physics.dart' as oimo;
 
-import '../macbear_3d.dart';
+import 'package:macbear_3d/macbear_3d.dart';
 
 class CubeScene extends M3Scene {
   final _geomCube = M3BoxGeom(1.0, 1.0, 1.0);
