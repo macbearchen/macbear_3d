@@ -31,7 +31,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(title: const Text('Macbear 3D powered by ANGLE')),
+        appBar: AppBar(title: const Text('Macbear 3D Engine - Powered by ANGLE')),
         floatingActionButton: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           mainAxisSize: MainAxisSize.min,
