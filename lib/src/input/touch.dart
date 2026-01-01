@@ -12,6 +12,7 @@ class M3TouchPoint {
   final double time; // 秒
   M3TouchPoint(this.position, this.buttons, this.time);
 
+  @override
   String toString() {
     return 'M3TouchPoint(${position.x.toStringAsFixed(2)}, ${position.y.toStringAsFixed(2)}, buttons: $buttons, time: $time)';
   }

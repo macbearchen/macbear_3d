@@ -25,6 +25,7 @@ class M3ShadowMap {
   }
 
   M3ShadowMap(int width, int height) {
+    debugPrint('create M3ShadowMap: $width x $height');
     shadowBuffer = M3Framebuffer(width, height);
   }
 

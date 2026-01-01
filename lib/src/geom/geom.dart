@@ -8,15 +8,16 @@ import '../../macbear_3d.dart';
 import '../gltf/gltf_parser.dart';
 
 // part for geom
+part 'axis_geom.dart';
 part 'box_geom.dart';
 part 'cylinder_geom.dart';
+part 'ellipsoid_geom.dart';
+part 'gltf_geom.dart';
+part 'obj_geom.dart';
 part 'plane_geom.dart';
 part 'pyramid_geom.dart';
 part 'sphere_geom.dart';
-part 'axis_geom.dart';
-part 'obj_geom.dart';
 part 'torus_geom.dart';
-part 'gltf_geom.dart';
 
 // indices for geom faces and edges to draw elements
 class _M3Indices {
@@ -49,6 +50,8 @@ class _M3Indices {
 
 abstract class M3Geom {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
+  static const int radialSegments = 16;
+
   String name = "Noname";
   int _vertexCount = 0;
   Vector3List? _vertices; // vertex positions

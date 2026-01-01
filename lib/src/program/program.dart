@@ -3,7 +3,6 @@
 
 // Macbear3D engine
 import '../../macbear_3d.dart';
-import '../texture/material.dart';
 
 // part for program
 part 'program_eye.dart';

@@ -1,22 +1,23 @@
 part of 'geom.dart';
 
 class M3PyramidGeom extends M3Geom {
-  M3PyramidGeom(double sx, double sy, double sz) {
+  M3PyramidGeom(double width, double height, double depth) {
     // initialize
     _init(vertexCount: 16, withNormals: true, withUV: true);
     name = "Pyramid";
 
-    double hx = sx / 2;
-    double hy = sy / 2;
+    double hx = width / 2;
+    double hy = height / 2;
+    double hz = depth / 2;
 
     // vertices
     final vertices = _vertices!;
-    vertices[0] = Vector3(-hx, -hy, 0);
-    vertices[1] = Vector3(hx, -hy, 0);
-    vertices[2] = Vector3(-hx, hy, 0);
-    vertices[3] = Vector3(hx, hy, 0);
+    vertices[0] = Vector3(-hx, -hy, -hz);
+    vertices[1] = Vector3(hx, -hy, -hz);
+    vertices[2] = Vector3(-hx, hy, -hz);
+    vertices[3] = Vector3(hx, hy, -hz);
 
-    vertices[4] = Vector3(0, 0, sz);
+    vertices[4] = Vector3(0, 0, hz);
     vertices[5] = vertices[0];
     vertices[6] = vertices[1];
 

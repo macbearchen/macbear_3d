@@ -13,6 +13,7 @@ export 'src/program/program.dart';
 export 'src/scene/scene.dart';
 export 'src/texture/material.dart';
 export 'src/texture/texture.dart';
+export 'src/texture/text_texture.dart';
 export 'src/util/constants.dart';
 export 'src/util/utility.dart';
 export 'src/widgets/view.dart';

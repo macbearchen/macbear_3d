@@ -13,6 +13,13 @@ import '../shaders_gen/TexturedLighting.es2.vert.g.dart';
 
 import 'shadow_map.dart';
 
+class M3RenderOptions {
+  bool wireframe = false;
+  bool helpers = false;
+  bool shadows = true;
+  bool showFPS = true;
+}
+
 class M3RenderEngine {
   late RenderingContext gl;
   final Framebuffer defaultFBO = Framebuffer(0); // default framebuffer
@@ -25,7 +32,7 @@ class M3RenderEngine {
   M3Program? programSkybox;
 
   // shadow map
-  M3ShadowMap? shadowMap;
+  M3ShadowMap? _shadowMap;
 
   // helper for 2D rendering
   late M3Text2D text2D;
@@ -34,9 +41,7 @@ class M3RenderEngine {
   final _projection2D = M3Projection();
 
   // render flags
-  bool bRenderWireframe = false;
-  bool bRenderShadowmap = true;
-  bool bRenderHelper = false;
+  M3RenderOptions options = M3RenderOptions();
 
   // constructor
   M3RenderEngine() {
@@ -50,7 +55,7 @@ class M3RenderEngine {
     programTexture?.dispose();
     programShadowmap?.dispose();
 
-    shadowMap?.dispose();
+    _shadowMap?.dispose();
     text2D.dispose();
   }
 
@@ -136,13 +141,14 @@ class M3RenderEngine {
     strFrag = "#define ENABLE_PCF \n$strFrag";
     programShadowmap = M3ProgramLighting(strVert, strFrag);
 
-    // shadow map
-    shadowMap = M3ShadowMap(1024, 1024);
-
     // init text2D
     text2D = await M3Text2D.createText2D(fontSize: 30);
 
     gl.lineWidth(2.0);
+  }
+
+  void createShadowMap({int width = 1024, int height = 1024}) {
+    _shadowMap ??= M3ShadowMap(width, height);
   }
 
   void bindDefaultFramebuffer() {
@@ -185,16 +191,16 @@ class M3RenderEngine {
 
     M3ProgramLighting progLight = programTexture!; // texture shader
 
-    if (!bRenderWireframe) {
+    if (!options.wireframe) {
       // Render Shadow Map
-      if (bRenderShadowmap && shadowMap != null) {
-        shadowMap!.renderDepthPass(scene, scene.light);
+      if (options.shadows && _shadowMap != null) {
+        _shadowMap!.renderDepthPass(scene, scene.light);
 
         progLight = programShadowmap!;
 
         // active shadowmap
         gl.activeTexture(WebGL.TEXTURE1);
-        gl.bindTexture(WebGL.TEXTURE_2D, shadowMap!.depthTexture);
+        gl.bindTexture(WebGL.TEXTURE_2D, _shadowMap!.depthTexture);
         gl.uniform1i(progLight.uniformSamplerShadowmap, 1);
 
         gl.activeTexture(WebGL.TEXTURE0);
@@ -207,7 +213,7 @@ class M3RenderEngine {
     }
 
     // draw Helper
-    if (bRenderHelper) {
+    if (options.helpers) {
       scene.renderHelper();
     }
   }
@@ -234,9 +240,9 @@ class M3RenderEngine {
 
     // 2D helper
     Matrix4 matIdentity = Matrix4.identity();
-    if (bRenderHelper) {
-      if (bRenderShadowmap) {
-        shadowMap!.drawDebugDepth(10, engine.appHeight - 210, 200, 200);
+    if (options.helpers) {
+      if (options.shadows && _shadowMap != null) {
+        _shadowMap!.drawDebugDepth(10, engine.appHeight - 210, 200, 200);
       }
 
       prog2D.setModelViewMatrix(matIdentity);
@@ -245,11 +251,13 @@ class M3RenderEngine {
       M3Shape2D.drawTouches(engine.touchManager);
     }
     // Draw FPS counter
-    Matrix4 matFps = Matrix4.identity();
-    matFps.setTranslation(Vector3(M3AppEngine.instance.appWidth - 120, 20, 0));
-    matFps.scaleByVector3(Vector3.all(0.5));
-    final fpsText = 'FPS: ${engine.fps.toStringAsFixed(1)}';
-    text2D.drawText(fpsText, matFps, color: Vector4(0, 1, 0, 1));
+    if (options.showFPS) {
+      Matrix4 matFps = Matrix4.identity();
+      matFps.setTranslation(Vector3(M3AppEngine.instance.appWidth - 50, 40, 0));
+      matFps.scaleByVector3(Vector3.all(0.5));
+      final fpsText = engine.fps.toStringAsFixed(1);
+      text2D.drawText(fpsText, matFps, color: Vector4(0, 1, 0, 1));
+    }
 
     prog2D.disableAttribute();
   }

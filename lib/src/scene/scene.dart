@@ -1,13 +1,15 @@
 import 'dart:math';
+import 'package:oimo_physics/oimo_physics.dart' as oimo;
 
 // Macbear3D engine
 import '../../macbear_3d.dart';
-import '../texture/material.dart';
 
 export 'camera.dart';
 export 'entity.dart';
 export 'light.dart';
 export 'skybox.dart';
+
+part 'sample_scene.dart';
 
 abstract class M3Scene {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
@@ -34,9 +36,9 @@ abstract class M3Scene {
     _camera.setEuler(0, 0, 0, distance: 20);
 
     // sun light
-    int halfView = 8;
-    light.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 30);
-    light.setEuler(0, -pi / 3, 0, distance: light.distanceToTarget); // rotate light
+    int halfView = 10;
+    light.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 50);
+    light.setEuler(pi / 5, -pi / 3, 0, distance: 25); // rotate light
   }
 
   void dispose() {

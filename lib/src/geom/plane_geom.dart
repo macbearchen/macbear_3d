@@ -9,15 +9,15 @@ class M3PlaneGeom extends M3Geom {
   // vertex order: row-major align by X-axis (-sx/2 ~ sx/2), column from (sy/2 ~ -sy/2)
   // default face-flip(false) means face-up; face-flip(true) means face-down
   M3PlaneGeom(
-    double sx,
-    double sy,
-    int segmentX,
-    int segmentY,
-    Vector2 mapping, {
-    Function(double, double)? callback,
-    bool bFaceFlip = false,
+    double width,
+    double height, {
+    int widthSegments = 6,
+    int heightSegments = 6,
+    Vector2? uvScale,
+    Function(double x, double y)? onVertex,
+    bool flipFace = false,
   }) {
-    int numVert = (segmentX + 1) * (segmentY + 1);
+    int numVert = (widthSegments + 1) * (heightSegments + 1);
     // initialize
     _init(vertexCount: numVert, withNormals: true, withUV: true);
     name = "Plane";
@@ -26,35 +26,36 @@ class M3PlaneGeom extends M3Geom {
     final vertices = _vertices!;
     final uvs = _uvs!;
     final normals = _normals!;
+    uvScale = uvScale ?? Vector2(1, 1);
 
-    Vector3 vn = Vector3(0, 0, (bFaceFlip) ? -1 : 1);
+    Vector3 vn = Vector3(0, 0, (flipFace) ? -1 : 1);
     double x, y, z = 0;
     int i, j, index = 0;
-    final hx = sx * 0.5, hy = sy * 0.5;
+    final hx = width * 0.5, hy = height * 0.5;
 
     // vertices: position, texUV
-    for (i = 0; i <= segmentY; i++) {
-      double ratioY = i.toDouble() / segmentY;
-      y = hy - sy * ratioY;
-      for (j = 0; j <= segmentX; j++) {
-        double ratioX = j.toDouble() / segmentX;
-        x = sx * ratioX - hx;
-        if (callback != null) {
-          z = callback(x, y);
+    for (i = 0; i <= heightSegments; i++) {
+      double ratioY = i.toDouble() / heightSegments;
+      y = hy - height * ratioY;
+      for (j = 0; j <= widthSegments; j++) {
+        double ratioX = j.toDouble() / widthSegments;
+        x = width * ratioX - hx;
+        if (onVertex != null) {
+          z = onVertex(x, y);
         }
         vertices[index] = Vector3(x, y, z);
-        uvs[index] = Vector2(ratioX * mapping.x, ratioY * mapping.y);
+        uvs[index] = Vector2(ratioX * uvScale.x, ratioY * uvScale.y);
 
         index++;
       }
     }
     // normals
     index = 0;
-    for (i = 0; i < segmentY; i++) {
-      for (j = 0; j <= segmentX; j++) {
-        if (j != segmentX) {
+    for (i = 0; i < heightSegments; i++) {
+      for (j = 0; j <= widthSegments; j++) {
+        if (j != widthSegments) {
           Vector3 dirX = vertices[index] - vertices[index + 1];
-          Vector3 dirY = vertices[index] - vertices[index + segmentX + 1];
+          Vector3 dirY = vertices[index] - vertices[index + widthSegments + 1];
           vn = dirY.cross(dirX).normalized();
         } else {
           vn = normals[index - 1]; // end-dot same as previous
@@ -65,8 +66,8 @@ class M3PlaneGeom extends M3Geom {
       }
     }
     // normals end-line same as previous
-    for (j = 0; j <= segmentX; j++) {
-      vn = normals[index - segmentX - 1];
+    for (j = 0; j <= widthSegments; j++) {
+      vn = normals[index - widthSegments - 1];
       normals[index] = vn;
 
       index++;
@@ -76,29 +77,29 @@ class M3PlaneGeom extends M3Geom {
     _createVBO();
 
     // solid: triangle-strip
-    int numIndex = (segmentX + 1) * 2 * (segmentY) + 2 * (segmentY - 1);
-    if (bFaceFlip) {
+    int numIndex = (widthSegments + 1) * 2 * (heightSegments) + 2 * (heightSegments - 1);
+    if (flipFace) {
       // face-flip
       numIndex++;
     }
 
     final indices = Uint16Array(numIndex);
     index = 0;
-    if (bFaceFlip) {
+    if (flipFace) {
       // face-flip
       indices[index] = 0;
       index++;
     }
 
-    for (i = 0; i < segmentY; i++) {
+    for (i = 0; i < heightSegments; i++) {
       if (i > 0) {
         indices[index] = indices[index - 1]; // repeat prev-index
-        indices[index + 1] = i * (segmentX + 1); // repeat next-index
+        indices[index + 1] = i * (widthSegments + 1); // repeat next-index
         index += 2;
       }
-      for (j = 0; j <= segmentX; j++) {
-        indices[index] = i * (segmentX + 1) + j;
-        indices[index + 1] = indices[index] + (segmentX + 1);
+      for (j = 0; j <= widthSegments; j++) {
+        indices[index] = i * (widthSegments + 1) + j;
+        indices[index + 1] = indices[index] + (widthSegments + 1);
         index += 2;
       }
     }
@@ -106,22 +107,22 @@ class M3PlaneGeom extends M3Geom {
     _faceIndices.add(_M3Indices(WebGL.TRIANGLE_STRIP, indices));
 
     // wireframe edges
-    numIndex = ((segmentX + 1) * segmentY + segmentX * (segmentY + 1)) * 2;
+    numIndex = ((widthSegments + 1) * heightSegments + widthSegments * (heightSegments + 1)) * 2;
     final lines = Uint16Array(numIndex);
     index = 0;
-    for (i = 0; i <= segmentY; i++) {
-      for (j = 0; j < segmentX; j++) {
+    for (i = 0; i <= heightSegments; i++) {
+      for (j = 0; j < widthSegments; j++) {
         // horizontal line align by Y-axis
-        lines[index] = i * (segmentX + 1) + j;
+        lines[index] = i * (widthSegments + 1) + j;
         lines[index + 1] = lines[index] + 1;
         index += 2;
       }
     }
-    for (i = 0; i < segmentY; i++) {
-      for (j = 0; j <= segmentX; j++) {
+    for (i = 0; i < heightSegments; i++) {
+      for (j = 0; j <= widthSegments; j++) {
         // vertical line align by X-axis
-        lines[index] = i * (segmentX + 1) + j;
-        lines[index + 1] = lines[index] + (segmentX + 1);
+        lines[index] = i * (widthSegments + 1) + j;
+        lines[index + 1] = lines[index] + (widthSegments + 1);
         index += 2;
       }
     }

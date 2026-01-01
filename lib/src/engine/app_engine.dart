@@ -16,7 +16,11 @@ class M3AppEngine {
   String version = "macbear3d-lib v0.1.0 powered by ANGLE ";
   final FlutterAngle _angle = FlutterAngle();
   late FlutterAngleTexture _sourceTexture; // main framebuffer
-  bool _didContextInit = false; // context initialized
+  static Vector3 backgroundColor = Vector3.zero();
+
+  // did init engine completed
+  bool _didInit = false; // context initialized
+  Future<void> Function()? onDidInit;
 
   final M3RenderEngine renderEngine = M3RenderEngine();
   int initTick = 0;
@@ -63,7 +67,7 @@ class M3AppEngine {
   M3AppEngine._internal();
 
   Future<void> initApp({int width = 100, int height = 100, double dpr = 1.0}) async {
-    if (_didContextInit) {
+    if (_didInit) {
       debugPrint("--- initApp: context already initialized ---");
       return;
     }
@@ -90,8 +94,11 @@ class M3AppEngine {
     await renderEngine.initProgram();
     renderEngine.setViewport(width, height, dpr);
 
+    _didInit = true;
+    if (onDidInit != null) {
+      await onDidInit!();
+    }
     debugPrint("*** initApp done ***");
-    _didContextInit = true;
   }
 
   void initKeyboard() {
@@ -107,7 +114,7 @@ class M3AppEngine {
     };
 
     keyboard.onKeyUp = (e) {
-      debugPrint("KeyUp: ${e}");
+      debugPrint("KeyUp: $e");
       activeScene?.inputController?.onKeyUp(e);
     };
 
@@ -150,7 +157,7 @@ class M3AppEngine {
   }
 
   void pause() {
-    if (!_didContextInit) {
+    if (!_didInit) {
       return;
     }
     if (ticker.isActive) {
@@ -160,7 +167,7 @@ class M3AppEngine {
   }
 
   void resume() {
-    if (!_didContextInit) {
+    if (!_didInit) {
       return;
     }
     if (!ticker.isActive) {
@@ -173,21 +180,18 @@ class M3AppEngine {
 
   Widget getAppWidget() {
     debugPrint("--- getAppWidget ---");
-    if (!_didContextInit) {
+    if (!_didInit) {
       return Container(
-        color: Colors.yellow,
-        child: Center(child: Text('Prepare ANGLE...')),
+        color: Colors.black,
+        child: Center(
+          child: Text('Macbear 3D', style: TextStyle(color: Colors.lightGreen, fontSize: 20)),
+        ),
       );
     }
 
     Widget textureSurface = kIsWeb
         ? HtmlElementView(viewType: _sourceTexture.textureId.toString())
-        : _didContextInit
-        ? _flipY(Texture(textureId: _sourceTexture.textureId))
-        : Container(
-            color: Colors.lightGreen.shade600,
-            child: Center(child: Text('Macbear3D loading...')),
-          );
+        : _flipY(Texture(textureId: _sourceTexture.textureId));
 
     return Listener(
       onPointerDown: (event) {
@@ -241,8 +245,8 @@ class M3AppEngine {
   }
 
   Future<bool> onResize(int width, int height, double dpr) async {
-    debugPrint("--- onResize: ($width x $height) dpr: $dpr (init=$_didContextInit) ---");
-    if (!_didContextInit) {
+    debugPrint("--- onResize: ($width x $height) dpr: $dpr (init=$_didInit) ---");
+    if (!_didInit) {
       return false;
     }
 
@@ -274,7 +278,7 @@ class M3AppEngine {
 
   // application update and render
   Future<void> updateRender(Duration elapsed) async {
-    if (!_updating && _didContextInit) {
+    if (!_updating && _didInit) {
       _updating = true;
       _stopwatch.reset();
       _stopwatch.start();
@@ -324,11 +328,8 @@ class M3AppEngine {
   Future<void> _render() async {
     _sourceTexture.activate();
 
-    int current = DateTime.now().millisecondsSinceEpoch;
-    double blue = sin((current - initTick) / 500) * 0.3;
-
     final gl = renderEngine.gl;
-    gl.clearColor(0, 0.3, blue, 1.0);
+    gl.clearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, 1.0);
     gl.clear(WebGL.COLOR_BUFFER_BIT | WebGL.DEPTH_BUFFER_BIT);
 
     // render active scene

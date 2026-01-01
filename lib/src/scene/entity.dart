@@ -28,13 +28,22 @@ class M3Entity {
 
   // convenience getters/setters
   Vector3 get position => _transform.position;
-  set position(Vector3 v) => _transform.position = v;
+  set position(Vector3 v) {
+    _transform.position = v;
+    _transform.markDirty();
+  }
 
   Quaternion get rotation => _transform.rotation;
-  set rotation(Quaternion q) => _transform.rotation = q;
+  set rotation(Quaternion q) {
+    _transform.rotation = q;
+    _transform.markDirty();
+  }
 
   Vector3 get scale => _transform.scale;
-  set scale(Vector3 v) => _transform.scale = v;
+  set scale(Vector3 v) {
+    _transform.scale = v;
+    _transform.markDirty();
+  }
 
   Matrix4 get matrix => _transform.worldMatrix;
 }

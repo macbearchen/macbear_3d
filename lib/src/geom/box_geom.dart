@@ -1,13 +1,13 @@
 part of 'geom.dart';
 
 class M3BoxGeom extends M3Geom {
-  M3BoxGeom(double sx, double sy, double sz) {
+  M3BoxGeom(double width, double height, double depth) {
     // initialize
-    _init(vertexCount: 24, withNormals: true);
+    _init(vertexCount: 24, withNormals: true, withUV: true);
     name = "Box";
-    double hx = sx / 2;
-    double hy = sy / 2;
-    double hz = sz / 2;
+    double hx = width / 2;
+    double hy = height / 2;
+    double hz = depth / 2;
 
     // vertices
     final vertices = _vertices!;
@@ -37,6 +37,34 @@ class M3BoxGeom extends M3Geom {
     vertices[21] = vertices[5];
     vertices[22] = vertices[6];
     vertices[23] = vertices[7];
+
+    final uvs = _uvs!;
+    uvs[0] = Vector2.zero();
+    uvs[1] = Vector2(1, 0);
+    uvs[2] = Vector2(0, 1);
+    uvs[3] = Vector2(1, 1);
+    uvs[4] = Vector2.zero();
+    uvs[5] = Vector2(1, 0);
+    uvs[6] = Vector2(0, 1);
+    uvs[7] = Vector2(1, 1);
+
+    uvs[8] = Vector2.zero();
+    uvs[9] = Vector2(1, 0);
+    uvs[10] = Vector2.zero();
+    uvs[11] = Vector2(1, 0);
+    uvs[12] = Vector2(0, 1);
+    uvs[13] = Vector2(1, 1);
+    uvs[14] = Vector2(0, 1);
+    uvs[15] = Vector2(1, 1);
+
+    uvs[16] = Vector2.zero();
+    uvs[17] = Vector2.zero();
+    uvs[18] = Vector2(1, 0);
+    uvs[19] = Vector2(1, 0);
+    uvs[20] = Vector2(0, 1);
+    uvs[21] = Vector2(0, 1);
+    uvs[22] = Vector2(1, 1);
+    uvs[23] = Vector2(1, 1);
 
     // normals
     if (_normals != null) {

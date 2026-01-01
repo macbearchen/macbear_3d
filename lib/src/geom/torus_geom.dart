@@ -1,12 +1,14 @@
 part of 'geom.dart';
 
 class M3TorusGeom extends M3Geom {
-  M3TorusGeom({
-    double radius = 1.0, // R
-    double tube = 0.4, // r
-    int radialSegments = 32,
-    int tubularSegments = 16,
+  M3TorusGeom(
+    double radius, // R
+    double tube, { // r
+    int radialSegments = M3Geom.radialSegments,
+    int tubularSegments = M3Geom.radialSegments,
   }) {
+    radialSegments = max(radialSegments, 3);
+    tubularSegments = max(tubularSegments, 3);
     final vetrexCount = (radialSegments + 1) * (tubularSegments + 1);
     _vertices = Vector3List(vetrexCount);
     _normals = Vector3List(vetrexCount);

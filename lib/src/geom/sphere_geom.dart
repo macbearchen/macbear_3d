@@ -3,10 +3,10 @@ part of 'geom.dart';
 // segmentRow divide as pie on XY-plane; segmentZ divide by Z-axis
 // vertex order: from top to bottom, CCW by each row
 class M3SphereGeom extends M3Geom {
-  M3SphereGeom(double rw, double rh, int segmentRow, int segmentZ) {
-    segmentRow = max(segmentRow, 3);
-    segmentZ = max(segmentRow, 2);
-    int numVert = (segmentRow + 1) * (segmentZ + 1);
+  M3SphereGeom(double radius, {int widthSegments = M3Geom.radialSegments, int heightSegments = 8}) {
+    widthSegments = max(widthSegments, 3);
+    heightSegments = max(heightSegments, 2);
+    int numVert = (widthSegments + 1) * (heightSegments + 1);
 
     // initialize
     _init(vertexCount: numVert, withNormals: true, withUV: true);
@@ -20,31 +20,30 @@ class M3SphereGeom extends M3Geom {
 
     double x, y, z;
     int i, j, index = 0;
-    final cotan = (rw * rw) / (rh * rh);
     // vertices: position, normal, texUV
-    for (i = 0; i <= segmentZ; i++) {
-      final ratioB = i / segmentZ;
+    for (i = 0; i <= heightSegments; i++) {
+      final ratioB = i / heightSegments;
       final angleB = pi * ratioB;
-      final radius = rw * sin(angleB);
+      final radiusB = radius * sin(angleB);
       if (0 == i) {
-        z = rh;
-      } else if (segmentZ == i) {
-        z = -rh;
+        z = radius;
+      } else if (heightSegments == i) {
+        z = -radius;
       } else {
-        z = rh * cos(angleB);
+        z = radius * cos(angleB);
       }
 
-      for (j = 0; j <= segmentRow; j++) {
-        final ratioA = j / segmentRow;
-        if (0 == j || segmentRow == j) {
-          x = radius;
+      for (j = 0; j <= widthSegments; j++) {
+        final ratioA = j / widthSegments;
+        if (0 == j || widthSegments == j) {
+          x = radiusB;
           y = 0;
         } else {
           final angleA = pi * 2 * ratioA;
-          x = radius * cos(angleA);
-          y = radius * sin(angleA);
+          x = radiusB * cos(angleA);
+          y = radiusB * sin(angleA);
         }
-        vn = Vector3(x, y, z * cotan).normalized();
+        vn = Vector3(x, y, z).normalized();
 
         vertices[index] = Vector3(x, y, z);
         normals[index] = vn;
@@ -57,43 +56,43 @@ class M3SphereGeom extends M3Geom {
     _createVBO();
 
     // solid: triangle-strip
-    int numIndex = (segmentRow + 1) * 2 * segmentZ;
+    int numIndex = (widthSegments + 1) * 2 * heightSegments;
     Uint16Array indices = Uint16Array(numIndex);
     index = 0;
 
     int startVert;
-    for (i = 0; i < segmentZ; i++) {
-      startVert = (segmentRow + 1) * i;
-      for (j = 0; j <= segmentRow; j++) {
+    for (i = 0; i < heightSegments; i++) {
+      startVert = (widthSegments + 1) * i;
+      for (j = 0; j <= widthSegments; j++) {
         indices[index] = startVert + j;
-        indices[index + 1] = indices[index] + (segmentRow + 1);
+        indices[index + 1] = indices[index] + (widthSegments + 1);
         index += 2;
       }
     }
     _faceIndices.add(_M3Indices(WebGL.TRIANGLE_STRIP, indices));
 
     // wireframe edges
-    numIndex = ((segmentRow + 1) * (segmentZ - 1) + 2) + ((segmentRow - 1) * (segmentZ + 1));
+    numIndex = ((widthSegments + 1) * (heightSegments - 1) + 2) + ((widthSegments - 1) * (heightSegments + 1));
     final lines = Uint16Array(numIndex);
     index = 0;
     lines[0] = 0;
-    for (i = 1; i < segmentZ; i++) // skip top and bottom, because only single dot there
+    for (i = 1; i < heightSegments; i++) // skip top and bottom, because only single dot there
     {
-      for (j = 0; j <= segmentRow; j++) {
+      for (j = 0; j <= widthSegments; j++) {
         index++;
-        lines[index] = (segmentRow + 1) * i + j;
+        lines[index] = (widthSegments + 1) * i + j;
       }
     }
     startVert = lines[index] + 1;
     index++;
     lines[index] = startVert;
-    for (j = 1; j < segmentRow; j++) // skip first and last of vertical slice
+    for (j = 1; j < widthSegments; j++) // skip first and last of vertical slice
     {
-      for (i = 0; i <= segmentZ; i++) {
+      for (i = 0; i <= heightSegments; i++) {
         if (j % 2 != 0) {
-          startVert = (segmentRow + 1) * (segmentZ - i) + j; // reverse order
+          startVert = (widthSegments + 1) * (heightSegments - i) + j; // reverse order
         } else {
-          startVert = (segmentRow + 1) * i + j; // common order
+          startVert = (widthSegments + 1) * i + j; // common order
         }
 
         index++;
