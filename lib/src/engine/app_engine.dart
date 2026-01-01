@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'dart:math';
+
+// ... (removing unused import)
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -24,8 +25,6 @@ class M3AppEngine {
 
   final M3RenderEngine renderEngine = M3RenderEngine();
   int initTick = 0;
-  int _frameCounter = 0;
-
   final M3TouchManager touchManager = M3TouchManager();
   final M3KeyboardManager keyboard = M3KeyboardManager();
 
@@ -33,10 +32,9 @@ class M3AppEngine {
   final Stopwatch _stopwatch = Stopwatch();
 
   late Ticker ticker;
+
+  int _frameCounter = 0;
   bool _updating = false;
-  int _totalTime = 0;
-  int _iterationCount = 60;
-  int _framesOver = 0;
 
   // FPS counter
   int _fpsFrameCount = 0;
@@ -288,16 +286,6 @@ class M3AppEngine {
       await _render();
 
       _stopwatch.stop();
-      _totalTime += _stopwatch.elapsedMilliseconds;
-      if (_stopwatch.elapsedMilliseconds > 16) {
-        _framesOver++;
-      }
-      if (--_iterationCount == 0) {
-        // debugPrint('Time: ${totalTime / 60} - Framesover $framesOver');
-        _totalTime = 0;
-        _iterationCount = 60;
-        _framesOver = 0;
-      }
 
       // FPS calculation
       _fpsFrameCount++;

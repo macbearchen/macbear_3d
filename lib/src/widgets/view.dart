@@ -9,7 +9,7 @@ class M3View extends StatefulWidget {
   const M3View({super.key});
 
   @override
-  _M3ViewState createState() => _M3ViewState();
+  State<M3View> createState() => _M3ViewState();
 }
 
 class _M3ViewState extends State<M3View> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
@@ -28,6 +28,7 @@ class _M3ViewState extends State<M3View> with SingleTickerProviderStateMixin, Wi
   Future<void> initAppEngine() async {
     // wait for context ready
     final size = await _getValidSize(context);
+    if (!context.mounted) return;
 
     final screenW = size.width.toInt();
     final screenH = size.height.toInt();

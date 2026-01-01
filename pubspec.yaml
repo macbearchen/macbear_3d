@@ -1,7 +1,7 @@
 name: macbear_3d
 description: "Macbear 3D engine package project."
 version: 0.1.0
-homepage:
+repository: https://github.com/macbearchen/macbear_3d
 
 environment:
   sdk: ^3.10.0

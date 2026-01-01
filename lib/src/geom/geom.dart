@@ -122,6 +122,13 @@ abstract class M3Geom {
       _uvs = null;
     }
 
+    if (_colors != null) {
+      _colorBuffer = gl.createBuffer();
+      gl.bindBuffer(WebGL.ARRAY_BUFFER, _colorBuffer);
+      gl.bufferData(WebGL.ARRAY_BUFFER, Float32Array.fromList(_colors!.buffer), WebGL.STATIC_DRAW);
+      _colors = null;
+    }
+
     if (_joints != null) {
       _jointBuffer = gl.createBuffer();
       gl.bindBuffer(WebGL.ARRAY_BUFFER, _jointBuffer);
