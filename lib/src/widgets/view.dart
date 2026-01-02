@@ -27,12 +27,12 @@ class _M3ViewState extends State<M3View> with SingleTickerProviderStateMixin, Wi
 
   Future<void> initAppEngine() async {
     // wait for context ready
-    final size = await _getValidSize(context);
     if (!context.mounted) return;
+    final dpr = MediaQuery.of(context).devicePixelRatio;
 
+    final size = await _getValidSize(context);
     final screenW = size.width.toInt();
     final screenH = size.height.toInt();
-    final dpr = MediaQuery.of(context).devicePixelRatio;
     debugPrint("=== M3View: initState addPostFrameCallback ($mounted) ($screenW x $screenH) dpr: $dpr ===");
 
     // ticker to update and render

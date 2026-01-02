@@ -36,10 +36,44 @@ class MainApp extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
-          children: [getHelperWidget(), const SizedBox(height: 10), getTutorialWidget()],
+          children: [
+            getHelperWidget(),
+            const SizedBox(height: 10),
+            getShaderWidget(),
+            const SizedBox(height: 10),
+            getTutorialWidget(),
+          ],
         ),
         body: M3View(),
       ),
+    );
+  }
+
+  Widget getShaderWidget() {
+    final renderEngine = M3AppEngine.instance.renderEngine;
+    final shaderOptions = renderEngine.options.shader;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FloatingActionButton(
+          heroTag: 'per_pixel',
+          onPressed: () {
+            shaderOptions.perPixel = !shaderOptions.perPixel;
+            renderEngine.setLightingProgram();
+          },
+          child: const Icon(Icons.draw),
+        ),
+        const SizedBox(width: 6),
+        FloatingActionButton(
+          heroTag: 'cartoon',
+          onPressed: () {
+            shaderOptions.cartoon = !shaderOptions.cartoon;
+            renderEngine.setLightingProgram();
+          },
+          child: const Icon(Icons.draw_outlined),
+        ),
+      ],
     );
   }
 
@@ -52,7 +86,7 @@ class MainApp extends StatelessWidget {
         FloatingActionButton(
           heroTag: 'wireframe',
           onPressed: () {
-            renderEngine.options.wireframe = !renderEngine.options.wireframe;
+            renderEngine.options.debug.wireframe = !renderEngine.options.debug.wireframe;
           },
           child: const Icon(Icons.grid_4x4_sharp),
         ),
@@ -60,7 +94,7 @@ class MainApp extends StatelessWidget {
         FloatingActionButton(
           heroTag: 'info',
           onPressed: () {
-            renderEngine.options.helpers = !renderEngine.options.helpers;
+            renderEngine.options.debug.showHelpers = !renderEngine.options.debug.showHelpers;
           },
           child: const Icon(Icons.info),
         ),

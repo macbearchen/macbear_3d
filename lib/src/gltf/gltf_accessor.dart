@@ -1,3 +1,4 @@
+// ignore_for_file: constant_identifier_names
 import 'dart:typed_data';
 
 /// glTF Accessor 工具類別

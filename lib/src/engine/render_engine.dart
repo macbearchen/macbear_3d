@@ -15,10 +15,22 @@ import 'shadow_map.dart';
 
 /// Rendering options for the engine (wireframe, helpers, shadows, FPS display).
 class M3RenderOptions {
-  bool wireframe = false;
-  bool helpers = false;
+  // debug options
+  M3DebugOptions debug = M3DebugOptions();
+  // shader options
+  M3ShaderOptions shader = M3ShaderOptions();
   bool shadows = true;
+}
+
+class M3DebugOptions {
+  bool wireframe = false;
+  bool showHelpers = false;
   bool showFPS = true;
+}
+
+class M3ShaderOptions {
+  bool perPixel = false;
+  bool cartoon = false;
 }
 
 /// The WebGL rendering engine that manages shaders, framebuffers, and scene rendering.
@@ -122,18 +134,28 @@ class M3RenderEngine {
     // rectangle program
     programRectangle = M3Program(Rect_es2_vert, Rect_es2_frag);
 
+    setLightingProgram();
+
+    // init text2D
+    text2D = await M3Text2D.createText2D(fontSize: 30);
+
+    gl.lineWidth(2.0);
+  }
+
+  void setLightingProgram() {
+    programTexture?.dispose();
+    programShadowmap?.dispose();
+
     final String strSkin = Skinning_es2_vert;
     // texture lighting program
     String strVert = TexturedLighting_es2_vert;
     strVert = strSkin + strVert;
     String strFrag = TexturedLighting_es2_frag;
     // pixel lighting: phong shading, cartoon
-    bool bPerPixel = false;
-    bool bCartoon = false;
-    if (bPerPixel) {
+    if (options.shader.perPixel) {
       strVert = "#define ENABLE_PIXEL_LIGHTING \n$strVert";
       strFrag = "#define ENABLE_PIXEL_LIGHTING \n$strFrag";
-      if (bCartoon) {
+      if (options.shader.cartoon) {
         strFrag = "#define ENABLE_CARTOON \n$strFrag";
       }
     }
@@ -144,11 +166,6 @@ class M3RenderEngine {
     strFrag = "#define ENABLE_SHADOW_MAP \n$strFrag";
     strFrag = "#define ENABLE_PCF \n$strFrag";
     programShadowmap = M3ProgramLighting(strVert, strFrag);
-
-    // init text2D
-    text2D = await M3Text2D.createText2D(fontSize: 30);
-
-    gl.lineWidth(2.0);
   }
 
   void createShadowMap({int width = 1024, int height = 1024}) {
@@ -195,7 +212,7 @@ class M3RenderEngine {
 
     M3ProgramLighting progLight = programTexture!; // texture shader
 
-    if (!options.wireframe) {
+    if (!options.debug.wireframe) {
       // Render Shadow Map
       if (options.shadows && _shadowMap != null) {
         _shadowMap!.renderDepthPass(scene, scene.light);
@@ -217,7 +234,7 @@ class M3RenderEngine {
     }
 
     // draw Helper
-    if (options.helpers) {
+    if (options.debug.showHelpers) {
       scene.renderHelper();
     }
   }
@@ -244,7 +261,7 @@ class M3RenderEngine {
 
     // 2D helper
     Matrix4 matIdentity = Matrix4.identity();
-    if (options.helpers) {
+    if (options.debug.showHelpers) {
       if (options.shadows && _shadowMap != null) {
         _shadowMap!.drawDebugDepth(10, engine.appHeight - 210, 200, 200);
       }
@@ -255,12 +272,15 @@ class M3RenderEngine {
       M3Shape2D.drawTouches(engine.touchManager);
     }
     // Draw FPS counter
-    if (options.showFPS) {
+    if (options.debug.showFPS) {
       Matrix4 matFps = Matrix4.identity();
       matFps.setTranslation(Vector3(M3AppEngine.instance.appWidth - 50, 40, 0));
       matFps.scaleByVector3(Vector3.all(0.5));
-      final fpsText = engine.fps.toStringAsFixed(1);
+      final fpsText = engine.fps.toStringAsFixed(2);
+      final frameText = engine.frameCounter.toString().padLeft(6);
       text2D.drawText(fpsText, matFps, color: Vector4(0, 1, 0, 1));
+      matFps.translateByVector3(Vector3(-18, 30, 0));
+      text2D.drawText(frameText, matFps, color: Vector4(1, 1, 1, 1));
     }
 
     prog2D.disableAttribute();

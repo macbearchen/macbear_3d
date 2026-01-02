@@ -287,10 +287,10 @@ class GltfPrimitive {
   List<int>? getIndices() {
     if (indicesAccessor == null) return null;
     final componentType = document.getAccessorComponentType(indicesAccessor!);
-    if (componentType == 5123) {
+    if (componentType == GltfAccessor.UNSIGNED_SHORT) {
       // UNSIGNED_SHORT
       return document.getUint16Accessor(indicesAccessor!).toList();
-    } else if (componentType == 5125) {
+    } else if (componentType == GltfAccessor.UNSIGNED_INT) {
       // UNSIGNED_INT
       return document.getUint32Accessor(indicesAccessor!).toList();
     }

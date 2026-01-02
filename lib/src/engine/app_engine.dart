@@ -36,7 +36,7 @@ class M3AppEngine {
 
   late Ticker ticker;
 
-  int _frameCounter = 0;
+  int frameCounter = 0;
   bool _updating = false;
 
   // FPS counter
@@ -334,7 +334,7 @@ class M3AppEngine {
     // gl.finish();
 
     // increase counter
-    _frameCounter++;
+    frameCounter++;
 
     await _sourceTexture.signalNewFrameAvailable();
   }
