@@ -8,7 +8,9 @@ import '../../macbear_3d.dart';
 part 'program_eye.dart';
 part 'program_lighting.dart';
 
-// for GLSL shader-language
+/// A WebGL shader program wrapper for GLSL vertex and fragment shaders.
+///
+/// Manages uniform locations, vertex attributes, and matrix transformations.
 class M3Program {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
 

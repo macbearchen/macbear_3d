@@ -1,5 +1,8 @@
 import 'package:vector_math/vector_math.dart';
 
+/// A hierarchical transform node with position, rotation, scale, and parent/child relationships.
+///
+/// Lazily recomputes the world matrix when marked dirty.
 class M3Transform {
   Vector3 position = Vector3.zero();
   Quaternion rotation = Quaternion.identity();

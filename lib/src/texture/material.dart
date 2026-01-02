@@ -3,6 +3,7 @@ import 'package:vector_math/vector_math.dart';
 import '../gltf/gltf_parser.dart';
 import 'texture.dart';
 
+/// Material properties for rendering (diffuse color, specular, shininess, textures).
 class M3Material {
   Vector4 diffuse = Vector4(1.0, 1.0, 1.0, 1.0);
   Vector3 specular = Vector3(1.0, 1.0, 1.0);

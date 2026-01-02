@@ -1,5 +1,6 @@
 part of 'touch.dart';
 
+/// Abstract interface for handling touch, scroll, and keyboard input events.
 abstract class M3InputController {
   // touch events
   void onTouchDown(M3Touch touch);
@@ -15,6 +16,7 @@ abstract class M3InputController {
   void onKeyRepeat(PhysicalKeyboardKey key);
 }
 
+/// Camera controller for orbit, pan, and zoom interactions.
 class M3CameraOrbitController extends M3InputController {
   final M3Camera camera;
   M3CameraOrbitController(this.camera);

@@ -1,5 +1,6 @@
 part of 'shape_2d.dart';
 
+/// A 2D rectangle shape with configurable position, size, and UV mapping.
 class M3Rectangle2D extends M3Shape2D {
   double _rectW = 0;
   double _rectH = 0;

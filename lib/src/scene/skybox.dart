@@ -1,6 +1,9 @@
 // Macbear3D engine
 import '../../macbear_3d.dart';
 
+/// A skybox rendered using a cubemap texture.
+///
+/// Renders a background environment that follows the camera position.
 class M3Skybox {
   static RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
 

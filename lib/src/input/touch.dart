@@ -6,10 +6,11 @@ import '../../macbear_3d.dart';
 
 part 'input_controller.dart';
 
+/// A single touch point with position, button state, and timestamp.
 class M3TouchPoint {
   final Vector2 position;
   final int buttons; // 1: left, 2: right, 4: middle
-  final double time; // 秒
+  final double time; // seconds
   M3TouchPoint(this.position, this.buttons, this.time);
 
   @override
@@ -18,10 +19,11 @@ class M3TouchPoint {
   }
 }
 
+/// Information about a two-finger pinch gesture (scale, center, distance).
 class M3PinchInfo {
-  final double scale; // 縮放比例
-  final Vector2 center; // 兩指中心點
-  final double distance; // 當前距離
+  final double scale;
+  final Vector2 center;
+  final double distance;
 
   M3PinchInfo(this.scale, this.center, this.distance);
 
@@ -31,6 +33,7 @@ class M3PinchInfo {
   }
 }
 
+/// Represents a single touch sequence (down, move, up) with path history.
 class M3Touch {
   final int id;
   final List<M3TouchPoint> path = [];
@@ -93,6 +96,7 @@ class M3Touch {
   }
 }
 
+/// Manages multiple touch points and provides pinch/pan gesture detection.
 class M3TouchManager {
   final Map<int, M3Touch> touches = {};
   // 用來記錄上一次 pinch 的距離

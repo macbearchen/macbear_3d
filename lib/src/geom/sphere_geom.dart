@@ -1,7 +1,8 @@
 part of 'geom.dart';
 
-// segmentRow divide as pie on XY-plane; segmentZ divide by Z-axis
-// vertex order: from top to bottom, CCW by each row
+/// A UV sphere geometry with configurable radius and segment count.
+///
+/// Vertices are ordered from top to bottom, counter-clockwise by each row.
 class M3SphereGeom extends M3Geom {
   M3SphereGeom(double radius, {int widthSegments = M3Geom.radialSegments, int heightSegments = 8}) {
     widthSegments = max(widthSegments, 3);
@@ -11,6 +12,7 @@ class M3SphereGeom extends M3Geom {
     // initialize
     _init(vertexCount: numVert, withNormals: true, withUV: true);
     name = "Sphere";
+    cullingRadius = radius;
 
     // vertices
     final vertices = _vertices!;

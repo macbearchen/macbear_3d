@@ -8,6 +8,7 @@ import '../gltf/gltf_loader.dart';
 import '../texture/material.dart';
 import 'obj_loader.dart';
 
+/// Skeletal animation skin data with bone matrices and inverse bind matrices.
 class M3Skin {
   final List<Matrix4> boneMatrices;
   final List<Matrix4>? inverseBindMatrices;
@@ -18,6 +19,9 @@ class M3Skin {
   int get boneCount => boneMatrices.length;
 }
 
+/// A 3D mesh combining geometry, material, and optional skin for skeletal animation.
+///
+/// Supports loading from OBJ, glTF, and GLB file formats.
 class M3Mesh {
   // related geometry
   M3Material mtr;

@@ -1,6 +1,8 @@
 part of 'geom.dart';
 
-// Axis geometry for helper display
+/// A coordinate axis helper geometry for debugging and visualization.
+///
+/// Displays X, Y, and Z axes as lines from the origin.
 class M3AxisGeom extends M3Geom {
   M3AxisGeom({double size = 1.0}) {
     // initialize
@@ -13,7 +15,7 @@ class M3AxisGeom extends M3Geom {
     vertices[1] = Vector3(size, 0, 0);
     vertices[2] = Vector3(0, size, 0);
     vertices[3] = Vector3(0, 0, size);
-    
+
     // vertex buffer object
     _createVBO();
 
@@ -27,7 +29,6 @@ class M3AxisGeom extends M3Geom {
       ),
     );
 
-    // wireframe edges
     _faceIndices.add(
       _M3Indices(
         WebGL.LINES,
@@ -38,6 +39,6 @@ class M3AxisGeom extends M3Geom {
       ),
     );
 
-    _edgeIndices = _faceIndices;
+    // none wireframe edges
   }
 }

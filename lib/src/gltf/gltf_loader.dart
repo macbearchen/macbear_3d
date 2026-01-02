@@ -6,7 +6,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import '../texture/texture.dart';
 import 'gltf_parser.dart';
 
-/// glTF/GLB 模型載入器
+/// Loader for glTF and GLB 3D model files from assets or binary data.
 class M3GltfLoader {
   /// 從 assets 載入 glTF 或 GLB 檔案
   static Future<GltfDocument> load(String path) async {

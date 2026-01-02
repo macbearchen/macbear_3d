@@ -1,6 +1,7 @@
 import 'package:oimo_physics/oimo_physics.dart' as oimo;
 import 'package:vector_math/vector_math.dart';
 
+/// Physics simulation engine wrapper for oimo_physics with gravity and collision.
 class M3PhysicsEngine {
   // physics
   late oimo.World? _world;

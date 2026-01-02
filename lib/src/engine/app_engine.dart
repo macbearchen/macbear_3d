@@ -11,6 +11,9 @@ import '../../macbear_3d.dart' hide Colors;
 import '../input/keyboard.dart';
 import '../physics/physics_engine.dart';
 
+/// The main application engine singleton that manages the Flutter-ANGLE context.
+///
+/// Provides initialization, update loop, rendering, input handling, and scene management.
 class M3AppEngine {
   static final M3AppEngine instance = M3AppEngine._internal();
 

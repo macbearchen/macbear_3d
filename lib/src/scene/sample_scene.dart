@@ -1,5 +1,6 @@
 part of 'scene.dart';
 
+/// A demonstration scene with cubes, spheres, physics, and a skybox.
 class SampleScene extends M3Scene {
   final _geomCube = M3BoxGeom(1.0, 1.0, 1.0);
   final _geomSphere = M3SphereGeom(0.5);

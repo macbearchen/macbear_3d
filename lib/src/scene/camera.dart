@@ -2,6 +2,7 @@
 import '../../macbear_3d.dart';
 import '../util/euler.dart';
 
+/// Manages projection matrix and viewport settings for perspective or orthographic rendering.
 class M3Projection {
   static const int halfW = 8, halfH = 6;
   // matrix
@@ -73,6 +74,9 @@ FovY: $degreeFovY, Clip Z: near=$nearClip, far=$farClip
   }
 }
 
+/// A 3D camera with view transformation, frustum culling, and orbit controls.
+///
+/// Supports look-at and Euler angle orientation. Used for both scene cameras and light shadow maps.
 class M3Camera extends M3Projection {
   Vector3 position = Vector3(0.0, 0.0, 0.0);
   Quaternion rotation = Quaternion.identity();
@@ -83,7 +87,7 @@ class M3Camera extends M3Projection {
 
   // visibility checking
   bool checkVisible(M3Entity entity) {
-    return frustum.intersectsWithSphere(Sphere.centerRadius(entity.position, entity.radius));
+    return frustum.intersectsWithSphere(Sphere.centerRadius(entity.position, entity.cullingRadius));
   }
 
   // View matrix, inverse matrix (camera to world for frustum debug)
@@ -97,7 +101,7 @@ class M3Camera extends M3Projection {
   double distanceToTarget = 20.0;
 
   void setLookat(Vector3 eye, Vector3 target, Vector3 up) {
-    this.position = eye;
+    position = eye;
     this.target = target;
     this.up = up;
     distanceToTarget = (target - position).length;

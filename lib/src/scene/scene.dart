@@ -11,6 +11,10 @@ export 'skybox.dart';
 
 part 'sample_scene.dart';
 
+/// Abstract base class for 3D scenes in the engine.
+///
+/// Manages entities, cameras, lights, physics integration, and provides
+/// rendering methods for solid, wireframe, and 2D content.
 abstract class M3Scene {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
   M3InputController? inputController;
@@ -64,6 +68,7 @@ abstract class M3Scene {
     final entity = M3Entity();
     entity.mesh = mesh;
     entity.position = position;
+    entity.cullingRadius = mesh.geom.cullingRadius;
 
     entities.add(entity);
 
@@ -130,6 +135,11 @@ abstract class M3Scene {
       // draw axis at object origin
       progSimple.setMaterial(mesh.mtr, Colors.red);
       M3Constants.geomAxis.draw(progSimple);
+
+      // bounds
+      Matrix4 matSphere = entity.matrix.scaledByVector3(Vector3.all(entity.cullingRadius * 1.03));
+      progSimple.setMatrices(camera, matSphere);
+      M3Constants.geomSphereBounds.draw(progSimple);
     }
 
     M3Material mtrHelper = M3Material();

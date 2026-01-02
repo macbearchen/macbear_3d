@@ -2,6 +2,9 @@
 import '../../macbear_3d.dart';
 import 'framebuffer.dart';
 
+/// Shadow map renderer for real-time shadows from directional lights.
+///
+/// Renders the scene from the light's perspective to generate a depth texture.
 class M3ShadowMap {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
   static final _prog = M3AppEngine.instance.renderEngine.programSimple!;

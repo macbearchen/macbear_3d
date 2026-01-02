@@ -1,14 +1,17 @@
 part of 'geom.dart';
 
+/// A four-sided pyramid geometry with a rectangular base and apex.
+///
+/// The base is centered at Z=-depth/2 and the apex is at Z=+depth/2.
 class M3PyramidGeom extends M3Geom {
   M3PyramidGeom(double width, double height, double depth) {
     // initialize
     _init(vertexCount: 16, withNormals: true, withUV: true);
     name = "Pyramid";
-
     double hx = width / 2;
     double hy = height / 2;
     double hz = depth / 2;
+    cullingRadius = Vector3(hx, hy, hz).length;
 
     // vertices
     final vertices = _vertices!;

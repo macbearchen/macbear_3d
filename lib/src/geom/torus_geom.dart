@@ -1,5 +1,8 @@
 part of 'geom.dart';
 
+/// A torus (donut) geometry with configurable major and minor radii.
+///
+/// The torus lies in the XY plane with the tube wrapped around the Z axis.
 class M3TorusGeom extends M3Geom {
   M3TorusGeom(
     double radius, // R
@@ -10,9 +13,11 @@ class M3TorusGeom extends M3Geom {
     radialSegments = max(radialSegments, 3);
     tubularSegments = max(tubularSegments, 3);
     final vetrexCount = (radialSegments + 1) * (tubularSegments + 1);
-    _vertices = Vector3List(vetrexCount);
-    _normals = Vector3List(vetrexCount);
-    _uvs = Vector2List(vetrexCount);
+
+    // initialize
+    _init(vertexCount: vetrexCount, withNormals: true, withUV: true);
+    name = "Torus";
+    cullingRadius = radius + tube;
 
     final vertices = _vertices!;
     final normals = _normals!;

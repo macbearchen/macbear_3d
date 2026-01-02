@@ -13,6 +13,7 @@ import '../shaders_gen/TexturedLighting.es2.vert.g.dart';
 
 import 'shadow_map.dart';
 
+/// Rendering options for the engine (wireframe, helpers, shadows, FPS display).
 class M3RenderOptions {
   bool wireframe = false;
   bool helpers = false;
@@ -20,6 +21,9 @@ class M3RenderOptions {
   bool showFPS = true;
 }
 
+/// The WebGL rendering engine that manages shaders, framebuffers, and scene rendering.
+///
+/// Handles shader program creation, shadow mapping, 2D overlay rendering, and viewport management.
 class M3RenderEngine {
   late RenderingContext gl;
   final Framebuffer defaultFBO = Framebuffer(0); // default framebuffer

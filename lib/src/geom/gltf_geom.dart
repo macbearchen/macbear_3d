@@ -1,7 +1,8 @@
 part of 'geom.dart';
 
-/// glTF 模型幾何資料
-/// 從 GltfPrimitive 建構 GPU-ready VBO/IBO
+/// Geometry loaded from a glTF model primitive.
+///
+/// Constructs GPU-ready VBO/IBO from [GltfPrimitive] data.
 class M3GltfGeom extends M3Geom {
   M3GltfGeom.fromPrimitive(GltfPrimitive primitive) {
     final positions = primitive.getPositions();

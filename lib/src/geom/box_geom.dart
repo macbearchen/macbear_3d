@@ -1,5 +1,8 @@
 part of 'geom.dart';
 
+/// A rectangular box (cuboid) geometry with configurable dimensions.
+///
+/// Creates a box centered at the origin with the specified width, height, and depth.
 class M3BoxGeom extends M3Geom {
   M3BoxGeom(double width, double height, double depth) {
     // initialize
@@ -8,6 +11,7 @@ class M3BoxGeom extends M3Geom {
     double hx = width / 2;
     double hy = height / 2;
     double hz = depth / 2;
+    cullingRadius = Vector3(hx, hy, hz).length;
 
     // vertices
     final vertices = _vertices!;

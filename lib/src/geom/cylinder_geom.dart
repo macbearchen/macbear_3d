@@ -1,7 +1,9 @@
 part of 'geom.dart';
 
-// radiusSegments divide as pie on XY-plane; heightSegments divide by Z-axis
-// vertex order: from top to bottom, CCW by each row
+/// A cylinder or cone geometry with configurable top and bottom radii.
+///
+/// Vertices are ordered from top to bottom, counter-clockwise by each row.
+/// Set [topRadius] to 0 for a cone shape.
 class M3CylinderGeom extends M3Geom {
   M3CylinderGeom(
     double topRadius,
@@ -16,6 +18,7 @@ class M3CylinderGeom extends M3Geom {
     // initialize
     _init(vertexCount: numVert, withNormals: true, withUV: true);
     name = "Cylinder";
+    cullingRadius = Vector2(max(topRadius, bottomRadius), height / 2).length;
 
     // vertices: position, normal, texture coordinate(u,v)
     final vertices = _vertices!;

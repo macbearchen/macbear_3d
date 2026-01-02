@@ -4,6 +4,7 @@ import '../../macbear_3d.dart';
 class M3Constants {
   // helper geom
   static final geomAxis = M3AxisGeom(size: 0.5);
+  static final geomSphereBounds = M3SphereBoundsGeom(radius: 1.0);
   static final geomFrustum = M3BoxGeom(2.0, 2.0, 2.0);
   static final geomDot = M3SphereGeom(0.1, widthSegments: 4, heightSegments: 2);
   static final geomGridPlane = M3PlaneGeom(1.6, 1.6, widthSegments: 5, heightSegments: 4);

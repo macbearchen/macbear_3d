@@ -1,6 +1,8 @@
 part of 'geom.dart';
 
-// vertex order: from top to bottom, CCW by each row
+/// A tri-axial ellipsoid geometry with independent X, Y, and Z radii.
+///
+/// Vertices are ordered from top to bottom, counter-clockwise by each row.
 class M3EllipsoidGeom extends M3Geom {
   M3EllipsoidGeom(double radiusX, double radiusY, double radiusZ, int widthSegments, int heightSegments) {
     widthSegments = max(widthSegments, 3);
@@ -10,6 +12,7 @@ class M3EllipsoidGeom extends M3Geom {
     // initialize
     _init(vertexCount: numVert, withNormals: true, withUV: true);
     name = "Ellipsoid";
+    cullingRadius = max(max(radiusX, radiusY), radiusZ);
 
     // vertices
     final vertices = _vertices!;

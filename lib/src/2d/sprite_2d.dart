@@ -1,9 +1,9 @@
 // Macbear3D engine
 import '../../macbear_3d.dart';
-import '../texture/text_texture.dart';
 
 part 'text_2d.dart';
 
+/// A 2D sprite with texture atlas support (row x column grid).
 class M3Sprite2D {
   final M3Rectangle2D _rect = M3Rectangle2D();
   M3Material mtr = M3Material();

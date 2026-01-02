@@ -4,6 +4,9 @@ import 'package:oimo_physics/oimo_physics.dart' as oimo;
 import '../../macbear_3d.dart';
 import 'transform.dart';
 
+/// A scene entity representing a renderable object with transform and physics.
+///
+/// Combines a mesh, transform, color, and optional rigid body for physics simulation.
 class M3Entity {
   final M3Transform _transform = M3Transform();
   oimo.RigidBody? rigidBody;
@@ -11,7 +14,7 @@ class M3Entity {
   Vector4 color = Vector4(1.0, 1.0, 1.0, 1.0); // RGBA
 
   // visibility culling
-  double radius = 1.0;
+  double cullingRadius = 1.0;
 
   void syncFromPhysics() {
     if (rigidBody == null) return;

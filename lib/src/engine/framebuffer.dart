@@ -3,7 +3,9 @@ import 'package:flutter_angle/flutter_angle.dart';
 
 import 'app_engine.dart';
 
-// framebuffer object
+/// A WebGL framebuffer object for off-screen rendering (e.g., shadow maps).
+///
+/// Creates and manages a depth texture attached to a framebuffer.
 class M3Framebuffer {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
 

@@ -4,6 +4,9 @@ import 'dart:ui' as ui;
 import '../../macbear_3d.dart';
 import 'ktx_info.dart';
 
+/// WebGL texture wrapper supporting 2D and cubemap textures.
+///
+/// Provides methods for loading from assets, creating solid colors, and checkerboard patterns.
 class M3Texture {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
 

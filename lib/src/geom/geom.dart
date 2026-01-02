@@ -17,9 +17,13 @@ part 'obj_geom.dart';
 part 'plane_geom.dart';
 part 'pyramid_geom.dart';
 part 'sphere_geom.dart';
+part 'sphere_bounds_geom.dart';
 part 'torus_geom.dart';
 
-// indices for geom faces and edges to draw elements
+/// Internal class to manage index buffers for geometry rendering.
+///
+/// Handles both face indices (for solid rendering) and edge indices
+/// (for wireframe rendering).
 class _M3Indices {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
 
@@ -38,21 +42,28 @@ class _M3Indices {
     _count = indices.length;
   }
 
+  /// Draws the indexed geometry using the current rendering context.
   void draw() {
     gl.bindBuffer(WebGL.ELEMENT_ARRAY_BUFFER, _indexBuffer);
     gl.drawElements(_primitiveType, _count, WebGL.UNSIGNED_SHORT, 0);
   }
 
+  /// Releases GPU resources associated with this index buffer.
   void dispose() {
     gl.deleteBuffer(_indexBuffer);
   }
 }
 
+/// Abstract base class for all 3D geometry primitives.
+///
+/// Provides vertex buffer management, rendering methods, and support for
+/// positions, normals, UV coordinates, colors, and skeletal animation data.
 abstract class M3Geom {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
   static const int radialSegments = 16;
 
   String name = "Noname";
+  double cullingRadius = 1.0;
   int _vertexCount = 0;
   Vector3List? _vertices; // vertex positions
   Vector3List? _normals; // vertex normals
@@ -71,7 +82,7 @@ abstract class M3Geom {
 
   // list of indices for faces and edges
   final List<_M3Indices> _faceIndices = []; // solid faces
-  List<_M3Indices> _edgeIndices = []; // wireframe edges
+  final List<_M3Indices> _edgeIndices = []; // wireframe edges
 
   @override
   String toString() {
@@ -144,6 +155,7 @@ abstract class M3Geom {
     }
   }
 
+  /// Releases all GPU resources associated with this geometry.
   void dispose() {
     if (_vertexBuffer != null) {
       gl.deleteBuffer(_vertexBuffer!);
@@ -185,6 +197,9 @@ abstract class M3Geom {
     _edgeIndices.clear();
   }
 
+  /// Renders the geometry using the specified shader program.
+  ///
+  /// Set [bSolid] to `false` for wireframe rendering.
   void draw(M3Program prog, {bool bSolid = true}) {
     if (_vertexBuffer != null) {
       gl.bindBuffer(WebGL.ARRAY_BUFFER, _vertexBuffer);

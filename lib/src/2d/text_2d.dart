@@ -1,5 +1,6 @@
 part of 'sprite_2d.dart';
 
+/// ASCII text renderer using a monospaced font texture atlas.
 class M3Text2D extends M3Sprite2D {
   static final firstChar = 32; // first char in ASCII table
   static final lastChar = 126; // last char in ASCII table

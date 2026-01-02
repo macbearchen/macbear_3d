@@ -2,6 +2,9 @@ import 'package:vector_math/vector_math.dart';
 
 import 'camera.dart';
 
+/// A directional or positional light source for scene illumination.
+///
+/// Extends [M3Camera] for shadow map rendering. Provides ambient and diffuse color blending.
 class M3Light extends M3Camera {
   static Vector3 ambient = Vector3(0.2, 0.2, 0.2);
   Vector3 color = Colors.white.rgb - ambient;

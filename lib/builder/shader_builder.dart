@@ -16,7 +16,8 @@ class ShaderBuilder implements Builder {
 
     // Calculate output path: replace 'lib/src/shaders' with 'lib/src/shaders_gen'
     // and append '.g.dart'
-    final newPath = inputId.path.replaceFirst('lib/src/shaders', 'lib/src/shaders_gen') + '.g.dart';
+    String newPath = inputId.path.replaceFirst('lib/src/shaders', 'lib/src/shaders_gen');
+    newPath += '.g.dart';
     final outputId = AssetId(inputId.package, newPath);
 
     final name = _makeConstName(inputId.path);

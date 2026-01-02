@@ -1,5 +1,8 @@
 part of 'geom.dart';
 
+/// A subdivided plane geometry with configurable segments and optional height mapping.
+///
+/// Supports UV scaling, face flipping, and custom vertex callbacks for terrain generation.
 class M3PlaneGeom extends M3Geom {
   // sample callback to Z value
   static double formulaZ(double x, double y) {
@@ -21,6 +24,7 @@ class M3PlaneGeom extends M3Geom {
     // initialize
     _init(vertexCount: numVert, withNormals: true, withUV: true);
     name = "Plane";
+    cullingRadius = Vector2(width, height).length / 2;
 
     // vertices
     final vertices = _vertices!;

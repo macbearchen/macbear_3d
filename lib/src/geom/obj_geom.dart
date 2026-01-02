@@ -1,5 +1,8 @@
 part of 'geom.dart';
 
+/// Geometry loaded from a Wavefront OBJ file.
+///
+/// Accepts pre-parsed vertex, normal, UV, and index data.
 class M3ObjGeom extends M3Geom {
   M3ObjGeom(List<double> vertices, List<double> normals, List<double> uvs, List<int> indices) {
     _init(vertexCount: vertices.length ~/ 3, withNormals: true, withUV: true);
