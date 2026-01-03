@@ -8,3 +8,10 @@
   * Physics engine integration (Oimo).
   * Lighting, shadows, and texturing support.
   * Basic primitives and geometry builders.
+
+## 0.1.1
+
+* Add: 
+  * UML diagram. https://open-vsx.org/vscode/item?itemName=jebbs.plantuml
+  * screenshot images.
+

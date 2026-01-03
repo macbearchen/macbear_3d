@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:build/build.dart';
 
+/// @nodoc
 class ShaderBuilder implements Builder {
   @override
   final buildExtensions = const {
