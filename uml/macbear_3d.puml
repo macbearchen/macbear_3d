@@ -961,8 +961,5 @@ class "macbear_3d::src::widgets::view.dart::_M3ViewState" {
 "flutter::src::widgets::ticker_provider.dart::SingleTickerProviderStateMixin" <|-- "macbear_3d::src::widgets::view.dart::_M3ViewState"
 "flutter::src::widgets::binding.dart::WidgetsBindingObserver" <|-- "macbear_3d::src::widgets::view.dart::_M3ViewState"
 
-class "macbear_3d::src::widgets::widget.dart::M3Widget" {
-}
-
 
 @enduml

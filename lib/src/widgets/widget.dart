@@ -1,3 +1,0 @@
-class M3Widget {
-  
-}

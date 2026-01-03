@@ -100,13 +100,25 @@ class MyScene extends M3Scene {
 
 To protect your usage, ensure you set `M3AppEngine.instance.onDidInit = onDidInit` and implement `onDidInit` method, then use `M3View` widget.
 
+## Generate UML Diagram
+
+https://pub.dev/packages/dcdg
+```
+./uml/gen_uml.sh
+```
+output to uml/macbear_3d.puml
+
 ## TODO
 
+- [ ] Skinned Mesh
 - [ ] Skeletal Animation
 - [ ] Shadows improvements (Cascaded Shadow Maps)
 - [ ] PBR Material support
 - [ ] Post-processing effects (Bloom, HDR)
 - [ ] Advanced Particle System
+- [ ] Physics System
+- [ ] Resource Management System
+- [ ] GUI System
 - [ ] WebGL support optimization
 
 ## Contributing

@@ -75,8 +75,22 @@ class M3Mesh {
     }
 
     M3Skin? skin;
-    if (primitive.skinIndex != null && primitive.skinIndex! < doc.skins.length) {
-      final gltfSkin = doc.skins[primitive.skinIndex!];
+    // Find a node that references this mesh (index 0) to get the skin
+    // Note: This assumes the first node referencing mesh 0 is the one we want.
+    int? skinIndex = primitive.skinIndex; // Fallback to primitive if exists (unlikely in valid glTF 2.0)
+
+    if (skinIndex == null) {
+      // Look for a node that ref mesh 0 (we only load mesh[0] currently)
+      for (final node in doc.nodes) {
+        if (node.meshIndex == 0 && node.skinIndex != null) {
+          skinIndex = node.skinIndex;
+          break;
+        }
+      }
+    }
+
+    if (skinIndex != null && skinIndex < doc.skins.length) {
+      final gltfSkin = doc.skins[skinIndex];
       final ibm = gltfSkin.getInverseBindMatrices();
       final List<Matrix4>? inverseMatrices = ibm != null
           ? List.generate(gltfSkin.joints.length, (i) {

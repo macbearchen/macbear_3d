@@ -15,6 +15,7 @@ class GltfDocument {
   late final List<GltfTexture> textures;
   late final List<GltfImage> images;
   late final List<GltfSkin> skins;
+  late final List<GltfNode> nodes;
 
   // Runtime loaded assets
   // Use dynamic to avoid circular dependency (should be List<M3Texture>)
@@ -46,7 +47,11 @@ class GltfDocument {
     final skinList = json['skins'] as List<dynamic>? ?? [];
     skins = skinList.map((e) => GltfSkin.parse(this, e as Map<String, dynamic>)).toList();
 
-    // 4. Parse Meshes
+    // 4. Parse Nodes
+    final nodeList = json['nodes'] as List<dynamic>? ?? [];
+    nodes = nodeList.map((e) => GltfNode.parse(this, e as Map<String, dynamic>)).toList();
+
+    // 5. Parse Meshes
     final meshList = json['meshes'] as List<dynamic>? ?? [];
     meshes = meshList.asMap().entries.map((entry) {
       return GltfMesh.parse(this, entry.key, entry.value as Map<String, dynamic>);
@@ -301,5 +306,70 @@ class GltfPrimitive {
   int get vertexCount {
     if (positionAccessor == null) return 0;
     return document.getAccessorCount(positionAccessor!);
+  }
+}
+
+/// glTF Node
+class GltfNode {
+  final GltfDocument document;
+  final String name;
+  final int? meshIndex;
+  final int? skinIndex;
+  final List<int> children;
+
+  // Transform
+  final Vector3? translation;
+  final Quaternion? rotation;
+  final Vector3? scale;
+  final Matrix4? matrix;
+
+  GltfNode({
+    required this.document,
+    required this.name,
+    this.meshIndex,
+    this.skinIndex,
+    this.children = const [],
+    this.translation,
+    this.rotation,
+    this.scale,
+    this.matrix,
+  });
+
+  static GltfNode parse(GltfDocument doc, Map<String, dynamic> json) {
+    Vector3? t;
+    if (json.containsKey('translation')) {
+      final l = (json['translation'] as List).cast<num>();
+      t = Vector3(l[0].toDouble(), l[1].toDouble(), l[2].toDouble());
+    }
+
+    Quaternion? r;
+    if (json.containsKey('rotation')) {
+      final l = (json['rotation'] as List).cast<num>();
+      r = Quaternion(l[0].toDouble(), l[1].toDouble(), l[2].toDouble(), l[3].toDouble());
+    }
+
+    Vector3? s;
+    if (json.containsKey('scale')) {
+      final l = (json['scale'] as List).cast<num>();
+      s = Vector3(l[0].toDouble(), l[1].toDouble(), l[2].toDouble());
+    }
+
+    Matrix4? m;
+    if (json.containsKey('matrix')) {
+      final l = (json['matrix'] as List).cast<num>();
+      m = Matrix4.fromList(l.map((e) => e.toDouble()).toList());
+    }
+
+    return GltfNode(
+      document: doc,
+      name: json['name'] as String? ?? 'Node',
+      meshIndex: json['mesh'] as int?,
+      skinIndex: json['skin'] as int?,
+      children: (json['children'] as List?)?.cast<int>() ?? [],
+      translation: t,
+      rotation: r,
+      scale: s,
+      matrix: m,
+    );
   }
 }
