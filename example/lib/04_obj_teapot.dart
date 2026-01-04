@@ -49,7 +49,6 @@ class ObjTeapotScene_04 extends M3Scene {
     super.update(elapsed);
 
     double sec = elapsed.inMilliseconds / 1000.0;
-
     light.setEuler(sec * pi / 18, -pi / 3, 0, distance: light.distanceToTarget); // rotate light
     // debugPrint('Light Direction: $dirLight');
 

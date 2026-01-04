@@ -51,75 +51,90 @@ class M3TextGeom extends M3Geom {
       }
 
       // Identify holes vs outer.
-      // M3TrueTypeParser returns raw contours.
-      // Simple logic: Assume first is outer, rest are holes (this is often true for simple glyphs, but TTF spec says orientation determines it)
-      // For this MVP, let's treat the largest contour as outer? Or just pass all to ear clipping if we had robust boolean ops.
-      // But M3EarClipping expects outer + list of holes.
-
-      // Let's assume contour[0] is outer.
-      List<Vector2> outer = contours[0];
-      List<List<Vector2>> holes = (contours.length > 1) ? contours.sublist(1) : [];
-
-      // Triangulate Face (Front)
-      // Vertices need to be scaled and offset by cursorX
-
-      // Flatten for local processing indices
-      List<Vector2> combinedPoly = [];
-      combinedPoly.addAll(outer);
-      for (var h in holes) {
-        combinedPoly.addAll(h);
+      // We calculate signed area to determine winding.
+      double getSignedArea(List<Vector2> contour) {
+        double area = 0.0;
+        for (int k = 0; k < contour.length; k++) {
+          Vector2 p1 = contour[k];
+          Vector2 p2 = contour[(k + 1) % contour.length];
+          area += (p1.x * p2.y - p2.x * p1.y);
+        }
+        return area / 2.0;
       }
 
-      // Triangulate
-      // Note: EarClipping merges holes into outer, so it returns indices relative to the merged polygon?
-      // My EarClipping implementation currently MODIFIES the outer list if holes exist.
-      // So let's pass copies.
+      var contourData = contours.where((c) => c.length >= 3).map((c) {
+        double area = getSignedArea(c);
+        return {'points': c, 'area': area};
+      }).toList();
 
-      List<Vector2> triangulationInput = List.from(outer);
-      List<List<Vector2>> triangulationHoles = holes.map((e) => List<Vector2>.from(e)).toList();
-
-      List<int> localIndices = M3EarClipping.triangulate(triangulationInput, holes: triangulationHoles);
-
-      // The triangulationInput now contains ALL vertices (including holes merged).
-      // We use THIS as the source for mesh vertices.
-
-      int indexOffset = allVertices.length;
-
-      // Add Front Face Vertices
-      for (var v in triangulationInput) {
-        allVertices.add(Vector3(cursorX + v.x * size, v.y * size, depth / 2));
-        allNormals.add(Vector3(0, 0, 1)); // Front normal
+      if (contourData.isEmpty) {
+        cursorX += _fontParser!.getAdvanceWidth(glyphIndex) * size;
+        continue;
       }
 
-      // Add Front Face Indices
-      for (var idx in localIndices) {
-        // allIndices.add(indexOffset + idx);
+      // Robust classification: The largest contour is always an outer.
+      // Other contours are outers if they have the same sign, holes if opposite.
+      contourData.sort((a, b) => (b['area'] as double).abs().compareTo((a['area'] as double).abs()));
+      double primarySign = (contourData[0]['area'] as double).sign;
+
+      List<List<Vector2>> normalizedOuters = [];
+      List<List<Vector2>> normalizedHoles = [];
+
+      for (var data in contourData) {
+        List<Vector2> pts = List.from(data['points'] as List<Vector2>);
+        double area = data['area'] as double;
+
+        if (area.sign == primarySign) {
+          // It's an outer. Normalize to CCW (area > 0).
+          if (area < 0) pts = pts.reversed.toList();
+          normalizedOuters.add(pts);
+        } else {
+          // It's a hole. Normalize to CW (area < 0).
+          if (area > 0) pts = pts.reversed.toList();
+          normalizedHoles.add(pts);
+        }
       }
 
-      // Add Back Face
-      // Back face is same vertices but z = -depth/2 and normal = -1
-      // And winding order reversed
-      int backIndexOffset = allVertices.length;
-      for (var v in triangulationInput) {
-        allVertices.add(Vector3(cursorX + v.x * size, v.y * size, -depth / 2));
-        allNormals.add(Vector3(0, 0, -1)); // Back normal
-      }
+      // Process each outer island separately for triangulation
+      // For simplicity in this engine, we'll associate all holes with all outers.
+      // M3EarClipping.triangulate handles this if holes are inside.
 
-      // Add Back Face Indices (reverse winding)
-      for (int k = 0; k < localIndices.length; k += 3) {
-        // allIndices.add(backIndexOffset + localIndices[k]);
-        // allIndices.add(backIndexOffset + localIndices[k + 2]);
-        // allIndices.add(backIndexOffset + localIndices[k + 1]);
+      for (var outer in normalizedOuters) {
+        List<Vector2> triangulationInput = List.from(outer);
+        List<List<Vector2>> triangulationHoles = normalizedHoles.map((e) => List<Vector2>.from(e)).toList();
+
+        List<int> localIndices = M3EarClipping.triangulate(triangulationInput, holes: triangulationHoles);
+
+        int indexOffset = allVertices.length;
+
+        // Front Face (z = depth/2)
+        for (var v in triangulationInput) {
+          allVertices.add(Vector3(cursorX + v.x * size, v.y * size, depth / 2));
+          allNormals.add(Vector3(0, 0, 1));
+        }
+        for (int k = 0; k < localIndices.length; k += 3) {
+          triIndices.add(indexOffset + localIndices[k]);
+          triIndices.add(indexOffset + localIndices[k + 1]);
+          triIndices.add(indexOffset + localIndices[k + 2]);
+        }
+
+        // Back Face (z = -depth/2)
+        int backIndexOffset = allVertices.length;
+        for (var v in triangulationInput) {
+          allVertices.add(Vector3(cursorX + v.x * size, v.y * size, -depth / 2));
+          allNormals.add(Vector3(0, 0, -1));
+        }
+        // CW winding for back face results in CCW from the back
+        for (int k = 0; k < localIndices.length; k += 3) {
+          triIndices.add(backIndexOffset + localIndices[k]);
+          triIndices.add(backIndexOffset + localIndices[k + 2]);
+          triIndices.add(backIndexOffset + localIndices[k + 1]);
+        }
       }
 
       // Extrusion (Sides)
-      // We need to stitch edges of the original contours (outer + holes)
-      // Since triangulation merged them, iterating triangulationInput edges is tricky because of bridge edges.
-      // Ideally we iterate the Original Contours.
-
-      List<List<Vector2>> allContoursToExtrude = [outer, ...holes];
-
-      for (var contour in allContoursToExtrude) {
+      List<List<Vector2>> allContours = [...normalizedOuters, ...normalizedHoles];
+      for (var contour in allContours) {
         for (int k = 0; k < contour.length; k++) {
           Vector2 curr = contour[k];
           Vector2 next = contour[(k + 1) % contour.length];
@@ -129,10 +144,9 @@ class M3TextGeom extends M3Geom {
           Vector3 p3 = Vector3(cursorX + next.x * size, next.y * size, -depth / 2); // Back next
           Vector3 p4 = Vector3(cursorX + curr.x * size, curr.y * size, -depth / 2); // Back curr
 
-          // Add 4 vertices for this quad to have flat shading normals
-          // Normal is perpendicular to the side face
+          // Normal points outward for solids (CCW loop), inward for holes (CW loop)
           Vector3 edge = p2 - p1;
-          Vector3 toBack = p3 - p2; // or roughly z axis
+          Vector3 toBack = Vector3(0, 0, 1);
           Vector3 normal = edge.cross(toBack)..normalize();
 
           int sideOffset = allVertices.length;
@@ -145,30 +159,26 @@ class M3TextGeom extends M3Geom {
           allVertices.add(p4);
           allNormals.add(normal);
 
+          // Correct CCW winding for side face seen from outside:
           // Triangle 1
           triIndices.add(sideOffset);
-          triIndices.add(sideOffset + 1); // p2
+          triIndices.add(sideOffset + 3); // p4
           triIndices.add(sideOffset + 2); // p3
 
           // Triangle 2
           triIndices.add(sideOffset);
           triIndices.add(sideOffset + 2); // p3
-          triIndices.add(sideOffset + 3); // p4
+          triIndices.add(sideOffset + 1); // p2
 
-          // top face for glyph edges
+          // Lines for wireframe
           lineIndices.add(sideOffset);
           lineIndices.add(sideOffset + 1);
-
-          // bottom face for glyph edges
-          lineIndices.add(sideOffset + 2);
-          lineIndices.add(sideOffset + 3);
-
-          // Lines for side edges
-          lineIndices.add(sideOffset);
-          lineIndices.add(sideOffset + 3);
-
           lineIndices.add(sideOffset + 1);
           lineIndices.add(sideOffset + 2);
+          lineIndices.add(sideOffset + 2);
+          lineIndices.add(sideOffset + 3);
+          lineIndices.add(sideOffset + 3);
+          lineIndices.add(sideOffset);
         }
       }
 
