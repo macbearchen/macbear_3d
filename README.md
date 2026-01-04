@@ -8,9 +8,9 @@ Macbear 3D brings high-performance 3D rendering to Flutter applications with a s
 
 ## Features
 
-- **High Performance**: Powered by `flutter_angle` for direct OpenGL ES interaction.
+- **High Performance**: Powered by Google ANGLE (OpenGL ES).
 - **Cross-Platform**: Works seamlessly on iOS, Android, and macOS.
-- **Scene Graph**: Flexible 3D scene management with Entity-Component architecture.
+- **Scene Graph**: Flexible 3D scene management with Entity-Component architecture, and camera system.
 - **Primitives**: Built-in support for Cubes, Spheres, Planes, and more.
 - **Model Loaders**: Easy loading of `glTF` and `OBJ` models.
 - **Materials & Textures**: Support for standard materials, texturing, and transparency.
@@ -114,6 +114,8 @@ output to uml/macbear_3d.puml
 - [ ] Skeletal Animation
 - [ ] Shadows improvements (Cascaded Shadow Maps)
 - [ ] PBR Material support
+- [ ] Skybox reflection via cubemap
+- [ ] Water effect (reflection, refraction)
 - [ ] Post-processing effects (Bloom, HDR)
 - [ ] Advanced Particle System
 - [ ] Physics System

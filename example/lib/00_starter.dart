@@ -36,6 +36,7 @@ Click buttons to test examples.
   5. GLTF scene
   6. create Shadowmap
   7. Physics scene
+  8. Text 3D scene
 ''';
 
     mat2D.setTranslation(Vector3(20, 80, 0));

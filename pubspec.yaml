@@ -1,5 +1,5 @@
 name: macbear_3d
-description: "Macbear 3D engine package project."
+description: "Macbear 3D is a lightweight 3D rendering engine for Flutter, built on Google ANGLE (OpenGL ES)."
 version: 0.1.1
 repository: https://github.com/macbearchen/macbear_3d
 

@@ -1,7 +1,11 @@
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart';
 import 'package:vector_math/vector_math_lists.dart';
+
+import '../util/ear_clipping.dart';
+import '../util/ttf_parser.dart';
 
 // Macbear3D engine
 import '../../macbear_3d.dart';
@@ -18,6 +22,7 @@ part 'plane_geom.dart';
 part 'pyramid_geom.dart';
 part 'sphere_geom.dart';
 part 'sphere_bounds_geom.dart';
+part 'text_geom.dart';
 part 'torus_geom.dart';
 
 /// Internal class to manage index buffers for geometry rendering.
