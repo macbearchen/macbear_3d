@@ -29,14 +29,14 @@ class Text3DScene_08 extends M3Scene {
       // We'll try to load a font. Please update path if needed.
       await textGeom.loadTtf('assets/example/test.ttf');
       // await textGeom.build("HELLO 3D!", size: 0.5, depth: 0.2);
-      await textGeom.build("ABCD 1234", size: 1);
+      await textGeom.build("123", size: 1, depth: 0.4);
 
       // Create Mesh
       final mesh = M3Mesh(textGeom, material: material);
       final entity = addMesh(mesh, Vector3(-2.0, 0, 0)); // Center roughly
 
       // 03-2: sphere geometry
-      final sphere = addMesh(M3Mesh(M3SphereGeom(0.5)), Vector3(2, 0, 2));
+      final sphere = addMesh(M3Mesh(M3SphereGeom(0.2)), Vector3(0, 0, 0));
       // sphere.mesh!.mtr.texDiffuse = texGrid2;
 
       // 03-1: plane geometry
