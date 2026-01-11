@@ -7,10 +7,10 @@ class M3Rectangle2D extends M3Shape2D {
 
   M3Rectangle2D() : super(WebGL.TRIANGLE_STRIP, 4) {
     // set rectangle vertices
-    setRectangle(0, 0, 80, 50);
+    setRectangle(0, 0, 16, 16);
 
     // mapping UV
-    mappingUV(0, 0, 80, 50);
+    mappingUV(0, 0, 16, 16);
   }
 
   @override

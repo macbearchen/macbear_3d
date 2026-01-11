@@ -1,7 +1,5 @@
 import 'dart:io';
 
-// ... (removing unused import)
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -17,7 +15,7 @@ import '../physics/physics_engine.dart';
 class M3AppEngine {
   static final M3AppEngine instance = M3AppEngine._internal();
 
-  String version = "macbear3d-lib v0.1.0 powered by ANGLE ";
+  String version = "macbear3d-lib v0.2.0 powered by ANGLE";
   final FlutterAngle _angle = FlutterAngle();
   late FlutterAngleTexture _sourceTexture; // main framebuffer
   static Vector3 backgroundColor = Vector3.zero();
@@ -30,6 +28,7 @@ class M3AppEngine {
   int initTick = 0;
   final M3TouchManager touchManager = M3TouchManager();
   final M3KeyboardManager keyboard = M3KeyboardManager();
+  final M3ResourceManager resourceManager = M3ResourceManager();
 
   // update elspsed
   final Stopwatch _stopwatch = Stopwatch();
@@ -94,6 +93,9 @@ class M3AppEngine {
     // await _onSize(width, height, dpr, isResize: false);
     await renderEngine.initProgram();
     renderEngine.setViewport(width, height, dpr);
+
+    // init resources
+    await M3Resources.init();
 
     _didInit = true;
     if (onDidInit != null) {

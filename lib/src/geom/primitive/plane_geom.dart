@@ -1,4 +1,4 @@
-part of 'geom.dart';
+part of '../geom.dart';
 
 /// A subdivided plane geometry with configurable segments and optional height mapping.
 ///
@@ -24,7 +24,6 @@ class M3PlaneGeom extends M3Geom {
     // initialize
     _init(vertexCount: numVert, withNormals: true, withUV: true);
     name = "Plane";
-    cullingRadius = Vector2(width, height).length / 2;
 
     // vertices
     final vertices = _vertices!;
@@ -79,6 +78,7 @@ class M3PlaneGeom extends M3Geom {
 
     // vertex buffer object
     _createVBO();
+    localBounding.sphere.radius = Vector2(width, height).length / 2;
 
     // solid: triangle-strip
     int numIndex = (widthSegments + 1) * 2 * (heightSegments) + 2 * (heightSegments - 1);

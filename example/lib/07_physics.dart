@@ -1,6 +1,4 @@
 // ignore_for_file: file_names
-import 'dart:math';
-
 import 'package:oimo_physics/oimo_physics.dart' as oimo;
 
 import 'main.dart';
@@ -16,7 +14,7 @@ class PhysicsScene_07 extends M3Scene {
     if (isLoaded) return;
     await super.load();
 
-    camera.setEuler(pi / 6, -pi / 6, 0, distance: 8);
+    camera.setEuler(pi / 6, -pi / 4, 0, distance: 10);
 
     final camera2 = M3Camera();
     camera2.setLookat(Vector3(0, 4, 5), Vector3.zero(), Vector3(0, 0, 1));
@@ -25,12 +23,13 @@ class PhysicsScene_07 extends M3Scene {
     final world = M3AppEngine.instance.physicsEngine.world!;
 
     // 07-1: physics static ground
-    final groundConfig = oimo.ObjectConfigure(
-      shapes: [oimo.Box(oimo.ShapeConfig(geometry: oimo.Shapes.box), 10, 10, 2)],
-      position: Vector3(0.0, 0.0, -2 / 2.0 - 1),
-    );
-    // ignore: unused_local_variable
-    final rbGround = world.add(groundConfig) as oimo.RigidBody;
+    M3AppEngine.instance.physicsEngine.addGround(10, 10, 2);
+    // final groundConfig = oimo.ObjectConfigure(
+    //   shapes: [oimo.Box(oimo.ShapeConfig(geometry: oimo.Shapes.box), 10, 10, 2)],
+    //   position: Vector3(0.0, 0.0, -2 / 2.0 - 1),
+    // );
+    // // ignore: unused_local_variable
+    // final rbGround = world.add(groundConfig) as oimo.RigidBody;
 
     // create body models
     List<Vector3> arrayPos = [Vector3(0, 0, 0), Vector3(3, 0, 0), Vector3(0, 3, 0), Vector3(0.2, 0.4, 3)];
@@ -80,7 +79,7 @@ class PhysicsScene_07 extends M3Scene {
     skybox = M3Skybox(M3Texture.createSampleCubemap());
 
     // plane geometry
-    final plane = addMesh(M3Mesh(M3PlaneGeom(10, 10, uvScale: Vector2.all(5.0))), Vector3(0, 0, -1));
+    final plane = addMesh(M3Mesh(M3PlaneGeom(10, 10, uvScale: Vector2.all(5.0))), Vector3(0, 0, 0));
     M3Texture texGround = M3Texture.createCheckerboard(
       size: 2,
       lightColor: Vector4(.7, 1, .5, 1),
@@ -94,8 +93,6 @@ class PhysicsScene_07 extends M3Scene {
     super.update(elapsed);
 
     double sec = elapsed.inMilliseconds / 1000.0;
-
     light.setEuler(sec * pi / 18, -pi / 3, 0, distance: light.distanceToTarget); // rotate light
-    // debugPrint('Light Direction: $dirLight');
   }
 }

@@ -18,6 +18,7 @@ class M3ObjGeom extends M3Geom {
       _uvs!.buffer[i] = uvs[i];
     }
 
+    // vertex buffer object
     _createVBO();
 
     // Create indices

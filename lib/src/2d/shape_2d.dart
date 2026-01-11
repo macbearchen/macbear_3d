@@ -25,27 +25,6 @@ class M3Shape2D {
   late Buffer _uvBuffer;
 
   static M3Material mtrWhite = M3Material();
-  static M3Material mtrImage = M3Material();
-
-  // for dynamic draw: line, triangle, rectangle
-  static M3Shape2D? _line;
-  static M3Shape2D? _triangle;
-  static M3Rectangle2D? _rectangle;
-
-  static M3Shape2D get line {
-    _line ??= M3Shape2D(WebGL.LINES, 2)..createVBO(WebGL.DYNAMIC_DRAW);
-    return _line!;
-  }
-
-  static M3Shape2D get triangle {
-    _triangle ??= M3Shape2D(WebGL.TRIANGLES, 3)..createVBO(WebGL.DYNAMIC_DRAW);
-    return _triangle!;
-  }
-
-  static M3Rectangle2D get rectangle {
-    _rectangle ??= M3Rectangle2D()..createVBO(WebGL.DYNAMIC_DRAW);
-    return _rectangle!;
-  }
 
   M3Shape2D(this._primitiveType, this._vertexCount) {
     // call init with vertex count
@@ -97,11 +76,12 @@ class M3Shape2D {
 
   // dynamic draw line
   static void drawLine(Vector2 pt0, Vector2 pt1, Vector4 color) {
+    prog2D.setMaterial(M3Shape2D.mtrWhite, color);
+
     // set line vertices
+    final line = M3Resources.line;
     line._vertices[0] = pt0;
     line._vertices[1] = pt1;
-
-    prog2D.setMaterial(M3Shape2D.mtrWhite, color);
 
     // draw shape2D
     line.draw();
@@ -109,42 +89,46 @@ class M3Shape2D {
 
   // dynamic draw triangle
   static void drawTriangle(Vector2 pt0, Vector2 pt1, Vector2 pt2, Vector4 color) {
-    // set triangle vertices
-    triangle._vertices[0] = pt0;
-    triangle._vertices[1] = pt1;
-    triangle._vertices[2] = pt2;
-
     prog2D.setMaterial(M3Shape2D.mtrWhite, color);
 
+    // set triangle vertices
+    final tri = M3Resources.triangle;
+    tri._vertices[0] = pt0;
+    tri._vertices[1] = pt1;
+    tri._vertices[2] = pt2;
+
     // draw shape2D
-    triangle.draw();
+    tri.draw();
   }
 
   static void drawImage(M3Texture tex, Matrix4 mvMatrix, {Vector4? color}) {
-    rectangle.setRectangle(0, 0, tex.texW.toDouble(), tex.texH.toDouble());
-
     Vector4 colorImage = Colors.white;
     if (color != null) {
       colorImage = color;
     }
-    M3Shape2D.mtrImage.texDiffuse = tex;
+    M3Material mtr = M3Material();
+    mtr.texDiffuse = tex;
 
-    M3Shape2D.prog2D.setMaterial(M3Shape2D.mtrImage, colorImage);
+    M3Shape2D.prog2D.setMaterial(mtr, colorImage);
     M3Shape2D.prog2D.setModelViewMatrix(mvMatrix);
 
+    Matrix4 mvUnit = mvMatrix.clone();
+    mvUnit.scaleByVector3(Vector3(tex.texW.toDouble(), tex.texH.toDouble(), 1));
+    M3Shape2D.prog2D.setModelViewMatrix(mvUnit);
+
     // draw shape2D
-    rectangle.draw();
+    M3Resources.rectUnit.draw();
   }
 
   static void drawTouches(M3TouchManager manager) {
     final colors = [
-      Vector4(1, 0, 0, 1), // left: 0x01
-      Vector4(0, 1, 0, 1), // right: 0x02
-      Vector4(1, 1, 0, 1), // left + right: 0x03
-      Vector4(0, 0, 1, 1), // middle: 0x04
-      Vector4(1, 0, 1, 1), // left + middle: 0x05
-      Vector4(0, 1, 1, 1), // right + middle: 0x06
-      Vector4(1, 1, 1, 1), // left + middle + right: 0x07
+      Vector4(1, 0, 0, 1), // 0x01: left
+      Vector4(0, 1, 0, 1), // 0x02: right
+      Vector4(1, 1, 0, 1), // 0x03: left + right
+      Vector4(0, 0, 1, 1), // 0x04: middle
+      Vector4(1, 0, 1, 1), // 0x05: left + middle
+      Vector4(0, 1, 1, 1), // 0x06: right + middle
+      Vector4(1, 1, 1, 1), // 0x07: left + middle + right
     ];
     manager.touches.forEach((id, touch) {
       if (touch.path.length < 2) return;

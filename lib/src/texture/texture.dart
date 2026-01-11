@@ -150,7 +150,12 @@ class M3Texture {
     ];
 
     for (int i = 0; i < 6; i++) {
-      tex._initCheckerboard(gridCount, colors[i], Vector4(0.6, 0.6, 0.6, 1), faceTarget: _cubeMapFaceTargets[i]);
+      tex._initCheckerboard(
+        gridCount,
+        colors[i],
+        i % 2 == 0 ? Vector4(0.6, 0.6, 0.6, 1) : Vector4(0.5, 0.5, 0.5, 1),
+        faceTarget: _cubeMapFaceTargets[i],
+      );
     }
     return tex;
   }

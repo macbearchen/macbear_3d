@@ -1,10 +1,10 @@
 // ignore_for_file: file_names
-import 'dart:math';
-
 import 'main.dart';
 
 // ignore: camel_case_types
 class PrimitivesScene_03 extends M3Scene {
+  M3Entity? _pyramid;
+
   @override
   Future<void> load() async {
     if (isLoaded) return;
@@ -45,19 +45,36 @@ class PrimitivesScene_03 extends M3Scene {
     sphere.mesh!.mtr.texDiffuse = texGrid2;
 
     // 03-3: cylinder geometry
-    final cylinder = addMesh(M3Mesh(M3CylinderGeom(0.2, 0.5, 1)), Vector3(0, 2, 0));
+    final cylinder = addMesh(M3Mesh(M3CylinderGeom(0.2, 0.5, 1, heightSegments: 2)), Vector3(0, 2, 0));
     cylinder.mesh!.mtr.texDiffuse = texGrid;
+
+    final cyliFlat = addMesh(M3Mesh(M3CylinderGeom(0.2, 0.5, 1, heightSegments: 2, creaseAngle: 1)), Vector3(-1, 2, 0));
+    cyliFlat.mesh!.mtr.texDiffuse = texGrid;
 
     // 03-4: torus geometry
     final torus = addMesh(M3Mesh(M3TorusGeom(0.5, 0.2)), Vector3(-2, 0, 0));
     torus.mesh!.mtr.texDiffuse = texGrid2;
 
     // 03-5: pyramid geometry
-    final pyramid = addMesh(M3Mesh(M3PyramidGeom(1, 1, 1)), Vector3(0, -2, 0));
-    pyramid.mesh!.mtr.texDiffuse = texGrid2;
+    _pyramid = addMesh(M3Mesh(M3PyramidGeom(1, 1, 1)), Vector3(0, -2, 0));
+    _pyramid!.mesh!.mtr.texDiffuse = texGrid2;
 
     // 03-6: ellipsoid geometry
-    final ellipsoidA = addMesh(M3Mesh(M3EllipsoidGeom(0.5, 1, 1.5, 32, 16)), Vector3(2, 2, 2));
-    ellipsoidA.mesh!.mtr.texDiffuse = texGrid2;
+    final ellipsoid = addMesh(M3Mesh(M3EllipsoidGeom(0.9, 0.6, 0.3)), Vector3(2, 2, 0));
+    ellipsoid.mesh!.mtr.texDiffuse = texGrid2;
+  }
+
+  @override
+  void update(Duration elapsed) {
+    super.update(elapsed);
+
+    double sec = elapsed.inMilliseconds / 1000.0;
+    light.setEuler(sec * pi / 5, -pi / 3, 0, distance: light.distanceToTarget); // rotate light
+    // debugPrint('Light Direction: $dirLight');
+
+    if (_pyramid != null) {
+      // final quatYPos90 = Quaternion.euler(0, pi / 2, 0);
+      _pyramid!.rotation = Quaternion.euler(0, 0, sec * pi / 8);
+    }
   }
 }

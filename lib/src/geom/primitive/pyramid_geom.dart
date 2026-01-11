@@ -1,4 +1,4 @@
-part of 'geom.dart';
+part of '../geom.dart';
 
 /// A four-sided pyramid geometry with a rectangular base and apex.
 ///
@@ -11,7 +11,6 @@ class M3PyramidGeom extends M3Geom {
     double hx = width / 2;
     double hy = height / 2;
     double hz = depth / 2;
-    cullingRadius = Vector3(hx, hy, hz).length;
 
     // vertices
     final vertices = _vertices!;
@@ -95,6 +94,7 @@ class M3PyramidGeom extends M3Geom {
     }
     // vertex buffer object
     _createVBO();
+    localBounding.sphere.radius = Vector3(hx, hy, hz).length;
 
     // solid faces
     _faceIndices.add(

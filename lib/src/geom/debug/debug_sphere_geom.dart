@@ -1,15 +1,14 @@
-part of 'geom.dart';
+part of '../geom.dart';
 
 /// A wireframe sphere geometry for visualizing bounding volumes.
 ///
 /// Displays three circular rings along the XY, XZ, and YZ planes.
-class M3SphereBoundsGeom extends M3Geom {
-  M3SphereBoundsGeom({double radius = 1.0}) {
-    int segments = 16; // must be even value
+class M3DebugSphereGeom extends M3Geom {
+  M3DebugSphereGeom({double radius = 1.0}) {
+    int segments = 24; // must be even value
     // initialize
     _init(vertexCount: (segments + 1) * 3);
-    name = "SphereBounds";
-    cullingRadius = radius;
+    name = "DebugSphere";
 
     // vertices
     final vertices = _vertices!;
@@ -32,6 +31,7 @@ class M3SphereBoundsGeom extends M3Geom {
 
     // vertex buffer object
     _createVBO();
+    localBounding.sphere.radius = radius;
 
     // solid faces: only outline
     for (int j = 0; j < 3; j++) {

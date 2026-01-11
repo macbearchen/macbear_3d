@@ -12,19 +12,13 @@ class M3ShadowMap {
   late M3Framebuffer shadowBuffer;
   Matrix4 matShadow = Matrix4.identity();
   WebGLTexture get depthTexture => shadowBuffer.depthTexture;
-  M3Sprite2D? _sprite;
+  M3Texture? _texDepth;
 
   // depth image for debug
-  M3Sprite2D get depthImage {
-    if (_sprite == null) {
-      M3Texture texDepth = M3Texture.fromWebGLTexture(
-        depthTexture,
-        texW: shadowBuffer.frameW,
-        texH: shadowBuffer.frameH,
-      );
-      _sprite = M3Sprite2D(texDepth);
-    }
-    return _sprite!;
+
+  M3Texture get texDepth {
+    _texDepth ??= M3Texture.fromWebGLTexture(depthTexture, texW: shadowBuffer.frameW, texH: shadowBuffer.frameH);
+    return _texDepth!;
   }
 
   M3ShadowMap(int width, int height) {
@@ -57,16 +51,12 @@ class M3ShadowMap {
   }
 
   void drawDebugDepth(double x, double y, double width, double height) {
-    // use depth texture from shadow buffer
-    final M3Texture texDepth = depthImage.mtr.texDiffuse;
-
-    // draw small quad at bottom-left
     Matrix4 matRect = Matrix4.identity();
     matRect.setTranslation(Vector3(x, y, 0.0));
     // size 200x200
     final scale = Vector3(width / texDepth.texW, height / texDepth.texH, 1.0);
     matRect.scaleByVector3(scale);
-    depthImage.draw(matRect);
-    // M3Shape2D.drawImage(texDepth, matRect);
+    // use depth texture from shadow buffer
+    M3Shape2D.drawImage(texDepth, matRect);
   }
 }

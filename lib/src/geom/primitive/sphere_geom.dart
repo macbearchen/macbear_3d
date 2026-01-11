@@ -1,18 +1,17 @@
-part of 'geom.dart';
+part of '../geom.dart';
 
-/// A tri-axial ellipsoid geometry with independent X, Y, and Z radii.
+/// A UV sphere geometry with configurable radius and segment count.
 ///
 /// Vertices are ordered from top to bottom, counter-clockwise by each row.
-class M3EllipsoidGeom extends M3Geom {
-  M3EllipsoidGeom(double radiusX, double radiusY, double radiusZ, int widthSegments, int heightSegments) {
+class M3SphereGeom extends M3Geom {
+  M3SphereGeom(double radius, {int widthSegments = M3Geom.radialSegments, int heightSegments = 8}) {
     widthSegments = max(widthSegments, 3);
     heightSegments = max(heightSegments, 2);
     int numVert = (widthSegments + 1) * (heightSegments + 1);
 
     // initialize
     _init(vertexCount: numVert, withNormals: true, withUV: true);
-    name = "Ellipsoid";
-    cullingRadius = max(max(radiusX, radiusY), radiusZ);
+    name = "Sphere";
 
     // vertices
     final vertices = _vertices!;
@@ -22,37 +21,30 @@ class M3EllipsoidGeom extends M3Geom {
 
     double x, y, z;
     int i, j, index = 0;
-    // For proper normals on a tri-axial ellipsoid: n = (x/a², y/b², z/c²) normalized
-    final invRadiusX2 = 1.0 / (radiusX * radiusX);
-    final invRadiusY2 = 1.0 / (radiusY * radiusY);
-    final invRadiusZ2 = 1.0 / (radiusZ * radiusZ);
     // vertices: position, normal, texUV
     for (i = 0; i <= heightSegments; i++) {
       final ratioB = i / heightSegments;
       final angleB = pi * ratioB;
-      // Calculate separate radii for X and Y based on the latitude angle
-      final radiusBx = radiusX * sin(angleB);
-      final radiusBy = radiusY * sin(angleB);
+      final radiusB = radius * sin(angleB);
       if (0 == i) {
-        z = radiusZ;
+        z = radius;
       } else if (heightSegments == i) {
-        z = -radiusZ;
+        z = -radius;
       } else {
-        z = radiusZ * cos(angleB);
+        z = radius * cos(angleB);
       }
 
       for (j = 0; j <= widthSegments; j++) {
         final ratioA = j / widthSegments;
         if (0 == j || widthSegments == j) {
-          x = radiusBx;
+          x = radiusB;
           y = 0;
         } else {
           final angleA = pi * 2 * ratioA;
-          x = radiusBx * cos(angleA);
-          y = radiusBy * sin(angleA);
+          x = radiusB * cos(angleA);
+          y = radiusB * sin(angleA);
         }
-        // Normal for ellipsoid: gradient of (x²/a² + y²/b² + z²/c² - 1), normalized
-        vn = Vector3(x * invRadiusX2, y * invRadiusY2, z * invRadiusZ2).normalized();
+        vn = Vector3(x, y, z).normalized();
 
         vertices[index] = Vector3(x, y, z);
         normals[index] = vn;
@@ -63,6 +55,7 @@ class M3EllipsoidGeom extends M3Geom {
     }
     // vertex buffer object
     _createVBO();
+    localBounding.sphere.radius = radius;
 
     // solid: triangle-strip
     int numIndex = (widthSegments + 1) * 2 * heightSegments;

@@ -33,6 +33,22 @@ class M3ShaderOptions {
   bool cartoon = false;
 }
 
+/// Rendering statistics
+class M3RenderStats {
+  int frames = 0;
+  int vertices = 0;
+  int triangles = 0;
+  int entities = 0;
+  int culling = 0;
+
+  void reset() {
+    vertices = 0;
+    triangles = 0;
+    entities = 0;
+    culling = 0;
+  }
+}
+
 /// The WebGL rendering engine that manages shaders, framebuffers, and scene rendering.
 ///
 /// Handles shader program creation, shadow mapping, 2D overlay rendering, and viewport management.
@@ -56,8 +72,9 @@ class M3RenderEngine {
   // for ortho-matrix to project to 2D screen
   final _projection2D = M3Projection();
 
-  // render flags
-  M3RenderOptions options = M3RenderOptions();
+  // render options, statistics
+  final M3RenderOptions options = M3RenderOptions();
+  final M3RenderStats stats = M3RenderStats();
 
   // constructor
   M3RenderEngine() {
@@ -138,8 +155,6 @@ class M3RenderEngine {
 
     // init text2D
     text2D = await M3Text2D.createText2D(fontSize: 30);
-
-    gl.lineWidth(2.0);
   }
 
   void setLightingProgram() {
@@ -195,6 +210,9 @@ class M3RenderEngine {
   }
 
   void renderScene(M3Scene scene) {
+    stats.reset();
+    stats.frames++;
+
     // draw skybox
     if (scene.skybox != null) {
       scene.skybox!.drawSkybox(scene.camera);
@@ -277,12 +295,22 @@ class M3RenderEngine {
       matFps.setTranslation(Vector3(M3AppEngine.instance.appWidth - 50, 40, 0));
       matFps.scaleByVector3(Vector3.all(0.5));
       final fpsText = engine.fps.toStringAsFixed(2);
-      final frameText = engine.frameCounter.toString().padLeft(6);
       text2D.drawText(fpsText, matFps, color: Vector4(0, 1, 0, 1));
-      matFps.translateByVector3(Vector3(-18, 30, 0));
+
+      final frameText =
+          '''
+${engine.frameCounter.toString().padLeft(6)}
+mesh:${stats.entities}
+cull:${stats.culling}
+ tri:${stats.triangles}
+vert:${stats.vertices}''';
+      matFps.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 60, 0));
+      matFps.scaleByVector3(Vector3.all(0.9));
+      // Draw Render Stats
       text2D.drawText(frameText, matFps, color: Vector4(1, 1, 1, 1));
     }
 
-    prog2D.disableAttribute();
+    gl.disableVertexAttribArray(prog2D.attribVertex.id);
+    gl.disableVertexAttribArray(prog2D.attribUV.id);
   }
 }

@@ -1,4 +1,4 @@
-part of 'geom.dart';
+part of '../geom.dart';
 
 /// A torus (donut) geometry with configurable major and minor radii.
 ///
@@ -17,7 +17,6 @@ class M3TorusGeom extends M3Geom {
     // initialize
     _init(vertexCount: vetrexCount, withNormals: true, withUV: true);
     name = "Torus";
-    cullingRadius = radius + tube;
 
     final vertices = _vertices!;
     final normals = _normals!;
@@ -49,6 +48,7 @@ class M3TorusGeom extends M3Geom {
     }
     // vertex buffer object
     _createVBO();
+    localBounding.sphere.radius = radius + tube;
 
     // solid: triangle-strip for round-side
     final numIndex = radialSegments * tubularSegments * 3 * 2;

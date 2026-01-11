@@ -4,7 +4,7 @@ A powerful yet easy-to-use 3D engine for Flutter, powered by ANGLE (OpenGL ES).
 
 Macbear 3D brings high-performance 3D rendering to Flutter applications with a simple API, enabling developers to create stunning 3D experiences, games, and visualizations.
 
-<img width="400" src="img/scene04.png" />
+<img width="400" src="img/scene08.png" />
 
 ## Features
 
@@ -16,11 +16,16 @@ Macbear 3D brings high-performance 3D rendering to Flutter applications with a s
 - **Materials & Textures**: Support for standard materials, texturing, and transparency.
 - **Lighting & Shadows**: Dynamic lighting and shadow mapping support.
 - **Physics**: Integrated rigid body physics engine (via `oimo_physics`).
+- **Resource Management**: Centralized loading and caching of assets (geometries, textures, fonts).
+- **3D Text**: Generate 3D geometry from text strings using TrueType/OpenType fonts.
+- **Bounding Volumes**: Automatic AABB and Bounding Sphere calculation for all geometries.
+- **Render Statistics**: Real-time monitoring of engine performance (FPS, vertices, triangles).
 - **Touch Input**: Built-in touch event handling for 3D interactions.
   
 <img width="400" src="img/scene01.png" />
 <img width="400" src="img/scene02.png" />
 <img width="400" src="img/scene03.png" />
+<img width="400" src="img/scene04.png" />
 <img width="400" src="img/scene05.png" />
 
 <details>
@@ -40,7 +45,7 @@ Add `macbear_3d` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  macbear_3d: ^0.1.1
+  macbear_3d: ^0.2.0
 ```
 
 ## Usage
@@ -118,8 +123,8 @@ output to uml/macbear_3d.puml
 - [ ] Water effect (reflection, refraction)
 - [ ] Post-processing effects (Bloom, HDR)
 - [ ] Advanced Particle System
-- [ ] Physics System
-- [ ] Resource Management System
+- [x] Resource Management System
+- [x] Text Rendering
 - [ ] GUI System
 - [ ] WebGL support optimization
 

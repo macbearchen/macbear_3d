@@ -53,6 +53,7 @@ class M3GltfGeom extends M3Geom {
       }
     }
 
+    // vertex buffer object
     _createVBO();
 
     // Create face indices

@@ -1,29 +1,28 @@
-import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:flutter/services.dart';
 import 'package:vector_math/vector_math_lists.dart';
-
-import '../util/ear_clipping.dart';
-import '../util/ttf_parser.dart';
 
 // Macbear3D engine
 import '../../macbear_3d.dart';
 import '../gltf/gltf_parser.dart';
 
+import 'text/ear_clipping.dart';
+import 'text/ttf_parser.dart';
+
 // part for geom
-part 'axis_geom.dart';
-part 'box_geom.dart';
-part 'cylinder_geom.dart';
-part 'ellipsoid_geom.dart';
+part 'debug/debug_axis_geom.dart';
+part 'debug/debug_sphere_geom.dart';
+part 'primitive/box_geom.dart';
+part 'primitive/cylinder_geom.dart';
+part 'primitive/ellipsoid_geom.dart';
+part 'primitive/plane_geom.dart';
+part 'primitive/pyramid_geom.dart';
+part 'primitive/sphere_geom.dart';
+part 'primitive/torus_geom.dart';
+part 'text/text_geom.dart';
+part 'text/contour.dart';
 part 'gltf_geom.dart';
 part 'obj_geom.dart';
-part 'plane_geom.dart';
-part 'pyramid_geom.dart';
-part 'sphere_geom.dart';
-part 'sphere_bounds_geom.dart';
-part 'text_geom.dart';
-part 'torus_geom.dart';
 
 /// Internal class to manage index buffers for geometry rendering.
 ///
@@ -47,6 +46,23 @@ class _M3Indices {
     _count = indices.length;
   }
 
+  int get primitiveCount {
+    switch (_primitiveType) {
+      case WebGL.TRIANGLES:
+        return _count ~/ 3;
+      case WebGL.TRIANGLE_STRIP:
+        return _count > 2 ? _count - 2 : 0;
+      case WebGL.LINES:
+        return _count ~/ 2;
+      case WebGL.LINE_STRIP:
+        return _count > 1 ? _count - 1 : 0;
+      case WebGL.POINTS:
+        return _count;
+      default:
+        return 0;
+    }
+  }
+
   /// Draws the indexed geometry using the current rendering context.
   void draw() {
     gl.bindBuffer(WebGL.ELEMENT_ARRAY_BUFFER, _indexBuffer);
@@ -59,6 +75,12 @@ class _M3Indices {
   }
 }
 
+/// Bounding box and sphere for geometry.
+class M3Bounding {
+  Aabb3 aabb = Aabb3();
+  Sphere sphere = Sphere();
+}
+
 /// Abstract base class for all 3D geometry primitives.
 ///
 /// Provides vertex buffer management, rendering methods, and support for
@@ -68,7 +90,8 @@ abstract class M3Geom {
   static const int radialSegments = 16;
 
   String name = "Noname";
-  double cullingRadius = 1.0;
+  M3Bounding localBounding = M3Bounding();
+
   int _vertexCount = 0;
   Vector3List? _vertices; // vertex positions
   Vector3List? _normals; // vertex normals
@@ -88,6 +111,16 @@ abstract class M3Geom {
   // list of indices for faces and edges
   final List<_M3Indices> _faceIndices = []; // solid faces
   final List<_M3Indices> _edgeIndices = []; // wireframe edges
+
+  int get vertexCount => _vertexCount;
+  int getTriangleCount({bool bSolid = true}) {
+    int count = 0;
+    final indices = bSolid ? _faceIndices : _edgeIndices;
+    for (var surface in indices) {
+      count += surface.primitiveCount;
+    }
+    return count;
+  }
 
   @override
   String toString() {
@@ -119,6 +152,22 @@ abstract class M3Geom {
     if (_vertices == null) {
       return;
     }
+    // calculate AABB, boundingSphere
+    if (_vertexCount > 0) {
+      final v = Vector3.zero();
+      _vertices!.load(0, v);
+      localBounding.aabb.min.setFrom(v);
+      localBounding.aabb.max.setFrom(v);
+      for (int i = 1; i < _vertexCount; i++) {
+        _vertices!.load(i, v);
+        localBounding.aabb.hullPoint(v);
+      }
+
+      // Update bounding sphere
+      localBounding.aabb.copyCenter(localBounding.sphere.center);
+      localBounding.sphere.radius = localBounding.aabb.min.distanceTo(localBounding.aabb.max) * 0.5;
+    }
+
     _vertexBuffer = gl.createBuffer();
     gl.bindBuffer(WebGL.ARRAY_BUFFER, _vertexBuffer);
     gl.bufferData(WebGL.ARRAY_BUFFER, Float32Array.fromList(_vertices!.buffer), WebGL.STATIC_DRAW);

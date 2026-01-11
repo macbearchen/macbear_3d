@@ -1,9 +1,11 @@
-import 'dart:math';
 import 'package:flutter/material.dart' hide Colors;
+
+// Macbear3D engine
 import 'package:macbear_3d/macbear_3d.dart';
 
 void main() {
   M3AppEngine.instance.onDidInit = onDidInit;
+  M3AppEngine.backgroundColor = Vector3(0, 0, 0.3);
 
   runApp(const MyApp());
 }

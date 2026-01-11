@@ -1,6 +1,4 @@
 // ignore_for_file: file_names
-import 'dart:math';
-
 import 'main.dart';
 
 // ignore: camel_case_types
@@ -26,20 +24,20 @@ class GlftScene_05 extends M3Scene {
     _man!.color = Colors.white;
     _man!.scale = Vector3.all(2);
 
-    // 05-2: GLTF model - using M3Mesh.loadFromUrl()
+    // 05-2: GLTF model - using M3Mesh.load()
     // https://github.com/KhronosGroup/glTF-Sample-Models
     // iOS entitlements should enable for internet access
     // com.apple.security.network.client
     /*
-    final meshDuck = await M3Mesh.loadFromUrl(
+    final meshDuck = await M3Mesh.load(
       // 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/Avocado/glTF-Binary/Avocado.glb',
       'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/Duck/glTF-Binary/Duck.glb',
     );
 */
     final meshDuck = await M3Mesh.load('example/Duck.glb');
 
-    _duck = addMesh(meshDuck, Vector3(1, 1, -1));
-    _duck!.scale = Vector3.all(0.01);
+    _duck = addMesh(meshDuck, Vector3(0, 2, -1));
+    _duck!.scale = Vector3.all(0.02);
 
     // set background color
     M3AppEngine.backgroundColor = Vector3(0.3, 0.1, 0.3);

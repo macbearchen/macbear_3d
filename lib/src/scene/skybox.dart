@@ -47,7 +47,7 @@ class M3Skybox {
 
     prog.setMatrices(camEye, boxMatrix);
     prog.setMaterial(mtr, Vector4(1, 1, 1, 1));
-    M3Constants.geomFrustum.draw(prog, bSolid: true);
+    M3Resources.debugFrustum.draw(prog, bSolid: true);
 
     _texCubemap.unbind();
     return true;

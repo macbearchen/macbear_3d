@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:oimo_physics/oimo_physics.dart' as oimo;
 
 // Macbear3D engine
@@ -68,7 +67,6 @@ abstract class M3Scene {
     final entity = M3Entity();
     entity.mesh = mesh;
     entity.position = position;
-    entity.cullingRadius = mesh.geom.cullingRadius;
 
     entities.add(entity);
 
@@ -80,9 +78,12 @@ abstract class M3Scene {
   }
 
   void update(Duration elapsed) {
-    // sync physics
     for (final entity in entities) {
+      // sync physics
       entity.syncFromPhysics();
+
+      // update bounds
+      entity.updateBounds();
     }
   }
 
@@ -93,9 +94,11 @@ abstract class M3Scene {
     gl.uniform1i(prog.uniformBoneCount, 0);
 
     for (final entity in entities) {
-      if (entity.mesh == null) continue;
       // culling
-      if (!camera.checkVisible(entity)) continue;
+      if (entity.mesh == null || !camera.isVisible(entity.worldBounding)) {
+        if (entity.mesh != null) M3AppEngine.instance.renderEngine.stats.culling++;
+        continue;
+      }
 
       final mesh = entity.mesh!;
       prog.setMatrices(camera, entity.matrix);
@@ -114,6 +117,12 @@ abstract class M3Scene {
       }
 
       mesh.geom.draw(prog, bSolid: bSolid);
+
+      // statistics
+      final stats = M3AppEngine.instance.renderEngine.stats;
+      stats.entities++;
+      stats.vertices += mesh.geom.vertexCount;
+      stats.triangles += mesh.geom.getTriangleCount(bSolid: bSolid);
     }
   }
 
@@ -126,20 +135,36 @@ abstract class M3Scene {
     gl.uniform1i(progSimple.uniformBoneCount, 0);
 
     for (final entity in entities) {
-      if (entity.mesh == null) continue;
       // culling
-      if (!camera.checkVisible(entity)) continue;
+      if (entity.mesh == null || !camera.isVisible(entity.worldBounding)) continue;
 
       final mesh = entity.mesh!;
+
+      // origin axis
       progSimple.setMatrices(camera, entity.matrix);
       // draw axis at object origin
       progSimple.setMaterial(mesh.mtr, Colors.red);
-      M3Constants.geomAxis.draw(progSimple);
+      M3Resources.debugAxis.draw(progSimple);
 
-      // bounds
-      Matrix4 matSphere = entity.matrix.scaledByVector3(Vector3.all(entity.cullingRadius * 1.03));
-      progSimple.setMatrices(camera, matSphere);
-      M3Constants.geomSphereBounds.draw(progSimple);
+      // bounding sphere
+      Sphere worldSphere = entity.worldBounding.sphere;
+      if (worldSphere.radius > 0) {
+        Matrix4 matSphere = Matrix4.identity();
+        matSphere.translateByVector3(worldSphere.center);
+        matSphere.scaleByVector3(Vector3.all(worldSphere.radius * 1.03));
+        progSimple.setMaterial(mesh.mtr, Colors.magenta);
+        progSimple.setMatrices(camera, matSphere);
+        M3Resources.debugSphere.draw(progSimple);
+      }
+      // AABB
+      final matAabb = Matrix4.identity();
+      matAabb.translateByVector3(entity.worldBounding.aabb.center);
+      Vector3 extents = (entity.worldBounding.aabb.max - entity.worldBounding.aabb.min) / 2;
+      extents += Vector3.all(0.03);
+      matAabb.scaleByVector3(extents);
+      progSimple.setMaterial(mesh.mtr, Colors.lime);
+      progSimple.setMatrices(camera, matAabb);
+      M3Resources.debugFrustum.draw(progSimple, bSolid: false);
     }
 
     M3Material mtrHelper = M3Material();
@@ -160,15 +185,23 @@ abstract class M3Scene {
     gl.uniform1i(progSimple.uniformBoneCount, 0);
 
     for (final entity in entities) {
-      if (entity.mesh == null) continue;
       // culling
-      if (!camera.checkVisible(entity)) continue;
+      if (entity.mesh == null || !camera.isVisible(entity.worldBounding)) {
+        if (entity.mesh != null) M3AppEngine.instance.renderEngine.stats.culling++;
+        continue;
+      }
 
       final mesh = entity.mesh!;
       progSimple.setMatrices(camera, entity.matrix);
       // wireframe
       progSimple.setMaterial(mesh.mtr, entity.color);
       mesh.geom.draw(progSimple, bSolid: false);
+
+      // statistics
+      final stats = M3AppEngine.instance.renderEngine.stats;
+      stats.entities++;
+      stats.vertices += mesh.geom.vertexCount;
+      stats.triangles += mesh.geom.getTriangleCount(bSolid: false);
     }
   }
 

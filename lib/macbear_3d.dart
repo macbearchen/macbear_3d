@@ -1,11 +1,11 @@
-export 'package:flutter/foundation.dart';
-export 'package:flutter_angle/flutter_angle.dart';
-export 'package:vector_math/vector_math.dart';
+export 'src/export.dart';
 
 export 'src/2d/shape_2d.dart';
 export 'src/2d/sprite_2d.dart';
 export 'src/engine/app_engine.dart';
 export 'src/engine/render_engine.dart';
+export 'src/engine/resource_manager.dart';
+export 'src/engine/resources.dart';
 export 'src/geom/geom.dart';
 export 'src/input/touch.dart';
 export 'src/mesh/mesh.dart';

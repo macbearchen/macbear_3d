@@ -1,5 +1,6 @@
+// ignore_for_file: avoid_print, avoid_relative_lib_imports
+
 import 'dart:io';
-import 'dart:typed_data';
 
 // Copy of minimal parser parts or import if possible.
 // For speed, let's just use the file path relative to execution.
@@ -7,7 +8,7 @@ import 'dart:typed_data';
 
 // It's safer to reproduce the logic or rely on relative imports if running from 'example/'
 
-import 'lib/src/util/ttf_parser.dart';
+import '../lib/src/geom/text/ttf_parser.dart';
 
 void main() {
   final file = File('example/assets/example/test.ttf');
@@ -20,7 +21,7 @@ void main() {
   print("File size: ${bytes.length}");
 
   try {
-    final parser = M3TrueTypeParser(bytes);
+    final parser = M3TrueTypeParser(bytes.buffer.asByteData());
     print("Parser initialized.");
 
     // Test a char

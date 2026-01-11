@@ -1,5 +1,5 @@
 PODS:
-  - flutter_angle (0.3.8):
+  - flutter_angle (0.3.9):
     - Flutter
     - FlutterAngle (~> 0.0.8)
     - FlutterMacOS
@@ -21,7 +21,7 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral
 
 SPEC CHECKSUMS:
-  flutter_angle: fc44e198cea1f07e1a5919bad1484049fab65c96
+  flutter_angle: fd425c2f11c130891a5e87a0dad8de8815413b43
   FlutterAngle: c810891af800750361b1d0e7cc944f2338d5ae18
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
 

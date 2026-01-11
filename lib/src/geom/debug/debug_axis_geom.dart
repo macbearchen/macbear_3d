@@ -1,10 +1,10 @@
-part of 'geom.dart';
+part of '../geom.dart';
 
 /// A coordinate axis helper geometry for debugging and visualization.
 ///
 /// Displays X, Y, and Z axes as lines from the origin.
-class M3AxisGeom extends M3Geom {
-  M3AxisGeom({double size = 1.0}) {
+class M3DebugAxisGeom extends M3Geom {
+  M3DebugAxisGeom({double size = 1.0}) {
     // initialize
     _init(vertexCount: 4);
     name = "Axis";

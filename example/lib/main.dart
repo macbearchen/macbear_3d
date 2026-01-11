@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:macbear_3d/macbear_3d.dart';
 
+// Macbear3D engine
+import 'package:macbear_3d/macbear_3d.dart';
 export 'package:macbear_3d/macbear_3d.dart';
 
 import '00_starter.dart';
@@ -13,7 +14,7 @@ import '06_shadowmap.dart';
 import '07_physics.dart';
 import '08_text_3d.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   M3AppEngine.instance.onDidInit = onDidInit;

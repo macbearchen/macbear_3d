@@ -85,9 +85,12 @@ class M3Camera extends M3Projection {
   // Euler
   M3Euler euler = M3Euler();
 
-  // visibility checking
-  bool checkVisible(M3Entity entity) {
-    return frustum.intersectsWithSphere(Sphere.centerRadius(entity.position, entity.cullingRadius));
+  // visibility checking (frustum culling)
+  bool isVisible(M3Bounding bounds) {
+    if (!frustum.intersectsWithSphere(bounds.sphere)) {
+      return false;
+    }
+    return frustum.intersectsWithAabb3(bounds.aabb);
   }
 
   // View matrix, inverse matrix (camera to world for frustum debug)
@@ -99,6 +102,32 @@ class M3Camera extends M3Projection {
   Vector3 target = Vector3(0.0, 0.0, 0.0);
   Vector3 up = Vector3(0.0, 0.0, 1.0);
   double distanceToTarget = 20.0;
+
+  // split distance for CSM
+  List<double> csmDepthSplits = [];
+
+  @override
+  void setViewport(int x, int y, int w, int h, {double fovy = 50.0, double near = 1.0, double far = 100.0}) {
+    super.setViewport(x, y, w, h, fovy: fovy, near: near, far: far);
+    // lambda: 0 split by average, 1 split as smaller near, larger far
+    csmDepthSplits = buildCSMSplits(4, 0.7);
+  }
+
+  /// CSM Cascaded-Shadowmap split (near, far)
+  /// lambda(0~1): 0 split by average, 1 split as smaller near, larger far
+  List<double> buildCSMSplits(int count, double lambda) {
+    List<double> splits = List.filled(count + 1, 0.0);
+    splits[0] = nearClip;
+    splits[count] = farClip;
+
+    for (int i = 1; i < count; i++) {
+      double fraction = i / count;
+      double zLog = nearClip * pow(farClip / nearClip, fraction);
+      double zLin = nearClip + fraction * (farClip - nearClip);
+      splits[i] = lambda * zLog + (1.0 - lambda) * zLin;
+    }
+    return splits;
+  }
 
   void setLookat(Vector3 eye, Vector3 target, Vector3 up) {
     position = eye;
@@ -162,25 +191,26 @@ $euler
       return;
     }
     prog.setMatrices(viewer, cameraToWorldMatrix);
-    M3Constants.geomAxis.draw(prog, bSolid: false);
+    M3Resources.debugAxis.draw(prog, bSolid: false);
 
     Matrix4 targetMatrix = Matrix4.identity();
     targetMatrix.setTranslation(target);
     prog.setMatrices(viewer, targetMatrix);
-    M3Constants.geomDot.draw(prog, bSolid: false);
+    M3Resources.debugDot.draw(prog, bSolid: false);
 
     Matrix4 frustumMatrix = Matrix4.inverted(projectionMatrix * viewMatrix);
     prog.setMatrices(viewer, frustumMatrix);
-    M3Constants.geomFrustum.draw(prog, bSolid: false);
+    M3Resources.debugFrustum.draw(prog, bSolid: false);
 
     Matrix4 matNear = Matrix4.identity();
     matNear.translateByVector3(Vector3(0, -0.2, -0.99));
     matNear = frustumMatrix * matNear;
     prog.setMatrices(viewer, matNear);
-    M3Constants.geomGridPlane.draw(prog, bSolid: false);
+    M3Resources.debugView.draw(prog, bSolid: false);
   }
 }
 
+/// Matrix4 extension for orthographic inverse
 extension Matrix4Extension on Matrix4 {
   Matrix4 orthoInverse() {
     // (1/3): inverse rotation by transposed
