@@ -10,6 +10,14 @@ topics:
   - macbear
   - 3d
 
+screenshots:
+  - description: 'Macbear 3D Engine'
+    path: img/scene08.png
+  - description: 'Teapot'
+    path: img/scene04.png
+  - description: 'Cartoon shader'
+    path: img/cartoon.png
+
 environment:
   sdk: ^3.10.0
   flutter: ">=1.17.0"
