@@ -521,6 +521,7 @@ class "macbear_3d::src::program::program.dart::M3Program" {
   +void setProjectionMatrix()
   +void setModelViewMatrix()
   +void setMVPMatrix()
+  +void applyCamera()
   +void setMatrices()
   +void setMaterial()
   +void disableAttribute()
@@ -542,15 +543,11 @@ class "macbear_3d::src::program::program.dart::M3ProgramEye" {
 "macbear_3d::src::program::program.dart::M3Program" <|-- "macbear_3d::src::program::program.dart::M3ProgramEye"
 
 class "macbear_3d::src::program::program.dart::M3ProgramLighting" {
-  +UniformLocation uniformMatrixShadowmap
-  +UniformLocation uniformSamplerShadowmap
   +void initLocation()
   +void setMatrices()
   +void setMaterial()
-  +void activeShadowmap()
 }
 
-"macbear_3d::src::program::program.dart::M3ProgramLighting" o-- "flutter_angle::shared::classes.dart::UniformLocation"
 "macbear_3d::src::program::program.dart::M3ProgramEye" <|-- "macbear_3d::src::program::program.dart::M3ProgramLighting"
 "macbear_3d::src::program::program.dart::M3LightingShader" <|-- "macbear_3d::src::program::program.dart::M3ProgramLighting"
 
@@ -563,12 +560,44 @@ abstract class "macbear_3d::src::program::program.dart::M3LightingShader" {
   -M3Light? _light
   +RenderingContext gl
   +void initLightingLocation()
-  +void useLight()
+  +void applyLight()
 }
 
 "macbear_3d::src::program::program.dart::M3LightingShader" o-- "flutter_angle::shared::classes.dart::UniformLocation"
 "macbear_3d::src::program::program.dart::M3LightingShader" o-- "macbear_3d::src::scene::light.dart::M3Light"
 "macbear_3d::src::program::program.dart::M3LightingShader" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+
+abstract class "macbear_3d::src::program::program.dart::M3ProgramShadow" {
+  +UniformLocation uniformSamplerShadowmap
+  +UniformLocation uniformShadowmapSize
+  +UniformLocation uniformNormalBias
+  +void initLocation()
+  +void applyLight()
+  +void bindShadow()
+}
+
+"macbear_3d::src::program::program.dart::M3ProgramShadow" o-- "flutter_angle::shared::classes.dart::UniformLocation"
+"macbear_3d::src::program::program.dart::M3ProgramLighting" <|-- "macbear_3d::src::program::program.dart::M3ProgramShadow"
+
+class "macbear_3d::src::program::program.dart::M3ProgramShadowmap" {
+  +UniformLocation uniformMatrixShadowmap
+  +void initLocation()
+  +void setMatrices()
+}
+
+"macbear_3d::src::program::program.dart::M3ProgramShadowmap" o-- "flutter_angle::shared::classes.dart::UniformLocation"
+"macbear_3d::src::program::program.dart::M3ProgramShadow" <|-- "macbear_3d::src::program::program.dart::M3ProgramShadowmap"
+
+class "macbear_3d::src::program::program.dart::M3ProgramShadowCSM" {
+  +UniformLocation uniformMatrixCSM
+  +UniformLocation uniformDepthCSM
+  +void initLocation()
+  +void applyCamera()
+  +void setMatrices()
+}
+
+"macbear_3d::src::program::program.dart::M3ProgramShadowCSM" o-- "flutter_angle::shared::classes.dart::UniformLocation"
+"macbear_3d::src::program::program.dart::M3ProgramShadow" <|-- "macbear_3d::src::program::program.dart::M3ProgramShadowCSM"
 
 class "macbear_3d::src::texture::material.dart::M3Material" {
   +Vector4 diffuse
@@ -699,6 +728,7 @@ class "macbear_3d::src::scene::transform.dart::M3Transform" {
   +List<M3Transform> children
   -bool _dirty
   -Matrix4 _worldMatrix
+  +bool isDirty
   +Matrix4 worldMatrix
   +void markDirty()
   -void _rebuild()
@@ -709,16 +739,30 @@ class "macbear_3d::src::scene::transform.dart::M3Transform" {
 "macbear_3d::src::scene::transform.dart::M3Transform" o-- "macbear_3d::src::scene::transform.dart::M3Transform"
 "macbear_3d::src::scene::transform.dart::M3Transform" o-- "vector_math::vector_math.dart::Matrix4"
 
+class "macbear_3d::src::scene::light.dart::M3ShadowCascade" {
+  +Matrix4 projectionMatrix
+  +double atlasBiasV
+  +double atlasScaleV
+  +String toString()
+}
+
+"macbear_3d::src::scene::light.dart::M3ShadowCascade" o-- "vector_math::vector_math.dart::Matrix4"
+
 class "macbear_3d::src::scene::light.dart::M3Light" {
   {static} +Vector3 ambient
   +Vector3 color
-  +bool bPositional
-  +bool bAlignCamera
-  +List<Matrix4> csmMatrices
+  +bool isDirectional
+  +bool isCameraAligned
+  +double shadowNormalBias
+  +double csmPaddingNear
+  +double csmPaddingFar
+  +List<M3ShadowCascade> cascades
   +Vector4 getDirection()
   {static} +Vector4 blendRGBA()
   {static} +Vector3 blendRGB()
-  +void splitCascadedShadowmap()
+  +void updateShadowCascades()
+  -void _updateCascadeAtlasV()
+  +void drawHelper()
 }
 
 "macbear_3d::src::scene::light.dart::M3Light" o-- "vector_math::vector_math.dart::Vector3"
@@ -787,6 +831,7 @@ class "macbear_3d::src::scene::entity.dart::M3Entity" {
   +Vector4 color
   +M3Bounding worldBounding
   -bool _boundsDirty
+  +M3Transform transform
   +Vector3 position
   +Quaternion rotation
   +Vector3 scale
@@ -805,39 +850,25 @@ class "macbear_3d::src::scene::entity.dart::M3Entity" {
 "macbear_3d::src::scene::entity.dart::M3Entity" o-- "vector_math::vector_math.dart::Quaternion"
 "macbear_3d::src::scene::entity.dart::M3Entity" o-- "vector_math::vector_math.dart::Matrix4"
 
-class "macbear_3d::src::scene::camera.dart::M3Projection" {
-  {static} +int halfW
-  {static} +int halfH
-  +Matrix4 projectionMatrix
-  +int viewportX
-  +int viewportY
-  +int viewportW
-  +int viewportH
-  +double nearClip
-  +double farClip
-  +double degreeFovY
-  +void setViewport()
-  +void enableInfinite()
-  +void refreshProjectionMatrix()
-  +String toString()
-}
-
-"macbear_3d::src::scene::camera.dart::M3Projection" o-- "vector_math::vector_math.dart::Matrix4"
-
 class "macbear_3d::src::scene::camera.dart::M3Camera" {
   +Vector3 position
   +Quaternion rotation
-  +Frustum frustum
+  -Frustum _frustum
   +M3Euler euler
   +Matrix4 viewMatrix
   -Matrix4 _invViewMatrix
   +Vector3 target
   +Vector3 up
   +double distanceToTarget
-  +List<double> csmDepthSplits
+  +List<double> csmSplitDistances
+  -int _csmCount
+  +double csmLambda
   +Matrix4 cameraToWorldMatrix
+  +int csmCount
   +bool isVisible()
+  +void updateFrustum()
   +void setViewport()
+  -void _updateSplitDistances()
   +List<double> buildCSMSplits()
   +void setLookat()
   +void setEuler()
@@ -853,6 +884,27 @@ class "macbear_3d::src::scene::camera.dart::M3Camera" {
 "macbear_3d::src::scene::camera.dart::M3Camera" o-- "macbear_3d::src::util::euler.dart::M3Euler"
 "macbear_3d::src::scene::camera.dart::M3Camera" o-- "vector_math::vector_math.dart::Matrix4"
 "macbear_3d::src::scene::camera.dart::M3Projection" <|-- "macbear_3d::src::scene::camera.dart::M3Camera"
+
+class "macbear_3d::src::scene::camera.dart::M3Projection" {
+  {static} +int halfW
+  {static} +int halfH
+  +Matrix4 projectionMatrix
+  +int viewportX
+  +int viewportY
+  +int viewportW
+  +int viewportH
+  +double nearClip
+  +double farClip
+  +double degreeFovY
+  +void setViewport()
+  +void enableInfinite()
+  +void refreshProjectionMatrix()
+  +String toString()
+  +double eyeDepthToFragZFromMatrix()
+  +double eyeDepthToFragZFromNearFar()
+}
+
+"macbear_3d::src::scene::camera.dart::M3Projection" o-- "vector_math::vector_math.dart::Matrix4"
 
 class "macbear_3d::src::engine::app_engine.dart::M3AppEngine" {
   {static} +M3AppEngine instance
@@ -915,7 +967,7 @@ class "macbear_3d::src::engine::app_engine.dart::M3AppEngine" {
 class "macbear_3d::src::engine::framebuffer.dart::M3Framebuffer" {
   +int frameW
   +int frameH
-  -Framebuffer _shadowFBO
+  -Framebuffer _fbo
   +WebGLTexture depthTexture
   +RenderingContext gl
   +void bind()
@@ -928,10 +980,11 @@ class "macbear_3d::src::engine::framebuffer.dart::M3Framebuffer" {
 
 class "macbear_3d::src::engine::shadow_map.dart::M3ShadowMap" {
   {static} -M3Program _prog
-  +M3Framebuffer shadowBuffer
-  +Matrix4 matShadow
-  -M3Texture? _texDepth
+  -M3Framebuffer _framebuffer
+  -M3Texture? _tex
   +RenderingContext gl
+  +int mapW
+  +int mapH
   +WebGLTexture depthTexture
   +M3Texture texDepth
   +void dispose()
@@ -941,7 +994,6 @@ class "macbear_3d::src::engine::shadow_map.dart::M3ShadowMap" {
 
 "macbear_3d::src::engine::shadow_map.dart::M3ShadowMap" o-- "macbear_3d::src::program::program.dart::M3Program"
 "macbear_3d::src::engine::shadow_map.dart::M3ShadowMap" o-- "macbear_3d::src::engine::framebuffer.dart::M3Framebuffer"
-"macbear_3d::src::engine::shadow_map.dart::M3ShadowMap" o-- "vector_math::vector_math.dart::Matrix4"
 "macbear_3d::src::engine::shadow_map.dart::M3ShadowMap" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
 "macbear_3d::src::engine::shadow_map.dart::M3ShadowMap" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
 "macbear_3d::src::engine::shadow_map.dart::M3ShadowMap" o-- "flutter_angle::shared::classes.dart::WebGLTexture"
@@ -1001,6 +1053,7 @@ class "macbear_3d::src::engine::render_engine.dart::M3DebugOptions" {
 class "macbear_3d::src::engine::render_engine.dart::M3ShaderOptions" {
   +bool perPixel
   +bool cartoon
+  +bool pcf
 }
 
 class "macbear_3d::src::engine::render_engine.dart::M3RenderStats" {
@@ -1019,13 +1072,15 @@ class "macbear_3d::src::engine::render_engine.dart::M3RenderEngine" {
   +M3Program? programRectangle
   +M3ProgramLighting? programSimpleLighting
   +M3ProgramLighting? programTexture
-  +M3ProgramLighting? programShadowmap
+  +M3ProgramShadowmap? programShadowmap
+  +M3ProgramShadowCSM? programShadowCSM
   +M3Program? programSkybox
   -M3ShadowMap? _shadowMap
   +M3Text2D text2D
   -M3Projection _projection2D
   +M3RenderOptions options
   +M3RenderStats stats
+  +M3ShadowMap? shadowMap
   +void dispose()
   +void getExtensions()
   +dynamic initProgram()
@@ -1041,6 +1096,8 @@ class "macbear_3d::src::engine::render_engine.dart::M3RenderEngine" {
 "macbear_3d::src::engine::render_engine.dart::M3RenderEngine" o-- "flutter_angle::shared::classes.dart::Framebuffer"
 "macbear_3d::src::engine::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::program::program.dart::M3Program"
 "macbear_3d::src::engine::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::program::program.dart::M3ProgramLighting"
+"macbear_3d::src::engine::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::program::program.dart::M3ProgramShadowmap"
+"macbear_3d::src::engine::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::program::program.dart::M3ProgramShadowCSM"
 "macbear_3d::src::engine::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::engine::shadow_map.dart::M3ShadowMap"
 "macbear_3d::src::engine::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::2d::sprite_2d.dart::M3Text2D"
 "macbear_3d::src::engine::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::scene::camera.dart::M3Projection"
