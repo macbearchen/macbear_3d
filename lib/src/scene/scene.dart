@@ -7,6 +7,7 @@ export 'camera.dart';
 export 'entity.dart';
 export 'light.dart';
 export 'skybox.dart';
+export 'transform.dart';
 
 part 'sample_scene.dart';
 
@@ -39,9 +40,9 @@ abstract class M3Scene {
     _camera.setEuler(0, 0, 0, distance: 20);
 
     // sun light
-    int halfView = 10;
+    int halfView = 8;
     light.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 50);
-    light.setEuler(pi / 5, -pi / 3, 0, distance: 25); // rotate light
+    light.setEuler(pi / 5, -pi / 3, 0, distance: 15); // rotate light
   }
 
   void dispose() {
@@ -92,6 +93,7 @@ abstract class M3Scene {
     // pre-draw
     gl.useProgram(prog.program);
     gl.uniform1i(prog.uniformBoneCount, 0);
+    prog.applyCamera(camera);
 
     for (final entity in entities) {
       // culling
@@ -168,13 +170,13 @@ abstract class M3Scene {
     }
 
     M3Material mtrHelper = M3Material();
-    progSimple.setMaterial(mtrHelper, Colors.yellow);
-    light.drawHelper(progSimple, camera);
-
-    progSimple.setMaterial(mtrHelper, Colors.skyBlue);
     for (final cam in cameras) {
+      progSimple.setMaterial(mtrHelper, Colors.skyBlue);
       cam.drawHelper(progSimple, camera);
     }
+
+    progSimple.setMaterial(mtrHelper, Colors.yellow);
+    light.drawHelper(progSimple, camera);
   }
 
   void renderWireframe() {

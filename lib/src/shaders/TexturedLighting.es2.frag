@@ -34,7 +34,9 @@ uniform highp vec4 DepthCSM;			// depth clip-plane
 #endif // ENABLE_SHADOW_CSM
 
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
-uniform highp sampler2D SamplerShadowmap;		// GL_TEXTURE1
+uniform highp sampler2D SamplerShadowmap;	// GL_TEXTURE1
+uniform highp vec2 ShadowmapSize;		// shadowmap resolution
+uniform highp float NormalBias;			// normal bias (for shadow acne)
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
 
 // lit result by per-vertex/per-pixel
@@ -68,6 +70,7 @@ lowp vec4 ComputePixelLit(in lowp vec4 texDiffuse)
 
 void main(void)
 {
+    lowp vec3 depthColor = vec3(1.0, 1.0, 0.0);
 	lowp vec4 texResult = texture2D(SamplerDiffuse, TextureCoordOut);	// tex-lookup
 #ifdef ENABLE_ALPHA_TEST
 	if (texResult.a < 0.5)
@@ -77,9 +80,24 @@ void main(void)
 	////////// shadow map //////////
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
 	#ifdef ENABLE_SHADOW_CSM
-	lowp vec4 cascade = vec4(greaterThanEqual(gl_FragCoord.zzzz, DepthCSM));
-	lowp int altas = int(dot(cascade, lowp vec4(1.0,1.0,1.0,0.0)));	// altas-index of shadowmap
-	highp vec4 LightcoordShadowmap = LightcoordCSM[altas];
+		highp vec4 LightcoordShadowmap = LightcoordCSM[3];
+		if (gl_FragCoord.z < DepthCSM.x) {
+			LightcoordShadowmap = LightcoordCSM[0];
+			depthColor = vec3(1.0, 0.0, 0.0);
+		}
+		else if (gl_FragCoord.z < DepthCSM.y) {
+			LightcoordShadowmap = LightcoordCSM[1];
+			depthColor = vec3(0.0, 1.0, 0.0);
+		}
+		else if (gl_FragCoord.z < DepthCSM.z) {
+			LightcoordShadowmap = LightcoordCSM[2];
+			depthColor = vec3(0.0, 0.0, 1.0);
+		}
+		else
+			LightcoordShadowmap = LightcoordCSM[3];
+
+		// gl_FragColor = vec4(vec3(gl_FragCoord.z), 1.0);
+		// return;
 	#endif // ENABLE_SHADOW_CSM
 	
 	if (LightcoordShadowmap.s < 0.0 || LightcoordShadowmap.t < 0.0 || LightcoordShadowmap.s > 1.0 || LightcoordShadowmap.t > 1.0) {
@@ -89,13 +107,14 @@ void main(void)
 
 	////////// PCF //////////
 	#ifdef ENABLE_PCF
+	highp vec2 texelSize = vec2(1.0) / ShadowmapSize;
 	highp vec4 depthPCF;	// depth-shadow by PCF
-	depthPCF.x = texture2D(SamplerShadowmap, LightcoordShadowmap.st + vec2( 0.0009, 0.0003)).r;
-	depthPCF.y = texture2D(SamplerShadowmap, LightcoordShadowmap.st + vec2(-0.0009,-0.0003)).r;
-	depthPCF.z = texture2D(SamplerShadowmap, LightcoordShadowmap.st + vec2(-0.0003, 0.0009)).r;
-	depthPCF.w = texture2D(SamplerShadowmap, LightcoordShadowmap.st + vec2( 0.0003,-0.0009)).r;
+	depthPCF.x = texture2D(SamplerShadowmap, LightcoordShadowmap.st + vec2( 1.0,  0.5) * texelSize).r;
+	depthPCF.y = texture2D(SamplerShadowmap, LightcoordShadowmap.st + vec2(-1.0, -0.5) * texelSize).r;
+	depthPCF.z = texture2D(SamplerShadowmap, LightcoordShadowmap.st + vec2(-0.5,  1.0) * texelSize).r;
+	depthPCF.w = texture2D(SamplerShadowmap, LightcoordShadowmap.st + vec2( 0.5, -1.0) * texelSize).r;
 	
-	depthPCF = step(vec4(LightcoordShadowmap.z), depthPCF);
+	depthPCF = step(vec4(LightcoordShadowmap.z - 0.0005), depthPCF);
 	lowp float factorLit = dot(depthPCF, depthPCF) / 4.0;
 	
 	lowp vec4 areaShadow = texResult * vec4(ColorAmbient, 1.0);	// shadow-area
@@ -105,7 +124,7 @@ void main(void)
 	highp float depthShadow;
 	depthShadow = texture2D(SamplerShadowmap, LightcoordShadowmap.st).r;
 	//	depthShadow = texture2DProj(SamplerShadowmap, LightcoordShadowmap).r;	// palallel-projection, so w = 1 
-	if (depthShadow < LightcoordShadowmap.z)
+	if (depthShadow < LightcoordShadowmap.z - 0.0005)
 		texResult = texResult * vec4(ColorAmbient, 1.0);		// shadow-area
 	else
 		texResult = ComputePixelLit(texResult);					// lit-area
@@ -123,5 +142,5 @@ void main(void)
 	texResult.rgb = mix(texResult.rgb, FogColor, fFogBlend); 
 #endif // ENABLE_FOG
 
-	gl_FragColor = texResult;
+	gl_FragColor = texResult; // * vec4(depthColor, 1.0);
 }

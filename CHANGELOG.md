@@ -1,3 +1,12 @@
+## 0.3.0
+
+* Add:
+  * **Cascaded Shadow Maps (CSM)**: Support for multiple shadow cascades (up to 4) for high-quality shadows over large distances.
+  * **Shadow Stability**: Implemented bounding sphere-based cascade calculation and texel snapping to eliminate shadow shimmering.
+  * **Shadow Quality**: Improved shadow pass to use front-face (CCW) rendering to prevent edge light leakage.
+  * **Dynamic Shadow Mode Switching**: Ability to switch between standard shadow mapping and CSM at runtime.
+  * **Performance Optimizations**: Efficient shadow atlas management and reduced draw calls for shadows.
+
 ## 0.2.0
 
 * Add: 

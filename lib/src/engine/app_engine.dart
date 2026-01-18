@@ -15,7 +15,7 @@ import '../physics/physics_engine.dart';
 class M3AppEngine {
   static final M3AppEngine instance = M3AppEngine._internal();
 
-  String version = "macbear3d-lib v0.2.0 powered by ANGLE";
+  String version = "macbear3d-lib v0.3.0 powered by ANGLE";
   final FlutterAngle _angle = FlutterAngle();
   late FlutterAngleTexture _sourceTexture; // main framebuffer
   static Vector3 backgroundColor = Vector3.zero();
@@ -90,12 +90,12 @@ class M3AppEngine {
     appHeight = height;
     devicePixelRatio = dpr;
 
+    // init resources
+    await M3Resources.init();
+
     // await _onSize(width, height, dpr, isResize: false);
     await renderEngine.initProgram();
     renderEngine.setViewport(width, height, dpr);
-
-    // init resources
-    await M3Resources.init();
 
     _didInit = true;
     if (onDidInit != null) {

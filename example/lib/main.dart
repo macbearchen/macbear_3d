@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 // Macbear3D engine
-import 'package:macbear_3d/macbear_3d.dart';
+import 'package:macbear_3d/macbear_3d.dart' hide Colors;
 export 'package:macbear_3d/macbear_3d.dart';
 
 import '00_starter.dart';
@@ -23,6 +23,8 @@ Future<void> main() async {
 
 Future<void> onDidInit() async {
   debugPrint('main_example.dart: onDidInit');
+  final renderEngine = M3AppEngine.instance.renderEngine;
+  renderEngine.createShadowMap(width: 1024, height: 2048);
   await M3AppEngine.instance.setScene(StarterScene_00());
 }
 
@@ -31,23 +33,73 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Macbear 3D Engine - Powered by ANGLE')),
-        floatingActionButton: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            getHelperWidget(),
-            const SizedBox(height: 10),
-            getShaderWidget(),
-            const SizedBox(height: 10),
-            getTutorialWidget(),
-          ],
-        ),
-        body: M3View(),
+    return MaterialApp(home: const MainPage());
+  }
+}
+
+class MainPage extends StatefulWidget {
+  const MainPage({super.key});
+
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  // 0 - no shadow
+  // 1 - shadowmap
+  // 2 - csm
+  int shadowMode = 2;
+
+  Future<void> _loadScene(M3Scene scene) async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.black54,
+          child: Padding(
+            padding: EdgeInsets.all(20.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: Colors.lightGreen),
+                const SizedBox(width: 20),
+                const Text("Loading 3D Scene...", style: TextStyle(color: Colors.white)),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    try {
+      await M3AppEngine.instance.setScene(scene);
+    } finally {
+      // Close the dialog
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Macbear 3D Engine - Powered by ANGLE')),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          getHelperWidget(),
+          const SizedBox(height: 10),
+          getShaderWidget(),
+          const SizedBox(height: 10),
+          getTutorialWidget(),
+        ],
       ),
+      body: M3View(),
     );
   }
 
@@ -58,6 +110,40 @@ class MainApp extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        FloatingActionButton(
+          heroTag: 'shadow',
+          onPressed: () {
+            final scene = M3AppEngine.instance.activeScene!;
+            shadowMode = (shadowMode + 1) % 3;
+            switch (shadowMode) {
+              case 0: // no shadow
+                renderEngine.options.shadows = false;
+                scene.camera.csmCount = 0;
+                break;
+              case 1: // shadowmap
+                renderEngine.options.shadows = true;
+                scene.camera.csmCount = 0;
+                scene.light.refreshProjectionMatrix();
+                scene.light.setLookat(Vector3(2, 0, 8), Vector3.zero(), Vector3(0, 0, 1));
+                break;
+              case 2: // cascade shadow map
+                renderEngine.options.shadows = true;
+                scene.camera.csmCount = 4;
+                break;
+            }
+          },
+          child: const Icon(Icons.light_mode_rounded),
+        ),
+        const SizedBox(width: 6),
+        FloatingActionButton(
+          heroTag: 'pcf',
+          onPressed: () {
+            shaderOptions.pcf = !shaderOptions.pcf;
+            renderEngine.setLightingProgram();
+          },
+          child: const Icon(Icons.blur_on_rounded),
+        ),
+        const SizedBox(width: 16),
         FloatingActionButton(
           heroTag: 'per_pixel',
           onPressed: () {
@@ -113,73 +199,55 @@ class MainApp extends StatelessWidget {
         children: [
           FloatingActionButton(
             heroTag: 'scene_01',
-            onPressed: () async {
-              await M3AppEngine.instance.setScene(CubeScene_01());
-            },
+            onPressed: () => _loadScene(CubeScene_01()),
             child: const Icon(Icons.filter_1),
           ),
           const SizedBox(width: 6),
           FloatingActionButton(
             heroTag: 'scene_02',
-            onPressed: () async {
-              await M3AppEngine.instance.setScene(SkyboxScene_02());
-            },
+            onPressed: () => _loadScene(SkyboxScene_02()),
             child: const Icon(Icons.filter_2),
           ),
           const SizedBox(width: 6),
           FloatingActionButton(
             heroTag: 'scene_03',
-            onPressed: () async {
-              await M3AppEngine.instance.setScene(PrimitivesScene_03());
-            },
+            onPressed: () => _loadScene(PrimitivesScene_03()),
             child: const Icon(Icons.filter_3),
           ),
           const SizedBox(width: 6),
           FloatingActionButton(
             heroTag: 'scene_04',
-            onPressed: () async {
-              await M3AppEngine.instance.setScene(ObjTeapotScene_04());
-            },
+            onPressed: () => _loadScene(ObjTeapotScene_04()),
             child: const Icon(Icons.filter_4),
           ),
           const SizedBox(width: 6),
           FloatingActionButton(
             heroTag: 'scene_05',
-            onPressed: () async {
-              await M3AppEngine.instance.setScene(GlftScene_05());
-            },
+            onPressed: () => _loadScene(GlftScene_05()),
             child: const Icon(Icons.filter_5),
           ),
           const SizedBox(width: 6),
           FloatingActionButton(
             heroTag: 'scene_06',
-            onPressed: () async {
-              shadowmapScene_06();
-            },
+            onPressed: () => _loadScene(ShadowmapScene_06()),
             child: const Icon(Icons.looks_6),
           ),
           const SizedBox(width: 6),
           FloatingActionButton(
             heroTag: 'scene_07',
-            onPressed: () async {
-              await M3AppEngine.instance.setScene(PhysicsScene_07());
-            },
+            onPressed: () => _loadScene(PhysicsScene_07()),
             child: const Icon(Icons.filter_7),
           ),
           const SizedBox(width: 6),
           FloatingActionButton(
             heroTag: 'scene_08',
-            onPressed: () async {
-              await M3AppEngine.instance.setScene(Text3DScene_08());
-            },
+            onPressed: () => _loadScene(Text3DScene_08()),
             child: const Icon(Icons.filter_8),
           ),
           const SizedBox(width: 6),
           FloatingActionButton(
             heroTag: 'sample',
-            onPressed: () async {
-              await M3AppEngine.instance.setScene(SampleScene());
-            },
+            onPressed: () => _loadScene(SampleScene()),
             child: const Icon(Icons.desktop_mac_sharp),
           ),
         ],

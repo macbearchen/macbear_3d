@@ -12,11 +12,15 @@ class SampleScene extends M3Scene {
     if (isLoaded) return;
     await super.load();
 
+    light.setLookat(Vector3(0, 0, 6), Vector3(0, 0, 1), Vector3(0, 1, 0));
+
     camera.setLookat(Vector3(0, 6, 8), Vector3(0, 0, 2), Vector3(0, 0, 1));
     camera.setEuler(pi / 6, -pi / 5, 0, distance: 10);
 
     final camera2 = M3Camera();
-    camera2.setLookat(Vector3(0, 4, 5), Vector3.zero(), Vector3(0, 0, 1));
+    int halfView = 3;
+    camera2.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 40, far: 20);
+    camera2.setLookat(Vector3(0, 8, 1), Vector3.zero(), Vector3(0, 0, 1));
     cameras.add(camera2);
 
     M3Texture texGround = M3Texture.createCheckerboard(
@@ -106,7 +110,7 @@ class SampleScene extends M3Scene {
 
     double sec = elapsed.inMilliseconds / 1000.0;
 
-    light.setEuler(sec * pi / 18, -pi / 3, 0, distance: light.distanceToTarget); // rotate light
+    light.setEuler(sec * pi / 18, -pi / 1.8, 0, distance: light.distanceToTarget); // rotate light
     // debugPrint('Light Direction: $dirLight');
   }
 

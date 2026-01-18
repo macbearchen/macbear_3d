@@ -28,9 +28,11 @@ class M3DebugOptions {
   bool showFPS = true;
 }
 
+// GLSL options
 class M3ShaderOptions {
-  bool perPixel = false;
-  bool cartoon = false;
+  bool perPixel = false; // per-pixel lighting
+  bool cartoon = false; // cartoon in per-pixel lighting
+  bool pcf = true; // percentage-closer-fliter (PCF) for shadowmap
 }
 
 /// Rendering statistics
@@ -60,11 +62,13 @@ class M3RenderEngine {
   M3Program? programRectangle;
   M3ProgramLighting? programSimpleLighting;
   M3ProgramLighting? programTexture;
-  M3ProgramLighting? programShadowmap;
+  M3ProgramShadowmap? programShadowmap;
+  M3ProgramShadowCSM? programShadowCSM;
   M3Program? programSkybox;
 
   // shadow map
   M3ShadowMap? _shadowMap;
+  M3ShadowMap? get shadowMap => _shadowMap;
 
   // helper for 2D rendering
   late M3Text2D text2D;
@@ -87,6 +91,7 @@ class M3RenderEngine {
     programSimpleLighting?.dispose();
     programTexture?.dispose();
     programShadowmap?.dispose();
+    programShadowCSM?.dispose();
 
     _shadowMap?.dispose();
     text2D.dispose();
@@ -160,6 +165,7 @@ class M3RenderEngine {
   void setLightingProgram() {
     programTexture?.dispose();
     programShadowmap?.dispose();
+    programShadowCSM?.dispose();
 
     final String strSkin = Skinning_es2_vert;
     // texture lighting program
@@ -177,10 +183,20 @@ class M3RenderEngine {
     programTexture = M3ProgramLighting(strVert, strFrag);
 
     // shadow map program
-    strVert = "#define ENABLE_SHADOW_MAP \n$strVert";
-    strFrag = "#define ENABLE_SHADOW_MAP \n$strFrag";
-    strFrag = "#define ENABLE_PCF \n$strFrag";
-    programShadowmap = M3ProgramLighting(strVert, strFrag);
+    String vsShadow = "#define ENABLE_SHADOW_MAP \n$strVert";
+    String fsShadow = "#define ENABLE_SHADOW_MAP \n$strFrag";
+    if (options.shader.pcf) {
+      fsShadow = "#define ENABLE_PCF \n$fsShadow";
+    }
+    programShadowmap = M3ProgramShadowmap(vsShadow, fsShadow);
+
+    // shadow CSM program
+    vsShadow = "#define ENABLE_SHADOW_CSM \n$strVert";
+    fsShadow = "#define ENABLE_SHADOW_CSM \n$strFrag";
+    if (options.shader.pcf) {
+      fsShadow = "#define ENABLE_PCF \n$fsShadow";
+    }
+    programShadowCSM = M3ProgramShadowCSM(vsShadow, fsShadow);
   }
 
   void createShadowMap({int width = 1024, int height = 1024}) {
@@ -228,24 +244,24 @@ class M3RenderEngine {
     gl.enable(WebGL.BLEND);
     gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA); // WebGL.ONE
 
-    M3ProgramLighting progLight = programTexture!; // texture shader
-
     if (!options.debug.wireframe) {
+      M3ProgramLighting progLight = programTexture!; // texture shader
       // Render Shadow Map
       if (options.shadows && _shadowMap != null) {
         _shadowMap!.renderDepthPass(scene, scene.light);
 
-        progLight = programShadowmap!;
-
-        // active shadowmap
-        gl.activeTexture(WebGL.TEXTURE1);
-        gl.bindTexture(WebGL.TEXTURE_2D, _shadowMap!.depthTexture);
-        gl.uniform1i(progLight.uniformSamplerShadowmap, 1);
-
-        gl.activeTexture(WebGL.TEXTURE0);
+        M3ProgramShadow progShadow = programShadowmap!;
+        // cascaded shadow mapping
+        if (scene.light.cascades.isNotEmpty) {
+          progShadow = programShadowCSM!;
+        }
+        progLight = progShadow;
+        // bind shadowmap texture
+        gl.useProgram(progShadow.program);
+        progShadow.bindShadow(_shadowMap!.depthTexture);
       }
 
-      progLight.useLight(scene.light);
+      progLight.applyLight(scene.light);
       scene.render(progLight, scene.camera, bSolid: true);
     } else {
       scene.renderWireframe();
@@ -281,7 +297,8 @@ class M3RenderEngine {
     Matrix4 matIdentity = Matrix4.identity();
     if (options.debug.showHelpers) {
       if (options.shadows && _shadowMap != null) {
-        _shadowMap!.drawDebugDepth(10, engine.appHeight - 210, 200, 200);
+        final width = 200 / _shadowMap!.mapH * _shadowMap!.mapW;
+        _shadowMap!.drawDebugDepth(10, engine.appHeight - 210, width, 200);
       }
 
       prog2D.setModelViewMatrix(matIdentity);
@@ -297,7 +314,7 @@ class M3RenderEngine {
       final fpsText = engine.fps.toStringAsFixed(2);
       text2D.drawText(fpsText, matFps, color: Vector4(0, 1, 0, 1));
 
-      final frameText =
+      final statText =
           '''
 ${engine.frameCounter.toString().padLeft(6)}
 mesh:${stats.entities}
@@ -307,7 +324,19 @@ vert:${stats.vertices}''';
       matFps.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 60, 0));
       matFps.scaleByVector3(Vector3.all(0.9));
       // Draw Render Stats
-      text2D.drawText(frameText, matFps, color: Vector4(1, 1, 1, 1));
+      text2D.drawText(statText, matFps, color: Vector4(1, 1, 1, 1));
+
+      if (engine.activeScene != null) {
+        final scene = engine.activeScene!;
+
+        final shadowText =
+            '''
+shadow:${options.shadows ? 'Y' : 'N'}
+csm=${scene.camera.csmCount}''';
+        matFps.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 150, 0));
+        // Draw Render Stats
+        text2D.drawText(shadowText, matFps, color: Vector4(1, 1, 0, 1));
+      }
     }
 
     gl.disableVertexAttribArray(prog2D.attribVertex.id);

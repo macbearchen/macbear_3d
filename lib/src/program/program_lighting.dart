@@ -24,15 +24,12 @@ mixin M3LightingShader {
     gl.uniform1f(uniformShininess, 0);
   }
 
-  void useLight(M3Light sceneLight) {
+  void applyLight(M3Light sceneLight) {
     _light = sceneLight;
   }
 }
 
 class M3ProgramLighting extends M3ProgramEye with M3LightingShader {
-  late UniformLocation uniformMatrixShadowmap;
-  late UniformLocation uniformSamplerShadowmap;
-
   // shader fog
 
   M3ProgramLighting(super.strVert, super.strFrag);
@@ -42,32 +39,17 @@ class M3ProgramLighting extends M3ProgramEye with M3LightingShader {
     super.initLocation();
 
     initLightingLocation(program);
-
-    uniformMatrixShadowmap = gl.getUniformLocation(program, "MatrixShadowmap");
-    uniformSamplerShadowmap = gl.getUniformLocation(program, "SamplerShadowmap");
-
-    if (uniformSamplerShadowmap.id >= 0) {
-      gl.uniform1i(uniformSamplerShadowmap, 1);
-    }
   }
 
   @override
   void setMatrices(M3Camera cam, Matrix4 mMatrix) {
     super.setMatrices(cam, mMatrix);
 
-    if (_light != null) {
-      if (uniformMatrixShadowmap.id >= 0) {
-        // light-space
-        Matrix4 lightMatrix = _light!.projectionMatrix * _light!.viewMatrix * mMatrix;
-        Matrix4 shadowMatrix = M3Constants.biasMatrix * lightMatrix;
-        gl.uniformMatrix4fv(uniformMatrixShadowmap, false, shadowMatrix.storage);
-      }
-
-      if (uniformLightPosition.id >= 0) {
-        Vector4 lightDirection = Matrix4.inverted(mMatrix) * _light!.getDirection();
-        lightDirection.normalize();
-        gl.uniform3fv(uniformLightPosition, lightDirection.xyz.storage);
-      }
+    final light = _light!;
+    if (uniformLightPosition.id >= 0) {
+      Vector4 lightDirection = Matrix4.inverted(mMatrix) * light.getDirection();
+      lightDirection.normalize();
+      gl.uniform3fv(uniformLightPosition, lightDirection.xyz.storage);
     }
   }
 
@@ -92,13 +74,5 @@ class M3ProgramLighting extends M3ProgramEye with M3LightingShader {
 
     // shininess
     gl.uniform1f(uniformShininess, mtr.shininess);
-  }
-
-  void activeShadowmap(WebGLTexture texture, Matrix4 matShadow) {
-    gl.uniformMatrix4fv(uniformMatrixShadowmap, false, matShadow.storage);
-
-    gl.activeTexture(WebGL.TEXTURE1);
-    gl.bindTexture(WebGL.TEXTURE_2D, texture);
-    gl.uniform1i(uniformSamplerShadowmap, 1);
   }
 }
