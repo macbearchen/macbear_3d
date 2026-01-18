@@ -13,7 +13,7 @@ topics:
 screenshots:
   - description: 'Macbear 3D Engine'
     path: img/scene08.png
-  - description: 'Teapot'
+  - description: 'Utah teapot'
     path: img/scene04.png
   - description: 'Cartoon shader'
     path: img/cartoon.png
