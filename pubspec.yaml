@@ -8,7 +8,7 @@ topics:
   - opengl
   - glsl
   - macbear
-  - 3d
+  - matrix
 
 screenshots:
   - description: 'Macbear 3D Engine'
