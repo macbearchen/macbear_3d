@@ -43,6 +43,10 @@ uniform mat4 MatrixCSM[4];
 varying highp vec4 LightcoordCSM[4];	// light-space coordinate-system
 #endif // ENABLE_SHADOW_CSM
 
+#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
+uniform highp float NormalBias;			// normal bias (for shadow acne)
+#endif
+
 #ifdef ENABLE_FOG
 // fog depth on water
 uniform mediump vec4 FogPlane;		// fog-plane in object-space
@@ -84,16 +88,17 @@ void main(void)
 	
 	
 #ifdef ENABLE_SHADOW_MAP
-	LightcoordShadowmap = MatrixShadowmap * objVert;
-//	LightcoordShadowmap = LightcoordShadowmap / LightcoordShadowmap.w;
+	vec3 biasedVertMap = objVert.xyz + objNormal * NormalBias;
+	LightcoordShadowmap = MatrixShadowmap * vec4(biasedVertMap, 1.0);
 #endif // ENABLE_SHADOW_MAP
 	
 #ifdef ENABLE_SHADOW_CSM
 	// cascaded shadowmap
-	LightcoordCSM[0] = MatrixCSM[0] * objVert;
-	LightcoordCSM[1] = MatrixCSM[1] * objVert;
-	LightcoordCSM[2] = MatrixCSM[2] * objVert;
-	LightcoordCSM[3] = MatrixCSM[3] * objVert;
+	vec3 biasedVertCSM = objVert.xyz + objNormal * NormalBias;
+	LightcoordCSM[0] = MatrixCSM[0] * vec4(biasedVertCSM, 1.0);
+	LightcoordCSM[1] = MatrixCSM[1] * vec4(biasedVertCSM, 1.0);
+	LightcoordCSM[2] = MatrixCSM[2] * vec4(biasedVertCSM, 1.0);
+	LightcoordCSM[3] = MatrixCSM[3] * vec4(biasedVertCSM, 1.0);
 #endif // ENABLE_SHADOW_CSM
 
 #ifdef ENABLE_FOG

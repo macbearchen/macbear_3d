@@ -32,7 +32,7 @@ class PrimitivesScene_03 extends M3Scene {
     );
 
     // 03-1: plane geometry
-    final plane = addMesh(M3Mesh(M3PlaneGeom(10, 10, uvScale: Vector2.all(5.0))), Vector3(0, 0, -1));
+    final plane = addMesh(M3Mesh(M3PlaneGeom(20, 20, uvScale: Vector2.all(5.0))), Vector3(0, 0, -1));
     M3Texture texGround = M3Texture.createCheckerboard(
       size: 2,
       lightColor: Vector4(.7, 1, .5, 1),
@@ -43,6 +43,11 @@ class PrimitivesScene_03 extends M3Scene {
     // 03-2: sphere geometry
     final sphere = addMesh(M3Mesh(M3SphereGeom(0.5)), Vector3(2, 0, 0));
     sphere.mesh!.mtr.texDiffuse = texGrid2;
+
+    final sphere2 = addMesh(M3Mesh(M3SphereGeom(1)), Vector3(0, 8, 1))..color = Vector4(1, 0, 0, 1);
+    final sphere3 = addMesh(M3Mesh(M3SphereGeom(1.5)), Vector3(-6, 6, 1.5))..color = Vector4(0, 1, 0, 1);
+    sphere2.mesh!.mtr.texDiffuse = texGrid2;
+    sphere3.mesh!.mtr.texDiffuse = texGrid2;
 
     // 03-3: cylinder geometry
     final cylinder = addMesh(M3Mesh(M3CylinderGeom(0.2, 0.5, 1, heightSegments: 2)), Vector3(0, 2, 0));

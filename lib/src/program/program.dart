@@ -7,6 +7,7 @@ import '../../macbear_3d.dart';
 // part for program
 part 'program_eye.dart';
 part 'program_lighting.dart';
+part 'program_shadowmap.dart';
 
 /// A WebGL shader program wrapper for GLSL vertex and fragment shaders.
 ///
@@ -44,6 +45,7 @@ class M3Program {
   late UniformLocation attribBoneIndex; // bone-index
   late UniformLocation attribBoneWeight; // bone-weight
 
+  /// Compiles and links a shader program from vertex and fragment sources.
   M3Program(String strVert, String strFrag) {
     // vertrx shader
     _shaderVert = gl.createShader(WebGL.VERTEX_SHADER);
@@ -147,6 +149,8 @@ class M3Program {
       gl.uniformMatrix4fv(uniformMVP, false, mat.storage);
     }
   }
+
+  void applyCamera(M3Camera cam) {}
 
   void setMatrices(M3Camera cam, Matrix4 mMatrix) {
     // Projection matrix

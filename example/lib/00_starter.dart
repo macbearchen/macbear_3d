@@ -34,7 +34,7 @@ Click buttons to test examples.
   3. Primitives scene
   4. Obj teapot scene
   5. GLTF scene
-  6. create Shadowmap
+  6. Shadow for large scene
   7. Physics scene
   8. Text 3D scene
 ''';

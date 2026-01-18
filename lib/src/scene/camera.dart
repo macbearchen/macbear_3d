@@ -2,77 +2,7 @@
 import '../../macbear_3d.dart';
 import '../util/euler.dart';
 
-/// Manages projection matrix and viewport settings for perspective or orthographic rendering.
-class M3Projection {
-  static const int halfW = 8, halfH = 6;
-  // matrix
-  Matrix4 projectionMatrix = Matrix4.identity();
-  // viewport: x,y,w,h
-  int viewportX = -halfW, viewportY = -halfH;
-  int viewportW = halfW * 2, viewportH = halfH * 2;
-  // clip z-plane: near/far
-  double nearClip = 1, farClip = 100.0;
-  // Vertical Focus Of View by degree, zero means orthographic projection (parallel)
-  double degreeFovY = 50.0;
-
-  M3Projection() {
-    refreshProjectionMatrix();
-  }
-  // set viewport and projection matrix
-  void setViewport(int x, int y, int w, int h, {double fovy = 50.0, double near = 1.0, double far = 100.0}) {
-    viewportX = x;
-    viewportY = y;
-    viewportW = w;
-    viewportH = h;
-
-    degreeFovY = fovy;
-    nearClip = near;
-    farClip = far;
-    refreshProjectionMatrix();
-  }
-
-  void enableInfinite() {
-    if (degreeFovY > 0.0) {
-      // perspective projection by infinitite far-clip
-      double fovy = radians(degreeFovY);
-      double aspect = (viewportW / viewportH).abs();
-      projectionMatrix = makeInfiniteMatrix(fovy, aspect, nearClip);
-    }
-  }
-
-  // refresh projection matrix
-  void refreshProjectionMatrix() {
-    if (degreeFovY > 0.0) {
-      // perspective projection
-      double fovy = radians(degreeFovY);
-      double aspect = (viewportW / viewportH).abs();
-      projectionMatrix = makePerspectiveMatrix(fovy, aspect, nearClip, farClip);
-    } else {
-      // orthographic projection (parallel)
-      double viewW = viewportW.toDouble(); // default view width
-      double viewH = viewportH.toDouble(); // default view height
-
-      final left = viewportX.toDouble();
-      final right = left + viewW;
-      final bottom = viewportY.toDouble();
-      final top = bottom + viewH;
-      projectionMatrix = makeOrthographicMatrix(left, right, bottom, top, nearClip, farClip);
-    }
-
-    // Flip Y only for Metal/iOS
-    // if (Platform.isIOS || Platform.isMacOS) {
-    //   projectionMatrix.scaleByVector3(Vector3(1, -1, 1));
-    // }
-  }
-
-  @override
-  String toString() {
-    return '''
-Viewport: ($viewportX,$viewportY) - $viewportW x $viewportH
-FovY: $degreeFovY, Clip Z: near=$nearClip, far=$farClip
-''';
-  }
-}
+part 'projection.dart';
 
 /// A 3D camera with view transformation, frustum culling, and orbit controls.
 ///
@@ -81,17 +11,9 @@ class M3Camera extends M3Projection {
   Vector3 position = Vector3(0.0, 0.0, 0.0);
   Quaternion rotation = Quaternion.identity();
 
-  Frustum frustum = Frustum();
+  final Frustum _frustum = Frustum();
   // Euler
   M3Euler euler = M3Euler();
-
-  // visibility checking (frustum culling)
-  bool isVisible(M3Bounding bounds) {
-    if (!frustum.intersectsWithSphere(bounds.sphere)) {
-      return false;
-    }
-    return frustum.intersectsWithAabb3(bounds.aabb);
-  }
 
   // View matrix, inverse matrix (camera to world for frustum debug)
   Matrix4 viewMatrix = Matrix4.identity();
@@ -104,13 +26,43 @@ class M3Camera extends M3Projection {
   double distanceToTarget = 20.0;
 
   // split distance for CSM
-  List<double> csmDepthSplits = [];
+  List<double> csmSplitDistances = [];
+  int _csmCount = 4;
+  int get csmCount => _csmCount;
+  set csmCount(int val) {
+    if (_csmCount != val) {
+      _csmCount = val;
+      _updateSplitDistances();
+    }
+  }
+
+  double csmLambda = 0.6;
+
+  // visibility checking (frustum culling)
+  bool isVisible(M3Bounding bounds) {
+    if (!_frustum.intersectsWithSphere(bounds.sphere)) {
+      return false;
+    }
+    return _frustum.intersectsWithAabb3(bounds.aabb);
+  }
+
+  void updateFrustum(Matrix4 matrix) {
+    _frustum.setFromMatrix(matrix);
+  }
 
   @override
   void setViewport(int x, int y, int w, int h, {double fovy = 50.0, double near = 1.0, double far = 100.0}) {
     super.setViewport(x, y, w, h, fovy: fovy, near: near, far: far);
-    // lambda: 0 split by average, 1 split as smaller near, larger far
-    csmDepthSplits = buildCSMSplits(4, 0.7);
+    _updateSplitDistances();
+  }
+
+  void _updateSplitDistances() {
+    if (csmCount > 0) {
+      csmSplitDistances = buildCSMSplits(csmCount, csmLambda);
+      debugPrint("csmSplitDistances: $csmSplitDistances");
+    } else {
+      csmSplitDistances = [];
+    }
   }
 
   /// CSM Cascaded-Shadowmap split (near, far)
@@ -138,7 +90,7 @@ class M3Camera extends M3Projection {
     viewMatrix = makeViewMatrix(eye, target, up);
     _invViewMatrix = viewMatrix.orthoInverse(); // ortho inverse matrix
     // frustum matrix for culling
-    frustum.setFromMatrix(projectionMatrix * viewMatrix);
+    updateFrustum(projectionMatrix * viewMatrix);
   }
 
   // yaw by Z-axis, pitch by Y-axis, roll by X-axis
@@ -169,7 +121,7 @@ class M3Camera extends M3Projection {
     _invViewMatrix.setTranslation(position);
     viewMatrix = _invViewMatrix.orthoInverse(); // compute model-view-matrix
     // frustum matrix for culling
-    frustum.setFromMatrix(projectionMatrix * viewMatrix);
+    updateFrustum(projectionMatrix * viewMatrix);
   }
 
   void setRotationQuaternion(Quaternion rotQuat, {double? distance}) {
@@ -202,11 +154,33 @@ $euler
     prog.setMatrices(viewer, frustumMatrix);
     M3Resources.debugFrustum.draw(prog, bSolid: false);
 
-    Matrix4 matNear = Matrix4.identity();
-    matNear.translateByVector3(Vector3(0, -0.2, -0.99));
-    matNear = frustumMatrix * matNear;
+    // near clip
+    Matrix4 matNear = frustumMatrix.clone()..translateByVector3(Vector3(0, -0.2, -0.995));
     prog.setMatrices(viewer, matNear);
     M3Resources.debugView.draw(prog, bSolid: false);
+
+    // draw split distance
+    if (csmCount > 0) {
+      M3Material mtrHelper = M3Material();
+      prog.setMaterial(mtrHelper, Colors.blue);
+      M3Projection proj = M3Projection();
+      for (int i = 0; i < csmSplitDistances.length - 1; i++) {
+        proj.setViewport(
+          viewportX,
+          viewportY,
+          viewportW,
+          viewportH,
+          fovy: degreeFovY,
+          near: csmSplitDistances[i],
+          far: csmSplitDistances[i + 1],
+        );
+
+        Matrix4 splitMatrix = Matrix4.inverted(proj.projectionMatrix * viewMatrix);
+        splitMatrix.translateByVector3(Vector3(0, -0.2, 1));
+        prog.setMatrices(viewer, splitMatrix);
+        M3Resources.debugView.draw(prog, bSolid: false);
+      }
+    }
   }
 }
 

@@ -12,7 +12,7 @@ class M3Framebuffer {
   int frameW = 1024;
   int frameH = 1024;
 
-  late Framebuffer _shadowFBO;
+  late Framebuffer _fbo;
   late WebGLTexture depthTexture;
 
   M3Framebuffer(this.frameW, this.frameH) {
@@ -43,8 +43,8 @@ class M3Framebuffer {
     // gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_COMPARE_FUNC, WebGL.LESS);
 
     // Create FBO
-    _shadowFBO = gl.createFramebuffer();
-    gl.bindFramebuffer(WebGL.FRAMEBUFFER, _shadowFBO);
+    _fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(WebGL.FRAMEBUFFER, _fbo);
     gl.framebufferTexture2D(WebGL.FRAMEBUFFER, WebGL.DEPTH_ATTACHMENT, WebGL.TEXTURE_2D, depthTexture, 0);
 
     // We don't need a color attachment for shadow mapping, but some drivers might complain.
@@ -59,12 +59,12 @@ class M3Framebuffer {
   }
 
   void bind() {
-    gl.bindFramebuffer(WebGL.FRAMEBUFFER, _shadowFBO);
+    gl.bindFramebuffer(WebGL.FRAMEBUFFER, _fbo);
     gl.viewport(0, 0, frameW, frameH);
   }
 
   void dispose() {
     gl.deleteTexture(depthTexture);
-    gl.deleteFramebuffer(_shadowFBO);
+    gl.deleteFramebuffer(_fbo);
   }
 }

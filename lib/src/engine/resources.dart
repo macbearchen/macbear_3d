@@ -29,7 +29,6 @@ class M3Resources {
 
   static M3Shape2D get triangle {
     _triangle ??= M3Shape2D(WebGL.TRIANGLES, 3)..createVBO(WebGL.DYNAMIC_DRAW);
-    debugPrint('triangle: $_triangle');
     return _triangle!;
   }
 

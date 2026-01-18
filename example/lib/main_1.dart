@@ -5,14 +5,15 @@ import 'package:macbear_3d/macbear_3d.dart';
 
 void main() {
   M3AppEngine.instance.onDidInit = onDidInit;
-  M3AppEngine.backgroundColor = Vector3(0, 0, 0.3);
 
   runApp(const MyApp());
 }
 
 Future<void> onDidInit() async {
   debugPrint('main_example.dart: onDidInit');
-  await M3AppEngine.instance.setScene(MyScene());
+  final appEngine = M3AppEngine.instance;
+  appEngine.renderEngine.createShadowMap(width: 1024, height: 1024);
+  await appEngine.setScene(MyScene());
 }
 
 class MyApp extends StatelessWidget {
@@ -37,11 +38,12 @@ class MyScene extends M3Scene {
     await super.load();
 
     camera.setEuler(pi / 6, -pi / 6, 0, distance: 8);
+    camera.csmCount = 0;
 
     // add geometry
     addMesh(M3Mesh(M3BoxGeom(1.0, 1.0, 1.0)), Vector3.zero()).color = Colors.blue;
-    addMesh(M3Mesh(M3SphereGeom(0.5)), Vector3(2, 0, 0)).color = Colors.red;
-    addMesh(M3Mesh(M3TorusGeom(0.5, 0.3)), Vector3(0, 2, 0)).color = Colors.green;
+    addMesh(M3Mesh(M3SphereGeom(0.5)), Vector3(0, 0, 2.5)).color = Colors.red;
+    addMesh(M3Mesh(M3TorusGeom(1, 0.2)), Vector3(0, 0, 0)).color = Colors.green;
     addMesh(M3Mesh(M3CylinderGeom(0.5, 0.0, 1.0)), Vector3(0, 0, 1)).color = Colors.yellow;
     addMesh(M3Mesh(M3PlaneGeom(5, 5)), Vector3(0, 0, -1));
   }

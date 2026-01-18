@@ -14,7 +14,7 @@ Macbear 3D brings high-performance 3D rendering to Flutter applications with a s
 - **Primitives**: Built-in support for Cubes, Spheres, Planes, and more.
 - **Model Loaders**: Easy loading of `glTF` and `OBJ` models.
 - **Materials & Textures**: Support for standard materials, texturing, and transparency.
-- **Lighting & Shadows**: Dynamic lighting and shadow mapping support.
+- **Lighting & Shadows**: Dynamic lighting and Cascaded Shadow Mapping (CSM) support.
 - **Physics**: Integrated rigid body physics engine (via `oimo_physics`).
 - **Resource Management**: Centralized loading and caching of assets (geometries, textures, fonts).
 - **3D Text**: Generate 3D geometry from text strings using TrueType/OpenType fonts.
@@ -45,7 +45,7 @@ Add `macbear_3d` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  macbear_3d: ^0.2.0
+  macbear_3d: ^0.3.0
 ```
 
 ## Usage
@@ -117,7 +117,7 @@ output to uml/macbear_3d.puml
 
 - [ ] Skinned Mesh
 - [ ] Skeletal Animation
-- [ ] Shadows improvements (Cascaded Shadow Maps)
+- [x] Shadows improvements (Cascaded Shadow Maps)
 - [ ] PBR Material support
 - [ ] Skybox reflection via cubemap
 - [ ] Water effect (reflection, refraction)
