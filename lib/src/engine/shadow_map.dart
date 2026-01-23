@@ -22,6 +22,11 @@ class M3ShadowMap {
     debugPrint('create M3ShadowMap: $width x $height');
   }
 
+  @override
+  String toString() {
+    return '$mapW*$mapH';
+  }
+
   void dispose() {
     _tex?.dispose();
     _framebuffer.dispose();

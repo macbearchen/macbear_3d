@@ -1,3 +1,6 @@
+// NOTICE 1: WITH_NORMAL must be defined before "Skinning.es2.vert"
+// NOTICE 2: "Skinning.es2.vert" must be added before this file
+
 // Lighting function //////////
 attribute mediump vec2 inTexCoord;
 //attribute mediump vec4 inColor;		// as diffuse-ambient material

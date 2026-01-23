@@ -24,14 +24,13 @@
 
 // vertex data
 attribute highp vec3 inVertex;
-attribute mediump vec3 inNormal;
 
 attribute mediump vec4 inBoneIndex;
 attribute mediump vec4 inBoneWeight;
 		  
 // skinning mesh part: bone
 uniform mediump int BoneCount;
-uniform highp   mat4 BoneMatrixArray[8];
+uniform highp   mat4 BoneMatrixArray[32];
 //uniform highp   mat3 BoneMatrixArrayIT[8];
 /*
 void ComputeSkinningVertex(out highp vec4 objVert, out mediump vec3 objNormal)
@@ -85,30 +84,45 @@ void ComputeSkinningVertex(out highp vec4 objVert, out mediump vec3 objNormal)
 
 // skinning vertex: discard for-loop, so extend to whole code
 // (ps: iPad2 has some problem when using for-loop (4 times) in shader)
+#ifdef WITH_NORMAL
+attribute mediump vec3 inNormal;
 void ComputeSkinningVertex(out highp vec4 objVert, out mediump vec3 objNormal)
+#else
+void ComputeSkinningVertex(out highp vec4 objVert)
+#endif // WITH_NORMAL
 {
 	highp vec4 srcVert = vec4(inVertex, 1.0);
 	// On PowerVR SGX it is possible to index the components of a vector
 	// with the [] operator. However this can cause trouble with PC
 	// emulation on some hardware so we "rotate" the vectors instead.
-	mediump ivec4 boneIndex = ivec4(inBoneIndex);
+	mediump ivec4 boneIndex = ivec4(inBoneIndex + 0.5);
 
 	objVert = BoneMatrixArray[boneIndex.x] * srcVert * inBoneWeight.x;
+#ifdef WITH_NORMAL
 	objNormal = mat3(BoneMatrixArray[boneIndex.x]) * inNormal * inBoneWeight.x;
+#endif // WITH_NORMAL
 	if (BoneCount > 1)
 	{
 		objVert += BoneMatrixArray[boneIndex.y] * srcVert * inBoneWeight.y;
+#ifdef WITH_NORMAL
 		objNormal += mat3(BoneMatrixArray[boneIndex.y]) * inNormal * inBoneWeight.y;
+#endif // WITH_NORMAL
 		if (BoneCount > 2)
 		{
 			objVert += BoneMatrixArray[boneIndex.z] * srcVert * inBoneWeight.z;
+#ifdef WITH_NORMAL
 			objNormal += mat3(BoneMatrixArray[boneIndex.z]) * inNormal * inBoneWeight.z;
+#endif // WITH_NORMAL
 			if (BoneCount > 3)
 			{
 				objVert += BoneMatrixArray[boneIndex.w] * srcVert * inBoneWeight.w;
+#ifdef WITH_NORMAL
 				objNormal += mat3(BoneMatrixArray[boneIndex.w]) * inNormal * inBoneWeight.w;
+#endif // WITH_NORMAL
 			}
 		}
 	}
+#ifdef WITH_NORMAL
 	objNormal = normalize(objNormal);
+#endif // WITH_NORMAL
 }

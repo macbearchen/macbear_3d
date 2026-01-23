@@ -7,7 +7,6 @@ export 'camera.dart';
 export 'entity.dart';
 export 'light.dart';
 export 'skybox.dart';
-export 'transform.dart';
 
 part 'sample_scene.dart';
 
@@ -47,13 +46,6 @@ abstract class M3Scene {
 
   void dispose() {
     skybox?.dispose();
-
-    final world = M3AppEngine.instance.physicsEngine.world!;
-    for (final entity in entities) {
-      if (entity.rigidBody != null) {
-        world.removeRigidBody(entity.rigidBody!);
-      }
-    }
   }
 
   bool _isLoaded = false;
@@ -78,8 +70,21 @@ abstract class M3Scene {
     entities.add(entity);
   }
 
-  void update(Duration elapsed) {
+  double _totalTime = 0.0;
+  double get totalTime => _totalTime;
+
+  void savePhysicsStates() {
     for (final entity in entities) {
+      entity.savePhysicsState();
+    }
+  }
+
+  void update(double delta) {
+    _totalTime += delta;
+    for (final entity in entities) {
+      // update animation
+      entity.update(delta);
+
       // sync physics
       entity.syncFromPhysics();
 
@@ -92,7 +97,6 @@ abstract class M3Scene {
   void render(M3Program prog, M3Camera camera, {bool bSolid = true}) {
     // pre-draw
     gl.useProgram(prog.program);
-    gl.uniform1i(prog.uniformBoneCount, 0);
     prog.applyCamera(camera);
 
     for (final entity in entities) {
@@ -142,8 +146,13 @@ abstract class M3Scene {
 
       final mesh = entity.mesh!;
 
+      Matrix4 matMesh = Matrix4.copy(entity.matrix);
+      if (mesh.skin != null) {
+        // matMesh = matMesh * mesh.skin!.jointNodes![0].worldMatrix;
+      }
+
       // origin axis
-      progSimple.setMatrices(camera, entity.matrix);
+      progSimple.setMatrices(camera, matMesh);
       // draw axis at object origin
       progSimple.setMaterial(mesh.mtr, Colors.red);
       M3Resources.debugAxis.draw(progSimple);
@@ -177,34 +186,6 @@ abstract class M3Scene {
 
     progSimple.setMaterial(mtrHelper, Colors.yellow);
     light.drawHelper(progSimple, camera);
-  }
-
-  void renderWireframe() {
-    M3Program progSimple = M3AppEngine.instance.renderEngine.programSimple!;
-
-    // pre-draw
-    gl.useProgram(progSimple.program);
-    gl.uniform1i(progSimple.uniformBoneCount, 0);
-
-    for (final entity in entities) {
-      // culling
-      if (entity.mesh == null || !camera.isVisible(entity.worldBounding)) {
-        if (entity.mesh != null) M3AppEngine.instance.renderEngine.stats.culling++;
-        continue;
-      }
-
-      final mesh = entity.mesh!;
-      progSimple.setMatrices(camera, entity.matrix);
-      // wireframe
-      progSimple.setMaterial(mesh.mtr, entity.color);
-      mesh.geom.draw(progSimple, bSolid: false);
-
-      // statistics
-      final stats = M3AppEngine.instance.renderEngine.stats;
-      stats.entities++;
-      stats.vertices += mesh.geom.vertexCount;
-      stats.triangles += mesh.geom.getTriangleCount(bSolid: false);
-    }
   }
 
   void render2D() {}

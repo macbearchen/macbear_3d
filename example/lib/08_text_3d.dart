@@ -56,10 +56,10 @@ class Text3DScene_08 extends M3Scene {
   }
 
   @override
-  void update(Duration elapsed) {
-    super.update(elapsed);
+  void update(double delta) {
+    super.update(delta);
 
-    double sec = elapsed.inMilliseconds / 1000.0;
+    double sec = totalTime;
     light.setEuler(sec * pi / 6, -pi / 5, 0, distance: light.distanceToTarget); // rotate light
   }
 }

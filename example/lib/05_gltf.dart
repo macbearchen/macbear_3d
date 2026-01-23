@@ -11,18 +11,25 @@ class GlftScene_05 extends M3Scene {
     if (isLoaded) return;
     await super.load();
 
+    camera.setLookat(Vector3(10, 0, 0), Vector3(0, 0, 2), Vector3(0, 0, 1));
     camera.setEuler(pi / 6, -pi / 6, 0, distance: 8);
 
     // plane geometry
-    final plane = addMesh(M3Mesh(M3PlaneGeom(10, 10, uvScale: Vector2.all(2.0))), Vector3(0, 0, -1));
-    M3Texture texGround = await M3Texture.loadTexture('example/test_8x8.astc');
+    M3Texture texGround = M3Texture.createCheckerboard(
+      size: 2,
+      lightColor: Vector4(.7, 1, .5, 1),
+      darkColor: Vector4(.5, 0.8, .3, 1),
+    );
+    final plane = addMesh(M3Mesh(M3PlaneGeom(20, 20, uvScale: Vector2.all(5.0))), Vector3(0, 0, 0));
     plane.mesh!.mtr.texDiffuse = texGround;
 
     // 05-1: GLTF model - using M3Mesh.load()
     final meshGltf = await M3Mesh.load('example/CesiumMan.glb');
-    _man = addMesh(meshGltf, Vector3(0, 0, -1));
+    meshGltf.animator?.play(0);
+    _man = addMesh(meshGltf, Vector3(0, 0, 0));
     _man!.color = Colors.white;
-    _man!.scale = Vector3.all(2);
+    _man!.rotation = Quaternion.euler(0, pi / 2, 0);
+    _man!.scale = Vector3.all(3);
 
     // 05-2: GLTF model - using M3Mesh.load()
     // https://github.com/KhronosGroup/glTF-Sample-Models
@@ -35,19 +42,24 @@ class GlftScene_05 extends M3Scene {
     );
 */
     final meshDuck = await M3Mesh.load('example/Duck.glb');
+    _duck = addMesh(meshDuck, Vector3(0, 5, 0));
+    _duck!.scale = Vector3.all(0.03);
 
-    _duck = addMesh(meshDuck, Vector3(0, 2, -1));
-    _duck!.scale = Vector3.all(0.02);
+    final meshFox = await M3Mesh.load('example/Fox.glb');
+    meshFox.animator?.play(0);
+    final fox = addMesh(meshFox, Vector3(-3, 0, 0));
+    fox.rotation = Quaternion.euler(0, pi / 2, 0);
+    fox.scale = Vector3.all(0.04);
 
     // set background color
     M3AppEngine.backgroundColor = Vector3(0.3, 0.1, 0.3);
   }
 
   @override
-  void update(Duration elapsed) {
-    super.update(elapsed);
+  void update(double delta) {
+    super.update(delta);
 
-    double sec = elapsed.inMilliseconds / 1000.0;
+    double sec = totalTime;
 
     light.setEuler(sec * pi / 18, -pi / 3, 0, distance: light.distanceToTarget); // rotate light
     // debugPrint('Light Direction: $dirLight');

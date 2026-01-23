@@ -32,19 +32,19 @@ class ShadowmapScene_06 extends M3Scene {
       100,
       widthSegments: 100,
       heightSegments: 100,
-      uvScale: Vector2.all(10.0),
+      uvScale: Vector2.all(6.0),
       onVertex: (x, y) {
         double rad = pi / 10;
         return (cos(x * rad) + sin(y * rad));
       },
     );
-
-    final plane = addMesh(M3Mesh(geomPlane), Vector3(0, 0, -2));
     M3Texture texGround = M3Texture.createCheckerboard(
       size: 10,
       lightColor: Vector4(.7, 1, .5, 1),
       darkColor: Vector4(.5, 0.8, .3, 1),
     );
+    // M3Texture texGround = await M3Texture.loadTexture('example/test_8x8.astc');
+    final plane = addMesh(M3Mesh(geomPlane), Vector3(0, 0, -2));
     plane.mesh!.mtr.texDiffuse = texGround;
 
     final geomBox = M3BoxGeom(2.0, 1.5, 3.0);
@@ -77,10 +77,10 @@ class ShadowmapScene_06 extends M3Scene {
   }
 
   @override
-  void update(Duration elapsed) {
-    super.update(elapsed);
+  void update(double delta) {
+    super.update(delta);
 
-    double sec = elapsed.inMilliseconds / 1000.0;
+    double sec = totalTime;
     light.setEuler(sec * pi / 20, -pi / 4, 0, distance: 30); // rotate light
     // debugPrint('Light Direction: $dirLight');
   }

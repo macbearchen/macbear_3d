@@ -25,7 +25,8 @@ class M3RenderOptions {
 class M3DebugOptions {
   bool wireframe = false;
   bool showHelpers = false;
-  bool showFPS = true;
+  bool showStats = true;
+  bool showPhysicsStats = false;
 }
 
 // GLSL options
@@ -70,9 +71,6 @@ class M3RenderEngine {
   M3ShadowMap? _shadowMap;
   M3ShadowMap? get shadowMap => _shadowMap;
 
-  // helper for 2D rendering
-  late M3Text2D text2D;
-
   // for ortho-matrix to project to 2D screen
   final _projection2D = M3Projection();
 
@@ -94,7 +92,6 @@ class M3RenderEngine {
     programShadowCSM?.dispose();
 
     _shadowMap?.dispose();
-    text2D.dispose();
   }
 
   void getExtensions() {
@@ -145,7 +142,7 @@ class M3RenderEngine {
     // getExtensions();
 
     // simple program
-    programSimple = M3Program(Simple_es2_vert, Simple_es2_frag);
+    programSimple = M3Program(Skinning_es2_vert + Simple_es2_vert, Simple_es2_frag);
 
     // skybox program
     programSkybox = M3Program(Skybox_es2_vert, Skybox_es2_frag);
@@ -157,9 +154,6 @@ class M3RenderEngine {
     programRectangle = M3Program(Rect_es2_vert, Rect_es2_frag);
 
     setLightingProgram();
-
-    // init text2D
-    text2D = await M3Text2D.createText2D(fontSize: 30);
   }
 
   void setLightingProgram() {
@@ -167,7 +161,7 @@ class M3RenderEngine {
     programShadowmap?.dispose();
     programShadowCSM?.dispose();
 
-    final String strSkin = Skinning_es2_vert;
+    final String strSkin = "#define WITH_NORMAL \n$Skinning_es2_vert";
     // texture lighting program
     String strVert = TexturedLighting_es2_vert;
     strVert = strSkin + strVert;
@@ -262,9 +256,11 @@ class M3RenderEngine {
       }
 
       progLight.applyLight(scene.light);
+      // solid
       scene.render(progLight, scene.camera, bSolid: true);
     } else {
-      scene.renderWireframe();
+      // wireframe
+      scene.render(programSimple!, scene.camera, bSolid: false);
     }
 
     // draw Helper
@@ -294,25 +290,24 @@ class M3RenderEngine {
     }
 
     // 2D helper
-    Matrix4 matIdentity = Matrix4.identity();
     if (options.debug.showHelpers) {
       if (options.shadows && _shadowMap != null) {
         final width = 200 / _shadowMap!.mapH * _shadowMap!.mapW;
         _shadowMap!.drawDebugDepth(10, engine.appHeight - 210, width, 200);
       }
 
-      prog2D.setModelViewMatrix(matIdentity);
+      prog2D.setModelViewMatrix(Matrix4.identity());
 
       // draw test: triangle, line, touches
       M3Shape2D.drawTouches(engine.touchManager);
     }
-    // Draw FPS counter
-    if (options.debug.showFPS) {
-      Matrix4 matFps = Matrix4.identity();
-      matFps.setTranslation(Vector3(M3AppEngine.instance.appWidth - 50, 40, 0));
-      matFps.scaleByVector3(Vector3.all(0.5));
+    // Render Statistics
+    Matrix4 matStats = Matrix4.identity();
+    if (options.debug.showStats) {
+      matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 50, 50, 0));
+      matStats.scaleByVector3(Vector3.all(0.5));
       final fpsText = engine.fps.toStringAsFixed(2);
-      text2D.drawText(fpsText, matFps, color: Vector4(0, 1, 0, 1));
+      M3Resources.text2D.drawText(fpsText, matStats, color: Vector4(0, 1, 0, 1));
 
       final statText =
           '''
@@ -321,10 +316,10 @@ mesh:${stats.entities}
 cull:${stats.culling}
  tri:${stats.triangles}
 vert:${stats.vertices}''';
-      matFps.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 60, 0));
-      matFps.scaleByVector3(Vector3.all(0.9));
-      // Draw Render Stats
-      text2D.drawText(statText, matFps, color: Vector4(1, 1, 1, 1));
+      matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 66, 0));
+      matStats.scaleByVector3(Vector3.all(0.9));
+      // Render Stats
+      M3Resources.text2D.drawText(statText, matStats, color: Vector4(1, 1, 1, 1));
 
       if (engine.activeScene != null) {
         final scene = engine.activeScene!;
@@ -332,10 +327,22 @@ vert:${stats.vertices}''';
         final shadowText =
             '''
 shadow:${options.shadows ? 'Y' : 'N'}
+$shadowMap
 csm=${scene.camera.csmCount}''';
-        matFps.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 150, 0));
-        // Draw Render Stats
-        text2D.drawText(shadowText, matFps, color: Vector4(1, 1, 0, 1));
+        matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 150, 0));
+        // Shadow Info
+        M3Resources.text2D.drawText(shadowText, matStats, color: Vector4(1, 1, 0, 1));
+      }
+    }
+
+    // Physics Statistics
+    final physicsWorld = M3AppEngine.instance.physicsEngine.world;
+    if (physicsWorld != null) {
+      physicsWorld.isStat = options.debug.showPhysicsStats;
+      if (options.debug.showPhysicsStats) {
+        final physicsInfo = physicsWorld.getInfo();
+        matStats.setTranslation(Vector3(10, 300, 0));
+        M3Resources.text2D.drawText(physicsInfo, matStats, color: Vector4(1, 0, 1, 1));
       }
     }
 

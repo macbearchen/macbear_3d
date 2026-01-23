@@ -21,8 +21,8 @@ class M3Shape2D {
   late Vector2List _uvs; // vertex texture coordinates(u,v)
 
   // VBO: vertex buffer object
-  late Buffer _vertexBuffer;
-  late Buffer _uvBuffer;
+  Buffer? _vertexBuffer;
+  Buffer? _uvBuffer;
 
   static M3Material mtrWhite = M3Material();
 
@@ -52,6 +52,17 @@ class M3Shape2D {
     _uvBuffer = gl.createBuffer();
     gl.bindBuffer(WebGL.ARRAY_BUFFER, _uvBuffer);
     gl.bufferData(WebGL.ARRAY_BUFFER, Float32Array.fromList(_uvs.buffer), usage);
+  }
+
+  void dispose() {
+    if (_vertexBuffer != null) {
+      gl.deleteBuffer(_vertexBuffer!);
+      _vertexBuffer = null;
+    }
+    if (_uvBuffer != null) {
+      gl.deleteBuffer(_uvBuffer!);
+      _uvBuffer = null;
+    }
   }
 
   void draw() {

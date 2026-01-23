@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-
+import 'package:flutter/foundation.dart';
 import 'package:vector_math/vector_math.dart';
 
 import 'gltf_accessor.dart';
@@ -16,6 +16,8 @@ class GltfDocument {
   late final List<GltfImage> images;
   late final List<GltfSkin> skins;
   late final List<GltfNode> nodes;
+  late final List<GltfAnimation> animations;
+  late final List<int> rootNodes;
 
   // Runtime loaded assets
   // Use dynamic to avoid circular dependency (should be List<M3Texture>)
@@ -56,6 +58,25 @@ class GltfDocument {
     meshes = meshList.asMap().entries.map((entry) {
       return GltfMesh.parse(this, entry.key, entry.value as Map<String, dynamic>);
     }).toList();
+
+    // 6. Parse Animations
+    final animationList = json['animations'] as List<dynamic>? ?? [];
+    animations = animationList.map((e) => GltfAnimation.parse(this, e as Map<String, dynamic>)).toList();
+
+    // 7. Find Root Nodes
+    final childSet = <int>{};
+    for (final node in nodes) {
+      for (final child in node.children) {
+        childSet.add(child);
+      }
+    }
+    rootNodes = [];
+    for (int i = 0; i < nodes.length; i++) {
+      if (!childSet.contains(i)) {
+        rootNodes.add(i);
+      }
+    }
+    debugPrint('GltfDocument: found ${rootNodes.length} root nodes: $rootNodes');
   }
 
   /// 取得 Accessor 資料
@@ -317,11 +338,14 @@ class GltfNode {
   final int? skinIndex;
   final List<int> children;
 
-  // Transform
-  final Vector3? translation;
-  final Quaternion? rotation;
-  final Vector3? scale;
+  // Transform (mutable for animation)
+  Vector3 translation;
+  Quaternion rotation;
+  Vector3 scale;
   final Matrix4? matrix;
+
+  /// Computed world matrix for this node.
+  Matrix4 worldMatrix = Matrix4.identity();
 
   GltfNode({
     required this.document,
@@ -329,9 +353,9 @@ class GltfNode {
     this.meshIndex,
     this.skinIndex,
     this.children = const [],
-    this.translation,
-    this.rotation,
-    this.scale,
+    required this.translation,
+    required this.rotation,
+    required this.scale,
     this.matrix,
   });
 
@@ -366,10 +390,97 @@ class GltfNode {
       meshIndex: json['mesh'] as int?,
       skinIndex: json['skin'] as int?,
       children: (json['children'] as List?)?.cast<int>() ?? [],
-      translation: t,
-      rotation: r,
-      scale: s,
+      translation: t ?? Vector3.zero(),
+      rotation: r ?? Quaternion.identity(),
+      scale: s ?? Vector3.all(1.0),
       matrix: m,
     );
   }
+
+  /// Computes the world matrix for this node and its children.
+  void computeWorldMatrix(Matrix4 parentMatrix) {
+    if (matrix != null) {
+      worldMatrix.setFrom(parentMatrix * matrix!);
+    } else {
+      worldMatrix.setFrom(parentMatrix * Matrix4.compose(translation, rotation, scale));
+    }
+
+    for (final childIndex in children) {
+      document.nodes[childIndex].computeWorldMatrix(worldMatrix);
+    }
+  }
+}
+
+/// glTF Animation
+class GltfAnimation {
+  final GltfDocument document;
+  final String name;
+  final List<GltfAnimationChannel> channels;
+  final List<GltfAnimationSampler> samplers;
+
+  GltfAnimation({required this.document, required this.name, required this.channels, required this.samplers});
+
+  static GltfAnimation parse(GltfDocument doc, Map<String, dynamic> json) {
+    final name = json['name'] as String? ?? 'Animation';
+
+    final samplerList = json['samplers'] as List<dynamic>? ?? [];
+    final samplers = samplerList.map((e) => GltfAnimationSampler.parse(doc, e as Map<String, dynamic>)).toList();
+
+    final channelList = json['channels'] as List<dynamic>? ?? [];
+    final channels = channelList.map((e) => GltfAnimationChannel.parse(doc, e as Map<String, dynamic>)).toList();
+
+    return GltfAnimation(document: doc, name: name, channels: channels, samplers: samplers);
+  }
+}
+
+/// glTF Animation Channel
+class GltfAnimationChannel {
+  final GltfDocument document;
+  final int samplerIndex;
+  final int? targetNodeIndex;
+  final String targetPath; // "translation", "rotation", "scale", "weights"
+
+  GltfAnimationChannel({
+    required this.document,
+    required this.samplerIndex,
+    this.targetNodeIndex,
+    required this.targetPath,
+  });
+
+  static GltfAnimationChannel parse(GltfDocument doc, Map<String, dynamic> json) {
+    final target = json['target'] as Map<String, dynamic>;
+    return GltfAnimationChannel(
+      document: doc,
+      samplerIndex: json['sampler'] as int,
+      targetNodeIndex: target['node'] as int?,
+      targetPath: target['path'] as String,
+    );
+  }
+}
+
+/// glTF Animation Sampler
+class GltfAnimationSampler {
+  final GltfDocument document;
+  final int inputAccessor; // time
+  final int outputAccessor; // values (TRS)
+  final String interpolation; // "LINEAR", "STEP", "CUBICSPLINE"
+
+  GltfAnimationSampler({
+    required this.document,
+    required this.inputAccessor,
+    required this.outputAccessor,
+    required this.interpolation,
+  });
+
+  static GltfAnimationSampler parse(GltfDocument doc, Map<String, dynamic> json) {
+    return GltfAnimationSampler(
+      document: doc,
+      inputAccessor: json['input'] as int,
+      outputAccessor: json['output'] as int,
+      interpolation: json['interpolation'] as String? ?? 'LINEAR',
+    );
+  }
+
+  Float32List getInputs() => document.getFloatAccessor(inputAccessor);
+  Float32List getOutputs() => document.getFloatAccessor(outputAccessor);
 }

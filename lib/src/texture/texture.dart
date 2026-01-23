@@ -11,7 +11,6 @@ class M3Texture {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
 
   // default white pixel 1x1
-  static final texWhite = M3Texture.createSolidColor(Vector4(1, 1, 1, 1));
   static final List<int> _cubeMapFaceTargets = [
     WebGL.TEXTURE_CUBE_MAP_POSITIVE_X,
     WebGL.TEXTURE_CUBE_MAP_NEGATIVE_X,

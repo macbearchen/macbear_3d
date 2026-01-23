@@ -1,6 +1,8 @@
 // Macbear3D engine
 import '../../macbear_3d.dart';
 
+enum M3Axis { x, y, z }
+
 class M3Constants {
   // POD should rotate axisX 90 degree: up from axisY(POD) to axisZ(3dsmax); POD(x,y,z) to 3dsmax(x,-z,y)
   // matrix rotate by X-axis: rotationX(-PI_HALF)

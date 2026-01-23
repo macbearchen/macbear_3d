@@ -25,16 +25,7 @@ class M3ObjGeom extends M3Geom {
     final indicesArray = Uint16Array.fromList(indices);
     _faceIndices.add(_M3Indices(WebGL.TRIANGLES, indicesArray));
 
-    // Create wireframe indices (simple approach: lines for triangles)
-    List<int> lineIndices = [];
-    for (int i = 0; i < indices.length; i += 3) {
-      lineIndices.add(indices[i]);
-      lineIndices.add(indices[i + 1]);
-      lineIndices.add(indices[i + 1]);
-      lineIndices.add(indices[i + 2]);
-      lineIndices.add(indices[i + 2]);
-      lineIndices.add(indices[i]);
-    }
-    _edgeIndices.add(_M3Indices(WebGL.LINES, Uint16Array.fromList(lineIndices)));
+    // Create wireframe indices
+    _generateEdgeIndices(indices);
   }
 }

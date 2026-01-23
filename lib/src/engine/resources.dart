@@ -2,12 +2,18 @@
 import '../../macbear_3d.dart';
 
 class M3Resources {
+  static final texWhite = M3Texture.createSolidColor(Vector4(1, 1, 1, 1));
+
   // debug geom
   static final debugAxis = M3DebugAxisGeom(size: 0.5);
   static final debugSphere = M3DebugSphereGeom(radius: 1.0);
   static final debugFrustum = M3BoxGeom(2.0, 2.0, 2.0);
   static final debugDot = M3SphereGeom(0.1, widthSegments: 4, heightSegments: 2);
   static final debugView = M3PlaneGeom(1.6, 1.6, widthSegments: 5, heightSegments: 4);
+
+  // unit geometory
+  static final unitCube = M3BoxGeom(1.0, 1.0, 1.0);
+  static final unitSphere = M3SphereGeom(0.5);
 
   // for dynamic draw: line, triangle
   static M3Shape2D? _line;
@@ -17,8 +23,7 @@ class M3Resources {
   static M3Text2D? _text2D;
   static M3Rectangle2D? _rectUnit;
 
-  static Future<M3Text2D> get text2D async {
-    _text2D ??= await M3Text2D.createText2D(fontSize: 30);
+  static M3Text2D get text2D {
     return _text2D!;
   }
 
@@ -40,9 +45,33 @@ class M3Resources {
   }
 
   static Future<void> init() async {
+    texWhite;
+
+    debugAxis;
+    debugSphere;
+    debugFrustum;
+    debugDot;
+    debugView;
+
     line;
     triangle;
     rectUnit;
-    await text2D;
+    _text2D = await M3Text2D.createText2D(fontSize: 30);
+    debugPrint('+++ M3Resources init done+++');
+  }
+
+  static void dispose() {
+    texWhite.dispose();
+
+    debugAxis.dispose();
+    debugSphere.dispose();
+    debugFrustum.dispose();
+    debugDot.dispose();
+    debugView.dispose();
+
+    line.dispose();
+    triangle.dispose();
+    rectUnit.dispose();
+    text2D.dispose();
   }
 }

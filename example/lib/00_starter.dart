@@ -19,13 +19,12 @@ class StarterScene_00 extends M3Scene {
   void render2D() {
     super.render2D();
 
-    final renderEngine = M3AppEngine.instance.renderEngine;
     Matrix4 mat2D = Matrix4.identity();
 
     M3Shape2D.drawImage(_logo!, mat2D, color: Vector4(1, 1, 1, 1));
 
     mat2D.setTranslation(Vector3(_logo!.texW + 6, 0, 0));
-    renderEngine.text2D.drawText('Welcome to Macbear 3D.', mat2D, color: Vector4(0.5, 1, 0.6, 1));
+    M3Resources.text2D.drawText('Welcome to Macbear 3D.', mat2D, color: Vector4(0.5, 1, 0.6, 1));
 
     final info = '''
 Click buttons to test examples.
@@ -41,6 +40,6 @@ Click buttons to test examples.
 
     mat2D.setTranslation(Vector3(20, 80, 0));
     mat2D.scaleByVector3(Vector3.all(0.7));
-    renderEngine.text2D.drawText(info, mat2D);
+    M3Resources.text2D.drawText(info, mat2D);
   }
 }

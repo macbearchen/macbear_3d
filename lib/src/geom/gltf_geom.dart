@@ -13,21 +13,26 @@ class M3GltfGeom extends M3Geom {
     final normals = primitive.getNormals();
     final uvs = primitive.getTexCoords();
     final indices = primitive.getIndices();
-
     final vertexCount = primitive.vertexCount;
 
-    _init(vertexCount: vertexCount, withNormals: normals != null, withUV: uvs != null);
+    _init(vertexCount: vertexCount, withNormals: normals != null || primitive.mode == 4, withUV: uvs != null);
 
-    // Copy positions
+    // Prepare indices for normal calculation and VBO creation
+    final List<int> finalIndices = indices ?? List<int>.generate(vertexCount, (i) => i);
+
+    // Copy Positions
     for (int i = 0; i < positions.length; i++) {
       _vertices!.buffer[i] = positions[i];
     }
 
-    // Copy normals
+    // Copy or Compute Normals
     if (normals != null && _normals != null) {
       for (int i = 0; i < normals.length; i++) {
         _normals!.buffer[i] = normals[i];
       }
+    } else if (primitive.mode == 4) {
+      // Mode 4 = TRIANGLES, compute smooth normals if missing
+      computeNormals(finalIndices);
     }
 
     // Copy UVs
@@ -57,29 +62,12 @@ class M3GltfGeom extends M3Geom {
     _createVBO();
 
     // Create face indices
-    if (indices != null && indices.isNotEmpty) {
-      // glTF indices
-      final indicesArray = Uint16Array.fromList(indices.map((e) => e.clamp(0, 65535)).toList());
-      _faceIndices.add(_M3Indices(_glMode(primitive.mode), indicesArray));
-    } else {
-      // Non-indexed geometry: generate sequential indices
-      final sequentialIndices = List<int>.generate(vertexCount, (i) => i);
-      final indicesArray = Uint16Array.fromList(sequentialIndices);
-      _faceIndices.add(_M3Indices(_glMode(primitive.mode), indicesArray));
-    }
+    final indicesArray = Uint16Array.fromList(finalIndices.map((e) => e.clamp(0, 65535)).toList());
+    _faceIndices.add(_M3Indices(_glMode(primitive.mode), indicesArray));
 
-    // Create wireframe indices for debugging
-    if (indices != null && indices.isNotEmpty && primitive.mode == 4) {
-      List<int> lineIndices = [];
-      for (int i = 0; i < indices.length - 2; i += 3) {
-        lineIndices.add(indices[i]);
-        lineIndices.add(indices[i + 1]);
-        lineIndices.add(indices[i + 1]);
-        lineIndices.add(indices[i + 2]);
-        lineIndices.add(indices[i + 2]);
-        lineIndices.add(indices[i]);
-      }
-      _edgeIndices.add(_M3Indices(WebGL.LINES, Uint16Array.fromList(lineIndices)));
+    // Create wireframe indices
+    if (primitive.mode == 4) {
+      _generateEdgeIndices(finalIndices);
     }
 
     // Apply material logic moved to M3Mesh construction

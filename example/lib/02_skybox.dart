@@ -11,7 +11,7 @@ class SkyboxScene_02 extends M3Scene {
     camera.setEuler(pi / 6, -pi / 6, 0, distance: 8);
 
     // 01: box geometry
-    final box = addMesh(M3Mesh(M3BoxGeom(1.0, 1.0, 1.0)), Vector3.zero());
+    final box = addMesh(M3Mesh(M3Resources.unitCube), Vector3.zero());
     M3Texture texGrid = M3Texture.createCheckerboard(size: 5);
     box.mesh!.mtr.texDiffuse = texGrid;
 

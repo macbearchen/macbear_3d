@@ -1,5 +1,6 @@
 import 'package:vector_math/vector_math.dart';
 
+import '../engine/resources.dart';
 import '../gltf/gltf_parser.dart';
 import 'texture.dart';
 
@@ -10,7 +11,7 @@ class M3Material {
   double shininess = 16; // glossiness [0 ~ 128]
 
   // textures
-  M3Texture texDiffuse = M3Texture.texWhite;
+  M3Texture texDiffuse = M3Resources.texWhite;
   Matrix3 texMatrix = Matrix3.identity();
 
   M3Material();

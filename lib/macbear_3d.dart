@@ -9,6 +9,7 @@ export 'src/engine/resources.dart';
 export 'src/geom/geom.dart';
 export 'src/input/touch.dart';
 export 'src/mesh/mesh.dart';
+export 'src/physics/physics_engine.dart';
 export 'src/program/program.dart';
 export 'src/scene/scene.dart';
 export 'src/texture/material.dart';

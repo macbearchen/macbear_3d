@@ -2,8 +2,9 @@ part of 'scene.dart';
 
 /// A demonstration scene with cubes, spheres, physics, and a skybox.
 class SampleScene extends M3Scene {
-  final _geomCube = M3BoxGeom(1.0, 1.0, 1.0);
-  final _geomSphere = M3SphereGeom(0.5);
+  final _geomCube = M3Resources.unitCube;
+  final _geomSphere = M3Resources.unitSphere;
+  final _geomCylinder = M3CylinderGeom(0.5, 0.5, 1.0);
   final _geomPlane = M3PlaneGeom(20.0, 20.0, widthSegments: 50, heightSegments: 50, uvScale: Vector2(10.0, 10.0));
 
   // constructor
@@ -12,7 +13,7 @@ class SampleScene extends M3Scene {
     if (isLoaded) return;
     await super.load();
 
-    light.setLookat(Vector3(0, 0, 6), Vector3(0, 0, 1), Vector3(0, 1, 0));
+    light.setLookat(Vector3(0, 0, 20), Vector3(0, 0, 1), Vector3(0, 1, 0));
 
     camera.setLookat(Vector3(0, 6, 8), Vector3(0, 0, 2), Vector3(0, 0, 1));
     camera.setEuler(pi / 6, -pi / 5, 0, distance: 10);
@@ -32,9 +33,9 @@ class SampleScene extends M3Scene {
     M3Texture texGrid = M3Texture.createCheckerboard(size: 3);
 
     // create physics ground rigid body, 4 fences
-    M3AppEngine.instance.physicsEngine.addGround(20, 20, 10);
-    M3AppEngine.instance.physicsEngine.addFence(20, 20, 10);
-    final world = M3AppEngine.instance.physicsEngine.world!;
+    final phyEngine = M3AppEngine.instance.physicsEngine;
+    phyEngine.addGround(20, 20, 10);
+    phyEngine.addBoundaryFence(20, 20, 10);
 
     // ground plane model
     final meshPlane = addMesh(M3Mesh(_geomPlane), Vector3(0, 0, 0))..color = Vector4(1.0, 1.0, 1.0, 1);
@@ -52,46 +53,41 @@ class SampleScene extends M3Scene {
     ];
 
     // cube model (dynamic)
-    int countX = 3, countY = 3, countZ = 12;
+    int countX = 4, countY = 4, countZ = 8;
     for (int i = 0; i < countX; i++) {
       for (int j = 0; j < countY; j++) {
         for (int k = 0; k < countZ; k++) {
-          final delta = Random().nextDouble() * 0.5 - 0.25;
-          final pos = Vector3(i * 2.0 + delta, j * 2.0 + delta, k * 2.0 + delta);
-          pos.z += 1.0; // drop from sky
+          final delta = Random().nextDouble() * 0.5 - 0.25 - 2;
+          final pos = Vector3(i * 2.0 + delta, j * 2.0 + delta, k * 3.0 + delta);
+          pos.z += 3.0; // drop from sky
 
           final meshColor = colors[k % colors.length];
-          // create visual entity
-          M3Entity entity;
           M3Mesh mesh;
-          M3Texture tex;
+          oimo.RigidBody rb;
+          M3Axis phyUpAxis = M3Axis.z;
 
-          // create rigid body
-          oimo.Shape oimoShape;
-          switch ((k + 1) % 2) {
+          // visual entity, rigid body
+          switch (k % 3) {
             case 0:
-              oimoShape = oimo.Box(oimo.ShapeConfig(geometry: oimo.Shapes.box), 1.0, 1.0, 1.0);
-              tex = texGrid;
+              mesh = M3Mesh(_geomSphere);
+              mesh.mtr.texDiffuse = texGrid2;
+              rb = phyEngine.addSphere(0.5, density: 1.0, position: pos);
+              break;
+            case 1:
               mesh = M3Mesh(_geomCube);
+              mesh.mtr.texDiffuse = texGrid;
+              rb = phyEngine.addBox(1.0, 1.0, 1.0, density: 1.0, position: pos);
               break;
             default:
-              oimoShape = oimo.Sphere(oimo.ShapeConfig(geometry: oimo.Shapes.sphere), 0.5);
-              tex = texGrid2;
-              mesh = M3Mesh(_geomSphere);
+              mesh = M3Mesh(_geomCylinder);
+              mesh.mtr.texDiffuse = texGrid2;
+              rb = phyEngine.addCylinder(0.5, 1.0, density: 1.0, position: pos);
+              phyUpAxis = M3Axis.y;
               break;
           }
-          entity = addMesh(mesh, pos)..color = meshColor;
-          entity.mesh!.mtr.texDiffuse = tex;
-
-          final config = oimo.ObjectConfigure(
-            shapes: [oimoShape],
-            position: pos,
-            move: true, // dynamic
-          );
-          final rb = world.add(config) as oimo.RigidBody;
-
-          // link
+          M3Entity entity = addMesh(mesh, pos)..color = meshColor;
           entity.rigidBody = rb;
+          entity.physicsUpAxis = phyUpAxis;
         }
       }
     }
@@ -105,10 +101,10 @@ class SampleScene extends M3Scene {
   }
 
   @override
-  void update(Duration elapsed) {
-    super.update(elapsed);
+  void update(double delta) {
+    super.update(delta);
 
-    double sec = elapsed.inMilliseconds / 1000.0;
+    double sec = totalTime;
 
     light.setEuler(sec * pi / 18, -pi / 1.8, 0, distance: light.distanceToTarget); // rotate light
     // debugPrint('Light Direction: $dirLight');
@@ -117,13 +113,12 @@ class SampleScene extends M3Scene {
   @override
   void render2D() {
     // draw rectangle full-screen
-    final renderEngine = M3AppEngine.instance.renderEngine;
     Matrix4 mat2D = Matrix4.identity();
 
     final sampleString = "Macbear 3D: sample scene";
     mat2D.setTranslation(Vector3(3, 3, 0));
-    renderEngine.text2D.drawText(sampleString, mat2D, color: Vector4(0, 0.1, 0, 1));
+    M3Resources.text2D.drawText(sampleString, mat2D, color: Vector4(0, 0.1, 0, 1));
     mat2D.setTranslation(Vector3(0, 1, 0));
-    renderEngine.text2D.drawText(sampleString, mat2D, color: Vector4(0, 0.9, 0, 1));
+    M3Resources.text2D.drawText(sampleString, mat2D, color: Vector4(0, 0.9, 0, 1));
   }
 }

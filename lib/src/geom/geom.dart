@@ -13,6 +13,7 @@ import 'text/ttf_parser.dart';
 part 'debug/debug_axis_geom.dart';
 part 'debug/debug_sphere_geom.dart';
 part 'primitive/box_geom.dart';
+part 'primitive/capsule_geom.dart';
 part 'primitive/cylinder_geom.dart';
 part 'primitive/ellipsoid_geom.dart';
 part 'primitive/plane_geom.dart';
@@ -206,6 +207,93 @@ abstract class M3Geom {
       gl.bindBuffer(WebGL.ARRAY_BUFFER, _weightBuffer);
       gl.bufferData(WebGL.ARRAY_BUFFER, Float32Array.fromList(_weights!), WebGL.STATIC_DRAW);
       _weights = null;
+    }
+  }
+
+  /// Computes vertex normals automatically based on triangle geometry.
+  ///
+  /// This method should be called after filling [_vertices] and providing [indices],
+  /// but before calling [_createVBO()].
+  void computeNormals(List<int> indices) {
+    if (_vertices == null || _vertexCount == 0 || indices.isEmpty) return;
+
+    // 1. Initialize normals if not already present
+    _normals ??= Vector3List(_vertexCount);
+    for (int i = 0; i < _vertexCount; i++) {
+      _normals!.setValues(i, 0.0, 0.0, 0.0);
+    }
+
+    final vA = Vector3.zero();
+    final vB = Vector3.zero();
+    final vC = Vector3.zero();
+    final edge1 = Vector3.zero();
+    final edge2 = Vector3.zero();
+    final triNormal = Vector3.zero();
+
+    // 2. Accumulate face normals for each vertex
+    for (int i = 0; i < indices.length - 2; i += 3) {
+      final i1 = indices[i];
+      final i2 = indices[i + 1];
+      final i3 = indices[i + 2];
+
+      _vertices!.load(i1, vA);
+      _vertices!.load(i2, vB);
+      _vertices!.load(i3, vC);
+
+      edge1.setFrom(vB);
+      edge1.sub(vA);
+      edge2.setFrom(vC);
+      edge2.sub(vA);
+
+      edge1.crossInto(edge2, triNormal);
+      if (triNormal.length2 < 1e-10) continue; // Skip degenerate triangles
+      triNormal.normalize();
+
+      // Accumulate into vertex normals
+      for (final idx in [i1, i2, i3]) {
+        _normals!.load(idx, vA);
+        vA.add(triNormal);
+        _normals!.setValues(idx, vA.x, vA.y, vA.z);
+      }
+    }
+
+    // 3. Normalize all vertex normals for smooth shading
+    for (int i = 0; i < _vertexCount; i++) {
+      _normals!.load(i, vA);
+      if (vA.length2 > 0) {
+        vA.normalize();
+        _normals!.setValues(i, vA.x, vA.y, vA.z);
+      }
+    }
+  }
+
+  /// Generates wireframe edge indices from triangle indices.
+  ///
+  /// Optimized to add each edge only once.
+  void _generateEdgeIndices(List<int> indices) {
+    if (indices.isEmpty) return;
+
+    final Set<int> edges = {};
+    final List<int> lineIndices = [];
+
+    void addEdge(int i1, int i2) {
+      final int a = i1 < i2 ? i1 : i2;
+      final int b = i1 < i2 ? i2 : i1;
+      final int key = (a << 16) | b;
+      if (edges.add(key)) {
+        lineIndices.add(a);
+        lineIndices.add(b);
+      }
+    }
+
+    for (int i = 0; i < indices.length - 2; i += 3) {
+      addEdge(indices[i], indices[i + 1]);
+      addEdge(indices[i + 1], indices[i + 2]);
+      addEdge(indices[i + 2], indices[i]);
+    }
+
+    if (lineIndices.isNotEmpty) {
+      _edgeIndices.add(_M3Indices(WebGL.LINES, Uint16Array.fromList(lineIndices)));
     }
   }
 

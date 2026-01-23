@@ -24,7 +24,7 @@ Future<void> main() async {
 Future<void> onDidInit() async {
   debugPrint('main_example.dart: onDidInit');
   final renderEngine = M3AppEngine.instance.renderEngine;
-  renderEngine.createShadowMap(width: 1024, height: 2048);
+  renderEngine.createShadowMap(width: 2048, height: 4096);
   await M3AppEngine.instance.setScene(StarterScene_00());
 }
 
@@ -99,7 +99,60 @@ class _MainPageState extends State<MainPage> {
           getTutorialWidget(),
         ],
       ),
-      body: M3View(),
+      body: Stack(
+        children: [
+          const M3View(),
+          Positioned(top: 3, right: 3, child: getTimeScaleWidget()),
+        ],
+      ),
+    );
+  }
+
+  final _timeScaleValues = [0.0, 0.1, 0.5, 1.0, 1.25, 1.5, 2.0, 5.0];
+
+  Widget getTimeScaleWidget() {
+    final engine = M3AppEngine.instance;
+    // Find closest index
+    int index = _timeScaleValues.indexWhere((v) => (v - engine.timeScale).abs() < 0.01);
+    if (index == -1) index = 4; // default to 1.0
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(24)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.speed, color: Colors.white70, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            "${engine.timeScale.toStringAsFixed(2)}x",
+            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(
+            width: 150,
+            child: SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                trackHeight: 2,
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+              ),
+              child: Slider(
+                value: index.toDouble(),
+                min: 0,
+                max: (_timeScaleValues.length - 1).toDouble(),
+                divisions: _timeScaleValues.length - 1,
+                activeColor: Colors.lightGreen,
+                inactiveColor: Colors.white24,
+                onChanged: (val) {
+                  setState(() {
+                    engine.timeScale = _timeScaleValues[val.toInt()];
+                  });
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

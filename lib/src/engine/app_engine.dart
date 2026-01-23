@@ -7,7 +7,6 @@ import 'package:flutter/scheduler.dart';
 // Macbear3D engine
 import '../../macbear_3d.dart' hide Colors;
 import '../input/keyboard.dart';
-import '../physics/physics_engine.dart';
 
 /// The main application engine singleton that manages the Flutter-ANGLE context.
 ///
@@ -15,7 +14,7 @@ import '../physics/physics_engine.dart';
 class M3AppEngine {
   static final M3AppEngine instance = M3AppEngine._internal();
 
-  String version = "macbear3d-lib v0.3.0 powered by ANGLE";
+  String version = "macbear3d-lib v0.4.0 powered by ANGLE";
   final FlutterAngle _angle = FlutterAngle();
   late FlutterAngleTexture _sourceTexture; // main framebuffer
   static Vector3 backgroundColor = Vector3.zero();
@@ -34,6 +33,8 @@ class M3AppEngine {
   final Stopwatch _stopwatch = Stopwatch();
 
   late Ticker ticker;
+  Duration _lastElapsed = Duration.zero;
+  double timeScale = 1.0; // global time scale
 
   int frameCounter = 0;
   bool _updating = false;
@@ -144,7 +145,7 @@ class M3AppEngine {
   }
 
   Future<void> setScene(M3Scene scene) async {
-    pause();
+    pause(); // app ticker pause
 
     // free original scene
     if (M3AppEngine.instance.activeScene != null) {
@@ -152,11 +153,18 @@ class M3AppEngine {
       M3AppEngine.instance.activeScene = null;
     }
 
+    // reset physics world
+    physicsEngine.resetWorld();
+
     await scene.load();
+    // reset scene to initial state
+    scene.savePhysicsStates(); // Initial state for interpolation
+    scene.update(0.0);
+
     activeScene = scene;
     renderEngine.setViewport(appWidth, appHeight, devicePixelRatio);
 
-    resume();
+    resume(); // app ticker resume
   }
 
   void pause() {
@@ -175,6 +183,7 @@ class M3AppEngine {
     }
     if (!ticker.isActive) {
       ticker.start();
+      _lastElapsed = Duration.zero;
     }
     debugPrint("+++ app resume +++");
   }
@@ -280,14 +289,23 @@ class M3AppEngine {
   }
 
   // application update and render
+  // elapsed time since ticker started (absolute duration)
   Future<void> updateRender(Duration elapsed) async {
     if (!_updating && _didInit) {
       _updating = true;
+
+      // delta time since last frame (relative duration)
+      Duration delta = elapsed - _lastElapsed;
+      _lastElapsed = elapsed;
+
       _stopwatch.reset();
       _stopwatch.start();
 
       // application update then render
-      _update(elapsed);
+      delta *= timeScale;
+      if (delta > Duration.zero) {
+        _update(delta);
+      }
       await _render();
 
       _stopwatch.stop();
@@ -308,12 +326,13 @@ class M3AppEngine {
   }
 
   // application update
-  void _update(Duration elapsed) {
-    // debugPrint('update= $elapsed');
+  void _update(Duration delta) {
+    // debugPrint('update= $delta');
     if (activeScene != null) {
-      double sec = elapsed.inMilliseconds / 1000.0;
-      physicsEngine.update(sec);
-      activeScene!.update(elapsed);
+      double dt = delta.inMicroseconds / 1000000.0;
+
+      physicsEngine.update(dt, onBeforeStep: activeScene!.savePhysicsStates);
+      activeScene!.update(dt);
     }
   }
 

@@ -67,13 +67,17 @@ class PrimitivesScene_03 extends M3Scene {
     // 03-6: ellipsoid geometry
     final ellipsoid = addMesh(M3Mesh(M3EllipsoidGeom(0.9, 0.6, 0.3)), Vector3(2, 2, 0));
     ellipsoid.mesh!.mtr.texDiffuse = texGrid2;
+
+    // 03-7: capsule geometry
+    final capsule = addMesh(M3Mesh(M3CapsuleGeom(0.3, 1)), Vector3(-2, 2, 0));
+    capsule.mesh!.mtr.texDiffuse = texGrid2;
   }
 
   @override
-  void update(Duration elapsed) {
-    super.update(elapsed);
+  void update(double delta) {
+    super.update(delta);
 
-    double sec = elapsed.inMilliseconds / 1000.0;
+    double sec = totalTime;
     light.setEuler(sec * pi / 5, -pi / 3, 0, distance: light.distanceToTarget); // rotate light
     // debugPrint('Light Direction: $dirLight');
 
