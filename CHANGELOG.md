@@ -1,3 +1,10 @@
+## 0.4.0
+
+* Add:
+  * **Core Engine**: Refactored `updateRender` to use `delta` duration for precise physics and animation timing.
+  * **Skinned Meshes**: Fixed world-space bounding box calculations and improved animation stability.
+  * **Resource Management**: Improved handling of font assets and added loading state support.
+
 ## 0.3.0
 
 * Add:
