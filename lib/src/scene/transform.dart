@@ -12,6 +12,8 @@ class M3Transform {
   final List<M3Transform> children = [];
 
   bool _dirty = true;
+  bool get isDirty => _dirty;
+
   Matrix4 _worldMatrix = Matrix4.identity();
 
   void markDirty() {

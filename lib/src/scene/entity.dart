@@ -2,7 +2,6 @@ import 'package:oimo_physics/oimo_physics.dart' as oimo;
 
 // Macbear3D engine
 import '../../macbear_3d.dart';
-import 'transform.dart';
 
 /// A scene entity representing a renderable object with transform and physics.
 ///
@@ -183,4 +182,5 @@ class M3Entity {
   }
 
   Matrix4 get matrix => _transform.worldMatrix;
+  M3Transform get transform => _transform;
 }

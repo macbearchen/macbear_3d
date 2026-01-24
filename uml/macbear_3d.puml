@@ -812,6 +812,7 @@ class "macbear_3d::src::scene::transform.dart::M3Transform" {
   +List<M3Transform> children
   -bool _dirty
   -Matrix4 _worldMatrix
+  +bool isDirty
   +Matrix4 worldMatrix
   +void markDirty()
   -void _rebuild()
@@ -927,6 +928,7 @@ class "macbear_3d::src::scene::entity.dart::M3Entity" {
   +Quaternion rotation
   +Vector3 scale
   +Matrix4 matrix
+  +M3Transform transform
   +void updateBounds()
   +void savePhysicsState()
   +void syncFromPhysics()

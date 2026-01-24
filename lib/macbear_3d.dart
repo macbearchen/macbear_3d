@@ -12,6 +12,7 @@ export 'src/mesh/mesh.dart';
 export 'src/physics/physics_engine.dart';
 export 'src/program/program.dart';
 export 'src/scene/scene.dart';
+export 'src/scene/transform.dart';
 export 'src/texture/material.dart';
 export 'src/texture/texture.dart';
 export 'src/texture/text_texture.dart';

@@ -1,5 +1,5 @@
 // ignore_for_file: file_names
-import 'main.dart';
+import 'main_all.dart';
 
 // ignore: camel_case_types
 class SkyboxScene_02 extends M3Scene {
