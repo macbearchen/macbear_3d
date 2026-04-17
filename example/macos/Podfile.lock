@@ -5,7 +5,7 @@ PODS:
     - FlutterMacOS
   - FlutterAngle (0.0.8)
   - FlutterMacOS (1.0.0)
-  - macbear_3d (0.7.2):
+  - macbear_3d (0.8.0):
     - FlutterMacOS
   - video_player_avfoundation (0.0.1):
     - Flutter
@@ -35,7 +35,7 @@ SPEC CHECKSUMS:
   flutter_angle: fd425c2f11c130891a5e87a0dad8de8815413b43
   FlutterAngle: c810891af800750361b1d0e7cc944f2338d5ae18
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
-  macbear_3d: 01ba869a72890885a6bb168ab771485582b144e1
+  macbear_3d: 701dbe77f689d224428f84b0a8f48d5f13d4f3d3
   video_player_avfoundation: 7993f492ae0bd77edaea24d9dc051d8bb2cd7c86
 
 PODFILE CHECKSUM: 54d867c82ac51cbd61b565781b9fada492027009
