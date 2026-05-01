@@ -1,3 +1,14 @@
+## 0.8.1
+
+* Update:
+  * **Project Structure**: Reorganized example files into a `demos/` subdirectory for better maintainability.
+  * **Scene Graph**: Introduced `M3Node` to improve hierarchical transformations and scene management; refactored `M3Entity` and `M3Transform`.
+  * **Rendering**:
+    * Added **PCF (Percentage Closer Filtering)** for smoother shadow edges (`PCF.es3.frag`).
+    * Improved `M3RenderPipeline` and `M3FrameBuffer` for better performance and flexibility.
+  * **Core Engine**: Removed legacy `physics_engine.dart` in favor of streamlined physics integration.
+  * **Shaders**: Updated ES3 shaders with PCF shadow support.
+
 ## 0.8.0
 
 * Update:

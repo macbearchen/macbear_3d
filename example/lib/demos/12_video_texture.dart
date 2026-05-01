@@ -1,7 +1,7 @@
 // ignore_for_file: unused_local_variable, file_names
 import 'package:flutter/material.dart' as fm;
 import 'package:video_player/video_player.dart';
-import 'main_all.dart';
+import '../main_all.dart';
 
 // ignore: camel_case_types
 class VideoTextureScene_12 extends M3Scene {

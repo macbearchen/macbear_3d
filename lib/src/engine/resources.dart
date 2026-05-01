@@ -14,6 +14,7 @@ import '../shaders_gen/TexturedLighting.es3.vert.g.dart';
 import '../shaders_gen/Unlit.es3.frag.g.dart';
 import '../shaders_gen/Unlit.es3.vert.g.dart';
 // GLSL functions
+import '../shaders_gen/glsl/PCF.es3.frag.g.dart';
 import '../shaders_gen/glsl/Pixel.es3.frag.g.dart';
 import '../shaders_gen/glsl/Skinning.es3.vert.g.dart';
 
@@ -271,20 +272,26 @@ class M3Resources {
     }
     programTexture = M3ProgramLighting(strVert, strFrag);
 
+    // PCF function only for shadow programs (append at end)
+    strFrag += PCF_frag;
+
+    // PCF - 0:none, 1:default(4-tap), 2:3x3, 3:5x5
+    if (options.pcf == 1) {
+      strFrag = "#define ENABLE_PCF \n$strFrag";
+    } else if (options.pcf == 2) {
+      strFrag = "#define ENABLE_PCF_3x3 \n$strFrag";
+    } else if (options.pcf == 3) {
+      strFrag = "#define ENABLE_PCF_5x5 \n$strFrag";
+    }
+
     // shadow map program
     String vsShadow = "#define ENABLE_SHADOW_MAP \n$strVert";
     String fsShadow = "#define ENABLE_SHADOW_MAP \n$strFrag";
-    if (options.pcf) {
-      fsShadow = "#define ENABLE_PCF \n$fsShadow";
-    }
     programShadowmap = M3ProgramShadowmap(vsShadow, fsShadow);
 
     // shadow CSM program
     vsShadow = "#define ENABLE_SHADOW_CSM \n$strVert";
     fsShadow = "#define ENABLE_SHADOW_CSM \n$strFrag";
-    if (options.pcf) {
-      fsShadow = "#define ENABLE_PCF \n$fsShadow";
-    }
     programShadowCSM = M3ProgramShadowCSM(vsShadow, fsShadow);
   }
 

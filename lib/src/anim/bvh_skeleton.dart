@@ -9,10 +9,10 @@ import 'bvh_parser.dart';
 class BvhSkeleton {
   final BvhData data;
   late final BvhAnimator animator;
-  final Map<BvhJoint, M3Transform> jointTransforms = {};
+  final Map<BvhJoint, M3Node> jointTransforms = {};
   final List<M3Entity> jointEntities = [];
   final List<M3Entity> boneEntities = [];
-  final M3Transform rootTransform = M3Transform();
+  final M3Node rootTransform = M3Node();
 
   static Future<BvhSkeleton> load(String path) async {
     final bytes = await M3ResourceManager.loadBuffer(path);
@@ -30,8 +30,8 @@ class BvhSkeleton {
     _createHierarchy(data.root, rootTransform, scene);
   }
 
-  void _createHierarchy(BvhJoint joint, M3Transform? parentTransform, M3Scene scene) {
-    final transform = M3Transform();
+  void _createHierarchy(BvhJoint joint, M3Node? parentTransform, M3Scene scene) {
+    final transform = M3Node();
     transform.parent = parentTransform;
     transform.position = joint.offset;
     jointTransforms[joint] = transform;

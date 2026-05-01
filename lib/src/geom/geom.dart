@@ -28,6 +28,8 @@ part 'text/contour.dart';
 part 'gltf_geom.dart';
 part 'obj_geom.dart';
 
+enum M3ShadingMode { flat, smooth }
+
 /// Internal class to manage index buffers for geometry rendering.
 ///
 /// Handles both face indices (for solid rendering) and edge indices
