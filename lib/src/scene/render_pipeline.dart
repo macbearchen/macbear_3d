@@ -4,14 +4,12 @@ import '../m3_internal.dart';
 /// Represents a single sub-mesh draw call data for sorting and batching.
 class M3RenderItem {
   final M3Entity entity;
-  final M3Mesh mesh;
   final M3SubMesh subMesh;
   final Matrix4 worldMatrix;
   final double depth;
 
   M3RenderItem({
     required this.entity,
-    required this.mesh,
     required this.subMesh,
     required this.worldMatrix,
     required this.depth,
@@ -72,10 +70,9 @@ class M3RenderPipeline {
   }
 
   /// Collects a sub-mesh into the appropriate queue based on its material.
-  void collect(M3Entity entity, M3Mesh mesh, M3SubMesh sub, Matrix4 worldMat, double depth) {
+  void collect(M3Entity entity, M3SubMesh sub, Matrix4 worldMat, double depth) {
     final item = M3RenderItem(
       entity: entity,
-      mesh: mesh,
       subMesh: sub,
       worldMatrix: worldMat,
       depth: depth,

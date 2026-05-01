@@ -6,18 +6,25 @@ import '../m3_internal.dart';
 /// A scene entity representing a renderable object with transform and physics.
 ///
 /// Combines a mesh, transform, color, and optional rigid body for physics simulation.
-class M3Entity {
-  final M3Transform _transform = M3Transform();
+class M3Entity extends M3Node {
   oimo.RigidBody? rigidBody;
   M3Mesh? mesh;
   Vector4 color = Vector4(1.0, 1.0, 1.0, 1.0); // RGBA
 
   M3ReflectionProbe? reflectionProbe;
 
-  // visibility culling
+  /// visibility culling
   M3Bounding worldBounding = M3Bounding();
   bool _boundsDirty = true;
 
+  /// Mark this entity as dirty, invalidating its world matrix and bounds.
+  @override
+  void markDirty() {
+    super.markDirty();
+    _boundsDirty = true;
+  }
+
+  /// Update the world bounding volume of this entity based on its mesh and transform.
   void updateBounds() {
     if (_boundsDirty && mesh != null && mesh!.subMeshes.isNotEmpty) {
       final worldAabb = worldBounding.aabb;
@@ -29,7 +36,7 @@ class M3Entity {
       for (final sub in mesh!.subMeshes) {
         final localBounding = sub.geom.localBounding;
         final localAabb = localBounding.aabb;
-        final matWorldSub = matrix * mesh!.initMatrix * sub.localMatrix;
+        final matWorldSub = worldMatrix * mesh!.initMatrix * sub.localMatrix;
 
         final v = Vector3.zero();
         for (int i = 0; i < 8; i++) {
@@ -49,7 +56,7 @@ class M3Entity {
         for (int i = 0; i < mesh!.skin!.boneCount; i++) {
           final jointNode = mesh!.skin!.jointNodes![i];
           v.setFrom(jointNode.worldMatrix.getTranslation());
-          matrix.transform3(v); // Bring joint world to entity world
+          worldMatrix.transform3(v); // Bring joint world to entity world
           worldAabb.hullPoint(v);
         }
       }
@@ -71,6 +78,7 @@ class M3Entity {
     _prevRot.setFrom(rigidBody!.orientation);
   }
 
+  /// Synchronize the entity's transform from its physics rigid body using interpolation.
   void syncFromPhysics() {
     if (rigidBody == null) return;
 
@@ -79,7 +87,7 @@ class M3Entity {
     final rbRot = rigidBody!.orientation;
 
     // 1. Manual Lerp Position
-    _transform.position.setValues(
+    position.setValues(
       _prevPos.x + (rbPos.x - _prevPos.x) * alpha,
       _prevPos.y + (rbPos.y - _prevPos.y) * alpha,
       _prevPos.z + (rbPos.z - _prevPos.z) * alpha,
@@ -116,38 +124,17 @@ class M3Entity {
       );
     }
     lerpRot.normalize();
-    _transform.rotation = lerpRot;
+    rotation = lerpRot;
 
-    _transform.markDirty();
+    markDirty();
     _boundsDirty = true;
   }
 
+  /// Synchronize the entity's transform to its physics rigid body.
   void syncToPhysics() {
     if (rigidBody == null) return;
-    rigidBody!.position = _transform.position;
-    rigidBody!.orientation = _transform.rotation;
-  }
-
-  // convenience getters/setters
-  Vector3 get position => _transform.position;
-  set position(Vector3 v) {
-    _transform.position = v;
-    _transform.markDirty();
-    _boundsDirty = true;
-  }
-
-  Quaternion get rotation => _transform.rotation;
-  set rotation(Quaternion q) {
-    _transform.rotation = q;
-    _transform.markDirty();
-    _boundsDirty = true;
-  }
-
-  Vector3 get scale => _transform.scale;
-  set scale(Vector3 v) {
-    _transform.scale = v;
-    _transform.markDirty();
-    _boundsDirty = true;
+    rigidBody!.position = position;
+    rigidBody!.orientation = rotation;
   }
 
   void update(double dt) {
@@ -168,6 +155,5 @@ class M3Entity {
     }
   }
 
-  Matrix4 get matrix => _transform.worldMatrix;
-  M3Transform get transform => _transform;
+  M3Node get node => this;
 }

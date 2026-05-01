@@ -12,7 +12,7 @@ class BvhAnimator {
 
   BvhAnimator(this.data);
 
-  void update(double dt, Map<BvhJoint, M3Transform> jointTransforms) {
+  void update(double dt, Map<BvhJoint, M3Node> jointTransforms) {
     if (!isPlaying || data.frameCount == 0) return;
 
     _time += dt * speed;
@@ -38,7 +38,7 @@ class BvhAnimator {
     }
   }
 
-  void _applyJointAnimation(BvhJoint joint, M3Transform transform, List<double> frame1, List<double> frame2, double t) {
+  void _applyJointAnimation(BvhJoint joint, M3Node transform, List<double> frame1, List<double> frame2, double t) {
     final offset = joint.channelOffset!;
     Vector3 pos = Vector3.copy(joint.offset);
     List<double> rotations = [0, 0, 0]; // X, Y, Z

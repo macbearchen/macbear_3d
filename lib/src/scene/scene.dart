@@ -140,14 +140,14 @@ abstract class M3Scene {
 
       if (stats.enabled) stats.entities++;
 
-      final meshMatrix = entity.matrix * mesh.initMatrix;
+      final meshMatrix = entity.worldMatrix * mesh.initMatrix;
       for (final sub in mesh.subMeshes) {
         final worldMat = meshMatrix * sub.localMatrix;
         final viewPos = camera.viewMatrix * worldMat.getTranslation();
         // Depth for sorting (negative Z in view space is forward)
         final depth = viewPos.z;
 
-        _pipeline.collect(entity, mesh, sub, worldMat, depth);
+        _pipeline.collect(entity, sub, worldMat, depth);
       }
     }
 
@@ -199,7 +199,7 @@ abstract class M3Scene {
 
       activeProg.setMatrices(camera, item.worldMatrix);
       activeProg.setMaterial(sub.mtr, entity.color);
-      activeProg.setSkinning(item.mesh.skin);
+      activeProg.setSkinning(entity.mesh!.skin);
 
       // pre-reflection probe
       if (entity.reflectionProbe != null) {
@@ -248,7 +248,7 @@ abstract class M3Scene {
       }
 
       final mesh = entity.mesh!;
-      final meshMatrix = entity.matrix * mesh.initMatrix;
+      final meshMatrix = entity.worldMatrix * mesh.initMatrix;
       for (final sub in mesh.subMeshes) {
         if (sub.mtr.reflection <= 0) continue;
 
@@ -300,7 +300,7 @@ abstract class M3Scene {
       final mesh = entity.mesh!;
 
       // origin axis
-      progSimple.setMatrices(camera, entity.matrix);
+      progSimple.setMatrices(camera, entity.worldMatrix);
       // draw axis at object origin
       // Use the first submesh's material or a default for axis color?
       // Actually axis is fixed color, but setMaterial is needed for uniform locations

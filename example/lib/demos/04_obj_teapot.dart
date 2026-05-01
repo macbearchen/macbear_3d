@@ -1,6 +1,6 @@
 // ignore_for_file: file_names
 import 'package:flutter/material.dart' as fm;
-import 'main_all.dart';
+import '../main_all.dart';
 
 // ignore: camel_case_types
 class ObjTeapotScene_04 extends M3Scene {

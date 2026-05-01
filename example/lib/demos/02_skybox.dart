@@ -1,6 +1,6 @@
 // ignore_for_file: file_names
 import 'package:flutter/material.dart' hide Matrix4;
-import 'main_all.dart' hide Colors;
+import '../main_all.dart' hide Colors;
 
 // ignore: camel_case_types
 class SkyboxScene_02 extends M3Scene {

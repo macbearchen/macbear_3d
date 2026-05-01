@@ -16,7 +16,7 @@ export 'src/program/program.dart';
 export 'src/scene/reflection_probe.dart';
 export 'src/scene/render_pipeline.dart';
 export 'src/scene/scene.dart';
-export 'src/scene/transform.dart';
+export 'src/scene/node.dart';
 export 'src/texture/material.dart';
 export 'src/texture/texture.dart';
 export 'src/util/constants.dart';

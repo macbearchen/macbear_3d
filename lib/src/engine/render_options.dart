@@ -22,7 +22,7 @@ class M3ShaderOptions {
   bool _cartoon = false; // cartoon shading
   bool _pbr = false; // physics based rendering
   bool _ibl = false; // image based lighting
-  bool _pcf = true; // shadow PCF
+  int _pcf = 1; // shadow PCF: 0:none, 1:default(4-tap), 2:3x3, 3:5x5
 
   bool isDirty = false;
 
@@ -85,8 +85,8 @@ class M3ShaderOptions {
   }
 
   // --- pcf ---
-  bool get pcf => _pcf;
-  set pcf(bool v) {
+  int get pcf => _pcf;
+  set pcf(int v) {
     if (_pcf == v) return;
     _pcf = v;
     isDirty = true;

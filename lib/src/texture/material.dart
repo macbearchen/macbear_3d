@@ -20,7 +20,7 @@ enum M3AlphaMode {
 class M3Material {
   Vector4 diffuse = Vector4(1.0, 1.0, 1.0, 1.0);
   Vector3 specular = Vector3(0.3, 0.3, 0.3);
-  double shininess = 16; // glossiness [0 ~ 128]
+  double shininess = 16; // glossiness [1 ~ 128]
   double reflection = 0.0;
   double metallic = 0.0;
   double roughness = 0.8;
@@ -40,7 +40,7 @@ class M3Material {
     roughness = 1.0;
     reflection = 0.0;
     specular.setZero();
-    shininess = 0.0;
+    shininess = 1.0;
   }
 
   /// Creates a deep copy of this material.

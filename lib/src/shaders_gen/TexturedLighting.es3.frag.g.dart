@@ -47,9 +47,7 @@ uniform highp vec4 DepthCSM;			// depth clip-plane
 #endif // ENABLE_SHADOW_CSM
 
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
-uniform highp sampler2D SamplerShadowmap;	// GL_TEXTURE1
-uniform highp vec2 ShadowmapSize;		// shadowmap resolution
-uniform highp float NormalBias;			// normal bias (for shadow acne)
+void ComputeShadowPCF(inout lowp vec4 texResult, in highp vec4 lightCoord);
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
 
 out vec4 fragColor;
@@ -69,51 +67,27 @@ void main(void)
 	////////// shadow map //////////
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
 	#ifdef ENABLE_SHADOW_CSM
-		highp vec4 lCoordShadowmap = LightcoordCSM[3];
+		highp vec4 lightCoord = LightcoordCSM[3];
 		if (gl_FragCoord.z < DepthCSM.x) {
-			lCoordShadowmap = LightcoordCSM[0];
+			lightCoord = LightcoordCSM[0];
 		}
 		else if (gl_FragCoord.z < DepthCSM.y) {
-			lCoordShadowmap = LightcoordCSM[1];
+			lightCoord = LightcoordCSM[1];
 		}
 		else if (gl_FragCoord.z < DepthCSM.z) {
-			lCoordShadowmap = LightcoordCSM[2];
+			lightCoord = LightcoordCSM[2];
 		}
 		else {
-			lCoordShadowmap = LightcoordCSM[3];
+			lightCoord = LightcoordCSM[3];
 		}
 	#else
-		highp vec4 lCoordShadowmap = LightcoordShadowmap;
+		highp vec4 lightCoord = LightcoordShadowmap;
 	#endif // ENABLE_SHADOW_CSM
 	
-	if (lCoordShadowmap.s < 0.0 || lCoordShadowmap.t < 0.0 || lCoordShadowmap.s > 1.0 || lCoordShadowmap.t > 1.0) {
-		texResult = ComputePixelLit(texResult);					// lit-area
-	}
-	else {
-
-	////////// PCF //////////
-	#ifdef ENABLE_PCF
-		highp vec2 texelSize = vec2(1.0) / ShadowmapSize;
-		highp vec4 depthPCF;	// depth-shadow by PCF
-		depthPCF.x = texture(SamplerShadowmap, lCoordShadowmap.st + vec2( 1.0,  0.5) * texelSize).r;
-		depthPCF.y = texture(SamplerShadowmap, lCoordShadowmap.st + vec2(-1.0, -0.5) * texelSize).r;
-		depthPCF.z = texture(SamplerShadowmap, lCoordShadowmap.st + vec2(-0.5,  1.0) * texelSize).r;
-		depthPCF.w = texture(SamplerShadowmap, lCoordShadowmap.st + vec2( 0.5, -1.0) * texelSize).r;
-		
-		depthPCF = step(vec4(lCoordShadowmap.z - 0.0005), depthPCF);
-		lowp float factorLit = dot(depthPCF, depthPCF) / 4.0;
-		
-		texResult = mix(ComputePixelUnlit(texResult), ComputePixelLit(texResult), factorLit);
-		
-	#else
-
-		highp float depthShadow;
-		depthShadow = texture(SamplerShadowmap, lCoordShadowmap.st).r;
-		if (depthShadow < lCoordShadowmap.z - 0.0005)
-			texResult = ComputePixelUnlit(texResult);
-		else
-			texResult = ComputePixelLit(texResult);
-	#endif // ENABLE_PCF
+	if (lightCoord.s < 0.0 || lightCoord.t < 0.0 || lightCoord.s > 1.0 || lightCoord.t > 1.0) {
+		texResult = ComputePixelLit(texResult);		// lit area
+	} else {
+		ComputeShadowPCF(texResult, lightCoord); 	// shadow area with PCF
 	}
 
 #else

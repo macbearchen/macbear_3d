@@ -12,20 +12,21 @@ class M3Camera extends M3Projection {
   Quaternion rotation = Quaternion.identity();
 
   final Frustum _frustum = Frustum();
-  // Euler
+
+  /// Euler
   M3Euler euler = M3Euler();
 
-  // View matrix, inverse matrix (camera to world for frustum debug)
+  /// View matrix, inverse matrix (camera to world for frustum debug)
   Matrix4 viewMatrix = Matrix4.identity();
   Matrix4 _invViewMatrix = Matrix4.identity();
   Matrix4 get cameraToWorldMatrix => _invViewMatrix;
 
-  // camera look at target, up vector
+  /// camera look at target, up vector
   Vector3 target = Vector3(0.0, 0.0, 0.0);
   Vector3 up = Vector3(0.0, 0.0, 1.0);
   double distanceToTarget = 20.0;
 
-  // split distance for CSM
+  /// split distance for CSM
   List<double> csmSplitDistances = [];
   int _csmCount = 4;
   int get csmCount => _csmCount;
@@ -38,7 +39,7 @@ class M3Camera extends M3Projection {
 
   double csmLambda = 0.6;
 
-  // visibility checking (frustum culling)
+  /// visibility checking (frustum culling)
   bool isVisible(M3Bounding bounds) {
     if (!_frustum.intersectsWithSphere(bounds.sphere)) {
       return false;
@@ -46,10 +47,12 @@ class M3Camera extends M3Projection {
     return _frustum.intersectsWithAabb3(bounds.aabb);
   }
 
+  /// Update frustum matrix from view and projection matrices.
   void updateFrustum(Matrix4 matrix) {
     _frustum.setFromMatrix(matrix);
   }
 
+  /// Set viewport and update frustum matrix.
   @override
   void setViewport(int x, int y, int w, int h, {double fovy = 50.0, double near = 1.0, double far = 100.0}) {
     super.setViewport(x, y, w, h, fovy: fovy, near: near, far: far);
@@ -83,6 +86,7 @@ class M3Camera extends M3Projection {
     return splits;
   }
 
+  /// Set camera look-at target and compute view matrix.
   void setLookat(Vector3 eye, Vector3 target, Vector3 up) {
     position = eye;
     this.target = target;
@@ -100,7 +104,7 @@ class M3Camera extends M3Projection {
     setLookat(position + delta, target + delta, up);
   }
 
-  // yaw by Z-axis, pitch by Y-axis, roll by X-axis
+  /// yaw by Z-axis, pitch by Y-axis, roll by X-axis
   void setEuler(double yaw, double pitch, double roll, {double? distance}) {
     euler.setEuler(yaw, pitch, roll);
     // rotate matrix: camera-axis(x,y,z) by euler-axis(-y, z, -x), eulerYPR order by axisZYX
@@ -145,6 +149,7 @@ $euler
 ''';
   }
 
+  /// Draw camera frustum and helper lines.
   void drawHelper(M3Program prog, M3Camera viewer) {
     if (viewer == this) {
       return;

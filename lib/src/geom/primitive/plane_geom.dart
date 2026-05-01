@@ -16,6 +16,7 @@ class M3PlaneGeom extends M3Geom {
   int widthSegments; // columns X
   int heightSegments; // rows Y
   M3Axis axis; // plane axis
+  final M3ShadingMode shading;
 
   // vertex order: row-major align by X-axis (-sx/2 ~ sx/2), column from (sy/2 ~ -sy/2)
   // default face-flip(false) means face-up; face-flip(true) means face-down
@@ -28,6 +29,7 @@ class M3PlaneGeom extends M3Geom {
     Function(double x, double y)? onVertex,
     bool flipFace = false,
     this.axis = M3Axis.z,
+    this.shading = M3ShadingMode.smooth,
   }) {
     int numVert = (widthSegments + 1) * (heightSegments + 1);
     // initialize
@@ -73,13 +75,6 @@ class M3PlaneGeom extends M3Geom {
           z = 0;
         }
 
-        // test height field for physics
-        if (index == 0) {
-          // z = 2;
-        }
-        if (index == widthSegments) {
-          // z = 4;
-        }
         vertices[index] = transform(x, y, z);
         uvs[index] = Vector2(ratioX * uvScale.x, ratioY * uvScale.y);
 
@@ -147,6 +142,8 @@ class M3PlaneGeom extends M3Geom {
 
     // wireframe edges
     numIndex = ((widthSegments + 1) * heightSegments + widthSegments * (heightSegments + 1)) * 2;
+    // extra slash lines on first row
+    numIndex += widthSegments * 2;
     final lines = Uint16Array(numIndex);
     index = 0;
     for (i = 0; i <= heightSegments; i++) {
@@ -164,6 +161,13 @@ class M3PlaneGeom extends M3Geom {
         lines[index + 1] = lines[index] + (widthSegments + 1);
         index += 2;
       }
+    }
+
+    // extra slash lines on first row
+    for (j = 1; j <= widthSegments; j++) {
+      lines[index] = j;
+      lines[index + 1] = lines[index] + widthSegments;
+      index += 2;
     }
     _edgeIndices.add(_M3Indices(WebGL.LINES, lines));
   }
@@ -190,13 +194,6 @@ class M3PlaneGeom extends M3Geom {
           z = 0;
         }
 
-        // test height field for physics
-        if (index == 0) {
-          // z = 2;
-        }
-        if (index == widthSegments) {
-          // z = 4;
-        }
         data[index] = z;
         index++;
       }

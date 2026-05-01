@@ -7,19 +7,19 @@ import 'package:vector_math/vector_math.dart' hide Colors;
 import 'package:macbear_3d/macbear_3d.dart';
 export 'package:macbear_3d/src/m3_internal.dart';
 
-import '00_starter.dart';
-import '01_cube.dart';
-import '02_skybox.dart';
-import '03_primitives.dart';
-import '04_obj_teapot.dart';
-import '05_animated.dart';
-import '06_shadowmap.dart';
-import '07_physics.dart';
-import '08_text_3d.dart';
-import '09_pbr_test.dart';
-import '10_terrain.dart';
-import '11_bvh.dart';
-import '12_video_texture.dart';
+import 'demos/00_starter.dart';
+import 'demos/01_cube.dart';
+import 'demos/02_skybox.dart';
+import 'demos/03_primitives.dart';
+import 'demos/04_obj_teapot.dart';
+import 'demos/05_animated.dart';
+import 'demos/06_shadowmap.dart';
+import 'demos/07_physics.dart';
+import 'demos/08_text_3d.dart';
+import 'demos/09_pbr_test.dart';
+import 'demos/10_terrain.dart';
+import 'demos/11_bvh.dart';
+import 'demos/12_video_texture.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,7 +29,7 @@ Future<void> main() async {
   M3AppEngine.backgroundColor = Vector3(0.1, 0.2, 0.6);
 
   final shaderOptions = M3AppEngine.instance.renderEngine.options.shader;
-  shaderOptions.pcf = true;
+  shaderOptions.pcf = 2;
   shaderOptions.perPixel = true;
   shaderOptions.pbr = true;
   shaderOptions.ibl = true;
@@ -46,7 +46,8 @@ Future<void> onDidInit() async {
   // final scene09 = PbrTestScene_09();
   // final testScene = SampleScene();
   final initScene = CubeScene_01();
-  await appEngine.setScene(initScene);
+  final testScene = BaseScene();
+  await appEngine.setScene(testScene);
 }
 
 class MainApp extends StatelessWidget {
@@ -250,13 +251,13 @@ class _MainPageState extends State<MainPage> {
         const SizedBox(width: 6),
         FloatingActionButton(
           heroTag: 'pcf',
-          backgroundColor: shaderOptions.pcf ? Colors.lightGreen : null,
+          backgroundColor: shaderOptions.pcf > 0 ? Colors.lightGreen : null,
           onPressed: () {
             setState(() {
-              shaderOptions.pcf = !shaderOptions.pcf;
+              shaderOptions.pcf = (shaderOptions.pcf + 1) % 4;
             });
           },
-          child: const Icon(Icons.blur_on_rounded),
+          child: Text('PCF ${shaderOptions.pcf}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
         ),
         const SizedBox(width: 20),
         FloatingActionButton(
