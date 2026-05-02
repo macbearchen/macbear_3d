@@ -179,14 +179,12 @@ csm=${scene.camera.csmCount}''';
     }
 
     // Physics Statistics
-    final physicsWorld = M3AppEngine.instance.physicsEngine.world;
-    if (physicsWorld != null) {
-      physicsWorld.isStat = options.debug.showPhysicsStats;
-      if (options.debug.showPhysicsStats) {
-        final physicsInfo = physicsWorld.getInfo();
-        matStats.setTranslation(Vector3(10, 300, 0));
-        M3Resources.text2D.drawText(physicsInfo, matStats, color: Vector4(1, 0, 1, 1));
-      }
+    final physicsEngine = M3AppEngine.instance.physicsEngine;
+    physicsEngine.showStats = options.debug.showPhysicsStats;
+    if (physicsEngine.showStats) {
+      final physicsInfo = physicsEngine.info;
+      matStats.setTranslation(Vector3(10, 300, 0));
+      M3Resources.text2D.drawText(physicsInfo, matStats, color: Vector4(1, 0, 1, 1));
     }
 
     gl.disableVertexAttribArray(prog2D.attribVertex.id);

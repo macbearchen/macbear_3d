@@ -46,8 +46,7 @@ Future<void> onDidInit() async {
   // final scene09 = PbrTestScene_09();
   // final testScene = SampleScene();
   final initScene = CubeScene_01();
-  final testScene = BaseScene();
-  await appEngine.setScene(testScene);
+  await appEngine.setScene(initScene);
 }
 
 class MainApp extends StatelessWidget {

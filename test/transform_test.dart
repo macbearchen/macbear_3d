@@ -4,9 +4,9 @@ import 'package:macbear_3d/macbear_3d.dart';
 import 'package:vector_math/vector_math.dart';
 
 void main() {
-  group('M3Transform', () {
+  group('M3Node', () {
     test('local to world matrix recomputation', () {
-      final transform = M3Transform();
+      final transform = M3Node();
       transform.position = Vector3(1, 2, 3);
 
       final mat = transform.worldMatrix;
@@ -15,8 +15,8 @@ void main() {
     });
 
     test('hierarchical dirty propagation', () {
-      final parent = M3Transform();
-      final child = M3Transform();
+      final parent = M3Node();
+      final child = M3Node();
       child.parent = parent;
       parent.children.add(child);
 
@@ -57,9 +57,9 @@ void main() {
       expect(entity.worldBounding.aabb.center, Vector3(10, 0, 0));
 
       // Change position via transform directly (simulating hierarchical change)
-      final parent = M3Transform();
-      entity.transform.parent = parent;
-      parent.children.add(entity.transform);
+      final parent = M3Node();
+      entity.parent = parent;
+      parent.children.add(entity);
 
       parent.position = Vector3(5, 5, 5);
       entity.updateBounds();

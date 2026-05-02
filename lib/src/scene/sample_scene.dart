@@ -69,7 +69,7 @@ class SampleScene extends M3Scene {
 
           final meshColor = colors[k % colors.length];
           M3Mesh mesh;
-          oimo.RigidBody rb;
+          M3PhysicsBody rb;
 
           // visual entity, rigid body
           switch (k % 3) {

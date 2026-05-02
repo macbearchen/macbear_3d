@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart' hide Matrix4;
-import 'package:oimo_physics/oimo_physics.dart' as oimo;
 
 // Macbear3D engine
 import '../m3_internal.dart';

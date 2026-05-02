@@ -58,7 +58,7 @@ class M3AppEngine with ChangeNotifier {
   M3Scene? activeScene;
 
   // physics
-  final physicsEngine = M3OimoPhysics();
+  M3PhysicsEngine physicsEngine = M3OimoPhysics();
 
   // This named constructor is the "real" constructor
   // It'll be called exactly once, by the static property assignment above
@@ -348,7 +348,7 @@ class M3AppEngine with ChangeNotifier {
 
       activeScene!.inputController?.update(dt);
       if (sdt > 0) {
-        physicsEngine.update(sdt, onBeforeStep: activeScene!.savePhysicsStates);
+        physicsEngine.step(sdt, onBeforeStep: activeScene!.savePhysicsStates);
         activeScene!.update(sdt);
       }
     }
