@@ -11,7 +11,7 @@ export 'src/engine/resources.dart';
 export 'src/geom/geom.dart';
 export 'src/input/touch.dart';
 export 'src/mesh/mesh.dart';
-export 'src/physics/oimo_physics_engine.dart';
+export 'src/physics/no_physics_engine.dart';
 export 'src/physics/physics_engine.dart';
 export 'src/program/program.dart';
 export 'src/scene/reflection_probe.dart';

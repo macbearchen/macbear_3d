@@ -35,7 +35,7 @@ class M3DebugSphereGeom extends M3Geom {
 
     // solid faces: only outline
     for (int j = 0; j < 3; j++) {
-      final indices = Uint16Array(segments + 1);
+      final indices = Uint16List(segments + 1);
       final index = j * (segments + 1);
       for (int i = 0; i <= segments; i++) {
         indices[i] = index + i;

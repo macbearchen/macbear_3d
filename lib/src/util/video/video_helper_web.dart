@@ -1,6 +1,6 @@
 import 'package:web/web.dart' as web;
 import 'dart:js_interop';
-import 'package:flutter_angle/flutter_angle.dart';
+import 'dart:typed_data';
 
 dynamic createVideoElement(String src) {
   final video = web.document.createElement('video') as web.HTMLVideoElement;
@@ -38,7 +38,7 @@ void updateTextureFromVideo(dynamic gl, int target, dynamic video) {
   const rgba = 0x1908; 
   const unsignedByte = 0x1401;
   
-  final pixels = Uint8Array.fromList(imageData.data.toDart); // Convert to flutter_angle array
+  final pixels = Uint8List.fromList(imageData.data.toDart); // Convert to flutter_angle array
 
   gl.texImage2D(
     target,

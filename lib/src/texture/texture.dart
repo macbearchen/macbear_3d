@@ -141,7 +141,7 @@ class M3Texture {
     texH = 1;
 
     // Fill the texture with a 1x1 white pixel.
-    final pixel = Uint8Array.fromList([
+    final pixel = Uint8List.fromList([
       (color.r * 255).round().clamp(0, 255),
       (color.g * 255).round().clamp(0, 255),
       (color.b * 255).round().clamp(0, 255),
@@ -164,20 +164,20 @@ class M3Texture {
     gl.texParameteri(target, WebGL.TEXTURE_MAG_FILTER, WebGL.NEAREST); // NEAREST
 
     // Fill the texture with a checkerboard pattern.
-    final lightPixel = Uint8Array.fromList([
+    final lightPixel = Uint8List.fromList([
       (lightColor.r * 255).round().clamp(0, 255),
       (lightColor.g * 255).round().clamp(0, 255),
       (lightColor.b * 255).round().clamp(0, 255),
       (lightColor.a * 255).round().clamp(0, 255),
     ]);
-    final darkPixel = Uint8Array.fromList([
+    final darkPixel = Uint8List.fromList([
       (darkColor.r * 255).round().clamp(0, 255),
       (darkColor.g * 255).round().clamp(0, 255),
       (darkColor.b * 255).round().clamp(0, 255),
       (darkColor.a * 255).round().clamp(0, 255),
     ]);
 
-    final data = Uint8Array.fromList(List.generate(gridCount * gridCount * 4, (index) => 0));
+    final data = Uint8List.fromList(List.generate(gridCount * gridCount * 4, (index) => 0));
     for (int i = 0; i < gridCount; i++) {
       for (int j = 0; j < gridCount; j++) {
         final pixel = (i + j) % 2 == 0 ? lightPixel : darkPixel;
@@ -294,7 +294,7 @@ class M3Texture {
       name = filename;
       texW = ktxInfo.width;
       texH = ktxInfo.height;
-      Uint8Array byteData = Uint8Array.fromList(ktxInfo.texData);
+      Uint8List byteData = Uint8List.fromList(ktxInfo.texData);
 
       final pixelFormat = ktxInfo.glFormat;
       bind();
@@ -327,12 +327,11 @@ class M3Texture {
       debugPrint('*** ERROR: M3Texture.toByteData returned null');
       return;
     }
-    final pixels = Uint8Array.fromList(byteData.buffer.asUint8List());
+    final pixels = Uint8List.fromList(byteData.buffer.asUint8List());
 
     bind();
     gl.texImage2D(faceTarget, 0, pixelFormat, texW, texH, 0, pixelFormat, WebGL.UNSIGNED_BYTE, pixels);
     if (generateMipmaps && !isCubemap) gl.generateMipmap(target);
-    pixels.dispose();
   }
 
   static Future<M3Texture> createWoodTexture({int size = 512}) async {

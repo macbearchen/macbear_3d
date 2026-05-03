@@ -67,7 +67,7 @@ class M3TorusGeom extends M3Geom {
 
     // solid: triangle-strip for round-side
     final numIndex = radialSegments * tubularSegments * 3 * 2;
-    final indices = Uint16Array(numIndex);
+    final indices = Uint16List(numIndex);
     index = 0;
 
     final row = tubularSegments + 1;
@@ -91,7 +91,7 @@ class M3TorusGeom extends M3Geom {
 
     // wireframe edges
     final numLineIndex = radialSegments * tubularSegments * 2 * 2;
-    final lineIndices = Uint16Array(numLineIndex);
+    final lineIndices = Uint16List(numLineIndex);
     index = 0;
 
     for (int i = 0; i < radialSegments; i++) {

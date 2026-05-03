@@ -22,7 +22,7 @@ class M3ObjGeom extends M3Geom {
     _createVBO();
 
     // Create indices
-    final indicesArray = Uint16Array.fromList(indices);
+    final indicesArray = Uint16List.fromList(indices);
     _faceIndices.add(_M3Indices(WebGL.TRIANGLES, indicesArray));
 
     // Create wireframe indices

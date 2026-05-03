@@ -117,7 +117,7 @@ class M3PlaneGeom extends M3Geom {
       numIndex++;
     }
 
-    final indices = Uint16Array(numIndex);
+    final indices = Uint16List(numIndex);
     index = 0;
     if (flipFace) {
       // face-flip
@@ -144,7 +144,7 @@ class M3PlaneGeom extends M3Geom {
     numIndex = ((widthSegments + 1) * heightSegments + widthSegments * (heightSegments + 1)) * 2;
     // extra slash lines on first row
     numIndex += widthSegments * 2;
-    final lines = Uint16Array(numIndex);
+    final lines = Uint16List(numIndex);
     index = 0;
     for (i = 0; i <= heightSegments; i++) {
       for (j = 0; j < widthSegments; j++) {

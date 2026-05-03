@@ -1,6 +1,8 @@
 import 'package:oimo_physics/oimo_physics.dart' as oimo;
 
-import '../m3_internal.dart';
+// Macbear3D engine
+import 'package:macbear_3d/macbear_3d.dart';
+import 'package:vector_math/vector_math.dart';
 
 class _M3OimoRigidBody extends M3RigidBody {
   final oimo.RigidBody _rigidBody;

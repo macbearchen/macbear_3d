@@ -23,7 +23,7 @@ class M3DebugAxisGeom extends M3Geom {
     _faceIndices.add(
       _M3Indices(
         WebGL.TRIANGLES,
-        Uint16Array.fromList([
+        Uint16List.fromList([
           0, 1, 2, // XY face
         ]),
       ),
@@ -32,7 +32,7 @@ class M3DebugAxisGeom extends M3Geom {
     _faceIndices.add(
       _M3Indices(
         WebGL.LINES,
-        Uint16Array.fromList([
+        Uint16List.fromList([
           0, 1, 0, 2, 0, 3, // XYZ axis lines
           1, 2, // XY edge
         ]),

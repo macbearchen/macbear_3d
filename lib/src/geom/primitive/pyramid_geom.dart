@@ -120,7 +120,7 @@ class M3PyramidGeom extends M3Geom {
     _faceIndices.add(
       _M3Indices(
         WebGL.TRIANGLES,
-        Uint16Array.fromList([
+        Uint16List.fromList([
           0, 2, 1, 1, 2, 3, // bottom face
           4, 5, 6, // back face
           7, 8, 9, // right face
@@ -134,7 +134,7 @@ class M3PyramidGeom extends M3Geom {
     _edgeIndices.add(
       _M3Indices(
         WebGL.LINES,
-        Uint16Array.fromList([
+        Uint16List.fromList([
           0, 1, 1, 3, 3, 2, 2, 0, // bottom part
           4, 0, 4, 1, 4, 2, 4, 3, // side parts
         ]),

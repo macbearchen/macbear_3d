@@ -47,11 +47,11 @@ class M3Shape2D {
     // buffers for vertices, normals after init
     _vertexBuffer = gl.createBuffer();
     gl.bindBuffer(WebGL.ARRAY_BUFFER, _vertexBuffer);
-    gl.bufferData(WebGL.ARRAY_BUFFER, Float32Array.fromList(_vertices.buffer), usage);
+    gl.bufferData(WebGL.ARRAY_BUFFER, Float32List.fromList(_vertices.buffer), usage);
 
     _uvBuffer = gl.createBuffer();
     gl.bindBuffer(WebGL.ARRAY_BUFFER, _uvBuffer);
-    gl.bufferData(WebGL.ARRAY_BUFFER, Float32Array.fromList(_uvs.buffer), usage);
+    gl.bufferData(WebGL.ARRAY_BUFFER, Float32List.fromList(_uvs.buffer), usage);
   }
 
   void dispose() {
@@ -69,13 +69,13 @@ class M3Shape2D {
     // bind vertex buffer
     gl.bindBuffer(WebGL.ARRAY_BUFFER, _vertexBuffer);
     if (_usage != WebGL.STATIC_DRAW) {
-      gl.bufferSubData(WebGL.ARRAY_BUFFER, 0, Float32Array.fromList(_vertices.buffer));
+      gl.bufferSubData(WebGL.ARRAY_BUFFER, 0, Float32List.fromList(_vertices.buffer));
     }
     gl.vertexAttribPointer(prog2D.attribVertex.id, 2, WebGL.FLOAT, false, 0, 0);
 
     gl.bindBuffer(WebGL.ARRAY_BUFFER, _uvBuffer);
     if (_usage != WebGL.STATIC_DRAW) {
-      gl.bufferSubData(WebGL.ARRAY_BUFFER, 0, Float32Array.fromList(_uvs.buffer));
+      gl.bufferSubData(WebGL.ARRAY_BUFFER, 0, Float32List.fromList(_uvs.buffer));
     }
     gl.vertexAttribPointer(prog2D.attribUV.id, 2, WebGL.FLOAT, false, 0, 0);
 

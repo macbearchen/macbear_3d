@@ -9,7 +9,6 @@ class M3ExternalTexture extends M3Texture {
   bool _isNativeCodec = (PlatformInfo.isMacOS || PlatformInfo.isIOS);
 
   // shared memory for native bridge
-  Uint8Array? _submitPixels;
 
   M3ExternalTexture(this.source, {bool? isUseNative}) : super(isCubemap: false, generateMipmaps: false) {
     name = "external_texture";
@@ -32,7 +31,6 @@ class M3ExternalTexture extends M3Texture {
 
   @override
   dispose() {
-    _submitPixels?.dispose();
     releaseNativeBridge();
     super.dispose();
   }

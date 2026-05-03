@@ -114,10 +114,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_angle
-      sha256: "2990d71e9cd36c9e181112392f2224c64d1dc5afb6a32afb3fafee27565d16a4"
+      sha256: ac8031752d4018ec2bfe699f70eee44f0c868762faf20d5e08bf07ca48f551d7
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.9"
+    version: "0.4.0"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -296,7 +296,7 @@ packages:
     source: hosted
     version: "1.4.0"
   vector_math:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: vector_math
       sha256: d530bd74fea330e6e364cda7a85019c434070188383e1cd8d9777ee586914c5b

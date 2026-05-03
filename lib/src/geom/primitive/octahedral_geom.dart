@@ -60,7 +60,7 @@ class M3OctahedralGeom extends M3Geom {
     localBounding.sphere.radius = radius;
 
     // solid faces
-    _faceIndices.add(_M3Indices(WebGL.TRIANGLES, Uint16Array.fromList(indices)));
+    _faceIndices.add(_M3Indices(WebGL.TRIANGLES, Uint16List.fromList(indices)));
 
     // wireframe edges
     _generateEdgeIndices(indices);

@@ -4,10 +4,12 @@ import 'package:vector_math/vector_math.dart';
 
 // Macbear3D engine
 import 'package:macbear_3d/macbear_3d.dart';
+import 'oimo_physics_engine.dart';
 
 void main() {
   // M3Package.name = null; // remove it when release
   M3AppEngine.instance.onDidInit = onDidInit;
+  M3AppEngine.instance.applyPhysicsEngine(M3OimoPhysicsEngine());
 
   runApp(const MyApp());
 }

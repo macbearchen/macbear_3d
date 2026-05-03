@@ -54,7 +54,7 @@ class M3CylinderGeom extends M3Geom {
           sideStripIndices.add(nextRowStart + j);
         }
         // Add a separate entry for each strip to avoid connective triangles between height segments
-        _faceIndices.add(_M3Indices(WebGL.TRIANGLE_STRIP, Uint16Array.fromList(sideStripIndices)));
+        _faceIndices.add(_M3Indices(WebGL.TRIANGLE_STRIP, Uint16List.fromList(sideStripIndices)));
         sideStripIndices = [];
       }
 
@@ -165,10 +165,10 @@ class M3CylinderGeom extends M3Geom {
 
     // Add collected TRIANGLES (caps and/or flat side)
     if (faceIndices.isNotEmpty) {
-      _faceIndices.add(_M3Indices(WebGL.TRIANGLES, Uint16Array.fromList(faceIndices)));
+      _faceIndices.add(_M3Indices(WebGL.TRIANGLES, Uint16List.fromList(faceIndices)));
     }
 
     // wireframe edges
-    _edgeIndices.add(_M3Indices(WebGL.LINES, Uint16Array.fromList(wireIndices)));
+    _edgeIndices.add(_M3Indices(WebGL.LINES, Uint16List.fromList(wireIndices)));
   }
 }

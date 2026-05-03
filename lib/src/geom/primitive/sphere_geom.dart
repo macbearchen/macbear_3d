@@ -59,7 +59,7 @@ class M3SphereGeom extends M3Geom {
 
     // solid: triangle-strip
     int numIndex = (widthSegments + 1) * 2 * heightSegments;
-    Uint16Array indices = Uint16Array(numIndex);
+    Uint16List indices = Uint16List(numIndex);
     index = 0;
 
     int startVert;
@@ -75,7 +75,7 @@ class M3SphereGeom extends M3Geom {
 
     // wireframe edges
     numIndex = ((widthSegments + 1) * (heightSegments - 1) + 2) + ((widthSegments - 1) * (heightSegments + 1));
-    final lines = Uint16Array(numIndex);
+    final lines = Uint16List(numIndex);
     index = 0;
     lines[0] = 0;
     for (i = 1; i < heightSegments; i++) // skip top and bottom, because only single dot there

@@ -71,7 +71,7 @@ class M3TerrainGeom extends M3Geom {
 
     // 3. Generate indices (Triangle Strip)
     int numIndex = (widthSegments + 1) * 2 * (heightSegments) + 2 * (heightSegments - 1);
-    final indices = Uint16Array(numIndex);
+    final indices = Uint16List(numIndex);
     index = 0;
     for (int i = 0; i < heightSegments; i++) {
       if (i > 0) {
@@ -88,7 +88,7 @@ class M3TerrainGeom extends M3Geom {
 
     // 4. Generate wireframe edges (LINES)
     int numWireIndex = ((widthSegments + 1) * heightSegments + widthSegments * (heightSegments + 1)) * 2;
-    final lines = Uint16Array(numWireIndex);
+    final lines = Uint16List(numWireIndex);
     index = 0;
     for (int i = 0; i <= heightSegments; i++) {
       for (int j = 0; j < widthSegments; j++) {

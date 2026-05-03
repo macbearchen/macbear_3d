@@ -94,7 +94,7 @@ class M3CapsuleGeom extends M3Geom {
 
     // solid: triangle-strip
     int numIndex = (radiusSegments + 1) * 2 * (totalRings - 1);
-    Uint16Array indices = Uint16Array(numIndex);
+    Uint16List indices = Uint16List(numIndex);
     index = 0;
 
     for (int i = 0; i < totalRings - 1; i++) {
@@ -125,6 +125,6 @@ class M3CapsuleGeom extends M3Geom {
         wireIndices.add(rowStart + (radiusSegments + 1) + j);
       }
     }
-    _edgeIndices.add(_M3Indices(WebGL.LINES, Uint16Array.fromList(wireIndices)));
+    _edgeIndices.add(_M3Indices(WebGL.LINES, Uint16List.fromList(wireIndices)));
   }
 }

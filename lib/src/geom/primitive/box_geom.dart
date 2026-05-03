@@ -117,7 +117,7 @@ class M3BoxGeom extends M3Geom {
     _faceIndices.add(
       _M3Indices(
         WebGL.TRIANGLES,
-        Uint16Array.fromList([
+        Uint16List.fromList([
           0, 2, 1, 1, 2, 3, // buttom face
           4, 5, 6, 6, 5, 7, // top face
           8, 9, 12, 12, 9, 13, // back face
@@ -132,7 +132,7 @@ class M3BoxGeom extends M3Geom {
     _edgeIndices.add(
       _M3Indices(
         WebGL.LINES,
-        Uint16Array.fromList([
+        Uint16List.fromList([
           0, 1, 1, 3, 3, 2, 2, 0, // bottom part
           4, 5, 5, 7, 7, 6, 6, 4, // top part
           0, 4, 1, 5, 2, 6, 3, 7, // vertical part

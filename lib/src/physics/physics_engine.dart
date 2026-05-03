@@ -68,7 +68,6 @@ class M3PhysicsSystem {
 
   void _syncToEntities() {
     for (final entry in _bodyToEntity.entries) {
-      final bodyHandle = entry.key;
       final entity = entry.value;
       final body = entity.rigidBody!;
 
