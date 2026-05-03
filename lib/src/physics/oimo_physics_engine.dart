@@ -95,8 +95,6 @@ class M3OimoPhysicsEngine implements M3PhysicsEngine {
   void step(double sec, {void Function()? onBeforeStep}) {
     if (_world == null) return;
 
-    _world!.isStat = showStats;
-
     _accumulator += sec;
     int steps = 0;
     while (_accumulator >= _world!.timeStep && steps < _maxStepsPerFrame) {
@@ -144,9 +142,6 @@ class M3OimoPhysicsEngine implements M3PhysicsEngine {
     );
     _world?.add(fenceNegY);
   }
-
-  @override
-  bool showStats = false;
 
   @override
   String get info => _world?.getInfo() ?? "";

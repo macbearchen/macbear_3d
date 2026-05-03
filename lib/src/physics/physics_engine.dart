@@ -1,5 +1,3 @@
-import 'package:vector_math/vector_math.dart';
-
 import '../m3_internal.dart';
 
 /// Abstract physics body for an entity.
@@ -30,10 +28,10 @@ abstract class M3PhysicsEngine {
   double get interpolationAlpha;
   void step(double sec, {void Function()? onBeforeStep});
 
-  bool showStats = false;
-  String get info => "";
+  String get info => "no physics info";
 }
 
+/// Physics-entity binding layer.
 class M3PhysicsSystem {
   final M3PhysicsEngine engine;
 

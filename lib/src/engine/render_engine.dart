@@ -180,8 +180,7 @@ csm=${scene.camera.csmCount}''';
 
     // Physics Statistics
     final physicsEngine = M3AppEngine.instance.physicsEngine;
-    physicsEngine.showStats = options.debug.showPhysicsStats;
-    if (physicsEngine.showStats) {
+    if (options.debug.showPhysicsStats) {
       final physicsInfo = physicsEngine.info;
       matStats.setTranslation(Vector3(10, 300, 0));
       M3Resources.text2D.drawText(physicsInfo, matStats, color: Vector4(1, 0, 1, 1));
