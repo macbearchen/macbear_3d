@@ -7,7 +7,7 @@ import '../m3_internal.dart';
 ///
 /// Combines a mesh, transform, color, and optional rigid body for physics simulation.
 class M3Entity extends M3Node {
-  M3PhysicsBody? rigidBody;
+  M3RigidBody? rigidBody;
   M3Mesh? mesh;
   Vector4 color = Vector4(1.0, 1.0, 1.0, 1.0); // RGBA
 

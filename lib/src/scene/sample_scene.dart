@@ -69,7 +69,7 @@ class SampleScene extends M3Scene {
 
           final meshColor = colors[k % colors.length];
           M3Mesh mesh;
-          M3PhysicsBody rb;
+          M3RigidBody rb;
 
           // visual entity, rigid body
           switch (k % 3) {
@@ -167,43 +167,5 @@ class MassiveScene extends M3Scene {
 
     // 02: sample cubemap
     skybox = M3Skybox(M3Texture.createSampleCubemap());
-  }
-}
-
-// Define a base scene
-class BaseScene extends M3Scene {
-  @override
-  Future<void> load() async {
-    if (isLoaded) return;
-    await super.load();
-
-    M3AppEngine.backgroundColor = Vector3(0.04, 0.04, 0.8);
-
-    camera.setEuler(pi / 9, -pi / 5, 0, distance: 20);
-    light.setEuler(pi / 5, -pi / 3, 0, distance: 30);
-
-    addGround();
-    // axis gizmo
-    addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 1));
-
-    final mesh = M3Mesh(M3Resources.unitSphere);
-    addMesh(mesh, Vector3(5, 5, 2));
-
-    // sample cubemap
-    skybox = M3Skybox(M3Texture.createSampleCubemap());
-  }
-
-  // ── Ground ──────────────────────────────────────────────────────────────────
-  void addGround() {
-    M3Texture texGrid = M3Texture.createCheckerboard(size: 10);
-    M3Material mtr = M3Material();
-    mtr.texDiffuse = texGrid;
-
-    const hs = 10.0;
-    // Fixed physics floor — top surface sits at z = 0
-    // world.addBox(x: 0, y: 0, z: -0.5, hx: hs, hy: hs, hz: 0.5, type: RigidBodyType.fixed);
-
-    final floor = addMesh(M3Mesh(M3PlaneGeom(hs * 2, hs * 2), material: mtr), Vector3(0, 0, 0));
-    floor.color = Colors.limeGreen;
   }
 }

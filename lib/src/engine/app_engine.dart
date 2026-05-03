@@ -58,7 +58,7 @@ class M3AppEngine with ChangeNotifier {
   M3Scene? activeScene;
 
   // physics
-  M3PhysicsEngine physicsEngine = M3OimoPhysics();
+  M3PhysicsEngine physicsEngine = M3OimoPhysicsEngine();
 
   // This named constructor is the "real" constructor
   // It'll be called exactly once, by the static property assignment above

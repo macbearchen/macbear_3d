@@ -1,12 +1,11 @@
 import 'package:oimo_physics/oimo_physics.dart' as oimo;
 
-
 import '../m3_internal.dart';
 
-class _M3OimoPhysicsBody implements M3PhysicsBody {
+class _M3OimoRigidBody extends M3RigidBody {
   final oimo.RigidBody _rigidBody;
 
-  _M3OimoPhysicsBody(this._rigidBody);
+  _M3OimoRigidBody(this._rigidBody, {required int handle}) : super(handle);
 
   @override
   Vector3 get position => _rigidBody.position;
@@ -20,7 +19,11 @@ class _M3OimoPhysicsBody implements M3PhysicsBody {
 }
 
 /// Physics simulation engine wrapper for oimo_physics with gravity and collision.
-class M3OimoPhysics implements M3PhysicsEngine {
+class M3OimoPhysicsEngine implements M3PhysicsEngine {
+  int _nextHandle = 1;
+  final Map<int, _M3OimoRigidBody> _bodies = {};
+  int _generateHandle() => _nextHandle++;
+
   // physics
   late oimo.World? _world;
   oimo.World? get world => _world;
@@ -33,7 +36,7 @@ class M3OimoPhysics implements M3PhysicsEngine {
     _accumulator = 0;
   }
 
-  M3OimoPhysics() {
+  M3OimoPhysicsEngine() {
     resetWorld();
   }
 
@@ -45,36 +48,38 @@ class M3OimoPhysics implements M3PhysicsEngine {
     _accumulator = 0;
   }
 
-  M3PhysicsBody _addPrimitive(oimo.Shape shape, {double density = 1.0, Vector3? position}) {
+  M3RigidBody _addPrimitive(oimo.Shape shape, {double density = 1.0, Vector3? position}) {
     // static body (density is zero)
     final config = oimo.ObjectConfigure(shapes: [shape], move: density > 0.0, position: position);
     final rb = _world?.add(config) as oimo.RigidBody;
-    return _M3OimoPhysicsBody(rb);
+    final body = _M3OimoRigidBody(rb, handle: _generateHandle());
+    _bodies[body.handle] = body;
+    return body;
   }
 
   @override
-  M3PhysicsBody addBox(double width, double height, double depth, {Vector3? position, double density = 1.0}) {
+  M3RigidBody addBox(double width, double height, double depth, {Vector3? position, double density = 1.0}) {
     final shape = oimo.Box(oimo.ShapeConfig(geometry: oimo.Shapes.box, density: density), width, height, depth);
     final rb = _addPrimitive(shape, density: density, position: position);
     return rb;
   }
 
   @override
-  M3PhysicsBody addSphere(double radius, {double density = 1.0, Vector3? position}) {
+  M3RigidBody addSphere(double radius, {double density = 1.0, Vector3? position}) {
     final shape = oimo.Sphere(oimo.ShapeConfig(geometry: oimo.Shapes.sphere, density: density), radius);
     final rb = _addPrimitive(shape, density: density, position: position);
     return rb;
   }
 
   @override
-  M3PhysicsBody addCylinder(double radius, double height, {double density = 1.0, Vector3? position}) {
+  M3RigidBody addCylinder(double radius, double height, {double density = 1.0, Vector3? position}) {
     final shape = oimo.Cylinder(oimo.ShapeConfig(geometry: oimo.Shapes.cylinder, density: density), radius, height);
     final rb = _addPrimitive(shape, density: density, position: position);
     return rb;
   }
 
   @override
-  M3PhysicsBody addCapsule(double radius, double height, {double density = 1.0, Vector3? position}) {
+  M3RigidBody addCapsule(double radius, double height, {double density = 1.0, Vector3? position}) {
     final shape = oimo.Capsule(oimo.ShapeConfig(geometry: oimo.Shapes.capsule, density: density), radius, height);
     final rb = _addPrimitive(shape, density: density, position: position);
     return rb;
@@ -89,7 +94,7 @@ class M3OimoPhysics implements M3PhysicsEngine {
   @override
   void step(double sec, {void Function()? onBeforeStep}) {
     if (_world == null) return;
-    
+
     _world!.isStat = showStats;
 
     _accumulator += sec;
@@ -103,14 +108,15 @@ class M3OimoPhysics implements M3PhysicsEngine {
   }
 
   @override
-  M3PhysicsBody addGround(double sizeW, double sizeH, double sizeD) {
+  M3RigidBody addGround(double sizeW, double sizeH, double sizeD) {
     final groundConfig = oimo.ObjectConfigure(
       shapes: [oimo.Box(oimo.ShapeConfig(geometry: oimo.Shapes.box), sizeW, sizeH, sizeD)],
       position: Vector3(0.0, 0.0, -sizeD / 2.0),
     );
-    // ignore: unused_local_variable
-    final rbGround = _world?.add(groundConfig) as oimo.RigidBody;
-    return _M3OimoPhysicsBody(rbGround);
+    final rb = _world?.add(groundConfig) as oimo.RigidBody;
+    final body = _M3OimoRigidBody(rb, handle: _generateHandle());
+    _bodies[body.handle] = body;
+    return body;
   }
 
   @override
