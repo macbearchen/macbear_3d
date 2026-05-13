@@ -17,6 +17,7 @@ part 'sample_scene.dart';
 abstract class M3Scene {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
   M3InputController? inputController;
+  final M3PhysicsSystem physicsSystem;
 
   final _light = M3Light();
   final _camera = M3Camera();
@@ -29,9 +30,11 @@ abstract class M3Scene {
   final List<M3Entity> entities = [];
 
   M3Skybox? skybox;
+  M3PlanarReflection? planarReflection;
+
   final M3RenderPipeline _pipeline = M3RenderPipeline();
 
-  M3Scene() {
+  M3Scene({M3PhysicsSystem? physics}) : physicsSystem = physics ?? M3PhysicsSystem(M3NoPhysicsEngine()) {
     cameras.add(_camera);
     inputController = M3CameraOrbitController(_camera);
 
@@ -43,10 +46,13 @@ abstract class M3Scene {
     int halfView = 8;
     light.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 50);
     light.setEuler(pi / 5, -pi / 3, 0, distance: 15); // rotate light
+
+    planarReflection = M3PlanarReflection(256, 256);
   }
 
   void dispose() {
     skybox?.dispose();
+    physicsSystem.dispose();
   }
 
   bool _isLoaded = false;
@@ -55,6 +61,9 @@ abstract class M3Scene {
   // load skybox, meshes, etc.
   Future<void> load() async {
     _isLoaded = true;
+
+    await physicsSystem.init();
+    debugPrint('<<< Physics System >>>\n${physicsSystem.info}\n');
   }
 
   M3Entity addMesh(M3Mesh mesh, Vector3 position) {
@@ -86,10 +95,17 @@ abstract class M3Scene {
     for (final entity in entities) {
       // update animation
       entity.update(delta);
+    }
 
+    physicsSystem.update(delta, onBeforeStep: savePhysicsStates);
+    final alpha = physicsSystem.interpolationAlpha;
+
+    for (final entity in entities) {
       // sync physics
-      entity.syncFromPhysics();
+      entity.syncFromPhysics(alpha);
+    }
 
+    for (final entity in entities) {
       // update bounds
       entity.updateBounds();
     }
@@ -182,7 +198,9 @@ abstract class M3Scene {
       final entity = item.entity;
 
       M3Program activeProg = prog;
-      if (prog is M3ProgramLighting &&
+      if (sub.mtr.programOverride != null) {
+        activeProg = sub.mtr.programOverride!;
+      } else if (prog is M3ProgramLighting &&
           sub.mtr.texDiffuse is M3ExternalTexture &&
           M3Resources.programExternalOES != null) {
         activeProg = M3Resources.programExternalOES!;
@@ -337,7 +355,14 @@ abstract class M3Scene {
     light.drawHelper(progSimple, camera);
   }
 
-  void render2D() {}
+  void render2D() {
+    if (planarReflection != null) {
+      final ratio = 0.5;
+      final w = planarReflection!.width * ratio;
+      final h = planarReflection!.height * ratio;
+      planarReflection!.drawDebugReflection(10, 10, w, h);
+    }
+  }
 
   /// Build scene-specific UI controls.
   Widget? buildUI(BuildContext context) => null;

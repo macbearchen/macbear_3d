@@ -16,6 +16,21 @@ class M3Projection {
   M3Projection() {
     refreshProjectionMatrix();
   }
+
+  void copyFrom(M3Projection other) {
+    projectionMatrix = other.projectionMatrix.clone();
+    viewportX = other.viewportX;
+    viewportY = other.viewportY;
+    viewportW = other.viewportW;
+    viewportH = other.viewportH;
+    nearClip = other.nearClip;
+    farClip = other.farClip;
+    degreeFovY = other.degreeFovY;
+  }
+
+  M3Projection clone() {
+    return M3Projection()..copyFrom(this);
+  }
   // set viewport and projection matrix
   void setViewport(int x, int y, int w, int h, {double fovy = 50.0, double near = 1.0, double far = 100.0}) {
     viewportX = x;

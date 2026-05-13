@@ -12,7 +12,7 @@ import '../input/keyboard.dart';
 class M3AppEngine with ChangeNotifier {
   static final M3AppEngine instance = M3AppEngine._internal();
 
-  static const String version = "macbear3d-lib v0.8.1 powered by ANGLE";
+  static const String version = "macbear3d-lib v0.9.0 powered by ANGLE";
   final FlutterAngle _angle = FlutterAngle();
   late FlutterAngleTexture _sourceTexture; // main framebuffer
   static Framebuffer get mainFbo => Framebuffer(kIsWeb ? null : instance._sourceTexture.fboId);
@@ -57,15 +57,6 @@ class M3AppEngine with ChangeNotifier {
   // scene
   M3Scene? activeScene;
 
-  // physics system
-  M3PhysicsEngine physicsEngine = M3NoPhysicsEngine();
-  late M3PhysicsSystem physicsSystem = M3PhysicsSystem(physicsEngine);
-
-  void applyPhysicsEngine(M3PhysicsEngine engine) {
-    physicsEngine = engine;
-    physicsSystem = M3PhysicsSystem(physicsEngine);
-  }
-
   // This named constructor is the "real" constructor
   // It'll be called exactly once, by the static property assignment above
   // it's also private, so it can only be called in this class
@@ -104,7 +95,7 @@ class M3AppEngine with ChangeNotifier {
     // init resources
     await M3Resources.init();
 
-    renderEngine.setViewport(width, height, dpr);
+    renderEngine.resize(width, height, dpr);
 
     _didInit = true;
     if (onDidInit != null) {
@@ -165,16 +156,13 @@ class M3AppEngine with ChangeNotifier {
       M3AppEngine.instance.activeScene = null;
     }
 
-    // reset physics world
-    physicsEngine.resetWorld();
-
     await scene.load();
     // reset scene to initial state
     scene.savePhysicsStates(); // Initial state for interpolation
     scene.update(0.0);
 
     activeScene = scene;
-    renderEngine.setViewport(appWidth, appHeight, devicePixelRatio);
+    renderEngine.resize(appWidth, appHeight, devicePixelRatio);
 
     notifyListeners();
     resume(); // app ticker resume
@@ -209,6 +197,7 @@ class M3AppEngine with ChangeNotifier {
       return Container(
         color: Colors.black,
         child: Center(
+          // Macbear 3D Copyright: Please don't remove this text!
           child: Text('Macbear 3D', style: TextStyle(color: Colors.lightGreen, fontSize: 20)),
         ),
       );
@@ -294,7 +283,7 @@ class M3AppEngine with ChangeNotifier {
     appHeight = height;
     devicePixelRatio = dpr;
 
-    renderEngine.setViewport(width, height, dpr);
+    renderEngine.resize(width, height, dpr);
 
     // touch manager reset
     touchManager.clearAll();
@@ -353,17 +342,18 @@ class M3AppEngine with ChangeNotifier {
       double sdt = dt * timeScale;
 
       activeScene!.inputController?.update(dt);
-      if (sdt > 0) {
-        physicsEngine.step(sdt, onBeforeStep: activeScene!.savePhysicsStates);
-        activeScene!.update(sdt);
-      }
+      activeScene!.update(sdt);
     }
   }
 
   // application render
   Future<void> _render() async {
-    // 1. render shadow map
+    // 1. pre-render: shadow map, reflection, etc.
     if (activeScene != null) {
+      // capture planar reflection
+      activeScene!.planarReflection?.capture(activeScene!);
+
+      // shadow map
       renderEngine.renderShadowMap(activeScene!);
     }
 

@@ -6,6 +6,8 @@ class PhysicsScene_07 extends M3Scene {
   final _geomCylinder = M3CylinderGeom(0.5, 0.5, 1.0, axis: M3Axis.y);
 
   // constructor
+  PhysicsScene_07() : super(physics: M3PhysicsSystem(M3RapierPhysicsEngine()));
+
   @override
   Future<void> load() async {
     if (isLoaded) return;
@@ -30,8 +32,7 @@ class PhysicsScene_07 extends M3Scene {
     cylinderMesh.subMeshes[0].mtr.texDiffuse = texGrid;
 
     // 07-1: physics static ground
-    final phyEngine = M3AppEngine.instance.physicsEngine;
-    phyEngine.addGround(10, 10, 2);
+    physicsSystem.addBox(5, 5, 2, M3RigidBodyDesc.fixed()..position = Vector3(0, 0, -2));
 
     List<Vector3> arrayPos = [Vector3(0, 0, 0), Vector3(3, 0, 0), Vector3(0, 3, 0), Vector3(.5, .6, 3)];
     List<Vector4> arrayColor = [Colors.yellow, Colors.red, Colors.green, Colors.blue];
@@ -43,7 +44,7 @@ class PhysicsScene_07 extends M3Scene {
 
       // visual entity
       final entity = addMesh(cubeMesh, pos)..color = arrayColor[i];
-      entity.rigidBody = phyEngine.addBox(1, 1, 1, position: pos);
+      entity.rigidBody = physicsSystem.addBox(0.5, 0.5, 0.5, M3RigidBodyDesc.dynamic()..position = pos);
     }
 
     // 07-3: physics rigid ball
@@ -52,7 +53,7 @@ class PhysicsScene_07 extends M3Scene {
       final pos = arrayPos[i].clone() + Vector3(0.3, 0.6, 3.0);
 
       final entity = addMesh(ballMesh, pos)..color = arrayColor[i];
-      entity.rigidBody = phyEngine.addSphere(0.5, position: pos);
+      entity.rigidBody = physicsSystem.addSphere(0.5, M3RigidBodyDesc.dynamic()..position = pos);
     }
 
     // 07-4: physics rigid cylinder
@@ -61,7 +62,7 @@ class PhysicsScene_07 extends M3Scene {
       final pos = Vector3(i - 0.2, i + 0.3, i + 6.5);
 
       final entity = addMesh(cylinderMesh, pos)..color = arrayColor[i];
-      entity.rigidBody = phyEngine.addCylinder(0.5, 1.0, position: pos);
+      entity.rigidBody = physicsSystem.addCylinder(0.5, 0.5, M3RigidBodyDesc.dynamic()..position = pos);
     }
 
     // sample cubemap

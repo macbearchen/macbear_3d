@@ -11,7 +11,7 @@ dependencies:
 
   macbear_3d:
     path: ../   # pub.dev 會自動處理
-  oimo_physics: ^0.0.5
+  rapier_physics: ^0.3.0
   video_player: ^2.11.1
 
 dev_dependencies:

@@ -12,6 +12,9 @@ part 'program_shadowmap.dart';
 /// A WebGL shader program wrapper for GLSL vertex and fragment shaders.
 ///
 /// Manages uniform locations, vertex attributes, and matrix transformations.
+///
+/// command:
+///   dart run build_runner build --delete-conflicting-outputs
 class M3Program {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
 
@@ -199,7 +202,12 @@ class M3Program {
     }
   }
 
-  void applyCamera(M3Camera cam) {}
+  void applyCamera(M3Camera cam) {
+    if (isLocationValid(uniformCameraViewport)) {
+      gl.uniform4f(uniformCameraViewport, cam.viewportX.toDouble(), cam.viewportY.toDouble(),
+          cam.viewportW.toDouble(), cam.viewportH.toDouble());
+    }
+  }
 
   void setMatrices(M3Camera cam, Matrix4 mMatrix) {
     // Projection matrix

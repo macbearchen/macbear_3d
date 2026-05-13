@@ -30,6 +30,7 @@ class M3Skybox {
     _texCubemap.dispose();
   }
 
+  /// draw skybox
   bool drawSkybox(M3Camera camEye) {
     final prog = M3Resources.programSkybox!;
 

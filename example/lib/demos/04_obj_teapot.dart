@@ -83,7 +83,7 @@ class ObjTeapotScene_04 extends M3Scene {
       ..color = Vector4(0.0, 1.0, 0.3, 1.0);
 
     // 04-5: reflection probe
-    _probe = M3ReflectionProbe(position: _teapot!.position, near: 1.0, far: 100.0);
+    _probe = M3ReflectionProbe(near: 1.0, far: 100.0);
     _probe.excludeEntity = _teapot;
 
     setReflectionProbe(true);
@@ -121,8 +121,8 @@ class ObjTeapotScene_04 extends M3Scene {
       _teapot!.rotation = quatYPos90 * Quaternion.euler(angle, 0, 0);
 
       if (_teapot!.reflectionProbe != null) {
-        _probe.position = _teapot!.position;
-        _probe.capture(this);
+        // capture reflection probe
+        _probe.capture(this, _teapot!.position);
       }
     }
   }

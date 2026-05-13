@@ -210,14 +210,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.17.0"
-  oimo_physics:
-    dependency: "direct main"
-    description:
-      name: oimo_physics
-      sha256: "0b2094414a2048a8e7fd3a3262592e26a17d7cac4e1b3ab1fa492cfd6657efeb"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.5"
   package_config:
     dependency: transitive
     description:
@@ -258,6 +250,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
+  rapier_physics:
+    dependency: "direct main"
+    description:
+      name: rapier_physics
+      sha256: "901f9cffa43f4975162d07aeb73c8f41468a3473cc8ca10f6238a21d4fb21a36"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.1"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -368,5 +368,5 @@ packages:
     source: hosted
     version: "3.1.3"
 sdks:
-  dart: ">=3.10.0 <4.0.0"
+  dart: ">=3.11.0 <4.0.0"
   flutter: ">=3.38.0"

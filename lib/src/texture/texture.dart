@@ -35,29 +35,26 @@ class M3Texture {
   String name = "noname";
   late WebGLTexture _texture;
   WebGLTexture get glTexture => _texture;
-  final bool isCubemap; // true: for cubemap, false: for 2D
   final bool generateMipmaps;
+  final int target; // GL_TEXTURE_2D, GL_TEXTURE_CUBE_MAP
   int texW = 32;
   int texH = 32;
-  int get target {
-    if (isCubemap) return WebGL.TEXTURE_CUBE_MAP;
-    return WebGL.TEXTURE_2D;
-  }
 
-  M3Texture({this.isCubemap = false, this.generateMipmaps = true}) {
+  M3Texture({this.target = WebGL.TEXTURE_2D, this.generateMipmaps = true}) {
     _texture = gl.createTexture();
 
     setParameters();
   }
 
   void setParameters() {
-    final int warpMode = isCubemap ? WebGL.CLAMP_TO_EDGE : WebGL.REPEAT;
+    final bool isCubemap = target == WebGL.TEXTURE_CUBE_MAP;
+    final int wrapMode = isCubemap ? WebGL.CLAMP_TO_EDGE : WebGL.REPEAT;
 
     bind();
-    gl.texParameteri(target, WebGL.TEXTURE_WRAP_S, warpMode);
-    gl.texParameteri(target, WebGL.TEXTURE_WRAP_T, warpMode);
+    gl.texParameteri(target, WebGL.TEXTURE_WRAP_S, wrapMode);
+    gl.texParameteri(target, WebGL.TEXTURE_WRAP_T, wrapMode);
     if (isCubemap) {
-      gl.texParameteri(target, WebGL.TEXTURE_WRAP_R, warpMode);
+      gl.texParameteri(target, WebGL.TEXTURE_WRAP_R, wrapMode);
     }
 
     final minFilter = generateMipmaps ? WebGL.LINEAR_MIPMAP_LINEAR : WebGL.LINEAR;
@@ -81,23 +78,39 @@ class M3Texture {
     gl.bindTexture(target, _textureNone); // seems not necessary
   }
 
+  /// Generate mipmaps for the texture.
+  void generateMipmap() {
+    if (generateMipmaps) {
+      bind();
+      gl.generateMipmap(target);
+    }
+  }
+
+  /// Create a texture from a WebGL texture.
   M3Texture.fromWebGLTexture(this._texture, {this.texW = 1024, this.texH = 1024, this.generateMipmaps = false})
-    : isCubemap = false;
+    : target = WebGL.TEXTURE_2D;
 
   @override
   String toString() {
-    return 'Texture${isCubemap ? 'Cubemap' : '2D'} ($texW x $texH): "$name"';
+    final targetName = switch (target) {
+      WebGL.TEXTURE_2D => '2D',
+      WebGL.TEXTURE_CUBE_MAP => 'CubeMap',
+      _ => 'Unknown',
+    };
+    return 'Texture $targetName ($texW x $texH): "$name"';
   }
 
+  /// Create a solid color texture (2D) with specified color.
   static M3Texture createSolidColor(Vector4 color) {
-    M3Texture tex = M3Texture();
+    M3Texture tex = M3Texture(generateMipmaps: false);
     tex.name = "solid_color";
     tex._initColorPixel(color);
     return tex;
   }
 
+  /// Create a solid color cubemap (cube) with specified color.
   static M3Texture createSolidColorCube(Vector4 color) {
-    M3Texture tex = M3Texture(isCubemap: true);
+    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, generateMipmaps: false);
     tex.name = "solid_color_cube";
     for (int i = 0; i < 6; i++) {
       tex._initColorPixel(color, faceTarget: _cubeMapFaceTargets[i]);
@@ -107,7 +120,7 @@ class M3Texture {
 
   /// Create a default IBL cubemap with simple sky/ground gradient colors.
   static M3Texture createDefaultIBLCube() {
-    M3Texture tex = M3Texture(isCubemap: true);
+    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, generateMipmaps: false);
     tex.name = "default_ibl_cube";
 
     final colorSky = Vector4(0.5, 0.7, 0.9, 1.0); // Light bluish sky
@@ -125,8 +138,19 @@ class M3Texture {
     return tex;
   }
 
+  /// Create an empty 2D texture with a specified size.
+  static M3Texture createEmpty2D(int width, int height, {bool generateMipmaps = true}) {
+    M3Texture tex = M3Texture(generateMipmaps: generateMipmaps);
+    tex.name = "empty_2d_${width}x$height";
+    tex.texW = width;
+    tex.texH = height;
+    tex._initEmptyTarget(faceTarget: WebGL.TEXTURE_2D);
+    return tex;
+  }
+
+  /// Create an empty cubemap with a specified size (all 6 faces filled with a neutral gray color).
   static M3Texture createEmptyCubemap(int size) {
-    M3Texture tex = M3Texture(isCubemap: true, generateMipmaps: true);
+    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, generateMipmaps: true);
     tex.name = "empty_cubemap_${size}x$size";
     tex.texW = size;
     tex.texH = size;
@@ -148,7 +172,6 @@ class M3Texture {
       (color.a * 255).round().clamp(0, 255),
     ]);
     gl.texImage2D(faceTarget, 0, WebGL.RGBA, 1, 1, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, pixel);
-    if (generateMipmaps && !isCubemap) gl.generateMipmap(target);
   }
 
   void _initEmptyTarget({int faceTarget = WebGL.TEXTURE_2D}) {
@@ -190,9 +213,9 @@ class M3Texture {
     }
 
     gl.texImage2D(faceTarget, 0, WebGL.RGBA, gridCount, gridCount, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, data);
-    if (generateMipmaps && !isCubemap) gl.generateMipmap(target);
   }
 
+  /// Create a checkerboard texture (2D) with specified size and colors.
   static M3Texture createCheckerboard({
     int size = 4,
     Vector4? lightColor,
@@ -204,11 +227,13 @@ class M3Texture {
     darkColor ??= Vector4(0.5, 0.5, 0.5, 1);
     tex.name = 'checkerboard';
     tex._initCheckerboard(size, lightColor, darkColor, faceTarget: faceTarget);
+    tex.generateMipmap();
     return tex;
   }
 
+  /// Create a sampler cubemap for texture sampling test.
   static M3Texture createSampleCubemap({int gridCount = 8}) {
-    M3Texture tex = M3Texture(isCubemap: true);
+    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP);
     tex.name = 'sample_cubemap';
 
     List<Vector4> colors = [
@@ -228,13 +253,16 @@ class M3Texture {
         faceTarget: _cubeMapFaceTargets[i],
       );
     }
+    tex.generateMipmap();
     return tex;
   }
 
+  /// Load a texture from the given URL.
   static Future<M3Texture> loadTexture(String url) async {
     M3Texture tex = M3Texture();
     tex.name = url;
     await tex._loadTarget(url);
+    tex.generateMipmap();
 
     debugPrint(tex.toString());
     return tex;
@@ -248,7 +276,7 @@ class M3Texture {
     String urlPosZ,
     String urlNegZ,
   ) async {
-    M3Texture tex = M3Texture(isCubemap: true);
+    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP);
     List<String> urls = [urlPosX, urlNegX, urlPosY, urlNegY, urlPosZ, urlNegZ];
 
     // 6 faces for cubemap
@@ -256,14 +284,12 @@ class M3Texture {
       await tex._loadTarget(urls[i], faceTarget: _cubeMapFaceTargets[i]);
       debugPrint(tex.toString());
     }
-    if (tex.generateMipmaps) {
-      tex.bind();
-      tex.gl.generateMipmap(WebGL.TEXTURE_CUBE_MAP);
-    }
+    tex.generateMipmap();
     tex.unbind();
     return tex;
   }
 
+  /// Create a texture from bytes.
   static Future<M3Texture> createFromBytes(Uint8List bytes, String name) async {
     M3Texture tex = M3Texture();
     tex.name = name;
@@ -273,6 +299,7 @@ class M3Texture {
     final img = frameInfo.image;
 
     await tex._loadTargetFromImage(img);
+    tex.generateMipmap();
     debugPrint(tex.toString());
     return tex;
   }
@@ -299,7 +326,6 @@ class M3Texture {
       final pixelFormat = ktxInfo.glFormat;
       bind();
       gl.compressedTexImage2D(faceTarget, 0, pixelFormat, texW, texH, 0, byteData);
-      if (generateMipmaps && !isCubemap) gl.generateMipmap(target);
       // } else if (lowerName.endsWith('.pvr')) {
       // PVR compressed texture
     } else {
@@ -331,13 +357,14 @@ class M3Texture {
 
     bind();
     gl.texImage2D(faceTarget, 0, pixelFormat, texW, texH, 0, pixelFormat, WebGL.UNSIGNED_BYTE, pixels);
-    if (generateMipmaps && !isCubemap) gl.generateMipmap(target);
   }
 
+  /// Create a wood texture with specified size.
   static Future<M3Texture> createWoodTexture({int size = 512}) async {
     M3Texture tex = M3Texture();
     final img = await _generateWoodImage(size: size);
     await tex._loadTargetFromImage(img);
+    tex.generateMipmap();
     return tex;
   }
 

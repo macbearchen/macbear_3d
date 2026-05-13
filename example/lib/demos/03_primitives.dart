@@ -89,6 +89,40 @@ class PrimitivesScene_03 extends M3Scene {
 
     // 03-9: axis gizmo
     addMesh(M3Resources.axisGizmoMesh, Vector3.zero());
+
+    // 03-10: Create a terrain-like plane with smooth shading
+    final smoothPlane = M3Mesh(
+      M3PlaneGeom(
+        8,
+        8,
+        widthSegments: 8,
+        heightSegments: 8,
+        uvScale: Vector2.all(4.0),
+        shading: M3ShadingMode.smooth,
+        onVertex: (x, y) {
+          return sin(x * 0.5) * cos(y * 0.5) * 2.0;
+        },
+      ),
+    );
+    smoothPlane.subMeshes[0].mtr.texDiffuse = texGround;
+    addMesh(smoothPlane, Vector3(-4.1, 9, 1.2));
+
+    // 03-11: Create a terrain-like plane with flat shading
+    final flatPlane = M3Mesh(
+      M3PlaneGeom(
+        8,
+        8,
+        widthSegments: 8,
+        heightSegments: 8,
+        uvScale: Vector2.all(4.0),
+        shading: M3ShadingMode.flat,
+        onVertex: (x, y) {
+          return sin(x * 0.5) * cos(y * 0.5) * 2.0;
+        },
+      ),
+    );
+    flatPlane.subMeshes[0].mtr.texDiffuse = texGround;
+    addMesh(flatPlane, Vector3(4.1, 9, 1.2));
   }
 
   @override

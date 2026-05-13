@@ -31,10 +31,12 @@ class M3RenderEngine {
     _shadowMap?.dispose();
   }
 
+  /// Create shadow map, call only after WebGL context created
   void createShadowMap({int width = 1024, int height = 1024}) {
     _shadowMap ??= M3ShadowMap(width, height);
   }
 
+  /// Bind default framebuffer
   void bindDefaultFramebuffer() {
     final engine = M3AppEngine.instance;
     final pixelW = (engine.appWidth * engine.devicePixelRatio).toInt();
@@ -43,26 +45,40 @@ class M3RenderEngine {
     gl.viewport(0, 0, pixelW, pixelH);
   }
 
-  void setViewport(int width, int height, double dpr) {
-    debugPrint("=== Viewport ($width x $height) dpr: $dpr ===");
+  /// resize rendering engine when application size changed
+  void resize(int width, int height, double dpr) {
+    debugPrint("=== App resize ($width x $height) dpr: $dpr ===");
 
     final pixelW = (width * dpr).toInt();
     final pixelH = (height * dpr).toInt();
-    gl.viewport(0, 0, pixelW, pixelH);
     // camera viewport by pixel size
-    M3AppEngine.instance.activeScene?.camera.setViewport(0, 0, pixelW, pixelH);
+    final scene = M3AppEngine.instance.activeScene;
+    if (scene != null) {
+      scene.camera.setViewport(0, 0, pixelW, pixelH);
+      // planar-reflection viewport by pixel size
+      final planar = scene.planarReflection;
+      if (planar != null) {
+        // Use half resolution to prevent z-fighting artifacts
+        const ratio = 0.5;
+        final reflectW = (width * ratio).toInt();
+        final reflectH = (height * ratio).toInt();
+        planar.resize(reflectW, reflectH);
+      }
+    }
 
     // projection 2D viewport by screen size
     _projection2D.setViewport(0, height, width, -height, fovy: 0, near: -1.0, far: 1.0);
     gl.lineWidth(dpr * 2.0);
   }
 
+  /// Render shadow map
   void renderShadowMap(M3Scene scene) {
     if (!options.debug.wireframe && options.shadows && _shadowMap != null) {
       _shadowMap!.renderDepth(scene, scene.light);
     }
   }
 
+  /// Render scene
   void renderScene(M3Scene scene) {
     stats.reset();
     stats.frames++;
@@ -119,6 +135,7 @@ class M3RenderEngine {
     }
   }
 
+  /// Render 2D overlay, e.g. debug texts or other 2D elements
   void render2D() {
     // ortho-param: left, right, top, bottom, near, far (flip Y-axis by swap top/bottom)
     gl.disable(WebGL.DEPTH_TEST);
@@ -179,9 +196,8 @@ csm=${scene.camera.csmCount}''';
     }
 
     // Physics Statistics
-    final physicsEngine = M3AppEngine.instance.physicsEngine;
-    if (options.debug.showPhysicsStats) {
-      final physicsInfo = physicsEngine.info;
+    final physicsInfo = M3AppEngine.instance.activeScene?.physicsSystem.info;
+    if (options.debug.showPhysicsStats && physicsInfo != null) {
       matStats.setTranslation(Vector3(10, 300, 0));
       M3Resources.text2D.drawText(physicsInfo, matStats, color: Vector4(1, 0, 1, 1));
     }

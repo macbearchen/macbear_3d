@@ -1,6 +1,8 @@
 // Macbear3D engine
 import '../m3_internal.dart';
 
+import '../shaders_gen/Mirror.es3.frag.g.dart';
+import '../shaders_gen/Mirror.es3.vert.g.dart';
 import '../shaders_gen/Rect.es3.frag.g.dart';
 import '../shaders_gen/Rect.es3.vert.g.dart';
 import '../shaders_gen/Simple.es3.frag.g.dart';
@@ -168,6 +170,7 @@ class M3Resources {
   static M3Program? programSimple;
   static M3Program? programSkybox;
   static M3Program? programRectangle;
+  static M3Program? programPlaneMirror; // plane reflection (mirror / water)
   static M3ProgramEye? programSkyboxReflect;
   static M3Program? programExternalOES; // external texture: video streaming
   // with lighting
@@ -217,6 +220,9 @@ class M3Resources {
     programRectangle = M3Program(Rect_vert, Rect_frag);
     programSkyboxReflect = M3ProgramEye(_SkinNormal_vert + SkyboxReflect_vert, Skybox_frag);
     programSimpleLighting = M3ProgramLighting(_SkinNormal_vert + SimpleLighting_vert, Simple_frag);
+
+    // plane reflection (mirror / water)
+    programPlaneMirror = M3Program(Mirror_vert, Mirror_frag);
 
     // external texture: video streaming
     String fsUnlit = Unlit_frag;

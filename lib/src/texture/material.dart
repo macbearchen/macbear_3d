@@ -1,8 +1,6 @@
-import 'package:vector_math/vector_math.dart';
-
-import '../engine/resources.dart';
+// Macbear3D engine
+import '../m3_internal.dart';
 import '../gltf/gltf_parser.dart';
-import 'texture.dart';
 
 /// Alpha blending modes for materials.
 enum M3AlphaMode {
@@ -30,6 +28,9 @@ class M3Material {
   // textures
   M3Texture texDiffuse = M3Resources.texWhite;
   Matrix3 texMatrix = Matrix3.identity();
+
+  /// Optional shader program override for this material.
+  M3Program? programOverride;
 
   M3Material();
 

@@ -39,6 +39,27 @@ class M3Camera extends M3Projection {
 
   double csmLambda = 0.6;
 
+  @override
+  void copyFrom(covariant M3Camera other) {
+    super.copyFrom(other);
+    position = other.position.clone();
+    rotation = other.rotation.clone();
+    euler.copyFrom(other.euler);
+    viewMatrix = other.viewMatrix.clone();
+    _invViewMatrix = other._invViewMatrix.clone();
+    target = other.target.clone();
+    up = other.up.clone();
+    distanceToTarget = other.distanceToTarget;
+    _csmCount = other._csmCount;
+    csmLambda = other.csmLambda;
+    csmSplitDistances = List.from(other.csmSplitDistances);
+    updateFrustum(projectionMatrix * viewMatrix);
+  }
+
+  /// Clone of this.
+  @override
+  M3Camera clone() => M3Camera()..copyFrom(this);
+
   /// visibility checking (frustum culling)
   bool isVisible(M3Bounding bounds) {
     if (!_frustum.intersectsWithSphere(bounds.sphere)) {
@@ -64,7 +85,7 @@ class M3Camera extends M3Projection {
   void _updateSplitDistances() {
     if (csmCount > 0) {
       csmSplitDistances = buildCSMSplits(csmCount, csmLambda);
-      debugPrint("csmSplitDistances: $csmSplitDistances");
+      // debugPrint("csmSplitDistances: $csmSplitDistances");
     } else {
       csmSplitDistances = [];
     }
@@ -135,9 +156,90 @@ class M3Camera extends M3Projection {
     updateFrustum(projectionMatrix * viewMatrix);
   }
 
+  /// set camera rotation by quaternion and distance to target.
   void setRotationQuaternion(Quaternion rotQuat, {double? distance}) {
     rotation = rotQuat;
     _setRotationMatrix3(rotQuat.asRotationMatrix(), distance: distance);
+  }
+
+  /// reflect view matrix by clip plane (reflection)
+  void reflectViewMatrix(Vector4 clipPlane) {
+    Matrix4 mirrorMat = Matrix4.identity();
+    mirrorMat.setRow(
+      0,
+      Vector4(
+        1 - 2 * clipPlane.x * clipPlane.x,
+        -2 * clipPlane.y * clipPlane.x,
+        -2 * clipPlane.z * clipPlane.x,
+        -2 * clipPlane.w * clipPlane.x,
+      ),
+    );
+    mirrorMat.setRow(
+      1,
+      Vector4(
+        -2 * clipPlane.x * clipPlane.y,
+        1 - 2 * clipPlane.y * clipPlane.y,
+        -2 * clipPlane.z * clipPlane.y,
+        -2 * clipPlane.w * clipPlane.y,
+      ),
+    );
+    mirrorMat.setRow(
+      2,
+      Vector4(
+        -2 * clipPlane.x * clipPlane.z,
+        -2 * clipPlane.y * clipPlane.z,
+        1 - 2 * clipPlane.z * clipPlane.z,
+        -2 * clipPlane.w * clipPlane.z,
+      ),
+    );
+    mirrorMat.setRow(3, Vector4(0, 0, 0, 1));
+
+    _invViewMatrix = mirrorMat * _invViewMatrix;
+    viewMatrix = _invViewMatrix.orthoInverse();
+
+    // update position, target, up
+    position = _invViewMatrix.getTranslation();
+    target = (mirrorMat * Vector4(target.x, target.y, target.z, 1.0)).xyz;
+    up = (mirrorMat * Vector4(up.x, up.y, up.z, 0.0)).xyz;
+
+    // frustum matrix for culling
+    updateFrustum(projectionMatrix * viewMatrix);
+  }
+
+  /// modify projection matrix by clip plane (oblique frustum)
+  void setObliqueClipPlane(Vector4 clipPlane) {
+    // 1. Transform plane from world space to view space
+    final clipPlaneInView = planeToViewSpace(clipPlane, viewMatrix, _invViewMatrix);
+
+    // 2. Calculate the clip-space corner point opposite the clipping plane
+    // using the sign of the plane's normal and the projection matrix.
+    // This is Lengyel's formula for the 'q' vector in camera space.
+    final Vector4 q = Vector4(
+      (clipPlaneInView.x.sign + projectionMatrix.entry(0, 2)) / projectionMatrix.entry(0, 0),
+      (clipPlaneInView.y.sign + projectionMatrix.entry(1, 2)) / projectionMatrix.entry(1, 1),
+      -1.0,
+      (1.0 + projectionMatrix.entry(2, 2)) / projectionMatrix.entry(2, 3),
+    );
+
+    // 3. Calculate the scaled plane vector 'c'
+    final Vector4 c = clipPlaneInView * (2.0 / clipPlaneInView.dot(q));
+
+    // 4. Replace the third row (index 2) of the projection matrix with 'c'
+    projectionMatrix.setRow(2, c);
+
+    // 5. Update frustum matrix for culling
+    updateFrustum(projectionMatrix * viewMatrix);
+  }
+
+  /// transform plane from world space to view space
+  static Vector4 planeToViewSpace(Vector4 planeWorld, Matrix4 viewMatrix, Matrix4 viewInverseMatrix) {
+    // inverse transpose of view matrix
+    final Matrix4 invTrans = viewInverseMatrix.clone()..transpose();
+
+    // transform plane = (A, B, C, D)
+    final Vector4 planeView = invTrans.transform(planeWorld);
+
+    return planeView;
   }
 
   @override

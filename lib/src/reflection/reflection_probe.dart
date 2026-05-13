@@ -2,7 +2,6 @@
 import '../m3_internal.dart';
 
 class M3ReflectionProbe {
-  Vector3 position;
   final _camCapture = M3Camera();
   M3Entity? excludeEntity; // ignore capture entity
 
@@ -11,13 +10,7 @@ class M3ReflectionProbe {
   M3Framebuffer? _fbo;
   bool isMirror = true;
 
-  M3ReflectionProbe({
-    required this.position,
-    this.texSize = 128,
-    this.isMirror = true,
-    double near = 0.1,
-    double far = 200.0,
-  }) {
+  M3ReflectionProbe({this.texSize = 128, this.isMirror = true, double near = 0.1, double far = 200.0}) {
     // Temporary camera with 90 degree FOV
     _camCapture.csmCount = 0;
     _camCapture.setViewport(0, 0, texSize, texSize, fovy: 90.0, near: near, far: far);
@@ -33,7 +26,7 @@ class M3ReflectionProbe {
   }
 
   /// Capture the scene from the probe's position into a cubemap texture.
-  void capture(M3Scene scene) {
+  void capture(M3Scene scene, Vector3 position) {
     final renderEngine = M3AppEngine.instance.renderEngine;
     final gl = renderEngine.gl;
 
@@ -71,7 +64,8 @@ class M3ReflectionProbe {
       _fbo!.bindFace(faces[i], texCubemap!.glTexture);
 
       // Clear
-      gl.clearColor(0, 0, 0, 1);
+      final bg = M3AppEngine.backgroundColor;
+      gl.clearColor(bg.r, bg.g, bg.b, 1.0);
       gl.clear(WebGL.COLOR_BUFFER_BIT | WebGL.DEPTH_BUFFER_BIT);
 
       // Setup camera
@@ -107,10 +101,7 @@ class M3ReflectionProbe {
         scene.entities.add(excludeEntity!);
       }
     }
-    if (texCubemap!.generateMipmaps) {
-      texCubemap!.bind();
-      gl.generateMipmap(WebGL.TEXTURE_CUBE_MAP);
-    }
+    texCubemap!.generateMipmap();
     // Restore state
     renderEngine.bindDefaultFramebuffer();
   }

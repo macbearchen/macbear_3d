@@ -36,13 +36,26 @@ class SkyboxScene_02 extends M3Scene {
     _center = addMesh(ballMesh, Vector3.zero());
     _center.scale = Vector3.all(3);
 
-    final plane = addMesh(M3Mesh(M3PlaneGeom(20, 20, uvScale: Vector2.all(5.0))), Vector3(0, 0, -5));
+    final meshPlane = M3Mesh(M3PlaneGeom(12, 12, uvScale: Vector2.all(4.0)));
     M3Texture texGround = M3Texture.createCheckerboard(
       size: 2,
       lightColor: Vector4(0.65, 0.45, 0.25, 1),
       darkColor: Vector4(0.36, 0.22, 0.12, 1),
     );
-    plane.mesh!.subMeshes[0].mtr.texDiffuse = texGround;
+    meshPlane.subMeshes[0].mtr.texDiffuse = texGround;
+
+    // Apply mirror shader to ground
+    const posZ = -1.0;
+    final colorPlane = Vector4(0.2, 1.0, 0.9, 1.0);
+    planarReflection = M3PlanarReflection(512, 512);
+    planarReflection!.clipPlane = Vector4(0, 0, 1, -posZ);
+
+    meshPlane.subMeshes[0].mtr
+      ..programOverride = M3Resources.programPlaneMirror
+      ..diffuse = colorPlane
+      ..texDiffuse = planarReflection!.texReflection;
+
+    final plane = addMesh(meshPlane, Vector3(0, 0, posZ))..color = colorPlane;
 
     // 02-3: orbit around
     final meshSphere = M3Mesh(M3Resources.unitSphere);
@@ -63,7 +76,7 @@ class SkyboxScene_02 extends M3Scene {
       ..color = Vector4(0.0, 1.0, 0.3, 1.0);
 
     // 02-4: reflection probe
-    _probe = M3ReflectionProbe(position: _center.position, near: 1.0, far: 100.0);
+    _probe = M3ReflectionProbe(near: 1.0, far: 100.0);
     _probe.excludeEntity = _center;
 
     _center.reflectionProbe = _probe;
@@ -95,7 +108,7 @@ class SkyboxScene_02 extends M3Scene {
     _center.rotation = Quaternion.euler(orbitAngle * 0.1, orbitAngle * 0.2, orbitAngle * 0.3);
     _center.position = Vector3(1 * cos(orbitAngle), 0, 1 * sin(orbitAngle));
 
-    _probe.position = _center.position;
-    _probe.capture(this);
+    // capture reflection probe
+    _probe.capture(this, _center.position);
   }
 }

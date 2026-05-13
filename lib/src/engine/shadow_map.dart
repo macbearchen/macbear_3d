@@ -31,6 +31,7 @@ class M3ShadowMap {
     _framebuffer.dispose();
   }
 
+  /// Render depth map from light's perspective
   void renderDepth(M3Scene scene, M3Light light) {
     final renderEngine = M3AppEngine.instance.renderEngine;
     final stats = renderEngine.stats;
@@ -87,6 +88,7 @@ class M3ShadowMap {
     stats.enabled = wasStatsEnabled;
   }
 
+  /// Draw shadow depth map for debugging
   void drawDebugDepth(double x, double y, double width, double height) {
     Matrix4 matRect = Matrix4.identity();
     matRect.setTranslation(Vector3(x, y, 0.0));

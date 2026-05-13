@@ -6,16 +6,11 @@ class M3TextTexture extends M3Texture {
 
   M3TextTexture._(this.text, {TextStyle? style})
     : style = style ?? const TextStyle(color: Color(0xFFFFFFFF), fontSize: 32, fontFamily: 'Arial'),
-      super(isCubemap: false) {
+      super(generateMipmaps: false) {
     name = "font(${this.style.fontSize}, ${this.style.fontFamily}): [$text]";
   }
 
-  static Future<M3TextTexture> createFixed(
-    String text, {
-    int width = 256,
-    int height = 256,
-    TextStyle? style,
-  }) async {
+  static Future<M3TextTexture> createFixed(String text, {int width = 256, int height = 256, TextStyle? style}) async {
     final tex = M3TextTexture._(text, style: style);
     tex.name = "createFixed: ${tex.name}";
     tex.texW = width;

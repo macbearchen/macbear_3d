@@ -6,6 +6,8 @@ import 'package:vector_math/vector_math.dart' hide Colors;
 // Macbear3D engine
 import 'package:macbear_3d/macbear_3d.dart';
 export 'package:macbear_3d/src/m3_internal.dart';
+// physics engine
+export 'rapier_physics_engine.dart';
 
 import 'demos/00_starter.dart';
 import 'demos/01_cube.dart';
@@ -20,13 +22,12 @@ import 'demos/09_pbr_test.dart';
 import 'demos/10_terrain.dart';
 import 'demos/11_bvh.dart';
 import 'demos/12_video_texture.dart';
-import 'oimo_physics_engine.dart';
+import 'rapier_physics_engine.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // M3Package.name = null; // remove it when release
-  M3AppEngine.instance.applyPhysicsEngine(M3OimoPhysicsEngine());
   M3AppEngine.instance.onDidInit = onDidInit;
   M3AppEngine.backgroundColor = Vector3(0.1, 0.2, 0.6);
 
@@ -46,9 +47,9 @@ Future<void> onDidInit() async {
   // final scene00 = StarterScene_00();
   // final scene03 = PrimitivesScene_03();
   // final scene09 = PbrTestScene_09();
-  // final testScene = SampleScene();
-  final initScene = CubeScene_01();
-  await appEngine.setScene(initScene);
+  final testScene = SampleScene(physics: M3PhysicsSystem(M3RapierPhysicsEngine()));
+  // final initScene = CubeScene_01();
+  await appEngine.setScene(testScene);
 }
 
 class MainApp extends StatelessWidget {
@@ -441,7 +442,10 @@ class _MainPageState extends State<MainPage> {
             backgroundColor: _selectedSceneIndex == 12 ? Colors.lightGreen : null,
             onPressed: () {
               _selectedSceneIndex = 12;
-              _loadScene(VideoTextureScene_12());
+              final testScene = SampleScene(physics: M3PhysicsSystem(M3RapierPhysicsEngine()));
+              // final testScene = VideoTextureScene_12();
+
+              _loadScene(testScene);
             },
             child: const Icon(Icons.video_library),
           ),

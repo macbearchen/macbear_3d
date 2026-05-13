@@ -17,6 +17,16 @@ class M3Euler {
     this.roll = roll;
   }
 
+  void copyFrom(M3Euler other) {
+    yaw = other.yaw;
+    pitch = other.pitch;
+    roll = other.roll;
+  }
+
+  M3Euler clone() {
+    return M3Euler()..copyFrom(this);
+  }
+
   void setToward(Vector3 toward) {
     // toward is a normalized vector
     final length = toward.normalize();

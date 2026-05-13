@@ -1,25 +1,33 @@
-import 'package:vector_math/vector_math.dart';
-import 'physics_engine.dart';
+import '../m3_internal.dart';
 
 /// No-op rigid body used when physics is disabled or not available
 class M3NoRigidBody implements M3RigidBody {
   @override
-  final int handle;
-
-  M3NoRigidBody(this.handle);
+  Vector3 get position => Vector3.zero();
 
   @override
-  Quaternion orientation = Quaternion.identity();
+  void setPosition(Vector3 position) {}
 
   @override
-  Vector3 position = Vector3.zero();
+  Quaternion get rotation => Quaternion.identity();
+
+  @override
+  void setRotation(Quaternion rotation) {}
 }
+
+class M3NoCollider implements M3Collider {}
 
 /// No-op physics engine used when physics is disabled or not available
 class M3NoPhysicsEngine implements M3PhysicsEngine {
-  int _nextHandle = 1;
+  @override
+  Future<void> init({Vector3? gravity}) async {
+    // do nothing
+  }
 
-  int _genHandle() => _nextHandle++;
+  @override
+  void dispose() {
+    // do nothing
+  }
 
   @override
   void resetWorld() {
@@ -27,43 +35,18 @@ class M3NoPhysicsEngine implements M3PhysicsEngine {
   }
 
   @override
-  M3RigidBody addBox(double width, double height, double depth, {Vector3? position, double density = 1.0}) {
-    return M3NoRigidBody(_genHandle());
+  String get info => "no physics (disabled)";
+
+  @override
+  void step(double sec) {}
+
+  @override
+  M3Collider createCollider(M3RigidBody body, M3ColliderDesc desc) {
+    return M3NoCollider();
   }
 
   @override
-  M3RigidBody addSphere(double radius, {double density = 1.0, Vector3? position}) {
-    return M3NoRigidBody(_genHandle());
+  M3RigidBody createRigidBody(M3RigidBodyDesc desc) {
+    return M3NoRigidBody();
   }
-
-  @override
-  M3RigidBody addCylinder(double radius, double height, {double density = 1.0, Vector3? position}) {
-    return M3NoRigidBody(_genHandle());
-  }
-
-  @override
-  M3RigidBody addCapsule(double radius, double height, {double density = 1.0, Vector3? position}) {
-    return M3NoRigidBody(_genHandle());
-  }
-
-  @override
-  M3RigidBody addGround(double sizeW, double sizeH, double sizeD) {
-    return M3NoRigidBody(_genHandle());
-  }
-
-  @override
-  void addBoundaryFence(double sizeW, double sizeH, double sizeD) {
-    // do nothing
-  }
-
-  @override
-  double get interpolationAlpha => 1.0;
-
-  @override
-  void step(double sec, {void Function()? onBeforeStep}) {
-    onBeforeStep?.call(); // 👈 這個建議保留
-  }
-
-  @override
-  String get info => "NoPhysicsEngine (disabled)";
 }

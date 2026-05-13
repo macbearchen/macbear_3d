@@ -8,12 +8,14 @@ class SampleScene extends M3Scene {
   final _geomPlane = M3PlaneGeom(20.0, 20.0, widthSegments: 50, heightSegments: 50, uvScale: Vector2(10.0, 10.0));
 
   // constructor
+  SampleScene({super.physics});
+
   @override
   Future<void> load() async {
     if (isLoaded) return;
     await super.load();
 
-    light.setLookat(Vector3(0, 0, 20), Vector3(0, 0, 1), Vector3(0, 1, 0));
+    light.setLookat(Vector3(0, 0, 60), Vector3(0, 0, 1), Vector3(0, 1, 0));
 
     camera.setLookat(Vector3(0, 6, 8), Vector3(0, 0, 2), Vector3(0, 0, 1));
     camera.setEuler(pi / 6, -pi / 5, 0, distance: 10);
@@ -33,9 +35,7 @@ class SampleScene extends M3Scene {
     M3Texture texGrid = M3Texture.createCheckerboard(size: 3);
 
     // create physics ground rigid body, 4 fences
-    final phyEngine = M3AppEngine.instance.physicsEngine;
-    phyEngine.addGround(20, 20, 10);
-    phyEngine.addBoundaryFence(20, 20, 10);
+    physicsSystem.addBox(10, 10, 2, M3RigidBodyDesc.fixed()..position = Vector3(0, 0, -2));
 
     // ground plane model
     final posGround = Vector3.zero();
@@ -76,17 +76,17 @@ class SampleScene extends M3Scene {
             case 0:
               mesh = M3Mesh(_geomSphere);
               mesh.subMeshes[0].mtr.texDiffuse = texGrid2;
-              rb = phyEngine.addSphere(0.5, density: 1.0, position: pos);
+              rb = physicsSystem.addSphere(0.5, M3RigidBodyDesc.dynamic()..position = pos);
               break;
             case 1:
               mesh = M3Mesh(_geomCube);
               mesh.subMeshes[0].mtr.texDiffuse = texGrid;
-              rb = phyEngine.addBox(1.0, 1.0, 1.0, density: 1.0, position: pos);
+              rb = physicsSystem.addBox(0.5, 0.5, 0.5, M3RigidBodyDesc.dynamic()..position = pos);
               break;
             default:
               mesh = M3Mesh(_geomCylinder);
               mesh.subMeshes[0].mtr.texDiffuse = texGrid2;
-              rb = phyEngine.addCylinder(0.5, 1.0, density: 1.0, position: pos);
+              rb = physicsSystem.addCylinder(0.5, 0.5, M3RigidBodyDesc.dynamic()..position = pos);
               break;
           }
           M3Entity entity = addMesh(mesh, pos)..color = meshColor;
@@ -111,6 +111,8 @@ class SampleScene extends M3Scene {
 
   @override
   void render2D() {
+    super.render2D();
+
     // draw rectangle full-screen
     Matrix4 mat2D = Matrix4.identity();
 

@@ -127,9 +127,45 @@ class M3CameraOrbitController extends M3InputController {
         keyboard.isPressed(LogicalKeyboardKey.numpadAdd)) {
       applyZoom(M3PinchInfo(1 + zoomSpeed, Vector2.zero(), 0));
     }
-    if (keyboard.isPressed(LogicalKeyboardKey.minus) ||
-        keyboard.isPressed(LogicalKeyboardKey.numpadSubtract)) {
+    if (keyboard.isPressed(LogicalKeyboardKey.minus) || keyboard.isPressed(LogicalKeyboardKey.numpadSubtract)) {
       applyZoom(M3PinchInfo(1 - zoomSpeed, Vector2.zero(), 0));
+    }
+
+    // roll keys
+    final rollSpeed = 6.0 * dt;
+    if (keyboard.isPressed(LogicalKeyboardKey.keyQ)) {
+      final euler = camera.euler;
+      euler.roll += rollSpeed;
+      camera.setEuler(euler.yaw, euler.pitch, euler.roll, distance: camera.distanceToTarget);
+    }
+    if (keyboard.isPressed(LogicalKeyboardKey.keyE)) {
+      final euler = camera.euler;
+      euler.roll -= rollSpeed;
+      camera.setEuler(euler.yaw, euler.pitch, euler.roll, distance: camera.distanceToTarget);
+    }
+
+    // fovy keys
+    bool isSetFovy = false;
+    final fovySpeed = 1.0;
+    if (keyboard.isPressed(LogicalKeyboardKey.keyZ)) {
+      camera.degreeFovY += fovySpeed;
+      isSetFovy = true;
+    }
+    if (keyboard.isPressed(LogicalKeyboardKey.keyC)) {
+      camera.degreeFovY -= fovySpeed;
+      isSetFovy = true;
+    }
+    if (isSetFovy) {
+      camera.degreeFovY = camera.degreeFovY.clamp(1, 179);
+      camera.setViewport(
+        camera.viewportX,
+        camera.viewportY,
+        camera.viewportW,
+        camera.viewportH,
+        fovy: camera.degreeFovY,
+      );
+
+      debugPrint("camera: $camera");
     }
   }
 }

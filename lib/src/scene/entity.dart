@@ -75,16 +75,15 @@ class M3Entity extends M3Node {
   void savePhysicsState() {
     if (rigidBody == null) return;
     _prevPos.setFrom(rigidBody!.position);
-    _prevRot.setFrom(rigidBody!.orientation);
+    _prevRot.setFrom(rigidBody!.rotation);
   }
 
   /// Synchronize the entity's transform from its physics rigid body using interpolation.
-  void syncFromPhysics() {
+  void syncFromPhysics([double alpha = 1.0]) {
     if (rigidBody == null) return;
 
-    final alpha = M3AppEngine.instance.physicsEngine.interpolationAlpha;
     final rbPos = rigidBody!.position;
-    final rbRot = rigidBody!.orientation;
+    final rbRot = rigidBody!.rotation;
 
     // 1. Manual Lerp Position
     position.setValues(
@@ -133,8 +132,8 @@ class M3Entity extends M3Node {
   /// Synchronize the entity's transform to its physics rigid body.
   void syncToPhysics() {
     if (rigidBody == null) return;
-    rigidBody!.position = position;
-    rigidBody!.orientation = rotation;
+    rigidBody!.setPosition(position);
+    rigidBody!.setRotation(rotation);
   }
 
   void update(double dt) {
