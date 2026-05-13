@@ -1,3 +1,14 @@
+## 0.9.0
+
+* Update:
+  * **Physics**: Switched to **Rapier** physics engine, replacing Oimo. Introduced new `Collider` and `RigidBody` abstractions for better physics management.
+  * **Rendering**:
+    * Added **Planar Reflections** support with `M3PlanarReflection` and dedicated `Mirror` shaders.
+    * Enhanced `M3Texture` with better support for external textures and text-based textures.
+    * Improved camera and projection systems to support reflection matrices.
+  * **Geometries**: Significant updates to `M3PlaneGeom` and primitives to support new rendering features.
+  * **Examples**: Updated all demos to use the new physics and reflection systems.
+
 ## 0.8.1
 
 * Update:

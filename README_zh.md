@@ -29,6 +29,7 @@
 - **模型加載**: 原生支援 **glTF/GLB**、**OBJ** 與 **BVH (骨架動畫)** 格式。
 - **骨架動畫**: 完整支援皮膚網格 (Skinned Mesh) 與基於骨骼的動畫系統 (包含 `M3OctahedralGeom` 骨骼視覺化)。
 - **進階光照**: 支援動態光照、**級聯陰影貼圖 (CSM)**、**PCF (百分比漸進過濾)** 以實現平滑陰影、**PBR (實體渲染)** 與 **IBL (環境光照)**。優化 `RenderPipeline` 並增強對不透明與透明材質的支援。
+- **平面反射**: 加入 `M3PlanarReflection` 與專屬 Mirror Shader 以實現高品質平面反射效果。
 - **動態反射探針**: 加入 `M3ReflectionProbe` 實作即時環境捕捉與動態反射。
 - **幾何形狀靈活性**: 為 Torus, Capsule, Cylinder 和 Plane 添加了 `M3Axis` 支持，允許自定義初始朝向。
 - **資源管理**: 預建的高效集中式加載與快取機制（紋理、模型、字體）。
@@ -36,7 +37,7 @@
 
 ### ⚙️ 物理與交互
 - **Android 穩定性**: 自動在 Vulkan 與 OpenGLES 之間切換以確保最佳相容性。
-- **整合物理引擎**: 與 **oimo_physics** 剛體物理引擎無縫協作。
+- **整合物理引擎**: 無縫整合 **Rapier** 剛體物理引擎 (取代 Oimo)，並引入 `Collider` 與 `RigidBody` 系統。
 - **碰撞檢測**: 自動計算 AABB 與包圍球 (Bounding Sphere)。
 - **交互增強**: 新增鍵盤縮放支持 (+, -) 和多點觸控視角控制。
 - **觸控輸入**: 內建 3D 物體互動處理與軌道攝影機 (Orbit Control) 支援。
@@ -47,7 +48,7 @@
 
 ```yaml
 dependencies:
-  macbear_3d: ^0.8.1
+  macbear_3d: ^0.9.0
 ```
 
 ## 快速上手
@@ -116,7 +117,7 @@ class MyScene extends M3Scene {
 - [x] 天空盒反射 (Cubemap)
 - [x] 動態反射探針 (Dynamic Reflection Probe)
 - [x] 物理引擎整合 (Oimo Physics)
-- [ ] 水面效果 (反射、折射)
+- [x] 水面效果 (反射、折射)
 - [ ] 後處理特效 (Bloom, HDR)
 - [ ] 進階粒子系統
 - [x] GUI 系統 (使用 Flutter Widget)

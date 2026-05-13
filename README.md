@@ -28,6 +28,7 @@ Preview the `main_all.dart` example live in your browser!
 - **Model Loaders**: Native support for **glTF/GLB**, **OBJ**, and **BVH** formats.
 - **Skeletal Animation**: Full support for skinned meshes and bone-based animations (including `M3OctahedralGeom` for bone visualization).
 - **Advanced Lighting**: Dynamic lighting with **Cascaded Shadow Mapping (CSM)**, **PCF (Percentage Closer Filtering)** for smooth shadows, **PBR (Physically Based Rendering)** and **IBL (Image-Based Lighting)** support. Improved `RenderPipeline` with enhanced support for opaque and transparency materials.
+- **Planar Reflections**: Added support for planar reflections with `M3PlanarReflection` and Mirror shaders for high-quality reflective surfaces.
 - **Dynamic Reflection Probe**: Added `M3ReflectionProbe` for real-time cubemap capture and dynamic reflections.
 - **Flexible Geometries**: Added `M3Axis` support for Torus, Capsule, Cylinder, and Plane for custom orientation.
 - **Resource Management**: Centralized system for loading and caching assets (geometries, meshes, textures, fonts).
@@ -35,7 +36,7 @@ Preview the `main_all.dart` example live in your browser!
 
 ### ⚙️ Physics & Interaction
 - **Android Stability**: Automated selection between Vulkan and OpenGLES for optimal compatibility.
-- **Integrated Physics**: Seamless integration with the **oimo_physics** rigid body physics engine.
+- **Integrated Physics**: Seamless integration with the **Rapier** rigid body physics engine (replacing Oimo). Added `Collider` and `RigidBody` system.
 - **Collision Detection**: Automatic AABB and Bounding Sphere calculation.
 - **Interaction**: Keyboard zoom support (+, -) and multi-touch orbit control.
 - **Touch Input**: Built-in interaction handling for 3D objects and orbit control.
@@ -64,7 +65,7 @@ Add `macbear_3d` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  macbear_3d: ^0.8.1
+  macbear_3d: ^0.9.0
 ```
 
 ## Usage
@@ -149,7 +150,7 @@ output to uml/macbear_3d.puml
 - [x] Skybox reflection via cubemap
 - [x] Dynamic Reflection Probe
 - [x] Physics Engine integration (Oimo Physics)
-- [ ] Water effect (reflection, refraction)
+- [x] Water effect (reflection, refraction)
 - [ ] Post-processing effects (Bloom, HDR)
 - [ ] Advanced Particle System
 - [x] Resource Management System
