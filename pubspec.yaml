@@ -55,7 +55,7 @@ flutter:
         pluginClass: M3VideoBridgePlugin
         fileName: src/video_bridge/video_bridge.dart
       windows:
-        pluginClass: M3VideoBridgePlugin
+        pluginClass: M3VideoBridgePluginCApi
 
   assets:
     - assets/fonts/RobotoMono/
