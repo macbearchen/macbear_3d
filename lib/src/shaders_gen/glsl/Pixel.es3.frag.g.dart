@@ -25,7 +25,7 @@ mediump vec3 safe_normalize(mediump vec3 v) {
 
 #ifdef ENABLE_PBR
 in mediump vec3 ObjectspaceV;
-uniform mediump vec2 uParamPBR; // x: Metallic, y: Roughness
+uniform mediump vec3 uParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level
 
 // Trowbridge-Reitz GGX
 mediump float DistributionGGX(mediump vec3 N, mediump vec3 H, mediump float roughness) {
@@ -82,8 +82,7 @@ mediump vec3 ApplyIBL(mediump vec3 ambientDiffuse, mediump vec3 N, mediump vec3 
     sampleDir.z = -reflectDir.y;
     
     // Roughness based Mip-mapping for Specular IBL (ES3 native textureLod)
-    // Assuming 7-8 mip levels for typical cubemap
-    mediump float mipLevel = uParamPBR.y * 7.0; // Roughness
+    mediump float mipLevel = uParamPBR.y * uParamPBR.z; // Roughness * MaxMipLevel
     mediump vec3 envColor = textureLod(SamplerEnvironment, sampleDir, mipLevel).rgb;
     envColor = pow(envColor, vec3(2.2));
     //--------------------

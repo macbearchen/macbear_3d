@@ -119,9 +119,9 @@ abstract class M3Geom {
   final List<_M3Indices> _edgeIndices = []; // wireframe edges
 
   int get vertexCount => _vertexCount;
-  int getTriangleCount({bool bSolid = true}) {
+  int getTriangleCount({M3FillMode fillMode = M3FillMode.solid}) {
     int count = 0;
-    final indices = bSolid ? _faceIndices : _edgeIndices;
+    final indices = fillMode == M3FillMode.solid ? _faceIndices : _edgeIndices;
     for (var surface in indices) {
       count += surface.primitiveCount;
     }

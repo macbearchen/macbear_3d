@@ -14,6 +14,7 @@ class M3DebugOptions {
   bool showHelpers = false;
   bool showStats = true;
   bool showPhysicsStats = false;
+  bool useObliqueClipPlane = true; // 使用斜截投影矩陣
 }
 
 // GLSL options

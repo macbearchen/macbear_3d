@@ -8,8 +8,6 @@ mixin M3LightingShader {
   late UniformLocation uniformSpecular; // "ColorSpecular" = inColor * LightDiffuse * MaterialSpecular (w: Shininess)
 
   late UniformLocation uniformLightPosition; // light position "LightPosition" (per object-space)
-  late UniformLocation uniformParamPBR; // x: Metallic, y: Roughness
-  late UniformLocation uniformSamplerEnvironment;
 
   M3Light? _light; // active light
 
@@ -19,13 +17,6 @@ mixin M3LightingShader {
     uniformSpecular = gl.getUniformLocation(prog, "ColorSpecular");
 
     uniformLightPosition = gl.getUniformLocation(prog, "LightPosition");
-    uniformParamPBR = gl.getUniformLocation(prog, "uParamPBR");
-    uniformSamplerEnvironment = gl.getUniformLocation(prog, "SamplerEnvironment");
-
-    // Set up some default material parameters.
-    if (M3Program.isLocationValid(uniformParamPBR)) {
-      gl.uniform2f(uniformParamPBR, 0, 0.5);
-    }
   }
 
   void applyLight(M3Light sceneLight) {
@@ -82,11 +73,6 @@ class M3ProgramLighting extends M3ProgramEye with M3LightingShader {
 
       // Pass as vec4: RGB, w = Shininess
       gl.uniform4f(uniformSpecular, outSpecular.x, outSpecular.y, outSpecular.z, mtr.shininess);
-    }
-
-    // PBR
-    if (M3Program.isLocationValid(uniformParamPBR)) {
-      gl.uniform2f(uniformParamPBR, mtr.metallic, mtr.roughness);
     }
   }
 }

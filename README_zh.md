@@ -117,7 +117,7 @@ class MyScene extends M3Scene {
 - [x] 天空盒反射 (Cubemap)
 - [x] 動態反射探針 (Dynamic Reflection Probe)
 - [x] 物理引擎整合 (Oimo Physics)
-- [x] 水面效果 (反射、折射)
+- [ ] 水面效果 (反射、折射)
 - [ ] 後處理特效 (Bloom, HDR)
 - [ ] 進階粒子系統
 - [x] GUI 系統 (使用 Flutter Widget)

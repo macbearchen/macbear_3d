@@ -39,12 +39,12 @@ class VideoTextureScene_12 extends M3Scene {
     // add plane to show video
     final planeMesh = M3Mesh(M3PlaneGeom(8, 4.5, uvScale: Vector2.all(1.0)));
     if (videoTexture != null) {
-      planeMesh.subMeshes[0].mtr.texDiffuse = videoTexture!;
+      planeMesh.subMeshes[0].mtr.diffuseTexture = videoTexture!;
     }
 
     final planeMesh2 = M3Mesh(M3PlaneGeom(10.66, 6, uvScale: Vector2.all(1.0)));
     if (videoTexture2 != null) {
-      planeMesh2.subMeshes[0].mtr.texDiffuse = videoTexture2!;
+      planeMesh2.subMeshes[0].mtr.diffuseTexture = videoTexture2!;
     }
 
     // 01: box geometry

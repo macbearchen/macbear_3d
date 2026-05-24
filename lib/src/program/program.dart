@@ -8,6 +8,7 @@ import '../m3_internal.dart';
 part 'program_eye.dart';
 part 'program_lighting.dart';
 part 'program_shadowmap.dart';
+part 'program_water.dart';
 
 /// A WebGL shader program wrapper for GLSL vertex and fragment shaders.
 ///
@@ -36,6 +37,9 @@ class M3Program {
 
   late UniformLocation uniformTexMatrix; // "uTexMatrix" for texture-matrix
   late UniformLocation uniformSamplerDiffuse; // texture "SamplerDiffuse"
+  late UniformLocation uniformParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level
+  late UniformLocation uniformSamplerEnvironment;
+
   late UniformLocation uniformCameraViewport; // camera viewport
 
   // vertex-attribute part:
@@ -154,7 +158,15 @@ class M3Program {
     uniformColor = gl.getUniformLocation(program, "uColor");
     uniformTexMatrix = gl.getUniformLocation(program, "uTexMatrix");
     uniformSamplerDiffuse = gl.getUniformLocation(program, "SamplerDiffuse");
+    uniformParamPBR = gl.getUniformLocation(program, "uParamPBR");
+    uniformSamplerEnvironment = gl.getUniformLocation(program, "SamplerEnvironment");
+
     uniformCameraViewport = gl.getUniformLocation(program, "CameraViewport");
+
+    // Set up some default material parameters.
+    if (M3Program.isLocationValid(uniformParamPBR)) {
+      gl.uniform3f(uniformParamPBR, 0.0, 0.5, 3.0);
+    }
 
     // vertex-attrib
     attribVertex = gl.getAttribLocation(program, "inVertex");
@@ -202,10 +214,16 @@ class M3Program {
     }
   }
 
+  /// unused for now
   void applyCamera(M3Camera cam) {
     if (isLocationValid(uniformCameraViewport)) {
-      gl.uniform4f(uniformCameraViewport, cam.viewportX.toDouble(), cam.viewportY.toDouble(),
-          cam.viewportW.toDouble(), cam.viewportH.toDouble());
+      gl.uniform4f(
+        uniformCameraViewport,
+        cam.viewportX.toDouble(),
+        cam.viewportY.toDouble(),
+        cam.viewportW.toDouble(),
+        cam.viewportH.toDouble(),
+      );
     }
   }
 
@@ -240,7 +258,21 @@ class M3Program {
     // diffuse-texture: GL_TEXTURE0
     if (isLocationValid(uniformSamplerDiffuse)) {
       gl.activeTexture(WebGL.TEXTURE0);
-      mtr.texDiffuse.bind(); // 2D or Cubemap
+      mtr.diffuseTexture.bind(); // 2D or Cubemap
+    }
+
+    // PBR
+    if (M3Program.isLocationValid(uniformParamPBR)) {
+      gl.uniform3f(uniformParamPBR, mtr.metallic, mtr.roughness, mtr.mipLevel.toDouble());
+    }
+  }
+
+  void setEnvironmentMap(M3Texture cubemap) {
+    if (isLocationValid(uniformSamplerEnvironment)) {
+      gl.uniform1i(uniformSamplerEnvironment, 2);
+      gl.activeTexture(WebGL.TEXTURE2); // bind cubemap to GL_TEXTURE2
+      cubemap.bind(); // Cubemap
+      gl.activeTexture(WebGL.TEXTURE0); // restore back to GL_TEXTURE0
     }
   }
 

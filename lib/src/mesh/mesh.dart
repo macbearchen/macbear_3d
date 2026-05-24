@@ -205,6 +205,16 @@ class M3Mesh {
     return mesh;
   }
 
+  /// Copies state from another mesh.
+  /// Heavy resources like [subMeshes] are referenced, while transform and animator state are copied.
+  void setFrom(M3Mesh other) {
+    initMatrix.setFrom(other.initMatrix);
+    // subMeshes are usually shared or setup during construction
+    if (animator != null && other.animator != null) {
+      animator!.playRate = other.animator!.playRate;
+    }
+  }
+
   /// Creates a deep copy of this mesh instance suitable for independent animation.
   /// Heavy resources like [geom] and [mtr] are shared, while [skin], [animator],
   /// and skeletal [nodes] are duplicated.
@@ -224,8 +234,8 @@ class M3Mesh {
     for (final sub in subMeshes) {
       clonedMesh.subMeshes.add(M3SubMesh(sub.geom, material: sub.mtr)..localMatrix.setFrom(sub.localMatrix));
     }
-    clonedMesh.initMatrix.setFrom(initMatrix);
     clonedMesh.nodes = clonedNodes;
+    clonedMesh.setFrom(this);
 
     if (animator != null && clonedNodes != null) {
       final clonedNodeMap = {for (int i = 0; i < clonedNodes.length; i++) i: clonedNodes[i]};

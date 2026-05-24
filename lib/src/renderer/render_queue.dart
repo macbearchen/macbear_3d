@@ -8,12 +8,7 @@ class M3RenderItem {
   final Matrix4 worldMatrix;
   final double depth;
 
-  M3RenderItem({
-    required this.entity,
-    required this.subMesh,
-    required this.worldMatrix,
-    required this.depth,
-  });
+  M3RenderItem({required this.entity, required this.subMesh, required this.worldMatrix, required this.depth});
 
   /// Priority for sorting opaque objects.
   /// Group by Material (program + texture) then by proximity.
@@ -56,37 +51,5 @@ class M3RenderQueue {
       // 2. Proximity (Back-to-Front)
       return b.depth.compareTo(a.depth);
     });
-  }
-}
-
-/// Managed list of render queues for different rendering passes.
-class M3RenderPipeline {
-  final M3RenderQueue opaque = M3RenderQueue();
-  final M3RenderQueue transparent = M3RenderQueue();
-
-  void clear() {
-    opaque.clear();
-    transparent.clear();
-  }
-
-  /// Collects a sub-mesh into the appropriate queue based on its material.
-  void collect(M3Entity entity, M3SubMesh sub, Matrix4 worldMat, double depth) {
-    final item = M3RenderItem(
-      entity: entity,
-      subMesh: sub,
-      worldMatrix: worldMat,
-      depth: depth,
-    );
-
-    if (sub.mtr.alphaMode == M3AlphaMode.blend) {
-      transparent.add(item);
-    } else {
-      opaque.add(item);
-    }
-  }
-
-  void sort() {
-    opaque.sortOpaque();
-    transparent.sortTransparent();
   }
 }

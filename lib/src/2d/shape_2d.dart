@@ -118,7 +118,7 @@ class M3Shape2D {
       imgColor = color;
     }
     M3Material mtr = M3Material();
-    mtr.texDiffuse = tex;
+    mtr.diffuseTexture = tex;
 
     Matrix4 imgMatrix = mMatrix.clone();
     imgMatrix.scaleByVector3(Vector3(tex.texW.toDouble(), tex.texH.toDouble(), 1));

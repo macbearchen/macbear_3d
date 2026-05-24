@@ -9,6 +9,17 @@ class PbrTestScene_09 extends M3Scene {
     await super.load();
 
     camera.setEuler(-pi / 12, -pi / 8, 0, distance: 30);
+    // nvlobby cubemap
+    final strPrefix = 'example/nvlobby_';
+    final strExt = 'jpg';
+    skybox = await M3Skybox.createCubemap(
+      '${strPrefix}xpos.$strExt',
+      '${strPrefix}xneg.$strExt',
+      '${strPrefix}ypos.$strExt',
+      '${strPrefix}yneg.$strExt',
+      '${strPrefix}zpos.$strExt',
+      '${strPrefix}zneg.$strExt',
+    );
 
     final sphereGeom = M3Resources.unitSphere;
 
@@ -22,10 +33,11 @@ class PbrTestScene_09 extends M3Scene {
         double roughness = j / (cols - 1);
 
         final mesh = M3Mesh(sphereGeom);
-        mesh.subMeshes[0].mtr.diffuse = Vector4(0.0, 1.0, 0.0, 1.0); // Green base color
-        mesh.subMeshes[0].mtr.reflection = metallic;
-        mesh.subMeshes[0].mtr.metallic = metallic;
-        mesh.subMeshes[0].mtr.roughness = max(roughness, 0.05); // Avoid zero roughness for GGX
+        mesh.subMeshes[0].mtr
+          ..diffuse = Vector4(0.0, 1.0, 0.0, 1.0)
+          ..reflection = metallic
+          ..metallic = metallic
+          ..roughness = max(roughness, 0.05); // Avoid zero roughness for GGX
 
         double x = (i - (rows - 1) / 2) * spacing;
         double y = (j - (cols - 1) / 2) * spacing;
@@ -45,18 +57,6 @@ class PbrTestScene_09 extends M3Scene {
 
     // axis gizmo
     addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 2));
-
-    // nvlobby cubemap
-    final strPrefix = 'example/nvlobby_';
-    final strExt = 'jpg';
-    skybox = await M3Skybox.createCubemap(
-      '${strPrefix}xpos.$strExt',
-      '${strPrefix}xneg.$strExt',
-      '${strPrefix}ypos.$strExt',
-      '${strPrefix}yneg.$strExt',
-      '${strPrefix}zpos.$strExt',
-      '${strPrefix}zneg.$strExt',
-    );
   }
 
   @override

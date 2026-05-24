@@ -17,14 +17,14 @@ class M3Euler {
     this.roll = roll;
   }
 
-  void copyFrom(M3Euler other) {
+  void setFrom(M3Euler other) {
     yaw = other.yaw;
     pitch = other.pitch;
     roll = other.roll;
   }
 
   M3Euler clone() {
-    return M3Euler()..copyFrom(this);
+    return M3Euler()..setFrom(this);
   }
 
   void setToward(Vector3 toward) {

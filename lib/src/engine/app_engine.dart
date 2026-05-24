@@ -94,7 +94,7 @@ class M3AppEngine with ChangeNotifier {
 
     // init resources
     await M3Resources.init();
-
+    renderEngine.init();
     renderEngine.resize(width, height, dpr);
 
     _didInit = true;
@@ -149,6 +149,9 @@ class M3AppEngine with ChangeNotifier {
 
   Future<void> setScene(M3Scene scene) async {
     pause(); // app ticker pause
+
+    // free probes
+    renderEngine.cleanProbes();
 
     // free original scene
     if (M3AppEngine.instance.activeScene != null) {
@@ -336,25 +339,39 @@ class M3AppEngine with ChangeNotifier {
 
   // application update
   void _update(Duration delta) {
+    double dt = delta.inMicroseconds / 1000000.0;
+    double sdt = dt * timeScale;
     // debugPrint('update= $delta');
-    if (activeScene != null) {
-      double dt = delta.inMicroseconds / 1000000.0;
-      double sdt = dt * timeScale;
 
-      activeScene!.inputController?.update(dt);
-      activeScene!.update(sdt);
+    final scene = activeScene;
+    if (scene != null) {
+      scene.inputController?.update(dt);
+      scene.update(sdt);
     }
   }
 
   // application render
   Future<void> _render() async {
     // 1. pre-render: shadow map, reflection, etc.
-    if (activeScene != null) {
-      // capture planar reflection
-      activeScene!.planarReflection?.capture(activeScene!);
-
+    final scene = activeScene;
+    if (scene != null) {
       // shadow map
-      renderEngine.renderShadowMap(activeScene!);
+      renderEngine.renderShadowMap(scene);
+
+      // prepare render queue
+      renderEngine.mainContext.prepareRenderQueue(scene, scene.camera);
+
+      // capture reflection probe (environment map)
+      if (renderEngine.mainContext.needsReflectionProbePass()) {
+        for (var probe in renderEngine.probes) {
+          probe.captureProbe(scene);
+        }
+      }
+      // capture planar reflection
+      if (renderEngine.mainContext.needsPlanarReflectionPass()) {
+        renderEngine.planarReflection.captureReflection(scene);
+        // renderEngine.planarReflection.captureRefraction(scene);
+      }
     }
 
     _sourceTexture.activate();
@@ -364,8 +381,16 @@ class M3AppEngine with ChangeNotifier {
     gl.clear(WebGL.COLOR_BUFFER_BIT | WebGL.DEPTH_BUFFER_BIT);
 
     // 2. render active scene
-    if (activeScene != null) {
-      renderEngine.renderScene(activeScene!);
+    if (scene != null) {
+      renderEngine.renderScene(scene);
+
+      // draw debug: only implement when needed
+      scene.renderDebug();
+
+      // draw Helper
+      if (renderEngine.options.debug.showHelpers) {
+        scene.renderHelper();
+      }
     }
     // 3. render 2D: UI, text etc.
     renderEngine.render2D();

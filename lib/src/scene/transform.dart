@@ -7,4 +7,10 @@ class M3Transform {
   Vector3 scale = Vector3.all(1);
 
   Matrix4 get matrix => Matrix4.compose(position, rotation, scale);
+
+  void setFrom(M3Transform other) {
+    position.setFrom(other.position);
+    rotation.setFrom(other.rotation);
+    scale.setFrom(other.scale);
+  }
 }

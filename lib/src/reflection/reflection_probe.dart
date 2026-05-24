@@ -3,30 +3,42 @@ import '../m3_internal.dart';
 
 class M3ReflectionProbe {
   final _camCapture = M3Camera();
-  M3Entity? excludeEntity; // ignore capture entity
+  M3Entity? owner; // ignore capture entity
 
-  int texSize = 128;
-  M3Texture? texCubemap;
+  final M3RenderContext _context = M3RenderContext();
   M3Framebuffer? _fbo;
+  int texSize = 128;
+  M3Texture? cubemapTexture;
+
   bool isMirror = true;
+
+  /// Get the mathematically correct maximum mipmap level based on size
+  int get maxMipLevel => cubemapTexture?.maxMipLevel ?? (log(texSize) / ln2).floor();
 
   M3ReflectionProbe({this.texSize = 128, this.isMirror = true, double near = 0.1, double far = 200.0}) {
     // Temporary camera with 90 degree FOV
     _camCapture.csmCount = 0;
     _camCapture.setViewport(0, 0, texSize, texSize, fovy: 90.0, near: near, far: far);
     _fbo ??= M3Framebuffer(texSize, texSize, useDepthTexture: false);
-    texCubemap ??= M3Texture.createEmptyCubemap(texSize);
+    cubemapTexture ??= M3Texture.createEmptyCubemap(texSize);
   }
 
   void dispose() {
     _fbo?.dispose();
     _fbo = null;
-    texCubemap?.dispose();
-    texCubemap = null;
+    cubemapTexture?.dispose();
+    cubemapTexture = null;
+  }
+
+  void setOwner(M3Entity? owner) {
+    this.owner = owner;
   }
 
   /// Capture the scene from the probe's position into a cubemap texture.
-  void capture(M3Scene scene, Vector3 position) {
+  void captureProbe(M3Scene scene) {
+    if (owner == null) return;
+    Vector3 position = owner!.position;
+
     final renderEngine = M3AppEngine.instance.renderEngine;
     final gl = renderEngine.gl;
 
@@ -61,7 +73,7 @@ class M3ReflectionProbe {
 
     for (int i = 0; i < 6; i++) {
       // Bind face
-      _fbo!.bindFace(faces[i], texCubemap!.glTexture);
+      _fbo!.bindFace(faces[i], cubemapTexture!.glTexture);
 
       // Clear
       final bg = M3AppEngine.backgroundColor;
@@ -90,18 +102,15 @@ class M3ReflectionProbe {
       gl.enable(WebGL.BLEND);
       gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA); // WebGL.ONE
 
-      // ignore entity
-      if (excludeEntity != null) {
-        scene.entities.remove(excludeEntity!);
+      // render scene for cubemap face
+      _context.prepareRenderQueue(scene, _camCapture);
+      if (owner != null) {
+        // ignore exclude entity
+        _context.excludeEntities([owner!]);
       }
-      // Render scene
-      scene.render(prog, _camCapture, bSolid: true);
-
-      if (excludeEntity != null) {
-        scene.entities.add(excludeEntity!);
-      }
+      _context.render(prog);
     }
-    texCubemap!.generateMipmap();
+    cubemapTexture!.generateMipmap();
     // Restore state
     renderEngine.bindDefaultFramebuffer();
   }

@@ -17,8 +17,8 @@ class M3Projection {
     refreshProjectionMatrix();
   }
 
-  void copyFrom(M3Projection other) {
-    projectionMatrix = other.projectionMatrix.clone();
+  void setFrom(M3Projection other) {
+    projectionMatrix.setFrom(other.projectionMatrix);
     viewportX = other.viewportX;
     viewportY = other.viewportY;
     viewportW = other.viewportW;
@@ -29,8 +29,9 @@ class M3Projection {
   }
 
   M3Projection clone() {
-    return M3Projection()..copyFrom(this);
+    return M3Projection()..setFrom(this);
   }
+
   // set viewport and projection matrix
   void setViewport(int x, int y, int w, int h, {double fovy = 50.0, double near = 1.0, double far = 100.0}) {
     viewportX = x;

@@ -22,15 +22,15 @@ class M3Material {
   double reflection = 0.0;
   double metallic = 0.0;
   double roughness = 0.8;
+  int mipLevel = 7; // max mipmap level for reflection roughness
   M3AlphaMode alphaMode = M3AlphaMode.opaque;
   int renderOrder = 0; // manual override for fine-tuned sorting
 
   // textures
-  M3Texture texDiffuse = M3Resources.texWhite;
+  M3Texture diffuseTexture = M3Resources.texWhite;
   Matrix3 texMatrix = Matrix3.identity();
 
-  /// Optional shader program override for this material.
-  M3Program? programOverride;
+  M3PlanarReflection? planarReflection; // planar reflection
 
   M3Material();
 
@@ -44,30 +44,41 @@ class M3Material {
     shininess = 1.0;
   }
 
+  /// Sets the material to a glossy (reflective) state.
+  void setGlossy() {
+    metallic = 1.0;
+    roughness = 0.0;
+    reflection = 1.0;
+    specular.setValues(1.0, 1.0, 1.0);
+    shininess = 128.0;
+  }
+
   /// Creates a deep copy of this material.
   /// Vector and Matrix properties are cloned, while texture references are shared.
   M3Material clone() {
-    return M3Material()..copyFrom(this);
+    return M3Material()..setFrom(this);
   }
 
   /// Copies all properties from another material.
-  void copyFrom(M3Material other) {
+  void setFrom(M3Material other) {
     diffuse.setFrom(other.diffuse);
     specular.setFrom(other.specular);
     shininess = other.shininess;
     reflection = other.reflection;
     metallic = other.metallic;
     roughness = other.roughness;
+    mipLevel = other.mipLevel;
     alphaMode = other.alphaMode;
     renderOrder = other.renderOrder;
-    texDiffuse = other.texDiffuse;
+    diffuseTexture = other.diffuseTexture;
     texMatrix.setFrom(other.texMatrix);
+    planarReflection = other.planarReflection;
   }
 
   factory M3Material.fromGltf(GltfMaterial gltfMat, GltfDocument doc) {
     final mtr = M3Material();
     // Base Color
-    mtr.diffuse = gltfMat.baseColorFactor;
+    mtr.diffuse.setFrom(gltfMat.baseColorFactor);
     mtr.metallic = gltfMat.metallicFactor;
     mtr.roughness = gltfMat.roughnessFactor;
     if (gltfMat.alphaMode == 'BLEND') {
@@ -82,7 +93,7 @@ class M3Material {
       if (texIndex < doc.runtimeTextures.length) {
         final tex = doc.runtimeTextures[texIndex];
         if (tex is M3Texture) {
-          mtr.texDiffuse = tex;
+          mtr.diffuseTexture = tex;
         }
       }
     }

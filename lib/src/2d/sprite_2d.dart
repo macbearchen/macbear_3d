@@ -20,7 +20,7 @@ class M3Sprite2D {
   int colCount = 1;
 
   M3Sprite2D(M3Texture tex, {this.rowCount = 1, this.colCount = 1}) {
-    mtr.texDiffuse = tex;
+    mtr.diffuseTexture = tex;
     cellW = tex.texW.toDouble() / rowCount;
     cellH = tex.texH.toDouble() / colCount;
 
@@ -42,7 +42,7 @@ class M3Sprite2D {
   }
 
   void dispose() {
-    mtr.texDiffuse.dispose();
+    mtr.diffuseTexture.dispose();
   }
 
   void draw(Matrix4 mMatrix, {int index = 0, Vector4? color}) {

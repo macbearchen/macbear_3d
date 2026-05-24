@@ -10,10 +10,18 @@ part 'render_options.dart';
 /// Handles shader program creation, shadow mapping, 2D overlay rendering, and viewport management.
 class M3RenderEngine {
   late RenderingContext gl;
+  // reflection map
+  late M3PlanarReflection planarReflection;
+
+  // reflection probes
+  final List<M3ReflectionProbe> probes = [];
 
   // shadow map
   M3ShadowMap? _shadowMap;
   M3ShadowMap? get shadowMap => _shadowMap;
+
+  /// main context (scene render)
+  final M3RenderContext mainContext = M3RenderContext();
 
   // for ortho-matrix to project to 2D screen
   final _projection2D = M3Projection();
@@ -27,8 +35,21 @@ class M3RenderEngine {
     debugPrint("--- M3RenderEngine constructor ---");
   }
 
+  void init() {
+    planarReflection = M3PlanarReflection();
+  }
+
+  void cleanProbes() {
+    for (final probe in probes) {
+      probe.dispose();
+    }
+    probes.clear();
+  }
+
   void dispose() {
     _shadowMap?.dispose();
+    planarReflection.dispose();
+    cleanProbes();
   }
 
   /// Create shadow map, call only after WebGL context created
@@ -51,19 +72,14 @@ class M3RenderEngine {
 
     final pixelW = (width * dpr).toInt();
     final pixelH = (height * dpr).toInt();
+
+    // planar-reflection viewport by pixel size
+    planarReflection.resize(width, height);
+
     // camera viewport by pixel size
     final scene = M3AppEngine.instance.activeScene;
     if (scene != null) {
       scene.camera.setViewport(0, 0, pixelW, pixelH);
-      // planar-reflection viewport by pixel size
-      final planar = scene.planarReflection;
-      if (planar != null) {
-        // Use half resolution to prevent z-fighting artifacts
-        const ratio = 0.5;
-        final reflectW = (width * ratio).toInt();
-        final reflectH = (height * ratio).toInt();
-        planar.resize(reflectW, reflectH);
-      }
     }
 
     // projection 2D viewport by screen size
@@ -115,23 +131,15 @@ class M3RenderEngine {
 
       progLight.applyLight(scene.light);
       // solid
-      scene.render(progLight, scene.camera, bSolid: true);
+      mainContext.render(progLight);
 
-      // reflection pass (only if not using single-pass IBL)
-      if (scene.skybox != null && !options.shader.ibl) {
-        scene.renderReflection();
-      }
+      // reflection pass:
+      // 1. cubemap reflection (only if not using single-pass IBL)
+      // 2. planar reflection
+      mainContext.renderReflectionPass();
     } else {
       // wireframe
-      scene.render(M3Resources.programSimple!, scene.camera, bSolid: false);
-    }
-
-    // draw debug: only implement when needed
-    scene.renderDebug();
-
-    // draw Helper
-    if (options.debug.showHelpers) {
-      scene.renderHelper();
+      mainContext.render(M3Resources.programSimple!, fillMode: M3FillMode.wireframe);
     }
   }
 
@@ -158,9 +166,20 @@ class M3RenderEngine {
 
     // 2D helper
     if (options.debug.showHelpers) {
-      if (options.shadows && _shadowMap != null) {
+      if (!options.debug.wireframe && options.shadows && _shadowMap != null) {
         final width = 200 / _shadowMap!.mapH * _shadowMap!.mapW;
-        _shadowMap!.drawDebugDepth(10, engine.appHeight - 210, width, 200);
+        _shadowMap!.drawDebugDepth(5, engine.appHeight - 210, width, 200);
+      }
+      // show planar reflection
+      if (mainContext.needsPlanarReflectionPass() && planarReflection.visible) {
+        final engine = M3AppEngine.instance;
+        final ratio = 0.5;
+        final x = 110.0;
+        final y = engine.appHeight - 210.0;
+        final w = planarReflection.width * ratio;
+        final h = planarReflection.height * ratio;
+
+        planarReflection.drawDebugReflection(x, y, w, h);
       }
 
       prog2D.setModelMatrix(Matrix4.identity());
@@ -192,6 +211,11 @@ csm=${scene.camera.csmCount}''';
         matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 150, 0));
         // Shadow Info
         M3Resources.text2D.drawText(shadowText, matStats, color: Vector4(1, 1, 0, 1));
+
+        // reflection probes info
+        final probesText = 'probes: ${probes.length}';
+        matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 200, 0));
+        M3Resources.text2D.drawText(probesText, matStats, color: Vector4(0, 1, 1, 1));
       }
     }
 

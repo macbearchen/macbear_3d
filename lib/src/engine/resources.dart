@@ -1,3 +1,4 @@
+// ignore_for_file: unused_import
 // Macbear3D engine
 import '../m3_internal.dart';
 
@@ -15,6 +16,8 @@ import '../shaders_gen/TexturedLighting.es3.frag.g.dart';
 import '../shaders_gen/TexturedLighting.es3.vert.g.dart';
 import '../shaders_gen/Unlit.es3.frag.g.dart';
 import '../shaders_gen/Unlit.es3.vert.g.dart';
+import '../shaders_gen/Water.es3.frag.g.dart';
+import '../shaders_gen/Water.es3.vert.g.dart';
 // GLSL functions
 import '../shaders_gen/glsl/PCF.es3.frag.g.dart';
 import '../shaders_gen/glsl/Pixel.es3.frag.g.dart';
@@ -170,7 +173,8 @@ class M3Resources {
   static M3Program? programSimple;
   static M3Program? programSkybox;
   static M3Program? programRectangle;
-  static M3Program? programPlaneMirror; // plane reflection (mirror / water)
+  static M3Program? programMirror; // plane reflection (mirror / water)
+  static M3Program? programWater; // water shader program
   static M3ProgramEye? programSkyboxReflect;
   static M3Program? programExternalOES; // external texture: video streaming
   // with lighting
@@ -222,7 +226,9 @@ class M3Resources {
     programSimpleLighting = M3ProgramLighting(_SkinNormal_vert + SimpleLighting_vert, Simple_frag);
 
     // plane reflection (mirror / water)
-    programPlaneMirror = M3Program(Mirror_vert, Mirror_frag);
+    // programMirror = M3Program(Mirror_vert, Mirror_frag);
+    programMirror = M3Program(Skinning_vert + Simple_vert, Mirror_frag);
+    programWater = M3Program(Water_vert, Water_frag);
 
     // external texture: video streaming
     String fsUnlit = Unlit_frag;
@@ -336,7 +342,10 @@ class M3Resources {
     programSimple?.dispose();
     programSkybox?.dispose();
     programRectangle?.dispose();
+    programMirror?.dispose();
+    programWater?.dispose();
     programSkyboxReflect?.dispose();
+    programExternalOES?.dispose();
     programSimpleLighting?.dispose();
 
     programTexture?.dispose();

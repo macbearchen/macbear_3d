@@ -26,10 +26,21 @@ class AnimatedScene_05 extends M3Scene {
       lightColor: Vector4(.7, 1, .5, 1),
       darkColor: Vector4(.5, 0.8, .3, 1),
     );
-    // plane geometry
 
-    final plane = addMesh(M3Mesh(M3PlaneGeom(20, 20, uvScale: Vector2.all(8.0))), Vector3(0, 0, 0));
-    plane.mesh!.subMeshes[0].mtr.texDiffuse = texGround;
+    // Apply mirror shader to ground
+    const posZ = 0.0;
+    renderEngine.planarReflection.clipPlane.setFromComponents(0, 0, 1, -posZ);
+
+    // plane geometry
+    final meshPlane = M3Mesh(M3PlaneGeom(16, 16, uvScale: Vector2.all(4.0)));
+    meshPlane.subMeshes[0].mtr
+      ..reflection = 0.5
+      ..roughness = 0.0
+      ..planarReflection = renderEngine.planarReflection
+      ..diffuseTexture = texGround;
+
+    final plane = addMesh(meshPlane, Vector3(0, 0, posZ));
+    renderEngine.planarReflection.setScale(0.5);
 
     // 05-1: GLTF model - using M3Mesh.load()
     final meshGltf = await M3Mesh.load('example/CesiumMan.glb');

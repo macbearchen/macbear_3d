@@ -437,6 +437,17 @@ class GltfNode {
     }
   }
 
+  /// Copies all properties from another node.
+  void setFrom(GltfNode other) {
+    translation.setFrom(other.translation);
+    rotation.setFrom(other.rotation);
+    scale.setFrom(other.scale);
+    if (matrix != null && other.matrix != null) {
+      matrix!.setFrom(other.matrix!);
+    }
+    worldMatrix.setFrom(other.worldMatrix);
+  }
+
   /// Creates a copy of this node for instance-sharing.
   /// Note: This does not recursively clone children since nodes are often
   /// referenced by index in the document. Hierarchy cloning is handled higher up.
@@ -451,7 +462,7 @@ class GltfNode {
       rotation: rotation.clone(),
       scale: scale.clone(),
       matrix: matrix?.clone(),
-    );
+    )..setFrom(this);
   }
 }
 

@@ -40,25 +40,24 @@ class M3Camera extends M3Projection {
   double csmLambda = 0.6;
 
   @override
-  void copyFrom(covariant M3Camera other) {
-    super.copyFrom(other);
-    position = other.position.clone();
-    rotation = other.rotation.clone();
-    euler.copyFrom(other.euler);
-    viewMatrix = other.viewMatrix.clone();
-    _invViewMatrix = other._invViewMatrix.clone();
-    target = other.target.clone();
-    up = other.up.clone();
+  void setFrom(covariant M3Camera other) {
+    super.setFrom(other);
+    position.setFrom(other.position);
+    rotation.setFrom(other.rotation);
+    euler.setFrom(other.euler);
+    viewMatrix.setFrom(other.viewMatrix);
+    _invViewMatrix.setFrom(other._invViewMatrix);
+    target.setFrom(other.target);
+    up.setFrom(other.up);
     distanceToTarget = other.distanceToTarget;
     _csmCount = other._csmCount;
     csmLambda = other.csmLambda;
     csmSplitDistances = List.from(other.csmSplitDistances);
-    updateFrustum(projectionMatrix * viewMatrix);
   }
 
   /// Clone of this.
   @override
-  M3Camera clone() => M3Camera()..copyFrom(this);
+  M3Camera clone() => M3Camera()..setFrom(this);
 
   /// visibility checking (frustum culling)
   bool isVisible(M3Bounding bounds) {
@@ -69,8 +68,9 @@ class M3Camera extends M3Projection {
   }
 
   /// Update frustum matrix from view and projection matrices.
-  void updateFrustum(Matrix4 matrix) {
-    _frustum.setFromMatrix(matrix);
+  void updateFrustum() {
+    final mat = projectionMatrix * viewMatrix;
+    _frustum.setFromMatrix(mat);
   }
 
   /// Set viewport and update frustum matrix.
@@ -78,8 +78,6 @@ class M3Camera extends M3Projection {
   void setViewport(int x, int y, int w, int h, {double fovy = 50.0, double near = 1.0, double far = 100.0}) {
     super.setViewport(x, y, w, h, fovy: fovy, near: near, far: far);
     _updateSplitDistances();
-    // frustum matrix for culling
-    updateFrustum(projectionMatrix * viewMatrix);
   }
 
   void _updateSplitDistances() {
@@ -116,8 +114,6 @@ class M3Camera extends M3Projection {
 
     viewMatrix = makeViewMatrix(eye, target, up);
     _invViewMatrix = viewMatrix.orthoInverse(); // ortho inverse matrix
-    // frustum matrix for culling
-    updateFrustum(projectionMatrix * viewMatrix);
   }
 
   /// Move camera (both eye and target) by world-space delta.
@@ -152,8 +148,6 @@ class M3Camera extends M3Projection {
     _invViewMatrix.setRotation(rotMat3);
     _invViewMatrix.setTranslation(position);
     viewMatrix = _invViewMatrix.orthoInverse(); // compute model-view-matrix
-    // frustum matrix for culling
-    updateFrustum(projectionMatrix * viewMatrix);
   }
 
   /// set camera rotation by quaternion and distance to target.
@@ -163,35 +157,16 @@ class M3Camera extends M3Projection {
   }
 
   /// reflect view matrix by clip plane (reflection)
-  void reflectViewMatrix(Vector4 clipPlane) {
+  void reflectViewMatrix(Plane clipPlane) {
+    final nx = clipPlane.normal.x;
+    final ny = clipPlane.normal.y;
+    final nz = clipPlane.normal.z;
+    final d = clipPlane.constant;
+
     Matrix4 mirrorMat = Matrix4.identity();
-    mirrorMat.setRow(
-      0,
-      Vector4(
-        1 - 2 * clipPlane.x * clipPlane.x,
-        -2 * clipPlane.y * clipPlane.x,
-        -2 * clipPlane.z * clipPlane.x,
-        -2 * clipPlane.w * clipPlane.x,
-      ),
-    );
-    mirrorMat.setRow(
-      1,
-      Vector4(
-        -2 * clipPlane.x * clipPlane.y,
-        1 - 2 * clipPlane.y * clipPlane.y,
-        -2 * clipPlane.z * clipPlane.y,
-        -2 * clipPlane.w * clipPlane.y,
-      ),
-    );
-    mirrorMat.setRow(
-      2,
-      Vector4(
-        -2 * clipPlane.x * clipPlane.z,
-        -2 * clipPlane.y * clipPlane.z,
-        1 - 2 * clipPlane.z * clipPlane.z,
-        -2 * clipPlane.w * clipPlane.z,
-      ),
-    );
+    mirrorMat.setRow(0, Vector4(1 - 2 * nx * nx, -2 * ny * nx, -2 * nz * nx, -2 * d * nx));
+    mirrorMat.setRow(1, Vector4(-2 * nx * ny, 1 - 2 * ny * ny, -2 * nz * ny, -2 * d * ny));
+    mirrorMat.setRow(2, Vector4(-2 * nx * nz, -2 * ny * nz, 1 - 2 * nz * nz, -2 * d * nz));
     mirrorMat.setRow(3, Vector4(0, 0, 0, 1));
 
     _invViewMatrix = mirrorMat * _invViewMatrix;
@@ -201,45 +176,62 @@ class M3Camera extends M3Projection {
     position = _invViewMatrix.getTranslation();
     target = (mirrorMat * Vector4(target.x, target.y, target.z, 1.0)).xyz;
     up = (mirrorMat * Vector4(up.x, up.y, up.z, 0.0)).xyz;
-
-    // frustum matrix for culling
-    updateFrustum(projectionMatrix * viewMatrix);
   }
 
+  /// reference to http://www.terathon.com/code/oblique.html
   /// modify projection matrix by clip plane (oblique frustum)
-  void setObliqueClipPlane(Vector4 clipPlane) {
+  void setObliqueClipPlane(Plane clipPlane) {
     // 1. Transform plane from world space to view space
-    final clipPlaneInView = planeToViewSpace(clipPlane, viewMatrix, _invViewMatrix);
+    final clipPlaneInView = planeToViewSpace(clipPlane, _invViewMatrix);
+    final nx = clipPlaneInView.normal.x;
+    final ny = clipPlaneInView.normal.y;
+    final nz = clipPlaneInView.normal.z;
+    final d = clipPlaneInView.constant;
 
     // 2. Calculate the clip-space corner point opposite the clipping plane
     // using the sign of the plane's normal and the projection matrix.
     // This is Lengyel's formula for the 'q' vector in camera space.
     final Vector4 q = Vector4(
-      (clipPlaneInView.x.sign + projectionMatrix.entry(0, 2)) / projectionMatrix.entry(0, 0),
-      (clipPlaneInView.y.sign + projectionMatrix.entry(1, 2)) / projectionMatrix.entry(1, 1),
+      (nx.sign + projectionMatrix.entry(0, 2)) / projectionMatrix.entry(0, 0),
+      (ny.sign + projectionMatrix.entry(1, 2)) / projectionMatrix.entry(1, 1),
       -1.0,
       (1.0 + projectionMatrix.entry(2, 2)) / projectionMatrix.entry(2, 3),
     );
 
     // 3. Calculate the scaled plane vector 'c'
-    final Vector4 c = clipPlaneInView * (2.0 / clipPlaneInView.dot(q));
+    final clipPlaneVec = Vector4(nx, ny, nz, d);
+    final Vector4 c = clipPlaneVec * (2.0 / clipPlaneVec.dot(q));
+    c.z += 1.0;
 
     // 4. Replace the third row (index 2) of the projection matrix with 'c'
     projectionMatrix.setRow(2, c);
+  }
 
-    // 5. Update frustum matrix for culling
-    updateFrustum(projectionMatrix * viewMatrix);
+  /// update reflection/fraction by clip plane (oblique frustum)
+  void updateClipSpace(Plane clipPlane) {
+    // disable CSM
+    csmCount = 0;
+    csmSplitDistances = [];
+
+    final debugOptions = M3AppEngine.instance.renderEngine.options.debug;
+    if (debugOptions.useObliqueClipPlane) {
+      setObliqueClipPlane(clipPlane); // clip below the plane
+    }
+    updateFrustum();
   }
 
   /// transform plane from world space to view space
-  static Vector4 planeToViewSpace(Vector4 planeWorld, Matrix4 viewMatrix, Matrix4 viewInverseMatrix) {
+  static Plane planeToViewSpace(Plane planeWorld, Matrix4 viewInverseMatrix) {
     // inverse transpose of view matrix
     final Matrix4 invTrans = viewInverseMatrix.clone()..transpose();
 
-    // transform plane = (A, B, C, D)
-    final Vector4 planeView = invTrans.transform(planeWorld);
+    // plane as vector4 = (A, B, C, D)
+    final planeVec = Vector4(planeWorld.normal.x, planeWorld.normal.y, planeWorld.normal.z, planeWorld.constant);
 
-    return planeView;
+    // transform plane
+    final Vector4 planeView = invTrans * planeVec;
+
+    return Plane.components(planeView.x, planeView.y, planeView.z, planeView.w);
   }
 
   @override

@@ -40,6 +40,9 @@ class M3Texture {
   int texW = 32;
   int texH = 32;
 
+  /// Get the mathematically correct maximum mipmap level based on dimensions
+  int get maxMipLevel => (log(max(texW, texH)) / ln2).floor();
+
   M3Texture({this.target = WebGL.TEXTURE_2D, this.generateMipmaps = true}) {
     _texture = gl.createTexture();
 

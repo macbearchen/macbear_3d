@@ -115,7 +115,9 @@ class M3PlaneGeom extends M3Geom {
       }
 
       final indices = Uint16List(numVert);
-      for (int k = 0; k < numVert; k++) indices[k] = k;
+      for (int k = 0; k < numVert; k++) {
+        indices[k] = k;
+      }
       _faceIndices.add(_M3Indices(WebGL.TRIANGLES, indices));
 
       // wireframe edges for flat mode
@@ -232,7 +234,7 @@ class M3PlaneGeom extends M3Geom {
     final numPoints = (widthSegments + 1) * (heightSegments + 1);
     final data = Float32List(numPoints);
     final hx = width * 0.5, hy = height * 0.5;
- 
+
     // vertices: position
     for (j = 0; j <= widthSegments; j++) {
       double ratioX = j.toDouble() / widthSegments;
@@ -241,18 +243,18 @@ class M3PlaneGeom extends M3Geom {
       for (i = 0; i <= heightSegments; i++) {
         double ratioY = i.toDouble() / heightSegments;
         y = hy - height * ratioY;
- 
+
         if (funcVertex != null) {
           z = funcVertex!(x, y);
         } else {
           z = 0;
         }
- 
+
         data[index] = z;
         index++;
       }
     }
- 
+
     final cellSize = Vector2(width / widthSegments, height / heightSegments);
     return M3HeightField(data, cellSize, 1.0);
   }

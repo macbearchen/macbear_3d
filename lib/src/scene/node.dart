@@ -5,23 +5,28 @@ import 'transform.dart';
 ///
 /// Lazily recomputes the world matrix when marked dirty.
 class M3Node {
-  M3Transform transform = M3Transform();
+  final M3Transform _transform = M3Transform();
 
-  Vector3 get position => transform.position;
+  Vector3 get position => _transform.position;
   set position(Vector3 v) {
-    transform.position = v;
+    _transform.position.setFrom(v);
     markDirty();
   }
 
-  Quaternion get rotation => transform.rotation;
+  Quaternion get rotation => _transform.rotation;
   set rotation(Quaternion q) {
-    transform.rotation = q;
+    _transform.rotation.setFrom(q);
     markDirty();
   }
 
-  Vector3 get scale => transform.scale;
+  void setEuler(double yaw, double pitch, double roll) {
+    _transform.rotation.setEuler(yaw, pitch, roll);
+    markDirty();
+  }
+
+  Vector3 get scale => _transform.scale;
   set scale(Vector3 v) {
-    transform.scale = v;
+    _transform.scale.setFrom(v);
     markDirty();
   }
 
@@ -57,7 +62,7 @@ class M3Node {
   }
 
   void _rebuild() {
-    final local = transform.matrix;
+    final local = _transform.matrix;
     _worldMatrix = parent != null ? parent!.worldMatrix * local : local;
     _dirty = false;
   }

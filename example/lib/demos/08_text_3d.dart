@@ -57,7 +57,7 @@ class Text3DScene_08 extends M3Scene {
       M3Mesh(M3PlaneGeom(20, 20, widthSegments: 20, heightSegments: 20, uvScale: Vector2.all(5.0))),
       Vector3(0, 0, -1),
     );
-    plane.mesh!.subMeshes[0].mtr.texDiffuse = texGround;
+    plane.mesh!.subMeshes[0].mtr.diffuseTexture = texGround;
     plane.mesh!.subMeshes[0].mtr.specular = Vector3.all(.6);
   }
 

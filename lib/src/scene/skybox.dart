@@ -6,13 +6,9 @@ import '../m3_internal.dart';
 /// Renders a background environment that follows the camera position.
 class M3Skybox {
   static RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
+  final M3Texture cubemapTexture;
 
-  final M3Material mtr = M3Material();
-  final M3Texture _texCubemap;
-
-  M3Skybox(this._texCubemap) {
-    mtr.texDiffuse = _texCubemap;
-  }
+  M3Skybox(this.cubemapTexture);
 
   static Future<M3Skybox> createCubemap(
     String urlPosX,
@@ -27,53 +23,46 @@ class M3Skybox {
   }
 
   void dispose() {
-    _texCubemap.dispose();
+    cubemapTexture.dispose();
   }
 
   /// draw skybox
-  bool drawSkybox(M3Camera camEye) {
-    final prog = M3Resources.programSkybox!;
-
-    gl.depthMask(false);
-    gl.disable(WebGL.DEPTH_TEST);
-    gl.disable(WebGL.CULL_FACE);
-    gl.disable(WebGL.BLEND);
-    // pre-draw
-    gl.useProgram(prog.program);
-
+  void drawSkybox(M3Camera camEye) {
     final scale = camEye.farClip / 4;
-    Matrix4 boxMatrix = Matrix4.identity();
+    Matrix4 mat = Matrix4.identity();
     // rotate axisX 90 degree: up from axisY to axisZ
-    boxMatrix.setRotation(M3Constants.rotXNeg90);
-    boxMatrix.scaleByVector3(Vector3.all(-scale));
-    boxMatrix.setTranslation(camEye.position);
+    mat.setRotation(M3Constants.rotXNeg90);
+    mat.scaleByVector3(Vector3.all(-scale));
+    mat.setTranslation(camEye.position);
 
-    prog.setMatrices(camEye, boxMatrix);
-    prog.setMaterial(mtr, Vector4(1, 1, 1, 1));
-    M3Resources.debugFrustum.draw(prog, bSolid: true);
-
-    _texCubemap.unbind();
-    return true;
+    drawCube(camEye, mat, cubemapTexture, writeDepth: false);
   }
 
-  static bool drawDebug(M3Camera camEye, Matrix4 boxMatrix, M3Material mtr) {
-    final prog = M3Resources.programSkybox!;
+  static void drawCube(M3Camera camEye, Matrix4 boxMatrix, M3Texture cubeTexture, {bool writeDepth = true}) {
+    gl.depthMask(writeDepth);
+    if (writeDepth) {
+      gl.enable(WebGL.DEPTH_TEST);
+    } else {
+      gl.disable(WebGL.DEPTH_TEST);
+    }
 
-    gl.depthMask(true);
-    gl.disable(WebGL.DEPTH_TEST);
     gl.disable(WebGL.CULL_FACE);
     gl.disable(WebGL.BLEND);
+
     // pre-draw
+    final prog = M3Resources.programSkybox!;
     gl.useProgram(prog.program);
-
-    Matrix4 mat = boxMatrix;
-
+    M3Material mtr = M3Material()..setGlossy();
     // draw on target for debug
-    gl.enable(WebGL.DEPTH_TEST);
-    prog.setMatrices(camEye, mat);
-    prog.setMaterial(mtr, Vector4(1, 1, 1, 1));
+    prog.setMatrices(camEye, boxMatrix);
+    prog.setMaterial(mtr, Vector4.all(1.0));
+    prog.setEnvironmentMap(cubeTexture);
+
     M3Resources.debugFrustum.draw(prog, bSolid: true);
 
-    return true;
+    gl.depthMask(true);
+    gl.enable(WebGL.DEPTH_TEST);
+    gl.enable(WebGL.CULL_FACE);
+    gl.enable(WebGL.BLEND);
   }
 }

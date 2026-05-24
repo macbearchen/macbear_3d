@@ -41,7 +41,7 @@ class SampleScene extends M3Scene {
     final posGround = Vector3.zero();
     final meshPlane = addMesh(M3Mesh(_geomPlane), posGround);
     meshPlane.mesh!.subMeshes[0].mtr
-      ..texDiffuse = texGround
+      ..diffuseTexture = texGround
       ..setMatte();
 
     // axis gizmo
@@ -75,17 +75,17 @@ class SampleScene extends M3Scene {
           switch (k % 3) {
             case 0:
               mesh = M3Mesh(_geomSphere);
-              mesh.subMeshes[0].mtr.texDiffuse = texGrid2;
+              mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
               rb = physicsSystem.addSphere(0.5, M3RigidBodyDesc.dynamic()..position = pos);
               break;
             case 1:
               mesh = M3Mesh(_geomCube);
-              mesh.subMeshes[0].mtr.texDiffuse = texGrid;
+              mesh.subMeshes[0].mtr.diffuseTexture = texGrid;
               rb = physicsSystem.addBox(0.5, 0.5, 0.5, M3RigidBodyDesc.dynamic()..position = pos);
               break;
             default:
               mesh = M3Mesh(_geomCylinder);
-              mesh.subMeshes[0].mtr.texDiffuse = texGrid2;
+              mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
               rb = physicsSystem.addCylinder(0.5, 0.5, M3RigidBodyDesc.dynamic()..position = pos);
               break;
           }
@@ -165,7 +165,7 @@ class MassiveScene extends M3Scene {
       lightColor: Vector4(.7, 1, .5, 1),
       darkColor: Vector4(.5, 0.8, .3, 1),
     );
-    plane.mesh!.subMeshes[0].mtr.texDiffuse = texGround;
+    plane.mesh!.subMeshes[0].mtr.diffuseTexture = texGround;
 
     // 02: sample cubemap
     skybox = M3Skybox(M3Texture.createSampleCubemap());

@@ -146,7 +146,7 @@ class _MainPageState extends State<MainPage> {
         final halfView = 8;
         scene.light.target = Vector3.zero();
         scene.light.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 50);
-        scene.light.setEuler(pi / 5, -pi / 3, 0, distance: 30); // rotate light
+        scene.light.setEuler(pi / 4, -pi / 4, 0, distance: 30); // rotate light
         scene.light.refreshProjectionMatrix();
         break;
       case 2: // cascade shadow map
@@ -183,8 +183,9 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  final _timeScaleValues = [0.0, 0.1, 0.5, 1.0, 1.25, 1.5, 2.0, 5.0];
+  final _timeScaleValues = [0.0, 0.25, 0.5, 1.0, 1.25, 1.5, 2.0, 4.0];
 
+  /// Time Scale Widget
   Widget getTimeScaleWidget() {
     final engine = M3AppEngine.instance;
     // Find closest index
@@ -231,6 +232,7 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
+  /// Shader Widget
   Widget getShaderWidget() {
     final renderEngine = M3AppEngine.instance.renderEngine;
     final shaderOptions = renderEngine.options.shader;
@@ -309,12 +311,24 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
+  /// Helper
   Widget getHelperWidget() {
     final renderEngine = M3AppEngine.instance.renderEngine;
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        FloatingActionButton(
+          heroTag: 'oblique_clip_plane',
+          backgroundColor: renderEngine.options.debug.useObliqueClipPlane ? Colors.lightGreen : null,
+          onPressed: () {
+            setState(() {
+              renderEngine.options.debug.useObliqueClipPlane = !renderEngine.options.debug.useObliqueClipPlane;
+            });
+          },
+          child: const Icon(Icons.cut_outlined),
+        ),
+        const SizedBox(width: 6),
         FloatingActionButton(
           heroTag: 'wireframe',
           backgroundColor: renderEngine.options.debug.wireframe ? Colors.lightGreen : null,
@@ -340,6 +354,7 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
+  /// Tutorial Scene
   Widget getTutorialWidget() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -442,8 +457,8 @@ class _MainPageState extends State<MainPage> {
             backgroundColor: _selectedSceneIndex == 12 ? Colors.lightGreen : null,
             onPressed: () {
               _selectedSceneIndex = 12;
-              final testScene = SampleScene(physics: M3PhysicsSystem(M3RapierPhysicsEngine()));
-              // final testScene = VideoTextureScene_12();
+              // final testScene = SampleScene(physics: M3PhysicsSystem(M3RapierPhysicsEngine()));
+              final testScene = VideoTextureScene_12();
 
               _loadScene(testScene);
             },

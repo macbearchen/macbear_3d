@@ -150,7 +150,7 @@ output to uml/macbear_3d.puml
 - [x] Skybox reflection via cubemap
 - [x] Dynamic Reflection Probe
 - [x] Physics Engine integration (Oimo Physics)
-- [x] Water effect (reflection, refraction)
+- [ ] Water effect (reflection, refraction)
 - [ ] Post-processing effects (Bloom, HDR)
 - [ ] Advanced Particle System
 - [x] Resource Management System

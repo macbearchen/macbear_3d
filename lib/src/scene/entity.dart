@@ -11,7 +11,13 @@ class M3Entity extends M3Node {
   M3Mesh? mesh;
   Vector4 color = Vector4(1.0, 1.0, 1.0, 1.0); // RGBA
 
-  M3ReflectionProbe? reflectionProbe;
+  M3ReflectionProbe? getProbe() {
+    final renderEngine = M3AppEngine.instance.renderEngine;
+    for (final probe in renderEngine.probes) {
+      if (probe.owner == this) return probe;
+    }
+    return null;
+  }
 
   /// visibility culling
   M3Bounding worldBounding = M3Bounding();

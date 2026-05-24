@@ -8,6 +8,8 @@ class M3ShadowMap {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
   static final _prog = M3Resources.programSimple!;
 
+  final M3RenderContext _context = M3RenderContext();
+
   final M3Framebuffer _framebuffer;
   int get mapW => _framebuffer.frameW;
   int get mapH => _framebuffer.frameH;
@@ -68,14 +70,18 @@ class M3ShadowMap {
         gl.viewport(0, y, mapW, height);
         light.projectionMatrix = cascade.projectionMatrix;
         // frustum matrix for culling
-        light.updateFrustum(light.projectionMatrix * light.viewMatrix);
-        // render scene
-        scene.render(_prog, light, bOnlyOpaque: true);
+        light.updateFrustum();
+        // shadowmap render scene only opaque
+        _context.prepareRenderQueue(scene, light, bOnlyOpaque: true);
+        _context.render(_prog);
       }
       light.projectionMatrix = backupMatrix;
-      light.updateFrustum(light.projectionMatrix * light.viewMatrix);
+      light.updateFrustum();
     } else {
-      scene.render(_prog, light, bOnlyOpaque: true);
+      light.updateFrustum();
+      // shadowmap render scene only opaque
+      _context.prepareRenderQueue(scene, light, bOnlyOpaque: true);
+      _context.render(_prog);
     }
 
     // recover to default GL state

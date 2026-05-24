@@ -74,10 +74,10 @@ class M3RapierPhysicsEngine implements M3PhysicsEngine {
         rapierDesc = rapier.RigidBodyDesc.kinematicVelocityBased();
         break;
     }
-    rapierDesc.position = desc.position;
-    rapierDesc.rotation = desc.rotation;
-    rapierDesc.linearVelocity = desc.linearVelocity;
-    rapierDesc.angularVelocity = desc.angularVelocity;
+    rapierDesc.position.setFrom(desc.position);
+    rapierDesc.rotation.setFrom(desc.rotation);
+    rapierDesc.linearVelocity.setFrom(desc.linearVelocity);
+    rapierDesc.angularVelocity.setFrom(desc.angularVelocity);
     rapierDesc.linearDamping = desc.linearDamping;
     rapierDesc.angularDamping = desc.angularDamping;
     rapierDesc.canSleep = desc.canSleep;
@@ -106,8 +106,8 @@ class M3RapierPhysicsEngine implements M3PhysicsEngine {
       case M3ColliderShapeType.heightfield:
         throw UnimplementedError('Heightfield collider not supported in M3RapierPhysicsEngine yet');
     }
-    rapierDesc.localPosition = desc.localPosition;
-    rapierDesc.localRotation = desc.localRotation;
+    rapierDesc.localPosition.setFrom(desc.localPosition);
+    rapierDesc.localRotation.setFrom(desc.localRotation);
     rapierDesc.friction = desc.friction;
     rapierDesc.restitution = desc.restitution;
     rapierDesc.density = desc.density;
