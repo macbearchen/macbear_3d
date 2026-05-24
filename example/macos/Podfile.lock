@@ -42,7 +42,7 @@ SPEC CHECKSUMS:
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   macbear_3d: 701dbe77f689d224428f84b0a8f48d5f13d4f3d3
   rapier_physics: d4acf823675fca6a0edd64ca3829208122c8cc96
-  video_player_avfoundation: 7993f492ae0bd77edaea24d9dc051d8bb2cd7c86
+  video_player_avfoundation: e54d03b3b19f64f2c557354f72ce538387541ba6
 
 PODFILE CHECKSUM: 54d867c82ac51cbd61b565781b9fada492027009
 
