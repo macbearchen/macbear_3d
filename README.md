@@ -30,6 +30,8 @@ Preview the `main_all.dart` example live in your browser!
 - **Advanced Lighting**: Dynamic lighting with **Cascaded Shadow Mapping (CSM)**, **PCF (Percentage Closer Filtering)** for smooth shadows, **PBR (Physically Based Rendering)** and **IBL (Image-Based Lighting)** support. Improved `RenderPipeline` with enhanced support for opaque and transparency materials.
 - **Planar Reflections**: Added support for planar reflections with `M3PlanarReflection` and Mirror shaders for high-quality reflective surfaces.
 - **Dynamic Reflection Probe**: Added `M3ReflectionProbe` for real-time cubemap capture and dynamic reflections.
+- **Water Effect**: Real-time water rendering with `M3Water` — dual-layer animated normal-map flow, planar reflection & refraction, configurable wave distortion, and fog-depth underwater tinting.
+- **RenderContext**: `M3RenderContext` bundles per-frame GPU state (viewport, matrices, lights, shadow map, reflection/water targets) for clean multi-pass rendering.
 - **Flexible Geometries**: Added `M3Axis` support for Torus, Capsule, Cylinder, and Plane for custom orientation.
 - **Resource Management**: Centralized system for loading and caching assets (geometries, meshes, textures, fonts).
 - **Text Rendering**: Generate 3D geometry from TrueType/OpenType fonts with alignment fixes for Web.
@@ -65,7 +67,7 @@ Add `macbear_3d` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  macbear_3d: ^0.9.0
+  macbear_3d: ^1.0.0
 ```
 
 ## Usage
@@ -150,7 +152,7 @@ output to uml/macbear_3d.puml
 - [x] Skybox reflection via cubemap
 - [x] Dynamic Reflection Probe
 - [x] Physics Engine integration (Oimo Physics)
-- [ ] Water effect (reflection, refraction)
+- [x] Water effect (reflection, refraction, animated flow, fog tinting)
 - [ ] Post-processing effects (Bloom, HDR)
 - [ ] Advanced Particle System
 - [x] Resource Management System

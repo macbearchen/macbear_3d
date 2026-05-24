@@ -31,6 +31,8 @@
 - **進階光照**: 支援動態光照、**級聯陰影貼圖 (CSM)**、**PCF (百分比漸進過濾)** 以實現平滑陰影、**PBR (實體渲染)** 與 **IBL (環境光照)**。優化 `RenderPipeline` 並增強對不透明與透明材質的支援。
 - **平面反射**: 加入 `M3PlanarReflection` 與專屬 Mirror Shader 以實現高品質平面反射效果。
 - **動態反射探針**: 加入 `M3ReflectionProbe` 實作即時環境捕捉與動態反射。
+- **水面效果**: 使用 `M3Water` 實現即時水面渲染，支援雙層動態法線貼圖流動、平面反射與折射、可調波紋扭曲，以及水下霧色深度渲染。
+- **渲染上下文 (RenderContext)**: `M3RenderContext` 封裝每幀 GPU 狀態（視口、矩陣、光源、陰影貼圖、反射/水面目標），讓多通道渲染架構更清晰。
 - **幾何形狀靈活性**: 為 Torus, Capsule, Cylinder 和 Plane 添加了 `M3Axis` 支持，允許自定義初始朝向。
 - **資源管理**: 預建的高效集中式加載與快取機制（紋理、模型、字體）。
 - **3D 文字**: 支援從 TrueType/OpenType 字體直接生成 3D 文字幾何體，並修正 Web 端對齊問題。
@@ -48,7 +50,7 @@
 
 ```yaml
 dependencies:
-  macbear_3d: ^0.9.0
+  macbear_3d: ^1.0.0
 ```
 
 ## 快速上手
@@ -117,7 +119,7 @@ class MyScene extends M3Scene {
 - [x] 天空盒反射 (Cubemap)
 - [x] 動態反射探針 (Dynamic Reflection Probe)
 - [x] 物理引擎整合 (Oimo Physics)
-- [ ] 水面效果 (反射、折射)
+- [x] 水面效果 (反射、折射、動態流動、霧色深度)
 - [ ] 後處理特效 (Bloom, HDR)
 - [ ] 進階粒子系統
 - [x] GUI 系統 (使用 Flutter Widget)

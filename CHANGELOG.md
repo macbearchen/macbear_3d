@@ -1,3 +1,19 @@
+## 1.0.0
+
+* Add:
+  * **Water Effect**: Introduced `M3Water` with animated dual-layer normal-map flow, planar reflection & refraction, fog-depth underwater tinting, and configurable wave distortion (`lib/src/scene/water.dart`).
+  * **Water Shader**: New ES3 `Water.es3.frag` / `Water.es3.vert` with generated Dart bindings (`Water.es3.frag.g.dart`, `Water.es3.vert.g.dart`).
+  * **ProgramWater**: Dedicated GPU program for water rendering (`lib/src/program/program_water.dart`).
+  * **RenderContext**: New `M3RenderContext` abstraction that bundles per-frame GPU state (viewport, matrices, lights, shadow map, reflection/water targets) for cleaner render-pass authoring (`lib/src/renderer/render_context.dart`).
+
+* Update:
+  * **Renderer Reorganisation**: Moved `render_pipeline.dart` → `lib/src/renderer/render_queue.dart` (`M3RenderQueue`); engine, scene, shadow map and reflection code updated accordingly.
+  * **Rendering**: Updated `M3RenderEngine`, `M3ShadowMap`, `M3PlanarReflection`, `M3ReflectionProbe`, `M3Skybox`, and pixel shader to integrate `RenderContext` and water pass.
+  * **Scene**: Updated `M3Camera`, `M3Entity`, `M3Node`, `M3Projection`, `M3SampleScene`, and `M3Scene` for the new render pipeline interface.
+  * **Geometry & Material**: Refinements to `M3PlaneGeom`, `M3Material`, and `M3Texture`.
+  * **Examples**: All demos updated to use the new API; `main.dart` and `main_all.dart` refreshed.
+  * **README**: Updated English and Traditional-Chinese READMEs to document the water feature.
+
 ## 0.9.0
 
 * Update:
