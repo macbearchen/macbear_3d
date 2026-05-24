@@ -1,4 +1,4 @@
-## 1.0.0
+## 0.9.0
 
 * Add:
   * **Water Effect**: Introduced `M3Water` with animated dual-layer normal-map flow, planar reflection & refraction, fog-depth underwater tinting, and configurable wave distortion (`lib/src/scene/water.dart`).
@@ -7,23 +7,16 @@
   * **RenderContext**: New `M3RenderContext` abstraction that bundles per-frame GPU state (viewport, matrices, lights, shadow map, reflection/water targets) for cleaner render-pass authoring (`lib/src/renderer/render_context.dart`).
 
 * Update:
-  * **Renderer Reorganisation**: Moved `render_pipeline.dart` → `lib/src/renderer/render_queue.dart` (`M3RenderQueue`); engine, scene, shadow map and reflection code updated accordingly.
-  * **Rendering**: Updated `M3RenderEngine`, `M3ShadowMap`, `M3PlanarReflection`, `M3ReflectionProbe`, `M3Skybox`, and pixel shader to integrate `RenderContext` and water pass.
-  * **Scene**: Updated `M3Camera`, `M3Entity`, `M3Node`, `M3Projection`, `M3SampleScene`, and `M3Scene` for the new render pipeline interface.
-  * **Geometry & Material**: Refinements to `M3PlaneGeom`, `M3Material`, and `M3Texture`.
-  * **Examples**: All demos updated to use the new API; `main.dart` and `main_all.dart` refreshed.
-  * **README**: Updated English and Traditional-Chinese READMEs to document the water feature.
-
-## 0.9.0
-
-* Update:
   * **Physics**: Switched to **Rapier** physics engine, replacing Oimo. Introduced new `Collider` and `RigidBody` abstractions for better physics management.
+  * **Renderer Reorganisation**: Moved `render_pipeline.dart` → `lib/src/renderer/render_queue.dart` (`M3RenderQueue`); engine, scene, shadow map and reflection code updated accordingly.
   * **Rendering**:
     * Added **Planar Reflections** support with `M3PlanarReflection` and dedicated `Mirror` shaders.
+    * Updated `M3RenderEngine`, `M3ShadowMap`, `M3PlanarReflection`, `M3ReflectionProbe`, `M3Skybox`, and pixel shader to integrate `RenderContext` and water pass.
     * Enhanced `M3Texture` with better support for external textures and text-based textures.
     * Improved camera and projection systems to support reflection matrices.
-  * **Geometries**: Significant updates to `M3PlaneGeom` and primitives to support new rendering features.
-  * **Examples**: Updated all demos to use the new physics and reflection systems.
+  * **Scene**: Updated `M3Camera`, `M3Entity`, `M3Node`, `M3Projection`, `M3SampleScene`, and `M3Scene` for the new render pipeline interface.
+  * **Geometries**: Significant updates to `M3PlaneGeom`, `M3Material`, and primitives to support new rendering features.
+  * **Examples**: All demos updated to use the new API; `main.dart` and `main_all.dart` refreshed.
 
 ## 0.8.1
 

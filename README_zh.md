@@ -50,7 +50,7 @@
 
 ```yaml
 dependencies:
-  macbear_3d: ^1.0.0
+  macbear_3d: ^0.9.0
 ```
 
 ## 快速上手
