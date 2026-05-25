@@ -8,6 +8,8 @@
 
 **Macbear 3D** 是一個專為 Flutter 打造的輕量級、高性能 3D 渲染引擎，由 **Google ANGLE (OpenGL ES 3.0)** 驅動。它提供簡單且強大的 API，讓開發者能夠輕鬆創建驚艷的 3D 體驗、遊戲與視覺化應用。
 
+「因為沒有合用的 Flutter 3D 引擎，所以自己做了一個」
+
 <p align="center">
   <img width="400" src="img/scene08.png" />
   <img width="400" src="img/scene05_gltf.gif" />

@@ -8,6 +8,8 @@
 
 **Macbear 3D** is a lightweight, high-performance 3D rendering engine for Flutter, powered by **Google ANGLE (OpenGL ES 3.0)**. It provides a simple yet powerful API to create stunning 3D experiences, games, and visualizations.
 
+"There was no 3D engine for Flutter that I actually wanted to use. So I built one."
+
 <p align="center">
   <img width="400" src="img/scene08.png" />
   <img width="480" src="img/scene_all.gif" />
