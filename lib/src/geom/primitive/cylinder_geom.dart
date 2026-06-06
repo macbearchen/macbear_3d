@@ -14,7 +14,8 @@ class M3CylinderGeom extends M3Geom {
     double creaseAngle = 40.0,
     M3Axis axis = M3Axis.z,
   }) {
-    radiusSegments = max(radiusSegments, 3);
+    radiusSegments = min(max(radiusSegments, 3), 64);
+    heightSegments = min(max(heightSegments, 1), 64);
     final bool smooth = (360.0 / radiusSegments) <= creaseAngle;
 
     name = "Cylinder";

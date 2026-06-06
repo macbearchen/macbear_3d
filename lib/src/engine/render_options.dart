@@ -12,9 +12,10 @@ class M3RenderOptions {
 class M3DebugOptions {
   bool wireframe = false;
   bool showHelpers = false;
+  bool showCamera = false; // camera frustum
+  bool showMaps = false; // texture maps
   bool showStats = true;
   bool showPhysicsStats = false;
-  bool useObliqueClipPlane = true; // 使用斜截投影矩陣
 }
 
 // GLSL options
@@ -24,8 +25,17 @@ class M3ShaderOptions {
   bool _pbr = false; // physics based rendering
   bool _ibl = false; // image based lighting
   int _pcf = 1; // shadow PCF: 0:none, 1:default(4-tap), 2:3x3, 3:5x5
+  bool _fog = false;
 
   bool isDirty = false;
+
+  // --- fog ---
+  bool get fog => _fog;
+  set fog(bool v) {
+    if (_fog == v) return;
+    _fog = v;
+    isDirty = true;
+  }
 
   // --- perPixel ---
   bool get perPixel => _perPixel;

@@ -4,7 +4,7 @@ import 'package:video_player/video_player.dart';
 import '../main_all.dart';
 
 // ignore: camel_case_types
-class VideoTextureScene_12 extends M3Scene {
+class VideoTextureScene_12 extends DemoScene {
   M3ExternalTexture? videoTexture;
   M3ExternalTexture? videoTexture2;
 
@@ -20,7 +20,6 @@ class VideoTextureScene_12 extends M3Scene {
     if (isLoaded) return;
     await super.load();
 
-    camera.setEuler(pi / 6, -pi / 7, 0, distance: 10);
     light.setEuler(pi / 4, -pi / 4, 0);
 
     final video480 = 'assets/example/big-buck-bunny-480p-30sec.mp4';

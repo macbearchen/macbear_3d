@@ -40,7 +40,7 @@ class SampleScene extends M3Scene {
     // ground plane model
     final posGround = Vector3.zero();
     final meshPlane = addMesh(M3Mesh(_geomPlane), posGround);
-    meshPlane.mesh!.subMeshes[0].mtr
+    meshPlane.mesh.subMeshes[0].mtr
       ..diffuseTexture = texGround
       ..setMatte();
 
@@ -90,7 +90,7 @@ class SampleScene extends M3Scene {
               break;
           }
           M3Entity entity = addMesh(mesh, pos)..color = meshColor;
-          entity.rigidBody = rb;
+          physicsSystem.attachEntity(entity, rb);
         }
       }
     }
@@ -165,7 +165,7 @@ class MassiveScene extends M3Scene {
       lightColor: Vector4(.7, 1, .5, 1),
       darkColor: Vector4(.5, 0.8, .3, 1),
     );
-    plane.mesh!.subMeshes[0].mtr.diffuseTexture = texGround;
+    plane.mesh.subMeshes[0].mtr.diffuseTexture = texGround;
 
     // 02: sample cubemap
     skybox = M3Skybox(M3Texture.createSampleCubemap());

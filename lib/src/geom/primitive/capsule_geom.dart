@@ -12,9 +12,9 @@ class M3CapsuleGeom extends M3Geom {
     int capSegments = 8,
     M3Axis axis = M3Axis.z,
   }) {
-    radiusSegments = max(radiusSegments, 3);
-    heightSegments = max(heightSegments, 1);
-    capSegments = max(capSegments, 2);
+    radiusSegments = min(max(radiusSegments, 3), 64);
+    heightSegments = min(max(heightSegments, 1), 64);
+    capSegments = min(max(capSegments, 2), 32);
 
     name = "Capsule";
 

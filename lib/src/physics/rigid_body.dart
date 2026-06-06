@@ -27,6 +27,7 @@ class M3RigidBodyDesc {
 
 /// Abstract physics body for an entity.
 abstract class M3RigidBody {
+  int get handle;
   Vector3 get position;
   void setPosition(Vector3 position);
 

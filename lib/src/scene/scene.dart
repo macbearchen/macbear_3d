@@ -7,6 +7,7 @@ export 'camera.dart';
 export 'entity.dart';
 export 'light.dart';
 export 'skybox.dart';
+export 'fog.dart';
 
 part 'sample_scene.dart';
 
@@ -33,6 +34,7 @@ abstract class M3Scene {
 
   M3Skybox? skybox;
   M3Water? water;
+  final M3Fog fog = M3Fog();
 
   M3Scene({M3PhysicsSystem? physics}) : physicsSystem = physics ?? M3PhysicsSystem(M3NoPhysicsEngine()) {
     cameras.add(_camera);
@@ -65,8 +67,7 @@ abstract class M3Scene {
   }
 
   M3Entity addMesh(M3Mesh mesh, Vector3 position) {
-    final entity = M3Entity();
-    entity.mesh = mesh;
+    final entity = M3Entity(mesh: mesh);
     entity.position = position;
 
     entities.add(entity);
@@ -100,13 +101,10 @@ abstract class M3Scene {
       entity.update(delta);
     }
 
-    physicsSystem.update(delta, onBeforeStep: savePhysicsStates);
-    final alpha = physicsSystem.interpolationAlpha;
+    // update water
+    water?.update(delta);
 
-    for (final entity in entities) {
-      // sync physics
-      entity.syncFromPhysics(alpha);
-    }
+    physicsSystem.update(delta, onBeforeStep: savePhysicsStates);
 
     for (final entity in entities) {
       // update bounds
@@ -114,11 +112,12 @@ abstract class M3Scene {
     }
   }
 
-  void renderDebug() {}
+  void drawDebug() {}
 
   // render helper: zero, camera, light, wireframe
-  void renderHelper() {
+  void drawHelper() {
     M3Program progSimple = M3Resources.programSimple!;
+    M3Material mtr = M3Material();
 
     // pre-draw
     gl.useProgram(progSimple.program);
@@ -126,16 +125,11 @@ abstract class M3Scene {
 
     for (final entity in entities) {
       // culling
-      if (entity.mesh == null || !camera.isVisible(entity.worldBounding)) continue;
-
-      final mesh = entity.mesh!;
+      if (!camera.isVisible(entity.worldBounding)) continue;
 
       // origin axis
       progSimple.setMatrices(camera, entity.worldMatrix);
-      // draw axis at object origin
-      // Use the first submesh's material or a default for axis color?
-      // Actually axis is fixed color, but setMaterial is needed for uniform locations
-      progSimple.setMaterial(mesh.subMeshes.isNotEmpty ? mesh.subMeshes[0].mtr : M3Material(), Colors.red);
+      progSimple.setMaterial(mtr, Colors.red);
       M3Resources.debugAxis.draw(progSimple);
 
       // bounding sphere
@@ -144,7 +138,7 @@ abstract class M3Scene {
         Matrix4 matSphere = Matrix4.identity();
         matSphere.translateByVector3(worldSphere.center);
         matSphere.scaleByVector3(Vector3.all(worldSphere.radius * 1.03));
-        progSimple.setMaterial(mesh.subMeshes.isNotEmpty ? mesh.subMeshes[0].mtr : M3Material(), Colors.magenta);
+        progSimple.setMaterial(mtr, Colors.magenta);
         progSimple.setMatrices(camera, matSphere);
         M3Resources.debugSphere.draw(progSimple);
       }
@@ -154,10 +148,16 @@ abstract class M3Scene {
       Vector3 extents = (entity.worldBounding.aabb.max - entity.worldBounding.aabb.min) / 2;
       extents += Vector3.all(0.03);
       matAabb.scaleByVector3(extents);
-      progSimple.setMaterial(mesh.subMeshes.isNotEmpty ? mesh.subMeshes[0].mtr : M3Material(), Colors.lime);
+      progSimple.setMaterial(mtr, Colors.lime);
       progSimple.setMatrices(camera, matAabb);
-      M3Resources.debugFrustum.draw(progSimple, bSolid: false);
+      M3Resources.debugFrustum.draw(progSimple, fillMode: M3FillMode.wireframe);
     }
+  }
+
+  void drawCameraHelper() {
+    M3Program progSimple = M3Resources.programSimple!;
+    gl.useProgram(progSimple.program);
+    gl.uniform1i(progSimple.uniformBoneCount, 0);
 
     M3Material mtrHelper = M3Material();
     for (final cam in cameras) {

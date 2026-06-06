@@ -59,6 +59,15 @@ class M3Constants {
     ..specular = Vector3(0.5, 0.5, 0.5)
     ..shininess = 64
     ..reflection = 0.9;
+
+  static final Vector3 colorLake = Vector3(0.30, 0.45, 0.40);
+  static final Vector3 colorMountainLake = Vector3(0.35, 0.55, 0.60);
+  static final Vector3 colorBeach = Vector3(0.31, 0.75, 0.78);
+  static final Vector3 colorOcean = Vector3(0.23, 0.44, 0.48);
+  static final Vector3 colorNight = Vector3(0.12, 0.15, 0.20);
+  static final Vector3 colorDusk = Vector3(0.85, 0.70, 0.55);
+  static final Vector3 colorGray = Vector3(0.70, 0.72, 0.75);
+  static final Vector3 colorSkyBlue = Vector3(0.78, 0.85, 0.91);
 }
 
 // package: local font asset

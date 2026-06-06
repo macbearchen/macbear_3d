@@ -22,7 +22,7 @@ class M3ObjGeom extends M3Geom {
     _createVBO();
 
     // Create indices
-    final indicesArray = Uint16List.fromList(indices);
+    final indicesArray = (_vertexCount > 65535) ? Uint32List.fromList(indices) : Uint16List.fromList(indices);
     _faceIndices.add(_M3Indices(WebGL.TRIANGLES, indicesArray));
 
     // Create wireframe indices

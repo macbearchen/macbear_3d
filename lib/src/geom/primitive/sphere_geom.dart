@@ -5,8 +5,8 @@ part of '../geom.dart';
 /// Vertices are ordered from top to bottom, counter-clockwise by each row.
 class M3SphereGeom extends M3Geom {
   M3SphereGeom(double radius, {int widthSegments = M3Geom.radialSegments, int heightSegments = 8}) {
-    widthSegments = max(widthSegments, 3);
-    heightSegments = max(heightSegments, 2);
+    widthSegments = min(max(widthSegments, 3), 64);
+    heightSegments = min(max(heightSegments, 2), 32);
     int numVert = (widthSegments + 1) * (heightSegments + 1);
 
     // initialize

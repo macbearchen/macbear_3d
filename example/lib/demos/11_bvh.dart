@@ -2,15 +2,13 @@
 import '../main_all.dart';
 
 // ignore: camel_case_types
-class BvhScene_11 extends M3Scene {
+class BvhScene_11 extends DemoScene {
   BvhSkeleton? skeleton;
 
   @override
   Future<void> load() async {
     if (isLoaded) return;
     await super.load();
-
-    camera.setEuler(pi / 6, -pi / 6, 0, distance: 20);
 
     // BVH resource: Biovision hierarchical data
     // https://theorangeduck.com/media/uploads/BVHView/bvhview.html

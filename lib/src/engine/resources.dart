@@ -174,7 +174,7 @@ class M3Resources {
   static M3Program? programSkybox;
   static M3Program? programRectangle;
   static M3Program? programMirror; // plane reflection (mirror / water)
-  static M3Program? programWater; // water shader program
+  static M3ProgramWater? programWater; // water shader program
   static M3ProgramEye? programSkyboxReflect;
   static M3Program? programExternalOES; // external texture: video streaming
   // with lighting
@@ -222,13 +222,23 @@ class M3Resources {
     programSimple = M3Program(Skinning_vert + Simple_vert, Simple_frag);
     programSkybox = M3Program(Skybox_vert, Skybox_frag);
     programRectangle = M3Program(Rect_vert, Rect_frag);
-    programSkyboxReflect = M3ProgramEye(_SkinNormal_vert + SkyboxReflect_vert, Skybox_frag);
+    programSkyboxReflect = M3ProgramEye(
+      _SkinNormal_vert + SkyboxReflect_vert,
+      Skybox_frag,
+      reflectionType: M3ReflectionType.cubemap,
+    );
     programSimpleLighting = M3ProgramLighting(_SkinNormal_vert + SimpleLighting_vert, Simple_frag);
 
     // plane reflection (mirror / water)
     // programMirror = M3Program(Mirror_vert, Mirror_frag);
-    programMirror = M3Program(Skinning_vert + Simple_vert, Mirror_frag);
-    programWater = M3Program(Water_vert, Water_frag);
+    programMirror = M3Program(Skinning_vert + Simple_vert, Mirror_frag, reflectionType: M3ReflectionType.planar);
+
+    bool bSpecularLight = true;
+    String strWaterFrag = Water_frag;
+    if (bSpecularLight) {
+      strWaterFrag = "#define ENABLE_WATER_SPECULAR \n$strWaterFrag";
+    }
+    programWater = M3ProgramWater(Water_vert, strWaterFrag, reflectionType: M3ReflectionType.planar);
 
     // external texture: video streaming
     String fsUnlit = Unlit_frag;
@@ -282,6 +292,12 @@ class M3Resources {
         }
       }
     }
+
+    if (options.fog) {
+      strVert = "#define ENABLE_FOG \n$strVert";
+      strFrag = "#define ENABLE_FOG \n$strFrag";
+    }
+
     programTexture = M3ProgramLighting(strVert, strFrag);
 
     // PCF function only for shadow programs (append at end)

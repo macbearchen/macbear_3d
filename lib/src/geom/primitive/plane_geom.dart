@@ -114,7 +114,7 @@ class M3PlaneGeom extends M3Geom {
         }
       }
 
-      final indices = Uint16List(numVert);
+      final indices = (_vertexCount > 65535) ? Uint32List(numVert) : Uint16List(numVert);
       for (int k = 0; k < numVert; k++) {
         indices[k] = k;
       }
@@ -176,7 +176,7 @@ class M3PlaneGeom extends M3Geom {
       int numIndex = (widthSegments + 1) * 2 * (heightSegments) + 2 * (heightSegments - 1);
       if (flipFace) numIndex++;
 
-      final indices = Uint16List(numIndex);
+      final indices = (_vertexCount > 65535) ? Uint32List(numIndex) : Uint16List(numIndex);
       index = 0;
       if (flipFace) {
         indices[index++] = 0;
@@ -199,7 +199,8 @@ class M3PlaneGeom extends M3Geom {
       // wireframe edges (original logic)
       int numWireIndex = ((widthSegments + 1) * heightSegments + widthSegments * (heightSegments + 1)) * 2;
       numWireIndex += widthSegments * 2; // extra slash lines
-      final lines = Uint16List(numWireIndex);
+
+      final lines = (_vertexCount > 65535) ? Uint32List(numWireIndex) : Uint16List(numWireIndex);
       index = 0;
       for (i = 0; i <= heightSegments; i++) {
         for (j = 0; j < widthSegments; j++) {

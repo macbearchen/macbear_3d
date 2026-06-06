@@ -1,7 +1,8 @@
 part of 'program.dart';
 
+///
 mixin M3LightingShader {
-  RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
+  RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
 
   late UniformLocation uniformAmbient; // "ColorAmbient" = inColor * LightAmbient * MaterialDiffuse
   late UniformLocation uniformDiffuse; // "ColorDiffuse" = inColor * LightDiffuse * MaterialDiffuse
@@ -19,33 +20,94 @@ mixin M3LightingShader {
     uniformLightPosition = gl.getUniformLocation(prog, "LightPosition");
   }
 
-  void applyLight(M3Light sceneLight) {
+  void attachLight(M3Light sceneLight) {
     _light = sceneLight;
+  }
+
+  void setLightPosition(Matrix4 mMatrix) {
+    if (_light == null) return;
+
+    if (M3Program.isLocationValid(uniformLightPosition)) {
+      Vector4 lightDirection = Matrix4.inverted(mMatrix) * _light!.getDirection();
+      lightDirection.normalize();
+      gl.uniform3fv(uniformLightPosition, lightDirection.xyz.storage);
+    }
   }
 }
 
-class M3ProgramLighting extends M3ProgramEye with M3LightingShader {
-  // shader fog
+mixin M3FogShader {
+  RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
 
-  M3ProgramLighting(super.strVert, super.strFrag);
+  UniformLocation? uniformFogPlane;
+  UniformLocation? uniformFogDepth;
+  UniformLocation? uniformFogColor;
+
+  M3Fog? _fog;
+
+  void initFogLocation(Program prog) {
+    uniformFogPlane = gl.getUniformLocation(prog, "FogPlane");
+    uniformFogDepth = gl.getUniformLocation(prog, "FogDepth");
+    uniformFogColor = gl.getUniformLocation(prog, "FogColor");
+  }
+
+  void applyFog(M3Fog fog) {
+    _fog = fog;
+
+    if (M3Program.isLocationValid(uniformFogColor)) {
+      gl.uniform3fv(uniformFogColor!, fog.color.storage);
+    }
+    if (M3Program.isLocationValid(uniformFogDepth)) {
+      gl.uniform1f(uniformFogDepth!, fog.depth);
+    }
+  }
+
+  void setFogPlane(M3Camera camera, Matrix4 worldMatrix) {
+    final fog = _fog;
+    if (fog == null) return;
+
+    if (!M3Program.isLocationValid(uniformFogPlane)) return;
+
+    Vector4 worldPlane;
+    final p = fog.customPlane;
+    if (p != null) {
+      // custom water plane, use opposite plane normal for refraction fog pass inside water
+      worldPlane = -Vector4(p.normal.x, p.normal.y, p.normal.z, p.constant);
+    } else {
+      // Default to camera-facing plane (standard depth fog).
+      final forward = camera.getForward();
+      final eye = camera.position;
+
+      // The plane equation is: dot(N, X) + D = 0.
+      final N = forward;
+      final D = -N.dot(eye) - (camera.farClip - fog.depth);
+      worldPlane = Vector4(N.x, N.y, N.z, D);
+    }
+
+    // Transform world space plane to object space:
+    final worldMatrixTransposed = Matrix4.copy(worldMatrix)..transpose();
+    final objectPlane = worldMatrixTransposed * worldPlane;
+
+    gl.uniform4fv(uniformFogPlane!, objectPlane.storage);
+  }
+}
+
+class M3ProgramLighting extends M3ProgramEye with M3LightingShader, M3FogShader {
+  M3ProgramLighting(super.strVert, super.strFrag, {super.reflectionType});
 
   @override
   void initLocation() {
     super.initLocation();
 
     initLightingLocation(program);
+    initFogLocation(program);
   }
 
   @override
   void setMatrices(M3Camera cam, Matrix4 mMatrix) {
     super.setMatrices(cam, mMatrix);
 
-    final light = _light!;
-    if (M3Program.isLocationValid(uniformLightPosition)) {
-      Vector4 lightDirection = Matrix4.inverted(mMatrix) * light.getDirection();
-      lightDirection.normalize();
-      gl.uniform3fv(uniformLightPosition, lightDirection.xyz.storage);
-    }
+    setLightPosition(mMatrix);
+    setFogPlane(cam, mMatrix);
   }
 
   @override

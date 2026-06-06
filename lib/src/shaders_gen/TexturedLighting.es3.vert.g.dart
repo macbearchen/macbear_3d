@@ -103,7 +103,7 @@ void main(void)
 
 #ifdef ENABLE_FOG
     mediump float DepthInFog = dot(FogPlane.xyz, objVert.xyz) + FogPlane.w;
-    FogDensity = DepthInFog / FogDepth;
+    FogDensity = clamp(DepthInFog / FogDepth, 0.0, 1.0);
 #endif
     
     TextureCoordOut = inTexCoord;

@@ -5,9 +5,6 @@ import '../m3_internal.dart';
 ///
 /// Renders the scene from the light's perspective to generate a depth texture.
 class M3ShadowMap {
-  RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
-  static final _prog = M3Resources.programSimple!;
-
   final M3RenderContext _context = M3RenderContext();
 
   final M3Framebuffer _framebuffer;
@@ -36,6 +33,9 @@ class M3ShadowMap {
   /// Render depth map from light's perspective
   void renderDepth(M3Scene scene, M3Light light) {
     final renderEngine = M3AppEngine.instance.renderEngine;
+    final gl = renderEngine.gl;
+    final prog = M3Resources.programSimple!;
+
     final stats = renderEngine.stats;
     final bool wasStatsEnabled = stats.enabled;
     stats.enabled = false;
@@ -73,7 +73,7 @@ class M3ShadowMap {
         light.updateFrustum();
         // shadowmap render scene only opaque
         _context.prepareRenderQueue(scene, light, bOnlyOpaque: true);
-        _context.render(_prog);
+        _context.render(prog);
       }
       light.projectionMatrix = backupMatrix;
       light.updateFrustum();
@@ -81,7 +81,7 @@ class M3ShadowMap {
       light.updateFrustum();
       // shadowmap render scene only opaque
       _context.prepareRenderQueue(scene, light, bOnlyOpaque: true);
-      _context.render(_prog);
+      _context.render(prog);
     }
 
     // recover to default GL state

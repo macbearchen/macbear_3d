@@ -3,6 +3,9 @@ import '../m3_internal.dart';
 /// No-op rigid body used when physics is disabled or not available
 class M3NoRigidBody implements M3RigidBody {
   @override
+  int get handle => 0;
+
+  @override
   Vector3 get position => Vector3.zero();
 
   @override

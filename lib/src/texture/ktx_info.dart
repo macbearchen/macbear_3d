@@ -1,7 +1,7 @@
 // ignore_for_file: constant_identifier_names, non_constant_identifier_names, unused_local_variable
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
+// Macbear3D engine
+import '../m3_internal.dart';
 
 abstract class M3GL {
   /* Compressed Texture Format */
@@ -58,16 +58,18 @@ class KtxInfo {
   });
 
   static Future<KtxInfo> parseKtx(String assetPath) async {
-    ByteData data = await rootBundle.load(assetPath);
+    final buffer = await M3ResourceManager.loadBuffer(assetPath);
+    final ByteData data = buffer.asByteData();
+    final u8List = buffer.asUint8List();
     final idAstc = Uint8List.fromList([0x13, 0xAB, 0xA1, 0x5C]);
     final idKtx = Uint8List.fromList([0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A]);
     final idKtx2 = Uint8List.fromList([0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A]);
 
-    if (listEquals(data.buffer.asUint8List(0, 4), idAstc)) {
+    if (listEquals(u8List.sublist(0, 4), idAstc)) {
       return _parseAstc(data); // parse ASTC
-    } else if (listEquals(data.buffer.asUint8List(0, 12), idKtx)) {
+    } else if (listEquals(u8List.sublist(0, 12), idKtx)) {
       return _parseKtx1(data); // parse KTX
-    } else if (listEquals(data.buffer.asUint8List(0, 12), idKtx2)) {
+    } else if (listEquals(u8List.sublist(0, 12), idKtx2)) {
       return _parseKtx2(data); // parse KTX2
     } else {
       throw Exception('Unsupported file extension: $assetPath');

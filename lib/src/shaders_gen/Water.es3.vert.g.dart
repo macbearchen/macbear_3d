@@ -5,8 +5,10 @@ const String Water_vert = r"""
 // Water vert-shader ES3 //////////
 
 layout(location = 0) in highp vec3 inVertex;		// vertex-data
-layout(location = 1) in lowp vec4 inColor;		// for water-color as fog in water
+// layout(location = 1) in lowp vec4 inColor;		// for water-color as fog in water
 layout(location = 3) in mediump vec2 inTexCoord;
+
+uniform lowp vec4 uColor;
 
 // eye-space for camera-viewer
 uniform highp mat4 ModelviewProjection;
@@ -31,8 +33,11 @@ out lowp vec4 DestinationColor;
 
 void main(void)
 {
-	DestinationColor = inColor;
-    gl_Position = ModelviewProjection * vec4(inVertex, 1.0);	// pre-compute Projection * Modelview
+	DestinationColor = uColor;
+	
+	highp vec4 objVert = vec4(inVertex, 1.0);
+
+    gl_Position = ModelviewProjection * objVert;	// pre-compute Projection * Modelview
 	
 	// Scale and translate texture coordinates used to sample the normal map - section 2.2 of white paper
 	BumpCoord0 = (inTexCoord * BumpTranslateScale0.zw) + BumpTranslateScale0.xy;

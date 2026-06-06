@@ -3,7 +3,7 @@ import 'package:flutter/material.dart' as fm;
 import '../main_all.dart';
 
 // ignore: camel_case_types
-class ObjTeapotScene_04 extends M3Scene {
+class ObjTeapotScene_04 extends DemoScene {
   M3Entity? _teapot;
   M3Material? mtrTeapot;
 
@@ -22,19 +22,8 @@ class ObjTeapotScene_04 extends M3Scene {
     if (isLoaded) return;
     await super.load();
 
-    camera.setEuler(pi / 6, -pi / 6, 0, distance: 8);
-
     // 04-1: sample cubemap
-    final strPrefix = 'example/nvlobby_';
-    final strExt = 'jpg';
-    skybox = await M3Skybox.createCubemap(
-      '${strPrefix}xpos.$strExt',
-      '${strPrefix}xneg.$strExt',
-      '${strPrefix}ypos.$strExt',
-      '${strPrefix}yneg.$strExt',
-      '${strPrefix}zpos.$strExt',
-      '${strPrefix}zneg.$strExt',
-    );
+    skybox = await createCubemapLobby(); // nvlobby cubemap
 
     // 04-2: obj model - using M3Mesh.load()
     final meshTeapot = await M3Mesh.load('example/teapot.obj');
@@ -78,7 +67,7 @@ class ObjTeapotScene_04 extends M3Scene {
         // ..texDiffuse = texGround
         ..planarReflection = renderEngine.planarReflection;
     }
-    renderEngine.planarReflection.setScale(1.0);
+    renderEngine.planarReflection.setRenderScale(1.0);
 
     _plane = addMesh(meshPlane, Vector3(0, 0, 0));
     _plane.rotation.setEuler(pi / 12, 0, 0);
@@ -117,7 +106,7 @@ class ObjTeapotScene_04 extends M3Scene {
 
   void setPlanarReflection(bool enable) {
     isEnablePlanar = enable;
-    for (final sub in _plane.mesh!.subMeshes) {
+    for (final sub in _plane.mesh.subMeshes) {
       sub.mtr.planarReflection = enable ? renderEngine.planarReflection : null;
     }
   }
@@ -156,7 +145,7 @@ class ObjTeapotScene_04 extends M3Scene {
   }
 
   @override
-  void renderDebug() {
+  void drawDebug() {
     if (!isDrawDebug) return;
 
     // test for skybox

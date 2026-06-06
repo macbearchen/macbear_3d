@@ -10,6 +10,9 @@ part 'program_lighting.dart';
 part 'program_shadowmap.dart';
 part 'program_water.dart';
 
+/// reflection type for render
+enum M3ReflectionType { none, planar, cubemap }
+
 /// A WebGL shader program wrapper for GLSL vertex and fragment shaders.
 ///
 /// Manages uniform locations, vertex attributes, and matrix transformations.
@@ -18,6 +21,9 @@ part 'program_water.dart';
 ///   dart run build_runner build --delete-conflicting-outputs
 class M3Program {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
+
+  // reflection type
+  final M3ReflectionType reflectionType;
 
   static bool isLocationValid(UniformLocation? loc) {
     final id = loc?.id;
@@ -58,7 +64,7 @@ class M3Program {
   late UniformLocation attribBoneWeight; // bone-weight
 
   /// Compiles and links a shader program from vertex and fragment sources.
-  M3Program(String strVert, String strFrag) {
+  M3Program(String strVert, String strFrag, {this.reflectionType = M3ReflectionType.none}) {
     // Ensure #version directive is at the very beginning if present
     strVert = _ensureVersionAtStart(strVert);
     strFrag = _ensureVersionAtStart(strFrag);

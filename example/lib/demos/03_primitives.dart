@@ -2,7 +2,7 @@
 import '../main_all.dart';
 
 // ignore: camel_case_types
-class PrimitivesScene_03 extends M3Scene {
+class PrimitivesScene_03 extends DemoScene {
   M3Entity? _pyramid;
 
   @override
@@ -10,26 +10,15 @@ class PrimitivesScene_03 extends M3Scene {
     if (isLoaded) return;
     await super.load();
 
-    camera.setEuler(pi / 6, -pi / 6, 0, distance: 8);
-
     // 01: add box geometry
     final box = addMesh(M3Mesh(M3BoxGeom(1.0, 1.0, 1.0)), Vector3.zero());
     M3Texture texGrid = M3Texture.createCheckerboard(size: 5);
-    box.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid;
+    box.mesh.subMeshes[0].mtr.diffuseTexture = texGrid;
 
     M3Texture texGrid2 = M3Texture.createCheckerboard(size: 6);
 
     // 02: sample cubemap
-    final strPrefix = 'example/nvlobby_';
-    final strExt = 'jpg';
-    skybox = await M3Skybox.createCubemap(
-      '${strPrefix}xpos.$strExt',
-      '${strPrefix}xneg.$strExt',
-      '${strPrefix}ypos.$strExt',
-      '${strPrefix}yneg.$strExt',
-      '${strPrefix}zpos.$strExt',
-      '${strPrefix}zneg.$strExt',
-    );
+    skybox = await createCubemapLobby(); // nvlobby cubemap
 
     // 03-1: plane geometry
     final plane = addMesh(M3Mesh(M3PlaneGeom(20, 20, uvScale: Vector2.all(5.0))), Vector3(0, 0, -1));
@@ -38,54 +27,54 @@ class PrimitivesScene_03 extends M3Scene {
       lightColor: Vector4(.7, 1, .5, 1),
       darkColor: Vector4(.5, 0.8, .3, 1),
     );
-    plane.mesh!.subMeshes[0].mtr.diffuseTexture = texGround;
+    plane.mesh.subMeshes[0].mtr.diffuseTexture = texGround;
 
     // 03-2: sphere geometry
     final sphere = addMesh(M3Mesh(M3SphereGeom(0.5)), Vector3(2, 0, 0));
-    sphere.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid2;
+    sphere.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
 
     // 03-3: cylinder geometry
     final cylinder = addMesh(M3Mesh(M3CylinderGeom(0.2, 0.5, 1, heightSegments: 2)), Vector3(0, 2, 0));
-    cylinder.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid;
+    cylinder.mesh.subMeshes[0].mtr.diffuseTexture = texGrid;
     final cylY = addMesh(M3Mesh(M3CylinderGeom(0.2, 0.5, 1, heightSegments: 2, axis: M3Axis.y)), Vector3(0, 2, 1.5));
-    cylY.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid;
+    cylY.mesh.subMeshes[0].mtr.diffuseTexture = texGrid;
     final cylX = addMesh(M3Mesh(M3CylinderGeom(0.2, 0.5, 1, heightSegments: 2, axis: M3Axis.x)), Vector3(0, 2, 2.5));
-    cylX.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid;
+    cylX.mesh.subMeshes[0].mtr.diffuseTexture = texGrid;
 
     final cyliFlat = addMesh(M3Mesh(M3CylinderGeom(0.2, 0.5, 1, heightSegments: 2, creaseAngle: 1)), Vector3(-1, 2, 0));
-    cyliFlat.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid;
+    cyliFlat.mesh.subMeshes[0].mtr.diffuseTexture = texGrid;
 
     // 03-4: torus geometry
     final torus = addMesh(M3Mesh(M3TorusGeom(0.5, 0.2)), Vector3(-2, 0, 0));
-    torus.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid2;
+    torus.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
     final torusY = addMesh(M3Mesh(M3TorusGeom(0.5, 0.2, axis: M3Axis.y)), Vector3(-2, 0, 2));
-    torusY.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid2;
+    torusY.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
     final torusX = addMesh(M3Mesh(M3TorusGeom(0.5, 0.2, axis: M3Axis.x)), Vector3(-2, 0, 4));
-    torusX.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid2;
+    torusX.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
 
     // 03-5: pyramid geometry
     _pyramid = addMesh(M3Mesh(M3PyramidGeom(1, 1, 1)), Vector3(0, -2, 0));
-    _pyramid!.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid2;
+    _pyramid!.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
     final pyramidY = addMesh(M3Mesh(M3PyramidGeom(0.6, 0.6, 1, axis: M3Axis.y)), Vector3(0, -2, 1));
-    pyramidY.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid2;
+    pyramidY.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
     final pyramidX = addMesh(M3Mesh(M3PyramidGeom(0.6, 0.6, 1, axis: M3Axis.x)), Vector3(0, -2, 2));
-    pyramidX.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid2;
+    pyramidX.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
 
     // 03-6: ellipsoid geometry
     final ellipsoid = addMesh(M3Mesh(M3EllipsoidGeom(0.9, 0.6, 0.3)), Vector3(2, 2, 0));
-    ellipsoid.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid2;
+    ellipsoid.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
 
     // 03-7: capsule geometry
     final capsule = addMesh(M3Mesh(M3CapsuleGeom(0.3, 1)), Vector3(-2, 2, 0));
-    capsule.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid2;
+    capsule.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
     final capsuleY = addMesh(M3Mesh(M3CapsuleGeom(0.3, 1, axis: M3Axis.y)), Vector3(-2, 2, 1.5));
-    capsuleY.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid2;
+    capsuleY.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
     final capsuleX = addMesh(M3Mesh(M3CapsuleGeom(0.3, 1, axis: M3Axis.x)), Vector3(-2, 2, 2.5));
-    capsuleX.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid2;
+    capsuleX.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
 
     // 03-8: octahedral geometry
     final octahedral = addMesh(M3Mesh(M3OctahedralGeom(0.5)), Vector3(0, 0, 1.5));
-    octahedral.mesh!.subMeshes[0].mtr.diffuseTexture = texGrid2;
+    octahedral.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
 
     // 03-9: axis gizmo
     addMesh(M3Resources.axisGizmoMesh, Vector3.zero());

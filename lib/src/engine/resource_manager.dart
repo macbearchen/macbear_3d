@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:ui';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 
@@ -50,9 +51,24 @@ class M3ResourceManager {
 
     // Centrally fetch raw bytes via loadBuffer
     final buffer = await loadBuffer(path);
-    final parser = M3TrueTypeParser(ByteData.view(buffer));
+    final parser = M3TrueTypeParser(buffer.asByteData());
     fonts[path] = parser;
     return parser;
+  }
+
+  /// Check if an asset exists
+  ///
+  /// Checks for both local assets (prefixed with 'assets/' or 'packages/')
+  static Future<bool> isAssetExists(String assetPath) async {
+    try {
+      final fullPath = assetPath.startsWith('assets/') || assetPath.startsWith('packages/')
+          ? assetPath
+          : 'assets/$assetPath';
+      await rootBundle.load(fullPath);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   /// Core helper to fetch raw byte data as a [ByteBuffer] from a URL or local asset.
@@ -77,5 +93,18 @@ class M3ResourceManager {
       final data = await rootBundle.load(fullPath);
       return data.buffer;
     }
+  }
+
+  /// Load image from path
+  static Future<Image> loadImage(String path) async {
+    final buffer = await loadBuffer(path);
+    return createImageFromBytes(buffer.asUint8List());
+  }
+
+  /// Create image from byte buffer
+  static Future<Image> createImageFromBytes(Uint8List bytes) async {
+    final codec = await instantiateImageCodec(bytes);
+    final frame = await codec.getNextFrame();
+    return frame.image;
   }
 }

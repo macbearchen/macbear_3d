@@ -1,7 +1,7 @@
 part of 'program.dart';
 
-// texture sampler for shadowmap
 abstract class M3ProgramShadow extends M3ProgramLighting {
+  // texture sampler for shadowmap
   late UniformLocation uniformSamplerShadowmap;
   late UniformLocation uniformShadowmapSize;
   late UniformLocation uniformNormalBias;
@@ -21,10 +21,8 @@ abstract class M3ProgramShadow extends M3ProgramLighting {
     }
   }
 
-  @override
-  void applyLight(M3Light sceneLight) {
-    super.applyLight(sceneLight);
-
+  /// Apply shadowmap related uniform variables.
+  void applyShadow(M3Light sceneLight) {
     if (M3Program.isLocationValid(uniformShadowmapSize)) {
       final shadowMap = M3AppEngine.instance.renderEngine.shadowMap!;
       gl.uniform2f(uniformShadowmapSize, shadowMap.mapW.toDouble(), shadowMap.mapH.toDouble());

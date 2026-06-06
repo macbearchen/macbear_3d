@@ -195,16 +195,11 @@ class M3TextGeom extends M3Geom {
     // vertex buffer object
     _createVBO();
 
-    // Indices
-    // M3Indices requires Uint16 array
-    // Check if indices fit in uint16. If not, we might need to split or use extension (OES_element_index_uint),
-    // but M3Indices implementation says Uint16List.
-    // So if > 65535, this will break. For simple text it's fine.
-
-    final indicesArray = Uint16List.fromList(triIndices);
+    final indicesArray = (_vertexCount > 65535) ? Uint32List.fromList(triIndices) : Uint16List.fromList(triIndices);
     _faceIndices.add(_M3Indices(WebGL.TRIANGLES, indicesArray));
 
     // wireframe edges
-    _edgeIndices.add(_M3Indices(WebGL.LINES, Uint16List.fromList(lineIndices)));
+    final edgesArray = (_vertexCount > 65535) ? Uint32List.fromList(lineIndices) : Uint16List.fromList(lineIndices);
+    _edgeIndices.add(_M3Indices(WebGL.LINES, edgesArray));
   }
 }

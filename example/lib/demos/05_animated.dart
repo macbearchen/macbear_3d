@@ -2,7 +2,7 @@
 import '../main_all.dart';
 
 // ignore: camel_case_types
-class AnimatedScene_05 extends M3Scene {
+class AnimatedScene_05 extends DemoScene {
   // Gltf models
   M3Entity? _duck;
   M3Entity? _man;
@@ -18,8 +18,8 @@ class AnimatedScene_05 extends M3Scene {
     if (isLoaded) return;
     await super.load();
 
-    camera.setLookat(Vector3(10, 0, 0), Vector3(0, 0, 1), Vector3(0, 0, 1));
-    camera.setEuler(pi / 6, -pi / 6, 0, distance: 12);
+    // set background color
+    M3AppEngine.backgroundColor = Vector3(0.3, 0.1, 0.3);
 
     M3Texture texGround = M3Texture.createCheckerboard(
       size: 10,
@@ -32,28 +32,29 @@ class AnimatedScene_05 extends M3Scene {
     renderEngine.planarReflection.clipPlane.setFromComponents(0, 0, 1, -posZ);
 
     // plane geometry
-    final meshPlane = M3Mesh(M3PlaneGeom(16, 16, uvScale: Vector2.all(4.0)));
+    final meshPlane = M3Mesh(M3PlaneGeom(30, 30, uvScale: Vector2.all(4.0)));
     meshPlane.subMeshes[0].mtr
       ..reflection = 0.5
-      ..roughness = 0.0
+      ..roughness = 0.2
+      ..metallic = 0.5
       ..planarReflection = renderEngine.planarReflection
       ..diffuseTexture = texGround;
 
     final plane = addMesh(meshPlane, Vector3(0, 0, posZ));
-    renderEngine.planarReflection.setScale(0.5);
+    renderEngine.planarReflection.setRenderScale(0.5);
 
     // 05-1: GLTF model - using M3Mesh.load()
     final meshGltf = await M3Mesh.load('example/CesiumMan.glb');
     meshGltf.animator?.play(0);
-    _man = addMesh(meshGltf, Vector3(0, 0, 0));
+    _man = addMesh(meshGltf, Vector3(0, 5, 0));
     _man!.color = Colors.white;
     _man!.rotation = Quaternion.euler(0, pi / 2, 0);
-    _man!.scale = Vector3.all(3);
+    _man!.scale = Vector3.all(2.0);
 
     // 05-2: GLTF model - using M3Mesh.load()
     final meshDuck = await M3Mesh.load('example/Duck.glb');
-    _duck = addMesh(meshDuck, Vector3(0, 5, 0));
-    _duck!.scale = Vector3.all(0.025);
+    _duck = addMesh(meshDuck, Vector3(-4, -4, 0));
+    _duck!.scale = Vector3.all(1.0);
 
     final meshFox = await M3Mesh.load('example/Fox.glb');
     meshFox.animator?.play(0);
@@ -86,9 +87,6 @@ class AnimatedScene_05 extends M3Scene {
     entity3.scale = Vector3.all(0.02);
     entity3.color = Vector4(0.5, 0.5, 1, 1); // Blueish
 
-    // set background color
-    M3AppEngine.backgroundColor = Vector3(0.3, 0.1, 0.3);
-
     // BVH resource: Biovision hierarchical data
     // https://theorangeduck.com/media/uploads/BVHView/bvhview.html
     // http://lo-th.github.io/olympe/BVH_player.html
@@ -120,7 +118,7 @@ class AnimatedScene_05 extends M3Scene {
       if (_foxAnimTimer > 3.0) {
         _foxAnimTimer = 0.0;
         _foxAnimIndex = (_foxAnimIndex + 1) % 3;
-        _fox!.mesh?.animator?.crossFade(_foxAnimIndex, 0.5);
+        _fox!.mesh.animator?.crossFade(_foxAnimIndex, 0.5);
         debugPrint('Fox animation cross-fade to index: $_foxAnimIndex');
       }
     }

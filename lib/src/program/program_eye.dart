@@ -4,7 +4,7 @@ part of 'program.dart';
 class M3ProgramEye extends M3Program {
   late UniformLocation uniformEyePosition; // eye position as camera origin
 
-  M3ProgramEye(super.strVert, super.strFrag);
+  M3ProgramEye(super.strVert, super.strFrag, {super.reflectionType});
 
   @override
   void initLocation() {

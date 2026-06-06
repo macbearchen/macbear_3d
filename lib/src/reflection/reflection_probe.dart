@@ -69,7 +69,7 @@ class M3ReflectionProbe {
     ];
 
     final prog = M3Resources.programTexture!;
-    prog.applyLight(scene.light);
+    prog.attachLight(scene.light);
 
     for (int i = 0; i < 6; i++) {
       // Bind face

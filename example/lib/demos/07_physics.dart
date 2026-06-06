@@ -2,7 +2,7 @@
 import '../main_all.dart';
 
 // ignore: camel_case_types
-class PhysicsScene_07 extends M3Scene {
+class PhysicsScene_07 extends DemoScene {
   final _geomCylinder = M3CylinderGeom(0.5, 0.5, 1.0, axis: M3Axis.y);
 
   // constructor
@@ -44,7 +44,8 @@ class PhysicsScene_07 extends M3Scene {
 
       // visual entity
       final entity = addMesh(cubeMesh, pos)..color = arrayColor[i];
-      entity.rigidBody = physicsSystem.addBox(0.5, 0.5, 0.5, M3RigidBodyDesc.dynamic()..position = pos);
+      final rb = physicsSystem.addBox(0.5, 0.5, 0.5, M3RigidBodyDesc.dynamic()..position = pos);
+      physicsSystem.attachEntity(entity, rb);
     }
 
     // 07-3: physics rigid ball
@@ -53,7 +54,8 @@ class PhysicsScene_07 extends M3Scene {
       final pos = arrayPos[i].clone() + Vector3(0.3, 0.6, 3.0);
 
       final entity = addMesh(ballMesh, pos)..color = arrayColor[i];
-      entity.rigidBody = physicsSystem.addSphere(0.5, M3RigidBodyDesc.dynamic()..position = pos);
+      final rb = physicsSystem.addSphere(0.5, M3RigidBodyDesc.dynamic()..position = pos);
+      physicsSystem.attachEntity(entity, rb);
     }
 
     // 07-4: physics rigid cylinder
@@ -62,7 +64,8 @@ class PhysicsScene_07 extends M3Scene {
       final pos = Vector3(i - 0.2, i + 0.3, i + 6.5);
 
       final entity = addMesh(cylinderMesh, pos)..color = arrayColor[i];
-      entity.rigidBody = physicsSystem.addCylinder(0.5, 0.5, M3RigidBodyDesc.dynamic()..position = pos);
+      final rb = physicsSystem.addCylinder(0.5, 0.5, M3RigidBodyDesc.dynamic()..position = pos);
+      physicsSystem.attachEntity(entity, rb);
     }
 
     // sample cubemap
@@ -75,7 +78,7 @@ class PhysicsScene_07 extends M3Scene {
       lightColor: Vector4(.7, 1, .5, 1),
       darkColor: Vector4(.5, 0.8, .3, 1),
     );
-    plane.mesh!.subMeshes[0].mtr.diffuseTexture = texGround;
+    plane.mesh.subMeshes[0].mtr.diffuseTexture = texGround;
   }
 
   @override

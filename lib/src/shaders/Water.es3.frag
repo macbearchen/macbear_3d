@@ -33,7 +33,7 @@ void BlendReflectionRefraction(out lowp vec4 ResultColor, in lowp vec3 vAccumula
 
 	// Divide by WaterToEyeLength to scale down the distortion
 	// of fragments based on their distance from the camera 
-	vTexCoord.xy -= vAccumulatedNormal.xy * (WaveDistortion / WaterToEyeLength);
+//	vTexCoord.xy -= vAccumulatedNormal.xy * (WaveDistortion / WaterToEyeLength);
 
 	// reflection, refraction
 	lowp vec4 ReflectionColor = texture(SamplerDiffuse, vTexCoord);

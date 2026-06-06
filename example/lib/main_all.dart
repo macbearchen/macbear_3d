@@ -8,6 +8,8 @@ import 'package:macbear_3d/macbear_3d.dart';
 export 'package:macbear_3d/src/m3_internal.dart';
 // physics engine
 export 'rapier_physics_engine.dart';
+import 'demos/demo_scene.dart';
+export 'demos/demo_scene.dart';
 
 import 'demos/00_starter.dart';
 import 'demos/01_cube.dart';
@@ -15,11 +17,10 @@ import 'demos/02_skybox.dart';
 import 'demos/03_primitives.dart';
 import 'demos/04_obj_teapot.dart';
 import 'demos/05_animated.dart';
-import 'demos/06_shadowmap.dart';
+import 'demos/06_terrain.dart';
 import 'demos/07_physics.dart';
 import 'demos/08_text_3d.dart';
 import 'demos/09_pbr_test.dart';
-import 'demos/10_terrain.dart';
 import 'demos/11_bvh.dart';
 import 'demos/12_video_texture.dart';
 import 'rapier_physics_engine.dart';
@@ -44,12 +45,11 @@ Future<void> onDidInit() async {
   final appEngine = M3AppEngine.instance;
   appEngine.renderEngine.createShadowMap(width: 2048, height: 4096);
 
-  // final scene00 = StarterScene_00();
-  // final scene03 = PrimitivesScene_03();
-  // final scene09 = PbrTestScene_09();
-  final testScene = SampleScene(physics: M3PhysicsSystem(M3RapierPhysicsEngine()));
-  // final initScene = CubeScene_01();
-  await appEngine.setScene(testScene);
+  final scene00 = StarterScene_00();
+  final scene10 = TerrainScene_06();
+  // final testScene = SampleScene(physics: M3PhysicsSystem(M3RapierPhysicsEngine()));
+  final initScene = CubeScene_01();
+  await appEngine.setScene(initScene);
 }
 
 class MainApp extends StatelessWidget {
@@ -166,6 +166,8 @@ class _MainPageState extends State<MainPage> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           getHelperWidget(),
+          const SizedBox(height: 10),
+          getFogWidget(),
           const SizedBox(height: 10),
           getShaderWidget(),
           const SizedBox(height: 10),
@@ -319,17 +321,6 @@ class _MainPageState extends State<MainPage> {
       mainAxisSize: MainAxisSize.min,
       children: [
         FloatingActionButton(
-          heroTag: 'oblique_clip_plane',
-          backgroundColor: renderEngine.options.debug.useObliqueClipPlane ? Colors.lightGreen : null,
-          onPressed: () {
-            setState(() {
-              renderEngine.options.debug.useObliqueClipPlane = !renderEngine.options.debug.useObliqueClipPlane;
-            });
-          },
-          child: const Icon(Icons.cut_outlined),
-        ),
-        const SizedBox(width: 6),
-        FloatingActionButton(
           heroTag: 'wireframe',
           backgroundColor: renderEngine.options.debug.wireframe ? Colors.lightGreen : null,
           onPressed: () {
@@ -341,6 +332,17 @@ class _MainPageState extends State<MainPage> {
         ),
         const SizedBox(width: 6),
         FloatingActionButton(
+          heroTag: 'map',
+          backgroundColor: renderEngine.options.debug.showMaps ? Colors.lightGreen : null,
+          onPressed: () {
+            setState(() {
+              renderEngine.options.debug.showMaps = !renderEngine.options.debug.showMaps;
+            });
+          },
+          child: const Icon(Icons.map),
+        ),
+        const SizedBox(width: 6),
+        FloatingActionButton(
           heroTag: 'info',
           backgroundColor: renderEngine.options.debug.showHelpers ? Colors.lightGreen : null,
           onPressed: () {
@@ -349,6 +351,81 @@ class _MainPageState extends State<MainPage> {
             });
           },
           child: const Icon(Icons.info),
+        ),
+        const SizedBox(width: 6),
+        FloatingActionButton(
+          heroTag: 'camera',
+          backgroundColor: renderEngine.options.debug.showCamera ? Colors.lightGreen : null,
+          onPressed: () {
+            setState(() {
+              renderEngine.options.debug.showCamera = !renderEngine.options.debug.showCamera;
+            });
+          },
+          child: const Icon(Icons.videocam_outlined),
+        ),
+      ],
+    );
+  }
+
+  /// Fog Widget
+  Widget getFogWidget() {
+    final renderEngine = M3AppEngine.instance.renderEngine;
+    final shaderOptions = renderEngine.options.shader;
+    final scene = M3AppEngine.instance.activeScene;
+    if (scene == null) return const SizedBox.shrink();
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (shaderOptions.fog) ...[
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(24)),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text("d: ", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                Text(
+                  scene.fog.depth.toStringAsFixed(1),
+                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(
+                  width: 100,
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 2,
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                    ),
+                    child: Slider(
+                      value: scene.fog.depth,
+                      min: 5.0,
+                      max: 100.0,
+                      activeColor: Colors.lightGreen,
+                      inactiveColor: Colors.white24,
+                      onChanged: (val) {
+                        setState(() {
+                          scene.fog.depth = val;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        FloatingActionButton(
+          heroTag: 'fog',
+          backgroundColor: shaderOptions.fog ? Colors.lightGreen : null,
+          onPressed: () {
+            setState(() {
+              shaderOptions.fog = !shaderOptions.fog;
+            });
+          },
+          child: Icon(shaderOptions.fog ? Icons.cloud : Icons.cloud_queue),
         ),
       ],
     );
@@ -417,9 +494,9 @@ class _MainPageState extends State<MainPage> {
             backgroundColor: _selectedSceneIndex == 6 ? Colors.lightGreen : null,
             onPressed: () {
               _selectedSceneIndex = 6;
-              _loadScene(ShadowmapScene_06());
+              _loadScene(TerrainScene_06());
             },
-            child: const Icon(Icons.looks_6),
+            child: const Icon(Icons.terrain),
           ),
           const SizedBox(width: 6),
           FloatingActionButton(
@@ -452,6 +529,16 @@ class _MainPageState extends State<MainPage> {
             child: const Icon(Icons.filter_9),
           ),
           const SizedBox(width: 6),
+          /*          FloatingActionButton(
+            heroTag: 'scene_10',
+            backgroundColor: _selectedSceneIndex == 10 ? Colors.lightGreen : null,
+            onPressed: () {
+              _selectedSceneIndex = 10;
+              _loadScene(TerrainScene_06());
+            },
+            child: const Icon(Icons.terrain),
+          ),
+          const SizedBox(width: 6), */
           FloatingActionButton(
             heroTag: 'scene_12',
             backgroundColor: _selectedSceneIndex == 12 ? Colors.lightGreen : null,

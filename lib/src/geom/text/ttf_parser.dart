@@ -1,5 +1,4 @@
 // ignore_for_file: unused_field, unused_local_variable, prefer_final_fields, prefer_interpolation_to_compose_strings, curly_braces_in_flow_control_structures
-import 'package:flutter/services.dart';
 
 // Macbear3D engine
 import '../../m3_internal.dart';
@@ -51,7 +50,8 @@ class M3TrueTypeParser {
 
   /// Helper factory to load a font from a Flutter asset path.
   static Future<M3TrueTypeParser> loadFromAsset(String assetPath) async {
-    final data = await rootBundle.load(assetPath);
+    final buffer = await M3ResourceManager.loadBuffer(assetPath);
+    final data = buffer.asByteData();
     return M3TrueTypeParser(data);
   }
 

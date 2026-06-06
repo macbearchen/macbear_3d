@@ -2,7 +2,7 @@
 import '../main_all.dart';
 
 // ignore: camel_case_types
-class StarterScene_00 extends M3Scene {
+class StarterScene_00 extends DemoScene {
   M3TextTexture? _logo;
 
   @override
@@ -33,7 +33,7 @@ Click buttons to test examples.
   3. Primitives scene
   4. Obj teapot scene
   5. GLTF scene
-  6. Shadow for large scene
+  6. Terrain scene
   7. Physics scene
   8. Text 3D scene
   9. PBR Test scene

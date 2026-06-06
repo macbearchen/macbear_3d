@@ -11,8 +11,8 @@ class M3EllipsoidGeom extends M3Geom {
     int widthSegments = M3Geom.radialSegments,
     int heightSegments = 8,
   }) {
-    widthSegments = max(widthSegments, 3);
-    heightSegments = max(heightSegments, 2);
+    widthSegments = min(max(widthSegments, 3), 64);
+    heightSegments = min(max(heightSegments, 2), 32);
     int numVert = (widthSegments + 1) * (heightSegments + 1);
 
     // initialize

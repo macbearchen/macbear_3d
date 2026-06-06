@@ -18,26 +18,26 @@ class M3PlanarReflection {
 
   /// Get the mathematically correct maximum mipmap level based on dimensions
   int get maxMipLevel => _texture.maxMipLevel;
-  double _sizeScale;
+  double _renderScale;
 
   /// width / height: default size of reflection image
   /// resolutionScale: scale ratio of width and height
-  M3PlanarReflection({int width = 16, int height = 16, double resolutionScale = 0.5}) : _sizeScale = resolutionScale {
+  M3PlanarReflection({int width = 16, int height = 16, double resolutionScale = 0.5}) : _renderScale = resolutionScale {
     assert(resolutionScale > 0 && resolutionScale <= 1.0);
     _fbo = M3Framebuffer(width, height, useDepthTexture: false);
     _texture = M3Texture.createEmpty2D(width, height);
   }
 
-  void setScale(double scale) {
+  void setRenderScale(double scale) {
     assert(scale > 0 && scale <= 1.0);
-    _sizeScale = scale;
+    _renderScale = scale;
     resize(width, height);
   }
 
   /// Resize reflection image, size is based on display size
   void resize(int width, int height) {
-    width = (width * _sizeScale).toInt();
-    height = (height * _sizeScale).toInt();
+    width = (width * _renderScale).toInt();
+    height = (height * _renderScale).toInt();
     if (width == this.width && height == this.height) return;
 
     dispose();
@@ -59,28 +59,31 @@ class M3PlanarReflection {
 
     _camera.setFrom(scene.camera);
     _camera.reflectViewMatrix(clipPlane);
+    _context.fog = scene.fog;
 
-    _camera.updateClipSpace(clipPlane);
-    _renderToTexture(scene, _camera, WebGL.CW); // reversed winding for mirrored view
+    _renderToTexture(scene, true); // reversed winding for mirrored view
   }
 
   /// Capture the scene by planar refraction (renders below the plane).
-  void captureRefraction(M3Scene scene) {
+  void captureRefraction(M3Scene scene, M3Fog fog) {
     // visible only when camera is above the plane
     final dist = clipPlane.distanceToVector3(scene.camera.position);
     visible = dist > 0.01;
     if (!visible) return;
 
     _camera.setFrom(scene.camera);
-    // negate the plane so the oblique clip removes geometry above the water
-    final belowPlane = Plane.normalconstant(-clipPlane.normal, -clipPlane.constant);
+    // Mcabear note: refraction clip fog depth.
+    // _camera.farClip = fog.depth;
+    // _camera.refreshProjectionMatrix();
+    _context.fog = fog;
 
-    _camera.updateClipSpace(belowPlane);
-    _renderToTexture(scene, _camera, WebGL.CCW); // normal winding — no view flip
+    _renderToTexture(scene, false); // normal winding — no view flip
   }
 
-  /// Render the scene to [_texture] using [cam], with the given [frontFace] winding.
-  void _renderToTexture(M3Scene scene, M3Camera cam, int frontFace) {
+  // Render the scene to [_texture]
+  // isReflection=true: render reflection above water(mirror)
+  // isReflection=false: render refraction below water(inside water)
+  void _renderToTexture(M3Scene scene, bool isReflection) {
     final renderEngine = M3AppEngine.instance.renderEngine;
     final gl = renderEngine.gl;
 
@@ -91,8 +94,21 @@ class M3PlanarReflection {
     gl.clear(WebGL.COLOR_BUFFER_BIT | WebGL.DEPTH_BUFFER_BIT);
 
     if (scene.skybox != null) {
-      scene.skybox!.drawSkybox(cam);
+      scene.skybox!.drawSkybox(_camera);
     }
+
+    // disable CSM, no shadow in reflection/refraction
+    _camera.csmCount = 0;
+    _camera.csmSplitDistances = [];
+
+    // oblique clip:
+    // reflection: clip geometry below the water, use original plane
+    // refraction: clip geometry above the water, use negated plane
+    final p = isReflection ? clipPlane : Plane.normalconstant(-clipPlane.normal, -clipPlane.constant);
+    _camera.setObliqueClipPlane(p);
+    _camera.updateFrustum();
+
+    final int frontFace = isReflection ? WebGL.CW : WebGL.CCW;
 
     // GL state
     gl.frontFace(frontFace);
@@ -109,10 +125,10 @@ class M3PlanarReflection {
     gl.polygonOffset(1.1, 4.0);
 
     final prog = M3Resources.programTexture!;
-    prog.applyLight(scene.light);
+    prog.attachLight(scene.light);
 
     // render scene for planar reflection/refraction
-    _context.prepareRenderQueue(scene, cam);
+    _context.prepareRenderQueue(scene, _camera);
     _context.excludePlane(this); // Exclude this plane during rendering.
     _context.render(prog);
 

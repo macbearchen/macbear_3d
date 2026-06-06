@@ -27,15 +27,15 @@ class M3Skybox {
   }
 
   /// draw skybox
-  void drawSkybox(M3Camera camEye) {
-    final scale = camEye.farClip / 4;
+  void drawSkybox(M3Camera camera) {
+    final scale = camera.farClip / 4;
     Matrix4 mat = Matrix4.identity();
     // rotate axisX 90 degree: up from axisY to axisZ
     mat.setRotation(M3Constants.rotXNeg90);
     mat.scaleByVector3(Vector3.all(-scale));
-    mat.setTranslation(camEye.position);
+    mat.setTranslation(camera.position);
 
-    drawCube(camEye, mat, cubemapTexture, writeDepth: false);
+    drawCube(camera, mat, cubemapTexture, writeDepth: false);
   }
 
   static void drawCube(M3Camera camEye, Matrix4 boxMatrix, M3Texture cubeTexture, {bool writeDepth = true}) {
@@ -58,7 +58,7 @@ class M3Skybox {
     prog.setMaterial(mtr, Vector4.all(1.0));
     prog.setEnvironmentMap(cubeTexture);
 
-    M3Resources.debugFrustum.draw(prog, bSolid: true);
+    M3Resources.debugFrustum.draw(prog, fillMode: M3FillMode.solid);
 
     gl.depthMask(true);
     gl.enable(WebGL.DEPTH_TEST);

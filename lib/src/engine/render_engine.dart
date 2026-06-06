@@ -73,6 +73,7 @@ class M3RenderEngine {
     final pixelW = (width * dpr).toInt();
     final pixelH = (height * dpr).toInt();
 
+    mainContext.fog = null;
     // planar-reflection viewport by pixel size
     planarReflection.resize(width, height);
 
@@ -80,6 +81,7 @@ class M3RenderEngine {
     final scene = M3AppEngine.instance.activeScene;
     if (scene != null) {
       scene.camera.setViewport(0, 0, pixelW, pixelH);
+      scene.water?.resize(width, height);
     }
 
     // projection 2D viewport by screen size
@@ -126,10 +128,11 @@ class M3RenderEngine {
         // bind shadowmap texture
         gl.useProgram(progShadow.program);
         progShadow.bindShadow(_shadowMap!.depthTexture);
+        progShadow.applyShadow(scene.light);
         progLight = progShadow;
       }
 
-      progLight.applyLight(scene.light);
+      progLight.attachLight(scene.light);
       // solid
       mainContext.render(progLight);
 
@@ -137,9 +140,14 @@ class M3RenderEngine {
       // 1. cubemap reflection (only if not using single-pass IBL)
       // 2. planar reflection
       mainContext.renderReflectionPass();
+
+      // post render water
+      scene.water?.render();
     } else {
       // wireframe
       mainContext.render(M3Resources.programSimple!, fillMode: M3FillMode.wireframe);
+      // water wireframe
+      scene.water?.render(fillMode: M3FillMode.wireframe);
     }
   }
 
@@ -165,7 +173,7 @@ class M3RenderEngine {
     }
 
     // 2D helper
-    if (options.debug.showHelpers) {
+    if (options.debug.showMaps) {
       if (!options.debug.wireframe && options.shadows && _shadowMap != null) {
         final width = 200 / _shadowMap!.mapH * _shadowMap!.mapW;
         _shadowMap!.drawDebugDepth(5, engine.appHeight - 210, width, 200);
@@ -180,6 +188,11 @@ class M3RenderEngine {
         final h = planarReflection.height * ratio;
 
         planarReflection.drawDebugReflection(x, y, w, h);
+      }
+
+      final water = engine.activeScene?.water;
+      if (water != null) {
+        water.drawDebug();
       }
 
       prog2D.setModelMatrix(Matrix4.identity());

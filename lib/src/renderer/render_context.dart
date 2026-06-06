@@ -1,11 +1,13 @@
 // Macbear3D engine
 import '../m3_internal.dart';
 
+/// rendering mode: solid - triangle, wireframe - edges
 enum M3FillMode { solid, wireframe }
 
 class M3RenderContext {
   late M3Camera _viewer; // scene camera or light (light for shadow map)
   M3Skybox? _sky;
+  M3Fog? fog;
 
   final M3RenderQueue opaque = M3RenderQueue();
   final M3RenderQueue transparent = M3RenderQueue();
@@ -25,17 +27,15 @@ class M3RenderContext {
     planarReflection.clear();
     reflectionProbe.clear();
 
-    // store viewer and skybox
+    // store viewer, skybox and fog
     _viewer = viewer;
     _sky = scene.skybox;
+    fog ??= scene.fog;
 
     final stats = M3AppEngine.instance.renderEngine.stats;
 
     // 1. Collect phase: Cull and categorize into queues
     for (final entity in scene.entities) {
-      if (entity.mesh == null) continue;
-      final mesh = entity.mesh!;
-
       // culling
       if (!viewer.isVisible(entity.worldBounding)) {
         if (stats.enabled) stats.culling++;
@@ -44,8 +44,8 @@ class M3RenderContext {
 
       if (stats.enabled) stats.entities++;
 
-      final meshMatrix = entity.worldMatrix * mesh.initMatrix;
-      for (final sub in mesh.subMeshes) {
+      final meshMatrix = entity.worldMatrix * entity.mesh.initMatrix;
+      for (final sub in entity.mesh.subMeshes) {
         final worldMat = meshMatrix * sub.localMatrix;
         final viewPos = viewer.viewMatrix * worldMat.getTranslation();
         // Depth for sorting (negative Z in view space is forward)
@@ -75,6 +75,9 @@ class M3RenderContext {
         }
       }
     }
+
+    // add water objects to transparent queue
+    if (scene.water != null) {}
 
     // 2. Sort phase
     opaque.sortOpaque();
@@ -133,14 +136,14 @@ class M3RenderContext {
     M3Program? progProbe = M3Resources.programSkyboxReflect;
     final options = M3AppEngine.instance.renderEngine.options;
     if (progProbe != null && !options.shader.ibl) {
-      _executeQueue(reflectionProbe, progProbe, useReflection: true);
+      _executeQueue(reflectionProbe, progProbe); // reflection cubemap
       stats.reflection += reflectionProbe.items.length;
     }
 
     // (2/2) render planar reflection objects
     M3Program? progPlanar = M3Resources.programMirror;
     if (progPlanar != null) {
-      _executeQueue(planarReflection, progPlanar, useReflection: true);
+      _executeQueue(planarReflection, progPlanar); // planar reflection
       stats.reflection += planarReflection.items.length;
     }
 
@@ -150,18 +153,17 @@ class M3RenderContext {
   }
 
   /// execute queue with shader
-  void _executeQueue(
-    M3RenderQueue queue,
-    M3Program prog, {
-    M3FillMode fillMode = M3FillMode.solid,
-    bool useReflection = false,
-  }) {
+  void _executeQueue(M3RenderQueue queue, M3Program prog, {M3FillMode fillMode = M3FillMode.solid}) {
     if (queue.isEmpty) return;
 
     RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
     // pre-draw state
     gl.useProgram(prog.program);
     prog.applyCamera(_viewer);
+    final hasFog = prog is M3ProgramLighting && fog != null;
+    if (hasFog) {
+      (prog).applyFog(fog!);
+    }
 
     final stats = M3AppEngine.instance.renderEngine.stats;
     // override material to apply entity color and reflection
@@ -181,27 +183,29 @@ class M3RenderContext {
       mtrOverride.setFrom(sub.mtr);
       mtrOverride.mipLevel = nextCubemap.maxMipLevel;
       colorOverride.setFrom(entity.color);
-      if (useReflection) {
+      if (prog.reflectionType != M3ReflectionType.none) {
         // for reflection pass
         // scale diffuse by reflection, and use planar reflection texture if available
         final f = mtrOverride.reflection;
         // colorOverride.setValues(f, f, f, f);
         colorOverride.setFrom(mtrOverride.diffuse);
         colorOverride.a *= f;
-        if (mtrOverride.planarReflection != null) {
+        // planar reflection
+        if (prog.reflectionType == M3ReflectionType.planar && mtrOverride.planarReflection != null) {
           mtrOverride.diffuseTexture = mtrOverride.planarReflection!.texture;
+          mtrOverride.mipLevel = mtrOverride.diffuseTexture.maxMipLevel;
         }
       }
 
       prog.setMatrices(_viewer, item.worldMatrix);
       prog.setMaterial(mtrOverride, colorOverride);
-      prog.setSkinning(entity.mesh!.skin);
+      prog.setSkinning(entity.mesh.skin);
 
       if (currentCubemap != nextCubemap) {
         currentCubemap = nextCubemap;
         prog.setEnvironmentMap(currentCubemap);
       }
-      sub.geom.draw(prog, bSolid: fillMode == M3FillMode.solid);
+      sub.geom.draw(prog, fillMode: fillMode);
 
       // statistics
       if (stats.enabled) {

@@ -297,10 +297,7 @@ class M3Texture {
     M3Texture tex = M3Texture();
     tex.name = name;
 
-    final codec = await ui.instantiateImageCodec(bytes);
-    final frameInfo = await codec.getNextFrame();
-    final img = frameInfo.image;
-
+    final img = await M3ResourceManager.createImageFromBytes(bytes);
     await tex._loadTargetFromImage(img);
     tex.generateMipmap();
     debugPrint(tex.toString());
@@ -309,7 +306,7 @@ class M3Texture {
 
   Future<void> _loadTarget(String url, {int faceTarget = WebGL.TEXTURE_2D}) async {
     final filename = 'assets/$url';
-    if (!await M3Utility.isAssetExists(filename)) {
+    if (!await M3ResourceManager.isAssetExists(filename)) {
       debugPrint('*** ERROR assets: $filename');
       _initCheckerboard(8, Vector4(0.8, 0.3, 0.3, 1), Vector4(0.7, 0.7, 0.3, 1), faceTarget: faceTarget);
       return;
@@ -324,7 +321,7 @@ class M3Texture {
       name = filename;
       texW = ktxInfo.width;
       texH = ktxInfo.height;
-      Uint8List byteData = Uint8List.fromList(ktxInfo.texData);
+      Uint8List byteData = ktxInfo.texData;
 
       final pixelFormat = ktxInfo.glFormat;
       bind();
@@ -332,7 +329,7 @@ class M3Texture {
       // } else if (lowerName.endsWith('.pvr')) {
       // PVR compressed texture
     } else {
-      ui.Image img = await gl.loadImageFromAsset(filename);
+      final img = await M3ResourceManager.loadImage(filename);
       await _loadTargetFromImage(img, faceTarget: faceTarget);
     }
   }

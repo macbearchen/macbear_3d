@@ -2,24 +2,15 @@
 import '../main_all.dart';
 
 // ignore: camel_case_types
-class PbrTestScene_09 extends M3Scene {
+class PbrTestScene_09 extends DemoScene {
   @override
   Future<void> load() async {
     if (isLoaded) return;
     await super.load();
 
     camera.setEuler(-pi / 12, -pi / 8, 0, distance: 30);
-    // nvlobby cubemap
-    final strPrefix = 'example/nvlobby_';
-    final strExt = 'jpg';
-    skybox = await M3Skybox.createCubemap(
-      '${strPrefix}xpos.$strExt',
-      '${strPrefix}xneg.$strExt',
-      '${strPrefix}ypos.$strExt',
-      '${strPrefix}yneg.$strExt',
-      '${strPrefix}zpos.$strExt',
-      '${strPrefix}zneg.$strExt',
-    );
+
+    skybox = await createCubemapLobby(); // nvlobby cubemap
 
     final sphereGeom = M3Resources.unitSphere;
 
@@ -48,15 +39,23 @@ class PbrTestScene_09 extends M3Scene {
       }
     }
 
+    final groundZ = -2.0;
     // Add a ground plane
     final geomPlane = M3PlaneGeom(20, 20);
-    final plane = addMesh(M3Mesh(geomPlane), Vector3(0, 0, -2));
-    plane.mesh!.subMeshes[0].mtr.diffuse = Vector4(0.5, 0.5, 0.5, 1.0);
-    plane.mesh!.subMeshes[0].mtr.metallic = 0.0;
-    plane.mesh!.subMeshes[0].mtr.roughness = 0.8;
+    final plane = addMesh(M3Mesh(geomPlane), Vector3(0, 0, groundZ));
+    plane.mesh.subMeshes[0].mtr
+      ..diffuse = Vector4(0.2, 0.9, 0.7, 1.0)
+      ..reflection = 0.3
+      ..metallic = 0.3
+      ..roughness = 0.0
+      ..planarReflection = renderEngine.planarReflection;
 
     // axis gizmo
     addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 2));
+
+    // 08-3: Apply mirror shader to ground
+    renderEngine.planarReflection.clipPlane.setFromComponents(0, 0, 1, -groundZ);
+    renderEngine.planarReflection.setRenderScale(1.0);
   }
 
   @override

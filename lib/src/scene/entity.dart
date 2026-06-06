@@ -1,6 +1,4 @@
 // Macbear3D engine
-
-// Macbear3D engine
 import '../m3_internal.dart';
 
 /// A scene entity representing a renderable object with transform and physics.
@@ -8,8 +6,14 @@ import '../m3_internal.dart';
 /// Combines a mesh, transform, color, and optional rigid body for physics simulation.
 class M3Entity extends M3Node {
   M3RigidBody? rigidBody;
-  M3Mesh? mesh;
+  final M3Mesh mesh;
   Vector4 color = Vector4(1.0, 1.0, 1.0, 1.0); // RGBA
+
+  /// visibility culling
+  M3Bounding worldBounding = M3Bounding();
+  bool _boundsDirty = true;
+
+  M3Entity({required this.mesh});
 
   M3ReflectionProbe? getProbe() {
     final renderEngine = M3AppEngine.instance.renderEngine;
@@ -18,10 +22,6 @@ class M3Entity extends M3Node {
     }
     return null;
   }
-
-  /// visibility culling
-  M3Bounding worldBounding = M3Bounding();
-  bool _boundsDirty = true;
 
   /// Mark this entity as dirty, invalidating its world matrix and bounds.
   @override
@@ -32,17 +32,17 @@ class M3Entity extends M3Node {
 
   /// Update the world bounding volume of this entity based on its mesh and transform.
   void updateBounds() {
-    if (_boundsDirty && mesh != null && mesh!.subMeshes.isNotEmpty) {
+    if (_boundsDirty && mesh.subMeshes.isNotEmpty) {
       final worldAabb = worldBounding.aabb;
 
       // Transform 8 corners of local AABB to world space
       worldAabb.min.setValues(double.infinity, double.infinity, double.infinity);
       worldAabb.max.setValues(double.negativeInfinity, double.negativeInfinity, double.negativeInfinity);
 
-      for (final sub in mesh!.subMeshes) {
+      for (final sub in mesh.subMeshes) {
         final localBounding = sub.geom.localBounding;
         final localAabb = localBounding.aabb;
-        final matWorldSub = worldMatrix * mesh!.initMatrix * sub.localMatrix;
+        final matWorldSub = worldMatrix * mesh.initMatrix * sub.localMatrix;
 
         final v = Vector3.zero();
         for (int i = 0; i < 8; i++) {
@@ -57,10 +57,10 @@ class M3Entity extends M3Node {
       }
 
       // If skin exists, also hull all bone world positions
-      if (mesh!.skin != null) {
+      if (mesh.skin != null) {
         final v = Vector3.zero();
-        for (int i = 0; i < mesh!.skin!.boneCount; i++) {
-          final jointNode = mesh!.skin!.jointNodes![i];
+        for (int i = 0; i < mesh.skin!.boneCount; i++) {
+          final jointNode = mesh.skin!.jointNodes![i];
           v.setFrom(jointNode.worldMatrix.getTranslation());
           worldMatrix.transform3(v); // Bring joint world to entity world
           worldAabb.hullPoint(v);
@@ -143,20 +143,21 @@ class M3Entity extends M3Node {
   }
 
   void update(double dt) {
-    if (mesh == null) return;
-
     // 1. Update Animator
-    if (mesh!.animator != null) {
-      mesh!.animator!.update(dt);
+    if (mesh.animator != null) {
+      mesh.animator!.update(dt);
       _boundsDirty = true; // Animation moves joints, dirty the bounds
     }
 
+    // Update submesh transforms for rigid node hierarchy animations
+    mesh.updateSubMeshTransforms();
+
     // 2. Update Skin
-    if (mesh!.skin != null) {
+    if (mesh.skin != null) {
       // In the current architecture, M3Entity represents the local space
       // for the mesh. We pass Identity as the MeshWorldMatrix because the
       // entity's matrix is applied later in the shader.
-      mesh!.skin!.update(null);
+      mesh.skin!.update(null);
     }
   }
 

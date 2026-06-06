@@ -11,7 +11,7 @@ class M3ProgramWater extends M3ProgramLighting {
   late UniformLocation uniformAxisBinormal;
   late UniformLocation uniformAxisNormal;
 
-  M3ProgramWater(super.strVert, super.strFrag);
+  M3ProgramWater(super.strVert, super.strFrag, {super.reflectionType});
 
   @override
   void initLocation() {
@@ -30,20 +30,25 @@ class M3ProgramWater extends M3ProgramLighting {
     gl.uniform1i(gl.getUniformLocation(program, "RefractionTex"), 2); // GL_TEXTURE2
   }
 
-  void bindWater(M3Texture? refraction, M3Water water) {
+  void bindWater(M3Water water) {
     // Bind texture
     gl.activeTexture(WebGL.TEXTURE1);
     water.normalMap.bind();
 
     gl.activeTexture(WebGL.TEXTURE2);
-    if (refraction != null) {
-      refraction.bind();
+    if (water.refractionPass != null) {
+      water.refractionPass!.texture.bind();
     } else {
       M3Resources.texWhite.bind();
     }
 
     // diffuse by reflection
     gl.activeTexture(WebGL.TEXTURE0);
+    if (water.reflectionPass != null) {
+      water.reflectionPass!.texture.bind();
+    } else {
+      M3Resources.texWhite.bind();
+    }
 
     // uniform param for bump of water (per GLSL)
     gl.uniform4f(

@@ -11,8 +11,8 @@ class M3TorusGeom extends M3Geom {
     int tubularSegments = M3Geom.radialSegments,
     M3Axis axis = M3Axis.z,
   }) {
-    radialSegments = max(radialSegments, 3);
-    tubularSegments = max(tubularSegments, 3);
+    radialSegments = min(max(radialSegments, 3), 64);
+    tubularSegments = min(max(tubularSegments, 3), 64);
     final vetrexCount = (radialSegments + 1) * (tubularSegments + 1);
 
     // initialize

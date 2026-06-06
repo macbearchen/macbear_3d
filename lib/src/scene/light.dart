@@ -210,9 +210,9 @@ class M3Light extends M3Camera {
         final frustumMatrix = Matrix4.inverted(crop.projectionMatrix * viewMatrix);
         prog.setMaterial(mtrHelper, Vector4(0, 0, 1, 0.3));
         prog.setMatrices(viewer, frustumMatrix);
-        M3Resources.debugFrustum.draw(prog, bSolid: true);
+        M3Resources.debugFrustum.draw(prog, fillMode: M3FillMode.solid);
         prog.setMaterial(mtrHelper, Vector4(0, 0, 1, 1));
-        M3Resources.debugFrustum.draw(prog, bSolid: false);
+        M3Resources.debugFrustum.draw(prog, fillMode: M3FillMode.wireframe);
       }
     }
   }

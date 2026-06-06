@@ -16,6 +16,9 @@ class M3SubMesh {
 
   Matrix4 localMatrix = Matrix4.identity();
 
+  /// The index of the glTF node this submesh is associated with, used for node animations.
+  int? nodeIndex;
+
   M3SubMesh(this.geom, {M3Material? material}) : mtr = material ?? M3Material();
 }
 
@@ -138,9 +141,41 @@ class M3Mesh {
   ///
   /// Currently only processes the first primitive of the first mesh in the document.
   static M3Mesh _meshFromGltfDoc(dynamic doc) {
-    // 1. Process all primitives of the first mesh (primary use case)
+    // 1. First compute default world matrices for all nodes in case they are static/not animated
+    final identity = Matrix4.identity();
+    for (final rootIndex in doc.rootNodes) {
+      doc.nodes[rootIndex].computeWorldMatrix(identity);
+    }
+
+    // 2. Process all primitives of all meshes by traversing the node hierarchy
     final List<M3SubMesh> primitives = [];
-    if (doc.meshes.isNotEmpty) {
+    for (int i = 0; i < doc.nodes.length; i++) {
+      final node = doc.nodes[i];
+      if (node.meshIndex != null && node.meshIndex! < doc.meshes.length) {
+        final gltfMesh = doc.meshes[node.meshIndex!];
+        for (final primitive in gltfMesh.primitives) {
+          final geom = M3GltfGeom.fromPrimitive(primitive);
+          M3Material? mtr;
+          if (primitive.materialIndex != null && primitive.materialIndex! < doc.materials.length) {
+            mtr = M3Material.fromGltf(doc.materials[primitive.materialIndex!], doc);
+          }
+          final subMesh = M3SubMesh(geom, material: mtr);
+          subMesh.nodeIndex = i;
+
+          if (node.skinIndex != null) {
+            // Skinned submesh uses identity localMatrix (bone matrices handle the transforms relative to entity origin)
+            subMesh.localMatrix = Matrix4.identity();
+          } else {
+            // Rigid submesh uses node's computed worldMatrix
+            subMesh.localMatrix.setFrom(node.worldMatrix);
+          }
+          primitives.add(subMesh);
+        }
+      }
+    }
+
+    // Fallback: If no nodes reference any meshes directly, load primitives of the first mesh with identity
+    if (primitives.isEmpty && doc.meshes.isNotEmpty) {
       final gltfMesh = doc.meshes[0];
       for (final primitive in gltfMesh.primitives) {
         final geom = M3GltfGeom.fromPrimitive(primitive);
@@ -152,23 +187,12 @@ class M3Mesh {
       }
     }
 
-    // 2. Process Skeletal Animation Skin if available
+    // 3. Process Skeletal Animation Skin if available (from any node in the doc)
     M3Skin? skin;
     int? skinIndex;
-
-    Matrix4 matNode = Matrix4.identity();
-    // Search for a node that references the first mesh
     for (final node in doc.nodes) {
-      if (node.meshIndex == 0) {
-        if (node.skinIndex != null) {
-          skinIndex = node.skinIndex;
-        }
-        // Capture mesh node transform
-        if (node.matrix != null) {
-          matNode.setFrom(node.matrix!);
-        } else {
-          matNode.setFrom(Matrix4.compose(node.translation, node.rotation, node.scale));
-        }
+      if (node.skinIndex != null) {
+        skinIndex = node.skinIndex;
         break;
       }
     }
@@ -193,10 +217,10 @@ class M3Mesh {
 
     final mesh = M3Mesh(null, skin: skin);
     mesh.subMeshes = primitives;
-    mesh.initMatrix.setFrom(matNode);
+    mesh.initMatrix = Matrix4.identity(); // Node transforms are flattened into submesh localMatrix
     mesh.nodes = doc.nodes;
 
-    // 3. Initialize Animator
+    // 4. Initialize Animator
     if (doc.animations.isNotEmpty) {
       final nodeMap = {for (int i = 0; i < doc.nodes.length; i++) i: doc.nodes[i]};
       mesh.animator = M3Animator((doc.animations as List).cast<GltfAnimation>(), nodeMap.cast<int, GltfNode>());
@@ -232,7 +256,11 @@ class M3Mesh {
 
     final clonedMesh = M3Mesh(null, skin: clonedSkin);
     for (final sub in subMeshes) {
-      clonedMesh.subMeshes.add(M3SubMesh(sub.geom, material: sub.mtr)..localMatrix.setFrom(sub.localMatrix));
+      clonedMesh.subMeshes.add(
+        M3SubMesh(sub.geom, material: sub.mtr)
+          ..localMatrix.setFrom(sub.localMatrix)
+          ..nodeIndex = sub.nodeIndex,
+      );
     }
     clonedMesh.nodes = clonedNodes;
     clonedMesh.setFrom(this);
@@ -244,5 +272,18 @@ class M3Mesh {
     }
 
     return clonedMesh;
+  }
+
+  /// Update the local transformations of rigid (non-skinned) submeshes from their associated glTF nodes.
+  void updateSubMeshTransforms() {
+    if (nodes == null) return;
+    for (final subMesh in subMeshes) {
+      if (subMesh.nodeIndex != null && subMesh.nodeIndex! < nodes!.length) {
+        final node = nodes![subMesh.nodeIndex!];
+        if (node.skinIndex == null) {
+          subMesh.localMatrix.setFrom(node.worldMatrix);
+        }
+      }
+    }
   }
 }

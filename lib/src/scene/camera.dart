@@ -67,6 +67,13 @@ class M3Camera extends M3Projection {
     return _frustum.intersectsWithAabb3(bounds.aabb);
   }
 
+  /// Get camera's forward vector in world space.
+  Vector3 getForward() {
+    final rot = cameraToWorldMatrix.getRotation();
+    final zAxis = rot.getColumn(2);
+    return -zAxis.normalized();
+  }
+
   /// Update frustum matrix from view and projection matrices.
   void updateFrustum() {
     final mat = projectionMatrix * viewMatrix;
@@ -214,7 +221,7 @@ class M3Camera extends M3Projection {
     csmSplitDistances = [];
 
     final debugOptions = M3AppEngine.instance.renderEngine.options.debug;
-    if (debugOptions.useObliqueClipPlane) {
+    if (debugOptions.showCamera) {
       setObliqueClipPlane(clipPlane); // clip below the plane
     }
     updateFrustum();
@@ -249,21 +256,21 @@ $euler
       return;
     }
     prog.setMatrices(viewer, cameraToWorldMatrix);
-    M3Resources.debugAxis.draw(prog, bSolid: false);
+    M3Resources.debugAxis.draw(prog, fillMode: M3FillMode.wireframe);
 
     Matrix4 targetMatrix = Matrix4.identity();
     targetMatrix.setTranslation(target);
     prog.setMatrices(viewer, targetMatrix);
-    M3Resources.debugDot.draw(prog, bSolid: false);
+    M3Resources.debugDot.draw(prog, fillMode: M3FillMode.wireframe);
 
     Matrix4 frustumMatrix = Matrix4.inverted(projectionMatrix * viewMatrix);
     prog.setMatrices(viewer, frustumMatrix);
-    M3Resources.debugFrustum.draw(prog, bSolid: false);
+    M3Resources.debugFrustum.draw(prog, fillMode: M3FillMode.wireframe);
 
     // near clip
     Matrix4 matNear = frustumMatrix.clone()..translateByVector3(Vector3(0, -0.2, -0.995));
     prog.setMatrices(viewer, matNear);
-    M3Resources.debugView.draw(prog, bSolid: false);
+    M3Resources.debugView.draw(prog, fillMode: M3FillMode.wireframe);
 
     // draw split distance
     if (csmCount > 0) {
@@ -284,7 +291,7 @@ $euler
         Matrix4 splitMatrix = Matrix4.inverted(proj.projectionMatrix * viewMatrix);
         splitMatrix.translateByVector3(Vector3(0, -0.2, 1));
         prog.setMatrices(viewer, splitMatrix);
-        M3Resources.debugView.draw(prog, bSolid: false);
+        M3Resources.debugView.draw(prog, fillMode: M3FillMode.wireframe);
       }
     }
   }

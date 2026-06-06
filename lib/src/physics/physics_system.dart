@@ -9,7 +9,7 @@ class M3PhysicsSystem {
   int _maxStepsPerFrame = 3;
   final double _timeStep = 1 / 60.0;
 
-  double get interpolationAlpha {
+  double get _interpolationAlpha {
     return _accumulator / _timeStep;
   }
 
@@ -64,21 +64,18 @@ class M3PhysicsSystem {
     return body;
   }
 
-  /*
-  void addEntity(M3Entity entity) {
-    final body = entity.rigidBody;
-    if (body != null) {
-      _bodyToEntity[body.handle] = entity;
-    }
+  void attachEntity(M3Entity entity, M3RigidBody body) {
+    entity.rigidBody = body;
+    _bodyToEntity[body.handle] = entity;
   }
 
-  void removeEntity(M3Entity entity) {
+  void detachEntity(M3Entity entity) {
     final body = entity.rigidBody;
     if (body != null) {
       _bodyToEntity.remove(body.handle);
+      entity.rigidBody = null;
     }
   }
-*/
 
   /// update physics world
   void update(double dt, {void Function()? onBeforeStep}) {
@@ -91,14 +88,14 @@ class M3PhysicsSystem {
       steps++;
     }
 
+    // sync physics to entities
     _syncToEntities();
   }
 
   // sync from physics system to entities
   void _syncToEntities() {
-    final alpha = interpolationAlpha;
     for (final entity in _bodyToEntity.values) {
-      entity.syncFromPhysics(alpha);
+      entity.syncFromPhysics(_interpolationAlpha);
     }
   }
 }

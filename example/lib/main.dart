@@ -16,6 +16,7 @@ Future<void> onDidInit() async {
   debugPrint('main.dart: onDidInit');
   final appEngine = M3AppEngine.instance;
   appEngine.renderEngine.createShadowMap(width: 1024, height: 1024);
+  M3AppEngine.backgroundColor = Vector3(0.1, 0.6, 0.3);
 
   await appEngine.setScene(MyScene());
 }
@@ -44,12 +45,22 @@ class MyScene extends M3Scene {
     camera.setEuler(pi / 6, -pi / 6, 0, distance: 8);
     camera.csmCount = 0;
 
+    M3Mesh meshGrid = M3Mesh(M3PlaneGeom(10, 10));
+
     // add geometry
     addMesh(M3Mesh(M3BoxGeom(1.0, 1.0, 1.0)), Vector3(0, 0, 2.5)).color = Colors.blue;
     addMesh(M3Mesh(M3SphereGeom(0.5)), Vector3(0, 0, 0)).color = Colors.red;
     addMesh(M3Mesh(M3TorusGeom(1, 0.2)), Vector3(0, 0, 0)).color = Colors.green;
     addMesh(M3Mesh(M3CylinderGeom(0.5, 0.1, 1.0)), Vector3(0, 0, 1.2)).color = Colors.yellow;
-    addMesh(M3Mesh(M3PlaneGeom(10, 10)), Vector3(0, 0, -1)).color = Colors.skyBlue;
+    final plane = addMesh(meshGrid, Vector3(0, 0, -1)).color = Colors.skyBlue;
+
+    // String strTex = 'astc/test_12x12.astc';
+    String strTex = 'astc/test_4x4.astc';
+    // String strTex = 'data_test/land.pvr';
+
+    // M3Texture texGrid = await M3Texture.loadTexture(strTex);
+    M3Texture texGrid = M3Texture.createCheckerboard(size: 10);
+    meshGrid.subMeshes.first.mtr.diffuseTexture = texGrid;
   }
 
   @override

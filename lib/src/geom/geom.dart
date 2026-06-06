@@ -1,6 +1,8 @@
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:vector_math/vector_math_lists.dart';
+import 'package:image/image.dart' as img;
 
 // Macbear3D engine
 import '../m3_internal.dart';
@@ -41,15 +43,24 @@ class _M3Indices {
   // not supported: GL_TRIANGLE_FAN, GL_LINE_LOOP
   final int _primitiveType;
   int _count = 0; // element count
-
+  int _indexType = WebGL.UNSIGNED_SHORT; // or WebGL.UNSIGNED_INT for 32 bits index
   late Buffer _indexBuffer;
 
-  _M3Indices(this._primitiveType, Uint16List indices) {
+  _M3Indices(this._primitiveType, TypedData indices) {
+    if (indices is Uint16List) {
+      _indexType = WebGL.UNSIGNED_SHORT;
+      _count = indices.length;
+    } else if (indices is Uint32List) {
+      _indexType = WebGL.UNSIGNED_INT;
+      _count = indices.length;
+    } else {
+      throw ArgumentError('indices must be Uint16List or Uint32List');
+    }
+
     // buffers for indices
     _indexBuffer = gl.createBuffer();
     gl.bindBuffer(WebGL.ELEMENT_ARRAY_BUFFER, _indexBuffer);
     gl.bufferData(WebGL.ELEMENT_ARRAY_BUFFER, indices, WebGL.STATIC_DRAW);
-    _count = indices.length;
   }
 
   int get primitiveCount {
@@ -72,7 +83,7 @@ class _M3Indices {
   /// Draws the indexed geometry using the current rendering context.
   void draw() {
     gl.bindBuffer(WebGL.ELEMENT_ARRAY_BUFFER, _indexBuffer);
-    gl.drawElements(_primitiveType, _count, WebGL.UNSIGNED_SHORT, 0);
+    gl.drawElements(_primitiveType, _count, _indexType, 0);
   }
 
   /// Releases GPU resources associated with this index buffer.
@@ -298,7 +309,8 @@ abstract class M3Geom {
     }
 
     if (lineIndices.isNotEmpty) {
-      _edgeIndices.add(_M3Indices(WebGL.LINES, Uint16List.fromList(lineIndices)));
+      final indices = (_vertexCount > 65535) ? Uint32List.fromList(lineIndices) : Uint16List.fromList(lineIndices);
+      _edgeIndices.add(_M3Indices(WebGL.LINES, indices));
     }
   }
 
@@ -345,9 +357,7 @@ abstract class M3Geom {
   }
 
   /// Renders the geometry using the specified shader program.
-  ///
-  /// Set [bSolid] to `false` for wireframe rendering.
-  void draw(M3Program prog, {bool bSolid = true}) {
+  void draw(M3Program prog, {M3FillMode fillMode = M3FillMode.solid}) {
     if (_vertexBuffer != null) {
       gl.bindBuffer(WebGL.ARRAY_BUFFER, _vertexBuffer);
       gl.enableVertexAttribArray(prog.attribVertex.id);
@@ -379,7 +389,7 @@ abstract class M3Geom {
       gl.vertexAttribPointer(prog.attribBoneWeight.id, 4, WebGL.FLOAT, false, 0, 0);
     }
 
-    List<_M3Indices> drawSurfaces = bSolid ? _faceIndices : _edgeIndices;
+    List<_M3Indices> drawSurfaces = fillMode == M3FillMode.solid ? _faceIndices : _edgeIndices;
     for (var surface in drawSurfaces) {
       surface.draw();
     }

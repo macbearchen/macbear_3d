@@ -12,7 +12,7 @@ import '../input/keyboard.dart';
 class M3AppEngine with ChangeNotifier {
   static final M3AppEngine instance = M3AppEngine._internal();
 
-  static const String version = "macbear3d-lib v0.9.0 powered by ANGLE";
+  static const String version = "macbear3d-lib v0.9.1 powered by ANGLE";
   final FlutterAngle _angle = FlutterAngle();
   late FlutterAngleTexture _sourceTexture; // main framebuffer
   static Framebuffer get mainFbo => Framebuffer(kIsWeb ? null : instance._sourceTexture.fboId);
@@ -169,6 +169,11 @@ class M3AppEngine with ChangeNotifier {
 
     notifyListeners();
     resume(); // app ticker resume
+  }
+
+  /// Triggers a rebuild of the engine UI by notifying listeners.
+  void refresh() {
+    notifyListeners();
   }
 
   void pause() {
@@ -370,7 +375,11 @@ class M3AppEngine with ChangeNotifier {
       // capture planar reflection
       if (renderEngine.mainContext.needsPlanarReflectionPass()) {
         renderEngine.planarReflection.captureReflection(scene);
-        // renderEngine.planarReflection.captureRefraction(scene);
+      }
+
+      final water = scene.water;
+      if (water != null) {
+        water.captureWater(scene);
       }
     }
 
@@ -385,11 +394,16 @@ class M3AppEngine with ChangeNotifier {
       renderEngine.renderScene(scene);
 
       // draw debug: only implement when needed
-      scene.renderDebug();
+      scene.drawDebug();
 
       // draw Helper
       if (renderEngine.options.debug.showHelpers) {
-        scene.renderHelper();
+        scene.drawHelper();
+      }
+
+      // draw camera frustums
+      if (renderEngine.options.debug.showCamera) {
+        scene.drawCameraHelper();
       }
     }
     // 3. render 2D: UI, text etc.
