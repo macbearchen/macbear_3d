@@ -209,7 +209,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.9.0"
+    version: "0.9.1"
   material_color_utilities:
     dependency: transitive
     description:

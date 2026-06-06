@@ -33,6 +33,7 @@ Preview the `main_all.dart` example live in your browser!
 - **Planar Reflections**: Added support for planar reflections with `M3PlanarReflection` and Mirror shaders for high-quality reflective surfaces.
 - **Dynamic Reflection Probe**: Added `M3ReflectionProbe` for real-time cubemap capture and dynamic reflections.
 - **Water Effect**: Real-time water rendering with `M3Water` — dual-layer animated normal-map flow, planar reflection & refraction, configurable wave distortion, and fog-depth underwater tinting.
+- **Fog Effect**: Introduced **M3Fog** supporting depth-based scene fog with camera-facing depth attenuation, custom color settings, and optional custom clip planes (e.g., for underwater depth tinting).
 - **RenderContext**: `M3RenderContext` bundles per-frame GPU state (viewport, matrices, lights, shadow map, reflection/water targets) for clean multi-pass rendering.
 - **Flexible Geometries**: Added `M3Axis` support for Torus, Capsule, Cylinder, and Plane for custom orientation.
 - **Resource Management**: Centralized system for loading and caching assets (geometries, meshes, textures, fonts).
@@ -69,7 +70,7 @@ Add `macbear_3d` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  macbear_3d: ^0.9.0
+  macbear_3d: ^0.9.1
 ```
 
 ## Usage

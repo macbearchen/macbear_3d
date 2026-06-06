@@ -1,3 +1,16 @@
+## 0.9.1
+
+* Add:
+  * **Terrain Heightmap support**: Added `fromHeightmapImage` and `fromHeightmapAsset` factory methods to `M3TerrainGeom`. Supports loading 16-bit grayscale PNG heightmaps (with custom IHDR parsing) for precise terrain generation, alongside standard 8-bit RGBA heightmaps. Uses bilinear interpolation for smooth elevations.
+  * **Fog Effect**: Introduced `M3Fog` with support for camera-facing depth fog, configurable fog colors, and custom plane clip calculations (e.g., for underwater shading) (`lib/src/scene/fog.dart`).
+  * **Web Build Rapier physics**: Added `rapier.js` and `rapier_ffi.wasm` to the example web directory to fix Web builds of the physics demo.
+  * **Example/Demo updates**: Added a new terrain heightmap demo `06_terrain.dart` showing high-resolution 16-bit heightmaps and procedural generation. Updated `main_all.dart` and other examples to clean up and integrate features.
+
+* Update:
+  * **Water Effect**: Enhanced water rendering with alpha blending, custom tangent-space TBN matrix computations (`setTBN`), and improved fog depth underwater tinting using customized clip planes.
+  * **Planar Reflections**: Added customizable render scaling (`setRenderScale`) for reflection and refraction passes to optimize performance, and unified oblique clipping plane calculations.
+  * **UML Generation Tool**: Updated `gen_uml.sh` to temporarily comment out annotations causing older analyzer tool crashes during class diagram generation.
+
 ## 0.9.0
 
 * Add:
