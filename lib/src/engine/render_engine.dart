@@ -179,9 +179,9 @@ class M3RenderEngine {
         _shadowMap!.drawDebugDepth(5, engine.appHeight - 210, width, 200);
       }
       // show planar reflection
-      if (mainContext.needsPlanarReflectionPass() && planarReflection.visible) {
+      if (mainContext.needsPlanarReflectionPass()) {
         final engine = M3AppEngine.instance;
-        final ratio = 0.5;
+        final ratio = 0.33;
         final x = 110.0;
         final y = engine.appHeight - 210.0;
         final w = planarReflection.width * ratio;

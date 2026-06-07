@@ -14,6 +14,7 @@ class M3PlanarReflection {
   final Plane clipPlane = Plane.components(0, 0, 1, 0);
   final M3Camera _camera = M3Camera(); // reflection camera to render reflection
 
+  bool enable = true;
   bool visible = true;
 
   /// Get the mathematically correct maximum mipmap level based on dimensions
@@ -36,8 +37,10 @@ class M3PlanarReflection {
 
   /// Resize reflection image, size is based on display size
   void resize(int width, int height) {
-    width = (width * _renderScale).toInt();
-    height = (height * _renderScale).toInt();
+    if (!enable) return;
+
+    width = max((width * _renderScale).toInt(), 2);
+    height = max((height * _renderScale).toInt(), 2);
     if (width == this.width && height == this.height) return;
 
     dispose();
@@ -52,6 +55,7 @@ class M3PlanarReflection {
 
   /// Capture the scene by planar reflection (renders above the plane).
   void captureReflection(M3Scene scene) {
+    if (!enable) return;
     // visible only when camera is above the plane
     final dist = clipPlane.distanceToVector3(scene.camera.position);
     visible = dist > 0.01;
@@ -66,6 +70,7 @@ class M3PlanarReflection {
 
   /// Capture the scene by planar refraction (renders below the plane).
   void captureRefraction(M3Scene scene, M3Fog fog) {
+    if (!enable) return;
     // visible only when camera is above the plane
     final dist = clipPlane.distanceToVector3(scene.camera.position);
     visible = dist > 0.01;
@@ -142,13 +147,15 @@ class M3PlanarReflection {
 
   /// draw helper
   void drawHelper(M3Camera viewer) {
-    if (visible) {
-      _camera.drawHelper(M3Resources.programSimple!, viewer);
-    }
+    if (!enable || !visible) return;
+
+    _camera.drawHelper(M3Resources.programSimple!, viewer);
   }
 
   /// Draw reflection map for debugging
   void drawDebugReflection(double x, double y, double width, double height) {
+    if (!enable || !visible) return;
+
     Matrix4 matRect = Matrix4.identity();
     matRect.setTranslation(Vector3(x, y, 0.0));
     final scale = Vector3(width / this.width, height / this.height, 1.0);

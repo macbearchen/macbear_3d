@@ -264,7 +264,7 @@ class M3Program {
     // diffuse-texture: GL_TEXTURE0
     if (isLocationValid(uniformSamplerDiffuse)) {
       gl.activeTexture(WebGL.TEXTURE0);
-      mtr.diffuseTexture.bind(); // 2D or Cubemap
+      mtr.diffuseTexture.bind(); // 2D texture only; Cubemap use setEnvironmentMap()
     }
 
     // PBR

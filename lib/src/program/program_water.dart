@@ -36,16 +36,16 @@ class M3ProgramWater extends M3ProgramLighting {
     water.normalMap.bind();
 
     gl.activeTexture(WebGL.TEXTURE2);
-    if (water.refractionPass != null) {
-      water.refractionPass!.texture.bind();
+    if (water.refractionPass.enable) {
+      water.refractionPass.texture.bind();
     } else {
       M3Resources.texWhite.bind();
     }
 
     // diffuse by reflection
     gl.activeTexture(WebGL.TEXTURE0);
-    if (water.reflectionPass != null) {
-      water.reflectionPass!.texture.bind();
+    if (water.reflectionPass.enable) {
+      water.reflectionPass.texture.bind();
     } else {
       M3Resources.texWhite.bind();
     }
