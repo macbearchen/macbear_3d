@@ -184,7 +184,7 @@ class M3Water extends M3Entity {
     double w = 0;
     double h = 0;
     for (final pass in passes) {
-      if (pass != null) {
+      if (pass.enable && pass.visible) {
         w = pass.width * ratio;
         h = pass.height * ratio;
         pass.drawDebugReflection(x, y, w, h);
@@ -198,7 +198,7 @@ class M3Water extends M3Entity {
       normalMap.dispose();
     }
 
-    reflectionPass?.dispose();
-    refractionPass?.dispose();
+    reflectionPass.dispose();
+    refractionPass.dispose();
   }
 }
