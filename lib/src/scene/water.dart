@@ -62,6 +62,15 @@ class M3Water extends M3Entity {
     if (useRefraction) {
       refractionPass = M3PlanarReflection();
     }
+
+    // water tint color
+    final tint = M3Constants.colorWaterTint;
+    setWaterTint(Vector4(tint.x, tint.y, tint.z, 0.3));
+  }
+
+  /// water surface tint color
+  void setWaterTint(Vector4 tint) {
+    color.setFrom(tint);
   }
 
   /// plane equation: ax + by + cz + d = 0

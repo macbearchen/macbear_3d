@@ -68,6 +68,11 @@ class M3Constants {
   static final Vector3 colorDusk = Vector3(0.85, 0.70, 0.55);
   static final Vector3 colorGray = Vector3(0.70, 0.72, 0.75);
   static final Vector3 colorSkyBlue = Vector3(0.78, 0.85, 0.91);
+
+  // water tint color
+  static final Vector3 colorWaterTint = Vector3(0.90, 0.97, 1.00);
+  static final Vector3 colorWaterTintLake = Vector3(0.94, 0.99, 1.00);
+  static final Vector3 colorWaterTintSea = Vector3(0.80, 1.00, 1.00);
 }
 
 // package: local font asset

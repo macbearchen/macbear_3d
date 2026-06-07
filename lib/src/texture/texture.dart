@@ -305,7 +305,7 @@ class M3Texture {
   }
 
   Future<void> _loadTarget(String url, {int faceTarget = WebGL.TEXTURE_2D}) async {
-    final filename = 'assets/$url';
+    final filename = url;
     if (!await M3ResourceManager.isAssetExists(filename)) {
       debugPrint('*** ERROR assets: $filename');
       _initCheckerboard(8, Vector4(0.8, 0.3, 0.3, 1), Vector4(0.7, 0.7, 0.3, 1), faceTarget: faceTarget);

@@ -15,9 +15,11 @@ class CubeScene_01 extends DemoScene {
     // axis gizmo
     addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 0));
 
+    // M3Texture texGround = await M3Texture.loadTexture("assets/example/test_8x8.astc");
     // ground plane
     final mtrGround = M3Material()
       ..diffuse = Vector4(0.588, 0.471, 0.353, 1.0)
+      // ..diffuseTexture = texGround
       ..setMatte();
     final groundMesh = M3Mesh(M3PlaneGeom(20, 20, uvScale: Vector2.all(5.0)), material: mtrGround);
     addMesh(groundMesh, Vector3(0, 0, -1));

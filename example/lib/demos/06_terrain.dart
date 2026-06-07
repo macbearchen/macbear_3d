@@ -160,11 +160,6 @@ class TerrainScene_06 extends DemoScene {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              _useHeightmap ? "Terrain: Heightmap" : "Terrain: Procedural fBm Noise",
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-            ),
-            const SizedBox(height: 8),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.lightGreen, foregroundColor: Colors.black),
               onPressed: () async {

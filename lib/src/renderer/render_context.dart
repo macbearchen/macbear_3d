@@ -77,7 +77,16 @@ class M3RenderContext {
     }
 
     // add water objects to transparent queue
-    if (scene.water != null) {}
+    final water = scene.water;
+    if (water != null) {
+      final item = M3RenderItem(
+        entity: water,
+        subMesh: water.mesh.subMeshes[0],
+        worldMatrix: water.worldMatrix,
+        depth: -1,
+      );
+      transparent.add(item);
+    }
 
     // 2. Sort phase
     opaque.sortOpaque();
