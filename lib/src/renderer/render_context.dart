@@ -85,7 +85,8 @@ class M3RenderContext {
         worldMatrix: water.worldMatrix,
         depth: -1,
       );
-      transparent.add(item);
+      // todo: z-fighting on water.render
+      // transparent.add(item);
     }
 
     // 2. Sort phase

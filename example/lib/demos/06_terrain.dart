@@ -202,6 +202,47 @@ class TerrainScene_06 extends DemoScene {
                 ),
               ),
             ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: 200,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Reflection",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  Switch(
+                    value: water?.reflectionEnabled ?? false,
+                    activeThumbColor: Colors.lightGreen,
+                    onChanged: (value) {
+                      water?.reflectionEnabled = value;
+                      M3AppEngine.instance.refresh();
+                    },
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              width: 200,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Refraction",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  Switch(
+                    value: water?.refractionEnabled ?? false,
+                    activeThumbColor: Colors.lightGreen,
+                    onChanged: (value) {
+                      water?.refractionEnabled = value;
+                      M3AppEngine.instance.refresh();
+                    },
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

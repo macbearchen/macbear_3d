@@ -67,12 +67,16 @@ class M3Water extends M3Entity {
     setWaterTint(Vector4(tint.x, tint.y, tint.z, 0.3));
   }
 
+  bool get reflectionEnabled => reflectionPass.enable;
+
   set reflectionEnabled(bool value) {
     reflectionPass.enable = value;
     if (value) {
       reflectionPass.resize(M3AppEngine.instance.appWidth, M3AppEngine.instance.appHeight);
     }
   }
+
+  bool get refractionEnabled => refractionPass.enable;
 
   set refractionEnabled(bool value) {
     refractionPass.enable = value;
@@ -125,7 +129,6 @@ class M3Water extends M3Entity {
   }
 
   void render({M3FillMode fillMode = M3FillMode.solid}) {
-    return;
     if (fillMode == M3FillMode.solid) {
       RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
       gl.enable(WebGL.BLEND);
@@ -137,7 +140,12 @@ class M3Water extends M3Entity {
       prog.applyCamera(_viewer);
       prog.bindWater(this);
 
-      waterMaterial.diffuseTexture = reflectionPass.texture;
+      // water material: set reflection texture if enabled
+      if (reflectionPass.enable) {
+        waterMaterial.diffuseTexture = reflectionPass.texture;
+      } else {
+        waterMaterial.diffuseTexture = M3Resources.texWhite;
+      }
 
       final alpha = 1.0; //water!.waterMaterial.reflection;
       final waterMatrix = worldMatrix;

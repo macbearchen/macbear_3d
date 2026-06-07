@@ -44,8 +44,7 @@ void main() {
     test('dirty transform triggers bounds update', () {
       final geom = M3BoxGeom(1, 1, 1);
       final mesh = M3Mesh(geom);
-      final entity = M3Entity();
-      entity.mesh = mesh;
+      final entity = M3Entity(mesh: mesh);
 
       // Initial update
       entity.updateBounds();
