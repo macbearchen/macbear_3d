@@ -31,9 +31,10 @@
 - **模型加載**: 原生支援 **glTF/GLB**、**OBJ** 與 **BVH (骨架動畫)** 格式。
 - **骨架動畫**: 完整支援皮膚網格 (Skinned Mesh) 與基於骨骼的動畫系統 (包含 `M3OctahedralGeom` 骨骼視覺化)。
 - **進階光照**: 支援動態光照、**級聯陰影貼圖 (CSM)**、**PCF (百分比漸進過濾)** 以實現平滑陰影、**PBR (實體渲染)** 與 **IBL (環境光照)**。優化 `RenderPipeline` 並增強對不透明與透明材質的支援。
+- **模組化著色器 (Modular Shaders)**: 重構著色器系統，使用乾淨的 `.glsl` 原始碼檔案以及專屬、型別安全的 Dart 著色器程式封裝（`M3FogShader`、`M3LightingShader`、`M3ShadowShader`、`M3WaterShader`），提供更方便的 uniform 變數綁定與封裝。
 - **平面反射**: 加入 `M3PlanarReflection` 與專屬 Mirror Shader 以實現高品質平面反射效果。
 - **動態反射探針**: 加入 `M3ReflectionProbe` 實作即時環境捕捉與動態反射。
-- **水面效果**: 使用 `M3Water` 實現即時水面渲染，支援雙層動態法線貼圖流動、平面反射與折射、可調波紋扭曲，以及水下霧色深度渲染。
+- **水面效果**: 使用 `M3Water` 實現即時水面渲染，支援雙層動態法線貼圖流動（支援在執行期使用 `M3Texture.createWaterNormalMap` 程序化生成水面法線貼圖）、平面反射與折射、可調波紋扭曲，以及水下霧色深度渲染。
 - **霧化效果 (Fog Effect)**: 引入 **M3Fog** 支援深度場景霧化，具備相機深度衰減、自定義霧色，以及自定義裁剪平面（如用於水下霧化與深度顏色渲染）。
 - **渲染上下文 (RenderContext)**: `M3RenderContext` 封裝每幀 GPU 狀態（視口、矩陣、光源、陰影貼圖、反射/水面目標），讓多通道渲染架構更清晰。
 - **幾何形狀靈活性**: 為 Torus, Capsule, Cylinder 和 Plane 添加了 `M3Axis` 支持，允許自定義初始朝向。
