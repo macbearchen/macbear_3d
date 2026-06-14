@@ -1,7 +1,9 @@
 #version 300 es
 // Water vert-shader ES3 //////////
-
+#ifndef ENABLE_SKINNING
 layout(location = 0) in highp vec3 inVertex;		// vertex-data
+#endif // ENABLE_SKINNING
+
 // layout(location = 1) in lowp vec4 inColor;		// for water-color as fog in water
 layout(location = 3) in mediump vec2 inTexCoord;
 
@@ -28,11 +30,29 @@ out highp float WaterToEyeLength;
 
 out lowp vec4 DestinationColor;
 
+#ifdef ENABLE_FOG
+out highp vec3 fogVert;
+#endif // ENABLE_FOG
+
 void main(void)
 {
 	DestinationColor = uColor;
 	
 	highp vec4 objVert = vec4(inVertex, 1.0);
+#ifdef ENABLE_SKINNING
+	if (BoneCount > 0)
+	{
+		ComputeSkinningVertex(objVert);
+	}
+#endif // ENABLE_SKINNING
+
+#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
+    ComputeShadowPosition(objVert.xyz, AxisNormal);
+#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
+
+#ifdef ENABLE_FOG
+    fogVert = objVert.xyz;
+#endif // ENABLE_FOG
 
     gl_Position = ModelviewProjection * objVert;	// pre-compute Projection * Modelview
 	

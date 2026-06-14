@@ -3,6 +3,10 @@
 const String TexturedLighting_vert = r"""
 #version 300 es
 // TexturedLighting vert-shader: ES3 //////////
+// 1. 'glsl/Skinning.es3.vert' inserted here
+// 2. 'glsl/Shadow.es3.vert' inserted here
+// 3. define ENABLE_FOG for fog
+
 #ifndef ENABLE_SKINNING
 layout(location = 0) in highp vec3 inVertex;
 layout(location = 2) in mediump vec3 inNormal;
@@ -32,25 +36,9 @@ out mediump vec2 TextureCoordOut;
 
 uniform mat4 ModelviewProjection;
 
-#ifdef ENABLE_SHADOW_MAP
-uniform mat4 MatrixShadowmap;
-out highp vec4 LightcoordShadowmap;
-#endif
-
-#ifdef ENABLE_SHADOW_CSM
-uniform mat4 MatrixCSM[4];
-out highp vec4 LightcoordCSM[4];
-#endif
-
-#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
-uniform highp float NormalBias;
-#endif
-
 #ifdef ENABLE_FOG
-uniform mediump vec4 FogPlane;
-uniform mediump float FogDepth;
-out mediump float FogDensity;
-#endif
+out highp vec3 fogVert;
+#endif // ENABLE_FOG
 
 void main(void)
 {
@@ -62,7 +50,7 @@ void main(void)
     {
         ComputeSkinningVertex(objVert, objNormal);
     }
-#endif
+#endif // ENABLE_SKINNING
 
     mediump vec3 L = LightPosition;
     mediump vec3 E = normalize(EyePosition - objVert.xyz);
@@ -86,25 +74,15 @@ void main(void)
     
     mediump float df = max(0.0, dot(objNormal, L));
     DestinationColor = vec4(ColorAmbient + ColorDiffuse.rgb * df, ColorDiffuse.a);
-#endif
+#endif // ENABLE_PIXEL_LIGHTING
     
-#ifdef ENABLE_SHADOW_MAP
-    vec3 biasedVertMap = objVert.xyz + objNormal * NormalBias;
-    LightcoordShadowmap = MatrixShadowmap * vec4(biasedVertMap, 1.0);
-#endif
-    
-#ifdef ENABLE_SHADOW_CSM
-    vec3 biasedVertCSM = objVert.xyz + objNormal * NormalBias;
-    LightcoordCSM[0] = MatrixCSM[0] * vec4(biasedVertCSM, 1.0);
-    LightcoordCSM[1] = MatrixCSM[1] * vec4(biasedVertCSM, 1.0);
-    LightcoordCSM[2] = MatrixCSM[2] * vec4(biasedVertCSM, 1.0);
-    LightcoordCSM[3] = MatrixCSM[3] * vec4(biasedVertCSM, 1.0);
-#endif
+#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
+    ComputeShadowPosition(objVert.xyz, objNormal);
+#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
 
 #ifdef ENABLE_FOG
-    mediump float DepthInFog = dot(FogPlane.xyz, objVert.xyz) + FogPlane.w;
-    FogDensity = clamp(DepthInFog / FogDepth, 0.0, 1.0);
-#endif
+    fogVert = objVert.xyz;
+#endif // ENABLE_FOG
     
     TextureCoordOut = inTexCoord;
     gl_Position = ModelviewProjection * objVert;

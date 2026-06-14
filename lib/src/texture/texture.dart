@@ -359,6 +359,177 @@ class M3Texture {
     gl.texImage2D(faceTarget, 0, pixelFormat, texW, texH, 0, pixelFormat, WebGL.UNSIGNED_BYTE, pixels);
   }
 
+  /// Create a procedural water normal map texture of a specified size and strength.
+  static M3Texture createWaterNormalMap({int size = 256, double strength = 5.0}) {
+    M3Texture tex = M3Texture(generateMipmaps: true);
+    tex.name = "procedural_water_normal";
+    tex.texW = size;
+    tex.texH = size;
+
+    final data = Uint8List(size * size * 4);
+
+    // dart format off
+    final permutation = [
+      151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225,
+      140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148,
+      247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32,
+      57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175,
+      74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122,
+      60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54,
+      65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169,
+      200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64,
+      52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212,
+      207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 223, 183, 170, 213,
+      119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9,
+      129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104,
+      218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241,
+      81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157,
+      184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93,
+      222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180
+    ];
+    // dart format on
+
+    final p = List<int>.filled(512, 0);
+    for (int i = 0; i < 256; i++) {
+      p[i] = p[i + 256] = permutation[i];
+    }
+
+    double fade(double t) => t * t * t * (t * (t * 6 - 15) + 10);
+    double lerp(double t, double a, double b) => a + t * (b - a);
+    double grad(int hash, double x, double y) {
+      int h = hash & 15;
+      double u = h < 8 ? x : y;
+      double v = h < 4 ? y : (h == 12 || h == 14 ? x : 0.0);
+      return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+    }
+
+    // Custom 2D tiling noise that wraps at the given integer period.
+    double tilingNoise(double x, double y, int period) {
+      final int prd = period.clamp(1, 256);
+
+      int intX = x.floor();
+      int intY = y.floor();
+
+      double xf = x - intX;
+      double yf = y - intY;
+
+      int x0 = intX % prd;
+      if (x0 < 0) x0 += prd;
+      int x1 = (x0 + 1) % prd;
+
+      int y0 = intY % prd;
+      if (y0 < 0) y0 += prd;
+      int y1 = (y0 + 1) % prd;
+
+      double u = fade(xf);
+      double v = fade(yf);
+
+      int a0 = p[x0] + y0;
+      int a1 = p[x0] + y1;
+      int b0 = p[x1] + y0;
+      int b1 = p[x1] + y1;
+
+      int aa = p[a0];
+      int ab = p[a1];
+      int ba = p[b0];
+      int bb = p[b1];
+
+      return lerp(
+        v,
+        lerp(u, grad(aa, xf, yf), grad(ba, xf - 1, yf)),
+        lerp(u, grad(ab, xf, yf - 1), grad(bb, xf - 1, yf - 1)),
+      );
+    }
+
+    // Height function helper that wraps periodically on [0, 1]
+    double getWarpedHeight(double u, double v) {
+      double wrapU = u % 1.0;
+      double wrapV = v % 1.0;
+      if (wrapU < 0.0) wrapU += 1.0;
+      if (wrapV < 0.0) wrapV += 1.0;
+
+      // 1. Domain warping: perturb coordinates using low-frequency Perlin noise.
+      final double dx =
+          tilingNoise(wrapU * 4.0 + 1.2, wrapV * 4.0 + 3.4, 4) * 0.15 +
+          tilingNoise(wrapU * 8.0 + 5.6, wrapV * 8.0 + 7.8, 8) * 0.07;
+      final double dy =
+          tilingNoise(wrapU * 4.0 + 9.1, wrapV * 4.0 + 2.3, 4) * 0.15 +
+          tilingNoise(wrapU * 8.0 + 4.5, wrapV * 8.0 + 6.7, 8) * 0.07;
+
+      final double warpedU = wrapU + dx;
+      final double warpedV = wrapV + dy;
+
+      // 2. Ridged noise: sum multiple octaves for crisp, organic ripple peaks
+      double h = 0.0;
+      double amp = 1.0;
+      int period = 6;
+      double maxAmp = 0.0;
+
+      for (int i = 0; i < 4; i++) {
+        final double n = tilingNoise(warpedU * period, warpedV * period, period);
+        final double ridge = 1.0 - n.abs();
+        h += ridge * ridge * amp;
+        maxAmp += amp;
+        period *= 2;
+        amp *= 0.5;
+      }
+      h /= maxAmp;
+
+      // 3. High-frequency micro-noise for extra detail/texture
+      final double micro =
+          tilingNoise(wrapU * 64.0, wrapV * 64.0, 64) * 0.05 +
+          tilingNoise(wrapU * 128.0 + 0.5, wrapV * 128.0 + 0.5, 128) * 0.025;
+      h += micro;
+
+      return h;
+    }
+
+    final double eps = 1.0 / size;
+
+    for (int y = 0; y < size; y++) {
+      final double v = y / size;
+      for (int x = 0; x < size; x++) {
+        final double u = x / size;
+
+        // Sample heights at center, right, and down to compute numerical derivatives
+        final double hCenter = getWarpedHeight(u, v);
+        final double hRight = getWarpedHeight(u + eps, v);
+        final double hDown = getWarpedHeight(u, v + eps);
+
+        // Compute derivatives scaled by the strength multiplier
+        final double dhdu = (hRight - hCenter) * strength;
+        final double dhdv = (hDown - hCenter) * strength;
+
+        // Normal vector in tangent space: N = (-dh/du, -dh/dv, 1.0)
+        double nx = -dhdu;
+        double ny = -dhdv;
+        double nz = 1.0;
+
+        // Normalize to get unit length
+        final double len = sqrt(nx * nx + ny * ny + nz * nz);
+        nx /= len;
+        ny /= len;
+        nz /= len;
+
+        // Map from [-1.0, 1.0] to [0, 255]
+        final int r = ((nx + 1.0) * 127.5).round().clamp(0, 255);
+        final int g = ((ny + 1.0) * 127.5).round().clamp(0, 255);
+        final int b = ((nz + 1.0) * 127.5).round().clamp(0, 255);
+
+        final int idx = (y * size + x) * 4;
+        data[idx] = r;
+        data[idx + 1] = g;
+        data[idx + 2] = b;
+        data[idx + 3] = 255;
+      }
+    }
+
+    tex.bind();
+    tex.gl.texImage2D(WebGL.TEXTURE_2D, 0, WebGL.RGBA, size, size, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, data);
+    tex.generateMipmap();
+    return tex;
+  }
+
   /// Create a wood texture with specified size.
   static Future<M3Texture> createWoodTexture({int size = 512}) async {
     M3Texture tex = M3Texture();

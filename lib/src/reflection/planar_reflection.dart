@@ -132,9 +132,16 @@ class M3PlanarReflection {
     final prog = M3Resources.programTexture!;
     prog.attachLight(scene.light);
 
-    // render scene for planar reflection/refraction
+    // 1. prepare render queue
     _context.prepareRenderQueue(scene, _camera);
-    _context.excludePlane(this); // Exclude this plane during rendering.
+
+    // 2. exclude this plane and water from render queue
+    _context.excludePlane(this);
+    if (scene.water != null) {
+      _context.excludeWater(scene.water!);
+    }
+
+    // 3. render scene for planar reflection/refraction
     _context.render(prog);
 
     _texture.generateMipmap();

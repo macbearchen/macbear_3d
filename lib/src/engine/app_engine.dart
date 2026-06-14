@@ -379,7 +379,7 @@ class M3AppEngine with ChangeNotifier {
 
       final water = scene.water;
       if (water != null) {
-        water.captureWater(scene);
+        water.captureWater();
       }
     }
 

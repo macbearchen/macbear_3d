@@ -1,8 +1,10 @@
 // Generated file – do not edit.
 // ignore: constant_identifier_names
-const String Skinning_vert = r"""
+const String SkinningVS_glsl = r"""
 #version 300 es
 // Skinning vert-shader ES3 //////////
+// must insert before vertex shader
+
 #define ENABLE_SKINNING
 
 layout(location = 0) in highp vec3 inVertex;

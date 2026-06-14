@@ -75,22 +75,24 @@ class M3RenderContext {
         }
       }
     }
-
-    // add water objects to transparent queue
+    // 2. Sort opaque
+    opaque.sortOpaque();
+    if (bOnlyOpaque) {
+      return; // remark it: produce some shore effect
+    }
+    // 3. add water objects to transparent queue
     final water = scene.water;
-    if (water != null) {
+    if (water != null && water.renderSurfaceEnabled) {
       final item = M3RenderItem(
         entity: water,
         subMesh: water.mesh.subMeshes[0],
         worldMatrix: water.worldMatrix,
         depth: -1,
       );
-      // todo: z-fighting on water.render
-      // transparent.add(item);
+      transparent.add(item);
     }
 
-    // 2. Sort phase
-    opaque.sortOpaque();
+    // 4. Sort transparent
     transparent.sortTransparent();
   }
 
@@ -108,6 +110,13 @@ class M3RenderContext {
     opaque.items.removeWhere((item) => item.subMesh.mtr.planarReflection == reflection);
     transparent.items.removeWhere((item) => item.subMesh.mtr.planarReflection == reflection);
     unlit.items.removeWhere((item) => item.subMesh.mtr.planarReflection == reflection);
+  }
+
+  /// exclude materials with the given water
+  void excludeWater(M3Water water) {
+    opaque.items.removeWhere((item) => item.entity == water);
+    transparent.items.removeWhere((item) => item.entity == water);
+    unlit.items.removeWhere((item) => item.entity == water);
   }
 
   bool needsPlanarReflectionPass() {
@@ -172,7 +181,7 @@ class M3RenderContext {
     prog.applyCamera(_viewer);
     final hasFog = prog is M3ProgramLighting && fog != null;
     if (hasFog) {
-      (prog).applyFog(fog!);
+      prog.applyFog(fog!); // fog supported
     }
 
     final stats = M3AppEngine.instance.renderEngine.stats;

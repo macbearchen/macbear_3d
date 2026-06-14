@@ -8,6 +8,7 @@ class ShaderBuilder implements Builder {
   final buildExtensions = const {
     '^lib/src/shaders/{{}}.vert': ['lib/src/shaders_gen/{{}}.vert.g.dart'],
     '^lib/src/shaders/{{}}.frag': ['lib/src/shaders_gen/{{}}.frag.g.dart'],
+    '^lib/src/shaders/{{}}.glsl': ['lib/src/shaders_gen/{{}}.glsl.g.dart'],
   };
 
   @override

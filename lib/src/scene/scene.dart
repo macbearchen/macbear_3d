@@ -79,6 +79,11 @@ abstract class M3Scene {
     entities.add(entity);
   }
 
+  void setWater(M3Water water) {
+    this.water = water;
+    water.scene = this;
+  }
+
   double _totalTime = 0.0;
   double get totalTime => _totalTime;
 

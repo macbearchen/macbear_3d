@@ -1,6 +1,6 @@
 #version 300 es
 // Mirror frag-shader //////////
-precision mediump float;
+
 in lowp vec4 DestinationColor;
 
 uniform mediump vec3 uParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level

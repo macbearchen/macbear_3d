@@ -6,8 +6,8 @@ class M3PhysicsSystem {
 
   // update per step
   double _accumulator = 0.0;
-  int _maxStepsPerFrame = 3;
   final double _timeStep = 1 / 60.0;
+  final int _maxStepsPerFrame = 6;
 
   double get _interpolationAlpha {
     return _accumulator / _timeStep;
@@ -83,7 +83,7 @@ class M3PhysicsSystem {
     int steps = 0;
     while (_accumulator >= _timeStep && steps < _maxStepsPerFrame) {
       if (onBeforeStep != null) onBeforeStep();
-      _engine.step(dt);
+      _engine.step(_timeStep);
       _accumulator -= _timeStep;
       steps++;
     }

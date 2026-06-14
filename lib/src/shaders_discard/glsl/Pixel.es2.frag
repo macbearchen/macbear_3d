@@ -104,7 +104,7 @@ mediump vec3 ApplyIBL(mediump vec3 ambientDiffuse, mediump vec3 N, mediump vec3 
 #endif // ENABLE_IBL
 
 // lit result by per-pixel: by lighting
-lowp vec4 ComputePixelLit(in lowp vec4 texDiffuse)
+lowp vec4 ShadeLit(in lowp vec4 texDiffuse)
 {
 	lowp vec4 result;
     mediump vec3 N = normalize(ObjectspaceN);
@@ -176,7 +176,7 @@ lowp vec4 ComputePixelLit(in lowp vec4 texDiffuse)
 }
 
 // unlit result by per-pixel: in shadow
-lowp vec4 ComputePixelUnlit(in lowp vec4 texDiffuse)
+lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse)
 {
 	lowp vec4 result;
 

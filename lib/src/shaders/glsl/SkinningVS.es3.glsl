@@ -1,5 +1,7 @@
 #version 300 es
 // Skinning vert-shader ES3 //////////
+// must insert before vertex shader
+
 #define ENABLE_SKINNING
 
 layout(location = 0) in highp vec3 inVertex;

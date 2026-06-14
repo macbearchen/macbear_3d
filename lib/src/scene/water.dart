@@ -1,26 +1,29 @@
 // Macbear3D engine
 import '../m3_internal.dart';
 
+/// Layer for water wave animation
 class M3WaterFlowLayer {
   Vector2 offset = Vector2.zero();
   Vector2 scale = Vector2.all(1.0);
   Vector2 velocity = Vector2.zero();
 }
 
+/// water effect, using plane reflection / refraction.
 class M3Water extends M3Entity {
-  static M3ProgramWater get progWater => M3Resources.programWater!; // debug: programMirror
+  M3ProgramWater get progWater => M3Resources.programWater!; // debug: programMirror
+  M3ProgramWaterCSM get progWaterCSM => M3Resources.programWaterCSM!;
 
   Plane surfacePlane = Plane.components(0, 0, 1, 0);
   M3Texture normalMap = M3Resources.texNormal; // normal-map for water wave distortion
-  double waveDistortion = 50.0;
+  double waveDistortion = 20.0;
   double reflectionDepthBias = 0.8;
-  late M3Camera _viewer;
+  late M3Scene scene;
 
   static M3Mesh createWaterSurface({
     double width = 400,
     double height = 400,
-    int widthSegments = 20,
-    int heightSegments = 20,
+    int widthSegments = 8,
+    int heightSegments = 8,
     Vector2? uvScale,
   }) {
     final mtr = M3Material()
@@ -28,7 +31,7 @@ class M3Water extends M3Entity {
       ..metallic = 0.3
       ..reflection = 0.3;
     final waterMesh = M3Mesh(
-      M3PlaneGeom(width, height, widthSegments: widthSegments, uvScale: uvScale),
+      M3PlaneGeom(width, height, widthSegments: widthSegments, heightSegments: heightSegments, uvScale: uvScale),
       material: mtr,
     );
 
@@ -48,10 +51,10 @@ class M3Water extends M3Entity {
 
   // for bump flow animation
   M3WaterFlowLayer flow0 = M3WaterFlowLayer()
-    ..scale = Vector2.all(1)
+    ..scale = Vector2.all(3)
     ..velocity = Vector2(0.016, -0.014);
   M3WaterFlowLayer flow1 = M3WaterFlowLayer()
-    ..scale = Vector2.all(2)
+    ..scale = Vector2.all(7)
     ..velocity = Vector2(0.025, -0.03);
 
   M3Water({M3Mesh? waterMesh, bool useReflection = true, bool useRefraction = true})
@@ -63,10 +66,11 @@ class M3Water extends M3Entity {
     refractionPass.enable = useRefraction;
 
     // water tint color
-    final tint = M3Constants.colorWaterTint;
-    setWaterTint(Vector4(tint.x, tint.y, tint.z, 0.3));
+    final tint = M3Constants.colorBeach;
+    setWaterTint(Vector4(tint.x, tint.y, tint.z, 0.6));
   }
 
+  bool renderSurfaceEnabled = true;
   bool get reflectionEnabled => reflectionPass.enable;
 
   set reflectionEnabled(bool value) {
@@ -118,8 +122,7 @@ class M3Water extends M3Entity {
     flow1.offset.y %= 1.0;
   }
 
-  void captureWater(M3Scene scene) {
-    _viewer = scene.camera;
+  void captureWater() {
     progWater.attachLight(scene.light);
 
     reflectionPass.captureReflection(scene);
@@ -129,16 +132,25 @@ class M3Water extends M3Entity {
   }
 
   void render({M3FillMode fillMode = M3FillMode.solid}) {
+    final viewer = scene.camera;
     if (fillMode == M3FillMode.solid) {
       RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
       gl.enable(WebGL.BLEND);
       gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA); // alpha blending
       gl.depthMask(false); // Don't write to depth buffer in blending pass
 
-      final prog = progWater;
+      final renderEngine = M3AppEngine.instance.renderEngine;
+      bool csmEnabled = renderEngine.isShadowEnabled && scene.light.cascades.isNotEmpty;
+      csmEnabled = false;
+      final dynamic prog = csmEnabled ? progWaterCSM : progWater;
       gl.useProgram(prog.program);
-      prog.applyCamera(_viewer);
+      prog.applyCamera(viewer);
+      prog.applyFog(scene.fog);
       prog.bindWater(this);
+      if (csmEnabled) {
+        prog.bindShadow(renderEngine.shadowMap!.depthTexture);
+        prog.applyShadow(scene.light);
+      }
 
       // water material: set reflection texture if enabled
       if (reflectionPass.enable) {
@@ -149,11 +161,11 @@ class M3Water extends M3Entity {
 
       final alpha = 1.0; //water!.waterMaterial.reflection;
       final waterMatrix = worldMatrix;
-      prog.setMatrices(_viewer, waterMatrix);
+      prog.setMatrices(viewer, waterMatrix);
       prog.setMaterial(waterMaterial, Vector4(0.0, 1.0, 0.8, alpha));
       prog.setSkinning(null);
 
-      // Call setTBN after setMatrices to set tangent-space uniforms and light position correctly
+      // Call setLightTBN after setMatrices to set tangent-space uniforms and light position correctly
       final normal = surfacePlane.normal;
       var tangent = Vector3(1.0, 0.0, 0.0);
       if (tangent.dot(normal).abs() > 0.9) {
@@ -161,15 +173,14 @@ class M3Water extends M3Entity {
       }
       final binormal = normal.cross(tangent).normalized();
       tangent = binormal.cross(normal).normalized();
-      prog.setTBN(tangent, binormal, normal);
+      prog.setLightTBN(tangent, binormal, normal);
 
-      // reflection for above water: using reflection texture
+      // reflection for above water, refraction for below water
       mesh.subMeshes[0].geom.draw(prog);
-      // refraction for below water: using refraction texture
     } else {
       final progEdge = M3Resources.programSimple!;
       final waterMatrix = worldMatrix;
-      progEdge.setMatrices(_viewer, waterMatrix);
+      progEdge.setMatrices(viewer, waterMatrix);
       progEdge.setMaterial(waterMaterial, Vector4(0, 1, 1, 0.6));
       mesh.subMeshes[0].geom.draw(progEdge, fillMode: M3FillMode.wireframe);
     }
@@ -179,8 +190,8 @@ class M3Water extends M3Entity {
     final passes = {reflectionPass, refractionPass};
 
     const ratio = 0.5;
-    double x = 10;
-    double y = 160;
+    double x = 8;
+    double y = 8;
     double w = 0;
     double h = 0;
     for (final pass in passes) {
@@ -191,6 +202,16 @@ class M3Water extends M3Entity {
         x += w + 2;
       }
     }
+
+    // water normal map
+    Matrix4 matRect = Matrix4.identity();
+    matRect.setTranslation(Vector3(x, y, 0.0));
+    w = normalMap.texW * ratio;
+    h = normalMap.texH * ratio;
+    final scaleNormalMap = Vector3(w / normalMap.texW, h / normalMap.texH, 1.0);
+
+    matRect.scaleByVector3(scaleNormalMap);
+    M3Shape2D.drawImage(normalMap, matRect);
   }
 
   void dispose() {

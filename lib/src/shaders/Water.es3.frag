@@ -1,6 +1,5 @@
 #version 300 es
 // Water frag-shader ES3 //////////
-precision mediump float;
 
 // water distortion (noise effect)
 in mediump vec2 BumpCoord0;
@@ -13,13 +12,24 @@ uniform mediump float	WaveDistortion;
 uniform sampler2D SamplerDiffuse;	// GL_TEXTURE0: diffuse as reflection
 uniform sampler2D NormalTex;		// GL_TEXTURE1: normalmap (Normal map uses z-axis major)
 uniform sampler2D RefractionTex;	// GL_TEXTURE2: refraction
-uniform mediump vec4 CameraViewport;		// xyzw for (x,y,width,height)
+uniform mediump vec4 CameraViewport; // xyzw for (x,y,width,height)
+
+// shade lit/unlit functions
+lowp vec4 ShadeLit(in lowp vec4 texDiffuse)
+{
+	return texDiffuse;
+}
+
+lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse)
+{
+	return texDiffuse * 0.5;
+}
 
 // output color
 out vec4 fragColor;
 
 // blend reflection and refraction
-void BlendReflectionRefraction(out lowp vec4 ResultColor, in lowp vec3 vAccumulatedNormal, in lowp vec3 WaterToEyeNormal)
+lowp vec4 BlendReflectionRefraction(in lowp vec3 vAccumulatedNormal, in lowp vec3 WaterToEyeNormal)
 {
 	// Calculate the Fresnel term to determine amount of reflection for each fragment
 	mediump float fAirWaterFresnel = clamp(dot(WaterToEyeNormal,vAccumulatedNormal),0.0,1.0);
@@ -39,10 +49,11 @@ void BlendReflectionRefraction(out lowp vec4 ResultColor, in lowp vec3 vAccumula
 	lowp vec4 ReflectionColor = texture(SamplerDiffuse, vTexCoord);
 	lowp vec4 RefractionColor = texture(RefractionTex, vTexCoord);
 	// Blend reflection and refraction
-	ResultColor = mix(RefractionColor, ReflectionColor, fTemp);
-
-//	ResultColor = mix(ReflectionColor, RefractionColor, 0.4);	// Constant mix
-//	ResultColor = RefractionColor;			// ReflectionColor, RefractionColor only
+	lowp vec4 result;
+	result = mix(RefractionColor, ReflectionColor, fTemp);
+//	result = mix(ReflectionColor, RefractionColor, 0.4);	// Constant mix
+//	result = RefractionColor;			// ReflectionColor, RefractionColor only
+	return result;
 }
 
 #ifdef ENABLE_WATER_SPECULAR
@@ -64,8 +75,8 @@ void main(void)
 	lowp vec3 vAccumulatedNormal = texture(NormalTex, BumpCoord0).rgb + texture(NormalTex, BumpCoord1).rgb - 1.0;
 
 	// blend reflection and refraction
-	lowp vec4 BlendResultColor;
-	BlendReflectionRefraction(BlendResultColor, vAccumulatedNormal, WaterToEyeNormal);
+	lowp vec4 resultColor;
+	resultColor = BlendReflectionRefraction(vAccumulatedNormal, WaterToEyeNormal);
 
 #ifdef ENABLE_WATER_SPECULAR
 	// specular part:
@@ -75,9 +86,17 @@ void main(void)
 	sf = pow(sf, 120.0);
 	
 	lowp float fTemp = sf;
-//	BlendResultColor = vec4(LightDiffuse * fTemp, 1.0);		// for debug purpose
-	BlendResultColor = vec4(BlendResultColor.rgb + LightDiffuse * fTemp, 1.0);
+//	resultColor = vec4(LightDiffuse * fTemp, 1.0);		// for debug purpose
+	resultColor = vec4(resultColor.rgb + LightDiffuse * fTemp, 1.0);
 #endif // ENABLE_WATER_SPECULAR
-	
-	fragColor = BlendResultColor;
+
+#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
+	resultColor = ShadeLitWithShadow(resultColor);
+#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
+
+#ifdef ENABLE_FOG
+	resultColor = ApplyFog(resultColor);
+#endif // ENABLE_FOG
+
+	fragColor = resultColor;
 }

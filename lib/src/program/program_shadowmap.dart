@@ -1,46 +1,18 @@
 part of 'program.dart';
 
-abstract class M3ProgramShadow extends M3ProgramLighting {
-  // texture sampler for shadowmap
-  late UniformLocation uniformSamplerShadowmap;
-  late UniformLocation uniformShadowmapSize;
-  late UniformLocation uniformNormalBias;
-
+/// abstract shadow program: lighting + shadow + fog
+abstract class M3ProgramShadow extends M3ProgramLighting with M3ShadowShader {
   M3ProgramShadow(super.strVert, super.strFrag);
 
   @override
   void initLocation() {
     super.initLocation();
 
-    uniformSamplerShadowmap = gl.getUniformLocation(program, "SamplerShadowmap");
-    uniformShadowmapSize = gl.getUniformLocation(program, "ShadowmapSize");
-    uniformNormalBias = gl.getUniformLocation(program, "NormalBias");
-
-    if (M3Program.isLocationValid(uniformSamplerShadowmap)) {
-      gl.uniform1i(uniformSamplerShadowmap, 1);
-    }
-  }
-
-  /// Apply shadowmap related uniform variables.
-  void applyShadow(M3Light sceneLight) {
-    if (M3Program.isLocationValid(uniformShadowmapSize)) {
-      final shadowMap = M3AppEngine.instance.renderEngine.shadowMap!;
-      gl.uniform2f(uniformShadowmapSize, shadowMap.mapW.toDouble(), shadowMap.mapH.toDouble());
-    }
-    if (M3Program.isLocationValid(uniformNormalBias)) {
-      gl.uniform1f(uniformNormalBias, sceneLight.shadowNormalBias);
-    }
-  }
-
-  void bindShadow(WebGLTexture texture) {
-    gl.activeTexture(WebGL.TEXTURE1);
-    gl.bindTexture(WebGL.TEXTURE_2D, texture);
-    gl.uniform1i(uniformSamplerShadowmap, 1);
-
-    gl.activeTexture(WebGL.TEXTURE0);
+    initShadowLocation(program);
   }
 }
 
+/// shadowmap program
 class M3ProgramShadowmap extends M3ProgramShadow {
   late UniformLocation uniformMatrixShadowmap;
 
@@ -67,6 +39,7 @@ class M3ProgramShadowmap extends M3ProgramShadow {
   }
 }
 
+// shadow CSM program
 class M3ProgramShadowCSM extends M3ProgramShadow {
   late UniformLocation uniformMatrixCSM;
   late UniformLocation uniformDepthCSM;

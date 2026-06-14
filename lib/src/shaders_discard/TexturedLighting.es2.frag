@@ -12,14 +12,14 @@ varying lowp vec4 DestinationColor;
 
 // no pre-multiply alpha
 // lit result by per-vertex
-lowp vec4 ComputePixelLit(in lowp vec4 texDiffuse)
+lowp vec4 ShadeLit(in lowp vec4 texDiffuse)
 {
 	lowp vec4 result = texDiffuse * DestinationColor;
 	result.rgb += SpecularOut.rgb;
 	return result;
 }
 
-lowp vec4 ComputePixelUnlit(in lowp vec4 texDiffuse)
+lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse)
 {
 	// unlit = ambient 
 	return texDiffuse * vec4(ColorAmbient, DestinationColor.a);
@@ -81,7 +81,7 @@ void main(void)
 	#endif // ENABLE_SHADOW_CSM
 	
 	if (LightcoordShadowmap.s < 0.0 || LightcoordShadowmap.t < 0.0 || LightcoordShadowmap.s > 1.0 || LightcoordShadowmap.t > 1.0) {
-		texResult = ComputePixelLit(texResult);					// lit-area
+		texResult = ShadeLit(texResult);					// lit-area
 	}
 	else {
 
@@ -97,7 +97,7 @@ void main(void)
 		depthPCF = step(vec4(LightcoordShadowmap.z - 0.0005), depthPCF);
 		lowp float factorLit = dot(depthPCF, depthPCF) / 4.0;
 		
-		texResult = mix(ComputePixelUnlit(texResult), ComputePixelLit(texResult), factorLit);
+		texResult = mix(ShadeUnlit(texResult), ShadeLit(texResult), factorLit);
 		
 	#else
 
@@ -105,16 +105,16 @@ void main(void)
 		depthShadow = texture2D(SamplerShadowmap, LightcoordShadowmap.st).r;
 		//	depthShadow = texture2DProj(SamplerShadowmap, LightcoordShadowmap).r;	// palallel-projection, so w = 1 
 		if (depthShadow < LightcoordShadowmap.z - 0.0005)
-			texResult = ComputePixelUnlit(texResult);
+			texResult = ShadeUnlit(texResult);
 		else
-			texResult = ComputePixelLit(texResult);
+			texResult = ShadeLit(texResult);
 	#endif // ENABLE_PCF
 
 	// texResult = vec4(vec3(LightcoordShadowmap.z), 1.0);	// debug shadowmap
 	}
 
 #else
-    texResult = ComputePixelLit(texResult);
+    texResult = ShadeLit(texResult);
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
 
 #ifdef ENABLE_FOG

@@ -19,6 +19,7 @@ class M3RenderEngine {
   // shadow map
   M3ShadowMap? _shadowMap;
   M3ShadowMap? get shadowMap => _shadowMap;
+  bool get isShadowEnabled => options.shadows && _shadowMap != null;
 
   /// main context (scene render)
   final M3RenderContext mainContext = M3RenderContext();
@@ -120,7 +121,7 @@ class M3RenderEngine {
       M3ProgramLighting progLight = M3Resources.programTexture!; // texture shader
       // M3ProgramLighting progLight = M3Resources.programSimpleLighting!; // for debug
 
-      if (options.shadows && _shadowMap != null) {
+      if (isShadowEnabled) {
         // select shadow map shader: single or cascaded
         final M3ProgramShadow progShadow = scene.light.cascades.isEmpty
             ? M3Resources.programShadowmap!

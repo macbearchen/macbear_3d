@@ -18,10 +18,12 @@ import '../shaders_gen/Unlit.es3.frag.g.dart';
 import '../shaders_gen/Unlit.es3.vert.g.dart';
 import '../shaders_gen/Water.es3.frag.g.dart';
 import '../shaders_gen/Water.es3.vert.g.dart';
-// GLSL functions
-import '../shaders_gen/glsl/PCF.es3.frag.g.dart';
-import '../shaders_gen/glsl/Pixel.es3.frag.g.dart';
-import '../shaders_gen/glsl/Skinning.es3.vert.g.dart';
+// GLSL functions include
+import '../shaders_gen/glsl/FogFS.es3.glsl.g.dart';
+import '../shaders_gen/glsl/PixelFS.es3.glsl.g.dart';
+import '../shaders_gen/glsl/ShadowFS.es3.glsl.g.dart';
+import '../shaders_gen/glsl/ShadowVS.es3.glsl.g.dart';
+import '../shaders_gen/glsl/SkinningVS.es3.glsl.g.dart';
 
 class M3Resources {
   // ------------------------------
@@ -131,6 +133,7 @@ class M3Resources {
   // Unit geometries
   // ------------------------------
   static final unitCube = M3BoxGeom(1.0, 1.0, 1.0);
+  static final unitCylinder = M3CylinderGeom(0.5, 0.5, 1.0);
   static final unitBone = M3OctahedralGeom(0.5, bias: Vector3(-0.6, 0, 0));
   static final unitOctahedral = M3OctahedralGeom(0.5);
   static final unitSphere = M3SphereGeom(0.5);
@@ -174,7 +177,8 @@ class M3Resources {
   static M3Program? programSkybox;
   static M3Program? programRectangle;
   static M3Program? programMirror; // plane reflection (mirror / water)
-  static M3ProgramWater? programWater; // water shader program
+  static M3ProgramWater? programWater; // water no shadow
+  static M3ProgramWaterCSM? programWaterCSM; // water shadow CSM
   static M3ProgramEye? programSkyboxReflect;
   static M3Program? programExternalOES; // external texture: video streaming
   // with lighting
@@ -184,7 +188,7 @@ class M3Resources {
   static M3ProgramShadowCSM? programShadowCSM;
 
   // ignore: non_constant_identifier_names
-  static final _SkinNormal_vert = "#define ENABLE_NORMAL \n$Skinning_vert";
+  static final _SkinNormalVS_glsl = "#define ENABLE_NORMAL \n$SkinningVS_glsl";
 
   static Future<void> init() async {
     debugPrint('M3Resources: init starting...');
@@ -205,6 +209,7 @@ class M3Resources {
     debugView;
 
     unitCube;
+    unitCylinder;
     unitBone;
     unitOctahedral;
     unitSphere;
@@ -219,26 +224,19 @@ class M3Resources {
 
     // Programs
     debugPrint('M3Resources: initializing shader programs...');
-    programSimple = M3Program(Skinning_vert + Simple_vert, Simple_frag);
+    programSimple = M3Program(SkinningVS_glsl + Simple_vert, Simple_frag);
     programSkybox = M3Program(Skybox_vert, Skybox_frag);
     programRectangle = M3Program(Rect_vert, Rect_frag);
     programSkyboxReflect = M3ProgramEye(
-      _SkinNormal_vert + SkyboxReflect_vert,
+      _SkinNormalVS_glsl + SkyboxReflect_vert,
       Skybox_frag,
       reflectionType: M3ReflectionType.cubemap,
     );
-    programSimpleLighting = M3ProgramLighting(_SkinNormal_vert + SimpleLighting_vert, Simple_frag);
+    programSimpleLighting = M3ProgramLighting(_SkinNormalVS_glsl + SimpleLighting_vert, Simple_frag);
 
     // plane reflection (mirror / water)
     // programMirror = M3Program(Mirror_vert, Mirror_frag);
-    programMirror = M3Program(Skinning_vert + Simple_vert, Mirror_frag, reflectionType: M3ReflectionType.planar);
-
-    bool bSpecularLight = true;
-    String strWaterFrag = Water_frag;
-    if (bSpecularLight) {
-      strWaterFrag = "#define ENABLE_WATER_SPECULAR \n$strWaterFrag";
-    }
-    programWater = M3ProgramWater(Water_vert, strWaterFrag, reflectionType: M3ReflectionType.planar);
+    programMirror = M3Program(SkinningVS_glsl + Simple_vert, Mirror_frag, reflectionType: M3ReflectionType.planar);
 
     // external texture: video streaming
     String fsUnlit = Unlit_frag;
@@ -268,49 +266,50 @@ class M3Resources {
     programShadowCSM?.dispose();
 
     // texture lighting program
-    String strVert = _SkinNormal_vert + TexturedLighting_vert;
+    String strVert = _SkinNormalVS_glsl + TexturedLighting_vert;
     String strFrag = TexturedLighting_frag;
 
-    // pixel lighting: phong shading, cartoon, PBR
+    // pixel lighting: phong shading, cartoon, PBR, IBL
     if (options.perPixel) {
       if (options.pbr) {
         // ES3 PBR: Use modern ES3 shaders
-        strVert = Skinning_vert + TexturedLighting_vert;
-        strFrag = Pixel_frag + TexturedLighting_frag;
-
-        strVert = "#define ENABLE_PIXEL_LIGHTING \n#define ENABLE_PBR \n#define ENABLE_NORMAL \n$strVert";
-        strFrag = "#define ENABLE_PIXEL_LIGHTING \n#define ENABLE_PBR \n$strFrag";
+        strVert = "#define ENABLE_PBR \n$strVert";
+        strFrag = "#define ENABLE_PBR \n$strFrag";
         if (options.ibl) {
           strFrag = "#define ENABLE_IBL \n$strFrag";
         }
       } else {
-        // ES2 Lighting
-        strVert = "#define ENABLE_PIXEL_LIGHTING \n$strVert";
-        strFrag = Pixel_frag + strFrag;
+        // ES2 Lighting: phong shading, cartoon
         if (options.cartoon) {
           strFrag = "#define ENABLE_CARTOON \n$strFrag";
         }
       }
+      // add pixel lighting shader to vertex/fragment shader for final result
+      strVert = "#define ENABLE_PIXEL_LIGHTING \n$strVert";
+      strFrag = "#define ENABLE_PIXEL_LIGHTING \n$strFrag \n$PixelFS_glsl ";
     }
 
     if (options.fog) {
       strVert = "#define ENABLE_FOG \n$strVert";
-      strFrag = "#define ENABLE_FOG \n$strFrag";
+      strFrag = "$FogFS_glsl \n$strFrag"; // define ENABLE_FOG in Fog_frag
     }
 
     programTexture = M3ProgramLighting(strVert, strFrag);
 
-    // PCF function only for shadow programs (append at end)
-    strFrag += PCF_frag;
+    // shadow map, CSM, PCF
+    String strShadowFS = ShadowFS_glsl;
 
     // PCF - 0:none, 1:default(4-tap), 2:3x3, 3:5x5
     if (options.pcf == 1) {
-      strFrag = "#define ENABLE_PCF \n$strFrag";
+      strShadowFS = "#define ENABLE_PCF \n$strShadowFS";
     } else if (options.pcf == 2) {
-      strFrag = "#define ENABLE_PCF_3x3 \n$strFrag";
+      strShadowFS = "#define ENABLE_PCF_3x3 \n$strShadowFS";
     } else if (options.pcf == 3) {
-      strFrag = "#define ENABLE_PCF_5x5 \n$strFrag";
+      strShadowFS = "#define ENABLE_PCF_5x5 \n$strShadowFS";
     }
+
+    strVert = ShadowVS_glsl + strVert; // shadow vertex shader
+    strFrag = strShadowFS + strFrag; // shadow fragment shader
 
     // shadow map program
     String vsShadow = "#define ENABLE_SHADOW_MAP \n$strVert";
@@ -321,6 +320,24 @@ class M3Resources {
     vsShadow = "#define ENABLE_SHADOW_CSM \n$strVert";
     fsShadow = "#define ENABLE_SHADOW_CSM \n$strFrag";
     programShadowCSM = M3ProgramShadowCSM(vsShadow, fsShadow);
+
+    // water program without shadow
+    bool bSpecularLight = true;
+    String vsWater = SkinningVS_glsl + Water_vert;
+    String fsWater = Water_frag;
+    if (bSpecularLight) {
+      fsWater = "#define ENABLE_WATER_SPECULAR \n$fsWater";
+    }
+    if (options.fog) {
+      vsWater = "#define ENABLE_FOG \n$vsWater";
+      fsWater = "$FogFS_glsl \n$fsWater"; // define ENABLE_FOG in Fog_frag
+    }
+    programWater = M3ProgramWater(vsWater, fsWater);
+
+    // water program with shadow CSM
+    vsWater = "#define ENABLE_SHADOW_CSM \n$ShadowVS_glsl \n$vsWater";
+    fsWater = "#define ENABLE_SHADOW_CSM \n$strShadowFS \n$fsWater";
+    programWaterCSM = M3ProgramWaterCSM(vsWater, fsWater);
   }
 
   static void checkUpdate(M3ShaderOptions options) {
@@ -360,6 +377,7 @@ class M3Resources {
     programRectangle?.dispose();
     programMirror?.dispose();
     programWater?.dispose();
+    programWaterCSM?.dispose();
     programSkyboxReflect?.dispose();
     programExternalOES?.dispose();
     programSimpleLighting?.dispose();

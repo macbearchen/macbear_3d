@@ -3,7 +3,7 @@
 const String Rect_frag = r"""
 #version 300 es
 // Rect frag-shader ES3 //////////
-precision mediump float;
+
 in mediump vec2 TextureCoordOut;
 in lowp vec4 DestinationColor;
 

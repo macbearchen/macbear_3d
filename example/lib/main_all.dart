@@ -49,7 +49,7 @@ Future<void> onDidInit() async {
   final scene10 = TerrainScene_06();
   // final testScene = SampleScene(physics: M3PhysicsSystem(M3RapierPhysicsEngine()));
   final initScene = CubeScene_01();
-  await appEngine.setScene(initScene);
+  await appEngine.setScene(scene10);
 }
 
 class MainApp extends StatelessWidget {
@@ -143,9 +143,9 @@ class _MainPageState extends State<MainPage> {
       case 1: // shadowmap
         renderEngine.options.shadows = true;
         scene.camera.csmCount = 0;
-        final halfView = 8;
+        final halfView = 20;
         scene.light.target = Vector3.zero();
-        scene.light.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 50);
+        scene.light.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 100);
         scene.light.setEuler(pi / 4, -pi / 4, 0, distance: 30); // rotate light
         scene.light.refreshProjectionMatrix();
         break;

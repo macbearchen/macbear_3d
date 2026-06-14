@@ -9,6 +9,10 @@ part 'program_eye.dart';
 part 'program_lighting.dart';
 part 'program_shadowmap.dart';
 part 'program_water.dart';
+part 'shader/fog_shader.dart';
+part 'shader/lighting_shader.dart';
+part 'shader/shadow_shader.dart';
+part 'shader/water_shader.dart';
 
 /// reflection type for render
 enum M3ReflectionType { none, planar, cubemap }
@@ -67,7 +71,7 @@ class M3Program {
   M3Program(String strVert, String strFrag, {this.reflectionType = M3ReflectionType.none}) {
     // Ensure #version directive is at the very beginning if present
     strVert = _ensureVersionAtStart(strVert);
-    strFrag = _ensureVersionAtStart(strFrag);
+    strFrag = _ensureVersionAtStart(strFrag, precision: "precision mediump float;");
 
     final bool isES3 = strVert.startsWith("#version 300 es") || strFrag.startsWith("#version 300 es");
 
@@ -126,7 +130,7 @@ class M3Program {
     gl.checkError();
   }
 
-  String _ensureVersionAtStart(String source) {
+  String _ensureVersionAtStart(String source, {String? precision}) {
     const versionHeader = "#version 300 es";
     String cleanSource = source;
 
@@ -137,20 +141,32 @@ class M3Program {
       hasVersion = true;
     }
 
-    // 2. Find and remove all #extension headers
+    // 2. Find and remove precision declaration
+    if (precision != null) {
+      cleanSource = cleanSource.replaceAll(precision, "");
+    }
+
+    // 3. Find and remove all #extension headers
     final extensionRegExp = RegExp(r"^#extension\s+.+:(enable|require).*$", multiLine: true);
     final Iterable<Match> matches = extensionRegExp.allMatches(cleanSource);
     final List<String> extensions = matches.map((m) => m.group(0)!.trim()).toList();
     cleanSource = cleanSource.replaceAll(extensionRegExp, "");
 
-    // 3. Rebuild source: #version first, then #extensions, then the rest
+    // 4. Rebuild source
     final buffer = StringBuffer();
+    // 4-1. Add version header
     if (hasVersion) {
       buffer.writeln(versionHeader);
     }
+    // 4-2. Add precision declaration
+    if (precision != null) {
+      buffer.writeln(precision);
+    }
+    // 4-3. Add extensions
     for (final ext in extensions) {
       buffer.writeln(ext);
     }
+    // 4-4. Add source code
     buffer.write(cleanSource.trim());
 
     return buffer.toString();

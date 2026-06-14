@@ -15,6 +15,7 @@ class TerrainScene_06 extends DemoScene {
   Future<void> load() async {
     if (isLoaded) return;
     await super.load();
+    renderEngine.options.shader.fog = true;
 
     camera.setEuler(-pi / 3, -pi / 9, 0, distance: 40);
     debugPrint('Camera: $camera');
@@ -24,12 +25,25 @@ class TerrainScene_06 extends DemoScene {
     // 3. Setup Terrain
     await _setupTerrain();
 
-    water = M3Water();
-    water!.normalMap = await M3Texture.loadTexture('example/NormalMapWater.png');
-    water!.setSurfacePlane(constant: -_waterHeight);
+    // 4. Add Water
+    await addWater();
 
+    // 5. Add Mesh List
     addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 0));
     _initMeshList();
+  }
+
+  Future<void> addWater() async {
+    final water = M3Water();
+    water.scene = this;
+    water.normalMap = M3Texture.createWaterNormalMap();
+
+    water.setSurfacePlane(constant: -_waterHeight);
+    final waterColor = Vector3(0, 0, 1);
+    // final waterColor = M3Constants.colorOcean;
+    water.setWaterTint(Vector4(waterColor.x, waterColor.y, waterColor.z, 1.0));
+
+    setWater(water);
   }
 
   void _initMeshList() {
@@ -130,7 +144,7 @@ class TerrainScene_06 extends DemoScene {
   void update(double delta) {
     super.update(delta);
     // Rotating the light to see terrain shadows moving
-    light.setEuler(totalTime * 0.2, -pi / 3, 0, distance: 30);
+    light.setEuler(totalTime * 0.2, -pi / 4, 0, distance: 30);
 
     const double rot = pi / 15;
     int indexTorus = 0;
@@ -151,10 +165,10 @@ class TerrainScene_06 extends DemoScene {
   @override
   Widget buildUI(BuildContext context) {
     return Positioned(
-      top: 50,
-      left: 8,
+      top: 56,
+      right: 110,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(12)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -170,11 +184,11 @@ class TerrainScene_06 extends DemoScene {
                 M3AppEngine.instance.refresh();
               },
               child: Text(
-                _useHeightmap ? "Switch to Noise Terrain" : "Switch to Heightmap Terrain",
+                _useHeightmap ? "Switch to Noise" : "Switch to Heightmap",
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
             Text(
               "Water Height: ${_waterHeight.toStringAsFixed(1)}",
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
@@ -202,7 +216,27 @@ class TerrainScene_06 extends DemoScene {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
+            SizedBox(
+              width: 200,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Render Surface",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  Switch(
+                    value: water?.renderSurfaceEnabled ?? false,
+                    activeThumbColor: Colors.lightGreen,
+                    onChanged: (value) {
+                      water?.renderSurfaceEnabled = value;
+                      M3AppEngine.instance.refresh();
+                    },
+                  ),
+                ],
+              ),
+            ),
             SizedBox(
               width: 200,
               child: Row(

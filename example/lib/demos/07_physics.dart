@@ -72,7 +72,10 @@ class PhysicsScene_07 extends DemoScene {
     skybox = M3Skybox(M3Texture.createSampleCubemap());
 
     // plane geometry
-    final plane = addMesh(M3Mesh(M3PlaneGeom(10, 10, uvScale: Vector2.all(5.0))), Vector3(0, 0, 0));
+    final plane = addMesh(
+      M3Mesh(M3PlaneGeom(10, 10, widthSegments: 16, heightSegments: 16, uvScale: Vector2.all(5.0))),
+      Vector3(0, 0, 0),
+    );
     M3Texture texGround = M3Texture.createCheckerboard(
       size: 2,
       lightColor: Vector4(.7, 1, .5, 1),

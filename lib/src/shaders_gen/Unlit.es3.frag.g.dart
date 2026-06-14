@@ -3,7 +3,7 @@
 const String Unlit_frag = r"""
 #version 300 es
 // Simple frag-shader ES3 //////////
-precision mediump float;
+
 in mediump vec2 TextureCoordOut;
 in lowp vec4 DestinationColor;
 

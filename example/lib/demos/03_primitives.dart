@@ -80,16 +80,17 @@ class PrimitivesScene_03 extends DemoScene {
     addMesh(M3Resources.axisGizmoMesh, Vector3.zero());
 
     // 03-10: Create a terrain-like plane with smooth shading
+    double scaleA = 1, scaleH = 1.0;
     final smoothPlane = M3Mesh(
       M3PlaneGeom(
-        8,
-        8,
-        widthSegments: 8,
-        heightSegments: 8,
+        6,
+        6,
+        widthSegments: 16,
+        heightSegments: 16,
         uvScale: Vector2.all(4.0),
         shading: M3ShadingMode.smooth,
         onVertex: (x, y) {
-          return sin(x * 0.5) * cos(y * 0.5) * 2.0;
+          return sin(x * scaleA) * cos(y * scaleA) * scaleH;
         },
       ),
     );
@@ -99,14 +100,14 @@ class PrimitivesScene_03 extends DemoScene {
     // 03-11: Create a terrain-like plane with flat shading
     final flatPlane = M3Mesh(
       M3PlaneGeom(
-        8,
-        8,
-        widthSegments: 8,
-        heightSegments: 8,
+        6,
+        6,
+        widthSegments: 16,
+        heightSegments: 16,
         uvScale: Vector2.all(4.0),
         shading: M3ShadingMode.flat,
         onVertex: (x, y) {
-          return sin(x * 0.5) * cos(y * 0.5) * 2.0;
+          return sin(x * scaleA) * cos(y * scaleA) * scaleH;
         },
       ),
     );
