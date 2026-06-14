@@ -141,6 +141,7 @@ class "macbear_3d::src::renderer::render_context.dart::M3RenderContext" {
   +void prepareRenderQueue()
   +void excludeEntities()
   +void excludePlane()
+  +void excludeWater()
   +bool needsPlanarReflectionPass()
   +bool needsReflectionProbePass()
   +void render()
@@ -274,6 +275,9 @@ class "macbear_3d::src::util::constants.dart::M3Constants" {
   {static} +Vector3 colorDusk
   {static} +Vector3 colorGray
   {static} +Vector3 colorSkyBlue
+  {static} +Vector3 colorWaterTint
+  {static} +Vector3 colorWaterTintLake
+  {static} +Vector3 colorWaterTintSea
 }
 
 "macbear_3d::src::util::constants.dart::M3Constants" o-- "vector_math::vector_math.dart::Matrix3"
@@ -948,48 +952,12 @@ class "macbear_3d::src::program::program.dart::M3ProgramLighting" {
 "macbear_3d::src::program::program.dart::M3LightingShader" <|-- "macbear_3d::src::program::program.dart::M3ProgramLighting"
 "macbear_3d::src::program::program.dart::M3FogShader" <|-- "macbear_3d::src::program::program.dart::M3ProgramLighting"
 
-abstract class "macbear_3d::src::program::program.dart::M3LightingShader" {
-  +RenderingContext gl
-  +UniformLocation uniformAmbient
-  +UniformLocation uniformDiffuse
-  +UniformLocation uniformSpecular
-  +UniformLocation uniformLightPosition
-  -M3Light? _light
-  +void initLightingLocation()
-  +void attachLight()
-  +void setLightPosition()
-}
-
-"macbear_3d::src::program::program.dart::M3LightingShader" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
-"macbear_3d::src::program::program.dart::M3LightingShader" o-- "flutter_angle::shared::classes.dart::UniformLocation"
-"macbear_3d::src::program::program.dart::M3LightingShader" o-- "macbear_3d::src::scene::light.dart::M3Light"
-
-abstract class "macbear_3d::src::program::program.dart::M3FogShader" {
-  +RenderingContext gl
-  +UniformLocation? uniformFogPlane
-  +UniformLocation? uniformFogDepth
-  +UniformLocation? uniformFogColor
-  -M3Fog? _fog
-  +void initFogLocation()
-  +void applyFog()
-  +void setFogPlane()
-}
-
-"macbear_3d::src::program::program.dart::M3FogShader" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
-"macbear_3d::src::program::program.dart::M3FogShader" o-- "flutter_angle::shared::classes.dart::UniformLocation"
-"macbear_3d::src::program::program.dart::M3FogShader" o-- "macbear_3d::src::scene::fog.dart::M3Fog"
-
 abstract class "macbear_3d::src::program::program.dart::M3ProgramShadow" {
-  +UniformLocation uniformSamplerShadowmap
-  +UniformLocation uniformShadowmapSize
-  +UniformLocation uniformNormalBias
   +void initLocation()
-  +void applyShadow()
-  +void bindShadow()
 }
 
-"macbear_3d::src::program::program.dart::M3ProgramShadow" o-- "flutter_angle::shared::classes.dart::UniformLocation"
 "macbear_3d::src::program::program.dart::M3ProgramLighting" <|-- "macbear_3d::src::program::program.dart::M3ProgramShadow"
+"macbear_3d::src::program::program.dart::M3ShadowShader" <|-- "macbear_3d::src::program::program.dart::M3ProgramShadow"
 
 class "macbear_3d::src::program::program.dart::M3ProgramShadowmap" {
   +UniformLocation uniformMatrixShadowmap
@@ -1012,19 +980,80 @@ class "macbear_3d::src::program::program.dart::M3ProgramShadowCSM" {
 "macbear_3d::src::program::program.dart::M3ProgramShadow" <|-- "macbear_3d::src::program::program.dart::M3ProgramShadowCSM"
 
 class "macbear_3d::src::program::program.dart::M3ProgramWater" {
+  +void initLocation()
+  +void setLightTBN()
+}
+
+"macbear_3d::src::program::program.dart::M3ProgramLighting" <|-- "macbear_3d::src::program::program.dart::M3ProgramWater"
+"macbear_3d::src::program::program.dart::M3WaterShader" <|-- "macbear_3d::src::program::program.dart::M3ProgramWater"
+
+class "macbear_3d::src::program::program.dart::M3ProgramWaterCSM" {
+  +void initLocation()
+  +void setLightTBN()
+}
+
+"macbear_3d::src::program::program.dart::M3ProgramShadowCSM" <|-- "macbear_3d::src::program::program.dart::M3ProgramWaterCSM"
+"macbear_3d::src::program::program.dart::M3WaterShader" <|-- "macbear_3d::src::program::program.dart::M3ProgramWaterCSM"
+
+abstract class "macbear_3d::src::program::program.dart::M3FogShader" {
+  +RenderingContext gl
+  +UniformLocation uniformFogPlane
+  +UniformLocation uniformFogDepth
+  +UniformLocation uniformFogColor
+  -M3Fog? _fog
+  +void initFogLocation()
+  +void applyFog()
+  +void setFogPlane()
+}
+
+"macbear_3d::src::program::program.dart::M3FogShader" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::program::program.dart::M3FogShader" o-- "flutter_angle::shared::classes.dart::UniformLocation"
+"macbear_3d::src::program::program.dart::M3FogShader" o-- "macbear_3d::src::scene::fog.dart::M3Fog"
+
+abstract class "macbear_3d::src::program::program.dart::M3LightingShader" {
+  +RenderingContext gl
+  +UniformLocation uniformAmbient
+  +UniformLocation uniformDiffuse
+  +UniformLocation uniformSpecular
+  +UniformLocation uniformLightPosition
+  -M3Light? _light
+  +void initLightingLocation()
+  +void attachLight()
+  +void setLightPosition()
+}
+
+"macbear_3d::src::program::program.dart::M3LightingShader" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::program::program.dart::M3LightingShader" o-- "flutter_angle::shared::classes.dart::UniformLocation"
+"macbear_3d::src::program::program.dart::M3LightingShader" o-- "macbear_3d::src::scene::light.dart::M3Light"
+
+abstract class "macbear_3d::src::program::program.dart::M3ShadowShader" {
+  +RenderingContext gl
+  +UniformLocation uniformSamplerShadowmap
+  +UniformLocation uniformShadowmapSize
+  +UniformLocation uniformNormalBias
+  +void initShadowLocation()
+  +void applyShadow()
+  +void bindShadow()
+}
+
+"macbear_3d::src::program::program.dart::M3ShadowShader" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::program::program.dart::M3ShadowShader" o-- "flutter_angle::shared::classes.dart::UniformLocation"
+
+abstract class "macbear_3d::src::program::program.dart::M3WaterShader" {
+  +RenderingContext gl
   +UniformLocation uniformBumpTranslateScale0
   +UniformLocation uniformBumpTranslateScale1
   +UniformLocation uniformWaveDistortion
   +UniformLocation uniformAxisTangent
   +UniformLocation uniformAxisBinormal
   +UniformLocation uniformAxisNormal
-  +void initLocation()
+  +void initWaterLocation()
   +void bindWater()
-  +void setTBN()
+  -void _setTBN()
 }
 
-"macbear_3d::src::program::program.dart::M3ProgramWater" o-- "flutter_angle::shared::classes.dart::UniformLocation"
-"macbear_3d::src::program::program.dart::M3ProgramLighting" <|-- "macbear_3d::src::program::program.dart::M3ProgramWater"
+"macbear_3d::src::program::program.dart::M3WaterShader" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::program::program.dart::M3WaterShader" o-- "flutter_angle::shared::classes.dart::UniformLocation"
 
 class "macbear_3d::src::texture::material.dart::M3Material" {
   +Vector4 diffuse
@@ -1096,6 +1125,7 @@ class "macbear_3d::src::texture::texture.dart::M3Texture" {
   {static} +dynamic createFromBytes()
   -dynamic _loadTarget()
   -dynamic _loadTargetFromImage()
+  {static} +M3Texture createWaterNormalMap()
   {static} +dynamic createWoodTexture()
   {static} -dynamic _generateWoodImage()
 }
@@ -1195,8 +1225,8 @@ class "macbear_3d::src::texture::ktx_info.dart::_Ktx2Level" {
 class "macbear_3d::src::physics::physics_system.dart::M3PhysicsSystem" {
   -M3PhysicsEngine _engine
   -double _accumulator
-  -int _maxStepsPerFrame
   -double _timeStep
+  -int _maxStepsPerFrame
   -Map<int, M3Entity> _bodyToEntity
   -double _interpolationAlpha
   +String info
@@ -1406,15 +1436,20 @@ class "macbear_3d::src::scene::water.dart::M3Water" {
   +M3Texture normalMap
   +double waveDistortion
   +double reflectionDepthBias
-  -M3Camera _viewer
-  +M3PlanarReflection? reflectionPass
-  +M3PlanarReflection? refractionPass
+  +M3Scene scene
+  +M3PlanarReflection reflectionPass
+  +M3PlanarReflection refractionPass
   +M3Fog waterFog
   +M3WaterFlowLayer flow0
   +M3WaterFlowLayer flow1
-  {static} +M3ProgramWater progWater
+  +bool renderSurfaceEnabled
+  +M3ProgramWater progWater
+  +M3ProgramWaterCSM progWaterCSM
   +M3Material waterMaterial
+  +bool reflectionEnabled
+  +bool refractionEnabled
   {static} +M3Mesh createWaterSurface()
+  +void setWaterTint()
   +void setSurfacePlane()
   +void resize()
   +void update()
@@ -1426,11 +1461,12 @@ class "macbear_3d::src::scene::water.dart::M3Water" {
 
 "macbear_3d::src::scene::water.dart::M3Water" o-- "vector_math::vector_math.dart::Plane"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
-"macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::scene::camera.dart::M3Camera"
+"macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::scene::scene.dart::M3Scene"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::scene::fog.dart::M3Fog"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::scene::water.dart::M3WaterFlowLayer"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::program::program.dart::M3ProgramWater"
+"macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::program::program.dart::M3ProgramWaterCSM"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::texture::material.dart::M3Material"
 "macbear_3d::src::scene::entity.dart::M3Entity" <|-- "macbear_3d::src::scene::water.dart::M3Water"
 
@@ -1456,6 +1492,7 @@ abstract class "macbear_3d::src::scene::scene.dart::M3Scene" {
   +dynamic load()
   +M3Entity addMesh()
   +void addEntity()
+  +void setWater()
   +void savePhysicsStates()
   +void update()
   +void drawDebug()
@@ -1721,6 +1758,7 @@ class "macbear_3d::src::engine::resources.dart::M3Resources" {
   {static} +M3OctahedralGeom debugDot
   {static} +M3PlaneGeom debugView
   {static} +M3BoxGeom unitCube
+  {static} +M3CylinderGeom unitCylinder
   {static} +M3OctahedralGeom unitBone
   {static} +M3OctahedralGeom unitOctahedral
   {static} +M3SphereGeom unitSphere
@@ -1733,13 +1771,14 @@ class "macbear_3d::src::engine::resources.dart::M3Resources" {
   {static} +M3Program? programRectangle
   {static} +M3Program? programMirror
   {static} +M3ProgramWater? programWater
+  {static} +M3ProgramWaterCSM? programWaterCSM
   {static} +M3ProgramEye? programSkyboxReflect
   {static} +M3Program? programExternalOES
   {static} +M3ProgramLighting? programSimpleLighting
   {static} +M3ProgramLighting? programTexture
   {static} +M3ProgramShadowmap? programShadowmap
   {static} +M3ProgramShadowCSM? programShadowCSM
-  {static} -String _SkinNormal_vert
+  {static} -String _SkinNormalVS_glsl
   {static} +M3Mesh axisGizmoMesh
   {static} +M3Text2D text2D
   {static} +M3Shape2D line
@@ -1758,12 +1797,14 @@ class "macbear_3d::src::engine::resources.dart::M3Resources" {
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::geom::geom.dart::M3BoxGeom"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::geom::geom.dart::M3OctahedralGeom"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::geom::geom.dart::M3PlaneGeom"
+"macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::geom::geom.dart::M3CylinderGeom"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::geom::geom.dart::M3SphereGeom"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::2d::shape_2d.dart::M3Shape2D"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::2d::text_2d.dart::M3Text2D"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::2d::shape_2d.dart::M3Rectangle2D"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::program::program.dart::M3Program"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::program::program.dart::M3ProgramWater"
+"macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::program::program.dart::M3ProgramWaterCSM"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::program::program.dart::M3ProgramEye"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::program::program.dart::M3ProgramLighting"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::program::program.dart::M3ProgramShadowmap"
@@ -1793,6 +1834,7 @@ class "macbear_3d::src::engine::render_engine.dart::M3RenderEngine" {
   +M3RenderOptions options
   +M3RenderStats stats
   +M3ShadowMap? shadowMap
+  +bool isShadowEnabled
   +void init()
   +void cleanProbes()
   +void dispose()
@@ -1984,6 +2026,7 @@ class "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" 
   -M3Texture _texture
   +Plane clipPlane
   -M3Camera _camera
+  +bool enable
   +bool visible
   -double _renderScale
   +int width
