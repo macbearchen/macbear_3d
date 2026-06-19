@@ -9,20 +9,35 @@ class CubeScene_01 extends DemoScene {
     if (isLoaded) return;
     await super.load();
 
+    // fog
+    fog.depth = 0.0;
+    fog.planeHeight = 0.0;
+
     // 01: box geometry
-    addMesh(M3Mesh(M3BoxGeom(1.0, 1.0, 1.0)), Vector3.zero());
+    final box = addMesh(M3Mesh(M3BoxGeom(1.0, 1.0, 1.0)), Vector3.zero());
+    box.scale.setValues(1, 1, 1);
 
     // axis gizmo
     addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 0));
 
-    // M3Texture texGround = await M3Texture.loadTexture("assets/example/test_8x8.astc");
+    final texName = "example/test_8x8.astc";
+    final texName2 = "example/nvlobby_xneg.jpg";
+    // M3Texture texTest = await M3Texture.loadTexture(texName);
+    M3Texture texGround = M3Texture.createCheckerboard(
+      size: 8,
+      lightColor: Vector4(0.65, 0.45, 0.25, 1),
+      darkColor: Vector4(0.36, 0.22, 0.12, 1),
+    );
     // ground plane
     final mtrGround = M3Material()
-      ..diffuse = Vector4(0.588, 0.471, 0.353, 1.0)
-      // ..diffuseTexture = texGround
+      ..diffuseTexture = texGround
       ..setMatte();
-    final groundMesh = M3Mesh(M3PlaneGeom(20, 20, uvScale: Vector2.all(5.0)), material: mtrGround);
-    addMesh(groundMesh, Vector3(0, 0, -1));
+    final groundMesh = M3Mesh(
+      M3PlaneGeom(80, 80, widthSegments: 20, heightSegments: 20, uvScale: Vector2.all(5.0)),
+      material: mtrGround,
+    );
+    final entity = addMesh(groundMesh, Vector3(0, 0, -1));
+    entity.color = Vector4(1, 1, 1, 1);
   }
 
   @override

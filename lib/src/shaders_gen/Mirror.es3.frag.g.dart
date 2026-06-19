@@ -2,6 +2,7 @@
 // ignore: constant_identifier_names
 const String Mirror_frag = r"""
 #version 300 es
+precision mediump float;
 // Mirror frag-shader //////////
 
 in lowp vec4 DestinationColor;

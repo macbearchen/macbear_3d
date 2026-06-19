@@ -1,6 +1,8 @@
 // Macbear3D engine
 import '../m3_internal.dart';
 
+enum M3PlanarPass { reflection, refraction }
+
 class M3PlanarReflection {
   final M3RenderContext _context = M3RenderContext();
   late M3Framebuffer _fbo;
@@ -26,7 +28,7 @@ class M3PlanarReflection {
   M3PlanarReflection({int width = 16, int height = 16, double resolutionScale = 0.5}) : _renderScale = resolutionScale {
     assert(resolutionScale > 0 && resolutionScale <= 1.0);
     _fbo = M3Framebuffer(width, height, useDepthTexture: false);
-    _texture = M3Texture.createEmpty2D(width, height);
+    _texture = M3Texture.createEmpty2D(width, height, wrap: WebGL.CLAMP_TO_EDGE);
   }
 
   void setRenderScale(double scale) {
@@ -45,7 +47,7 @@ class M3PlanarReflection {
 
     dispose();
     _fbo = M3Framebuffer(width, height, useDepthTexture: false);
-    _texture = M3Texture.createEmpty2D(width, height);
+    _texture = M3Texture.createEmpty2D(width, height, wrap: WebGL.CLAMP_TO_EDGE);
   }
 
   void dispose() {
@@ -53,8 +55,7 @@ class M3PlanarReflection {
     _fbo.dispose();
   }
 
-  /// Capture the scene by planar reflection (renders above the plane).
-  void captureReflection(M3Scene scene) {
+  void _capture(M3Scene scene, M3PlanarPass pass) {
     if (!enable) return;
     // visible only when camera is above the plane
     final dist = clipPlane.distanceToVector3(scene.camera.position);
@@ -62,33 +63,33 @@ class M3PlanarReflection {
     if (!visible) return;
 
     _camera.setFrom(scene.camera);
-    _camera.reflectViewMatrix(clipPlane);
-    _context.fog = scene.fog;
+    if (pass == M3PlanarPass.reflection) {
+      // reversed winding for mirrored view
+      _camera.reflectViewMatrix(clipPlane);
+    } else {
+      // normal winding — no view flip
+      // _camera.farClip = fog.depth;
+      // _camera.refreshProjectionMatrix();
+    }
 
-    _renderToTexture(scene, true); // reversed winding for mirrored view
+    _context.fog = scene.fog;
+    _renderToTexture(scene, pass);
+  }
+
+  /// Capture the scene by planar reflection (renders above the plane).
+  void captureReflection(M3Scene scene) {
+    _capture(scene, M3PlanarPass.reflection);
   }
 
   /// Capture the scene by planar refraction (renders below the plane).
-  void captureRefraction(M3Scene scene, M3Fog fog) {
-    if (!enable) return;
-    // visible only when camera is above the plane
-    final dist = clipPlane.distanceToVector3(scene.camera.position);
-    visible = dist > 0.01;
-    if (!visible) return;
-
-    _camera.setFrom(scene.camera);
-    // Mcabear note: refraction clip fog depth.
-    // _camera.farClip = fog.depth;
-    // _camera.refreshProjectionMatrix();
-    _context.fog = fog;
-
-    _renderToTexture(scene, false); // normal winding — no view flip
+  void captureRefraction(M3Scene scene) {
+    _capture(scene, M3PlanarPass.refraction);
   }
 
   // Render the scene to [_texture]
-  // isReflection=true: render reflection above water(mirror)
-  // isReflection=false: render refraction below water(inside water)
-  void _renderToTexture(M3Scene scene, bool isReflection) {
+  // reflection pass: render above water (mirror)
+  // refraction pass: render below water (inside water)
+  void _renderToTexture(M3Scene scene, M3PlanarPass pass) {
     final renderEngine = M3AppEngine.instance.renderEngine;
     final gl = renderEngine.gl;
 
@@ -109,6 +110,7 @@ class M3PlanarReflection {
     // oblique clip:
     // reflection: clip geometry below the water, use original plane
     // refraction: clip geometry above the water, use negated plane
+    final bool isReflection = pass == M3PlanarPass.reflection;
     final p = isReflection ? clipPlane : Plane.normalconstant(-clipPlane.normal, -clipPlane.constant);
     _camera.setObliqueClipPlane(p);
     _camera.updateFrustum();

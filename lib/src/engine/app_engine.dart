@@ -202,13 +202,18 @@ class M3AppEngine with ChangeNotifier {
   Widget getAppWidget() {
     debugPrint("--- getAppWidget ---");
     if (!_didInit) {
+      // --- Macbear 3D ---
+      // *** Copyright information, please do not delete
+      // *** 版權所有, 請勿任意修改
+      // *** 저작권은 보호되며, 허가 없이 수정할 수 없습니다.
+      // #region DO NOT MODIFY --- Copyright
       return Container(
-        color: Colors.black,
+        color: Colors.grey,
         child: Center(
-          // Macbear 3D Copyright: Please don't remove this text!
-          child: Text('Macbear 3D', style: TextStyle(color: Colors.lightGreen, fontSize: 20)),
+          child: Text('Macbear 3D', style: TextStyle(color: Colors.white, fontSize: 20)),
         ),
       );
+      // #endregion
     }
 
     Widget textureSurface = kIsWeb

@@ -1,4 +1,5 @@
 #version 300 es
+precision mediump float;
 // TexturedLighting frag-shader: ES3 //////////
 
 #ifdef ENABLE_PIXEL_LIGHTING

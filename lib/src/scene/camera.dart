@@ -297,19 +297,3 @@ $euler
   }
 }
 
-/// Matrix4 extension for orthographic inverse
-extension Matrix4Extension on Matrix4 {
-  Matrix4 orthoInverse() {
-    // (1/3): inverse rotation by transposed
-    Matrix3 rotInv = getRotation().transposed();
-
-    // (2/3): inverse translation by negative
-    Vector3 tInv = -(rotInv * getTranslation());
-
-    // (3/3): inverse matrix only for ortho
-    Matrix4 retMat = Matrix4.identity();
-    retMat.setRotation(rotInv);
-    retMat.setTranslation(tInv);
-    return retMat;
-  }
-}

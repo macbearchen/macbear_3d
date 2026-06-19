@@ -3,6 +3,7 @@ part of 'program.dart';
 // add reflection by skybox-cubemap
 class M3ProgramEye extends M3Program {
   late UniformLocation uniformEyePosition; // eye position as camera origin
+  late UniformLocation uniformObjectScale; // object scale
 
   M3ProgramEye(super.strVert, super.strFrag, {super.reflectionType});
 
@@ -11,11 +12,7 @@ class M3ProgramEye extends M3Program {
     super.initLocation();
 
     uniformEyePosition = gl.getUniformLocation(program, "EyePosition");
-  }
-
-  // eye position in object-space (model-space)
-  void setEye(Vector3 eye) {
-    gl.uniform3fv(uniformEyePosition, eye.storage);
+    uniformObjectScale = gl.getUniformLocation(program, "ObjectScale");
   }
 
   @override
@@ -31,8 +28,18 @@ class M3ProgramEye extends M3Program {
       double det = matInv.copyInverse(mvMatrix);
 
       if (det != 0.0) {
-        Vector3 posEye = matInv.getTranslation();
-        setEye(posEye);
+        // eye position in object-space (model-space)
+        if (M3Program.isLocationValid(uniformEyePosition)) {
+          Vector3 eyePosition = matInv.getTranslation();
+          gl.uniform3fv(uniformEyePosition, eyePosition.storage);
+        }
+        // object scale
+        if (M3Program.isLocationValid(uniformObjectScale)) {
+          Vector3 objScale = matInv.decomposeScale();
+          gl.uniform3fv(uniformObjectScale, objScale.storage);
+        }
+      } else {
+        debugPrint('M3ProgramEye.setMatrices: det = 0.0');
       }
     }
   }

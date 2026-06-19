@@ -4,15 +4,35 @@
 
 #define ENABLE_FOG
 
+// sphere fog base on camera position
+in highp float fogDist; // distance to camera
 in highp vec3 fogVert;
-uniform mediump vec4 FogPlane;
-uniform mediump float FogDepth;
-uniform lowp vec3 FogColor;
+
+// x: sphereStart, y: sphereDepth, z: planeHeight
+uniform mediump vec3 uFogParams;
+uniform lowp vec3 uFogColor;
+
+// plane fog
+uniform mediump vec4 uPlaneFog;
+uniform lowp vec3 uPlaneFogColor;
 
 lowp vec4 ApplyFog(in lowp vec4 texResult)
 {
-    mediump float DepthInFog = dot(FogPlane.xyz, fogVert) + FogPlane.w;
-    mediump float FogDensity = clamp(DepthInFog / FogDepth, 0.0, 1.0);
-    lowp float fFogBlend = clamp(FogDensity + 1.0 - texResult.a, 0.0, 1.0);
-    return vec4(mix(texResult.rgb, FogColor, fFogBlend), texResult.a);
+    mediump float fogDensity;
+    mediump float fogBlend;
+    lowp vec4 result = texResult;
+    // 1/2: plane fog
+    if (uFogParams.z > 0.0) {
+        mediump float  planeDist = dot(uPlaneFog.xyz, fogVert) + uPlaneFog.w;
+        fogDensity = clamp(planeDist / uFogParams.z, 0.0, 1.0);
+        fogBlend = clamp(fogDensity + 1.0 - texResult.a, 0.0, 1.0);
+        result = vec4(mix(result.rgb, uPlaneFogColor, fogBlend), texResult.a);
+    }
+    // 2/2: sphere fog
+    if (uFogParams.y > 0.0) {
+        fogDensity = clamp((fogDist - uFogParams.x) / uFogParams.y, 0.0, 1.0);
+        fogBlend = clamp(fogDensity + 1.0 - texResult.a, 0.0, 1.0);
+        result = vec4(mix(result.rgb, uFogColor, fogBlend), texResult.a);
+    }
+    return result;
 }

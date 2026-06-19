@@ -34,6 +34,8 @@ out mediump vec2 TextureCoordOut;
 uniform mat4 ModelviewProjection;
 
 #ifdef ENABLE_FOG
+uniform mediump vec3 ObjectScale;
+out highp float fogDist;   // distance: eye to obj-vertex
 out highp vec3 fogVert;
 #endif // ENABLE_FOG
 
@@ -50,7 +52,10 @@ void main(void)
 #endif // ENABLE_SKINNING
 
     mediump vec3 L = LightPosition;
-    mediump vec3 E = normalize(EyePosition - objVert.xyz);
+    mediump vec3 eyeToObj = EyePosition - objVert.xyz;
+    highp float eyeToObjDist = length(eyeToObj);
+    mediump vec3 E = eyeToObj / eyeToObjDist;
+
 #ifdef ENABLE_PIXEL_LIGHTING
     ObjectspaceH = normalize(L + E);
     #ifdef ENABLE_PBR
@@ -76,11 +81,13 @@ void main(void)
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
     ComputeShadowPosition(objVert.xyz, objNormal);
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
-
+    
 #ifdef ENABLE_FOG
+    eyeToObj /= ObjectScale;
+    fogDist = length(eyeToObj);
     fogVert = objVert.xyz;
 #endif // ENABLE_FOG
-    
+
     TextureCoordOut = inTexCoord;
     gl_Position = ModelviewProjection * objVert;
 }

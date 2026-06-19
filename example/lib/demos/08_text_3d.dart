@@ -28,24 +28,24 @@ class Text3DScene_08 extends DemoScene {
     final font = await resManager.loadFont(isLocalFont ? localPath : fontPath); // ignore: dead_code
     final text = isLocalFont ? "OpenGL ES3" : "麥克熊"; // ignore: dead_code
     // Create Text Geometry
-    final textGeom = M3TextGeom(text, font, size: 1.5, depth: 0.3, curveSubdivisions: 3, creaseAngle: 40);
-    final textGeom2 = M3TextGeom('Macbear 3D', font, size: 2, depth: 0.6, curveSubdivisions: 3, creaseAngle: 40);
+    final textGeom = M3TextGeom(text, font, size: 1.2, depth: 0.2, curveSubdivisions: 3, creaseAngle: 40);
+    final textGeom2 = M3TextGeom('Macbear 3D', font, size: 1.6, depth: 0.4, curveSubdivisions: 3, creaseAngle: 40);
 
     // Create Material
     final mtr = M3Material();
-    mtr.diffuse = Vector4(0.1, 0.5, 1.0, 1.0); // Blue
+    mtr.diffuse = Vector4(0.1, 0.6, 1.0, 1.0); // Blue
     mtr.shininess = 32;
 
     final mtr2 = M3Material();
-    mtr2.diffuse = Vector4(1.0, 1.0, 0.2, 1.0); // yellow
+    mtr2.diffuse = Vector4(0.8, 1.0, 0.1, 1.0); // yellow
     // 08-1: text geometry
     final mesh = M3Mesh(textGeom, material: mtr);
-    final entity = addMesh(mesh, Vector3(-5, 1, 1.8)); // TW
+    final entity = addMesh(mesh, Vector3(-4, 0, 1.5)); // OpenGL ES
     entity.rotation.setEuler(0, pi * 0.45, 0);
 
     final mesh2 = M3Mesh(textGeom2, material: mtr2);
-    final entity2 = addMesh(mesh2, Vector3(-3, -3, 0)); // 3D
-    entity2.rotation.setEuler(0, 0, pi / 3);
+    final entity2 = addMesh(mesh2, Vector3(-3, -3, 0)); // Macbear 3D
+    entity2.rotation.setEuler(0, 0, pi / 5);
 
     M3Texture texGround = M3Texture.createCheckerboard(
       size: 2,
@@ -65,7 +65,7 @@ class Text3DScene_08 extends DemoScene {
 
     plane.mesh.subMeshes[0].mtr
       ..reflection = 0.2
-      ..roughness = 0.1
+      ..roughness = 0.0
       ..metallic = 0.2
       ..planarReflection = renderEngine.planarReflection
       ..diffuseTexture = texGround;

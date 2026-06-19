@@ -47,10 +47,13 @@ class _M3Indices {
   late Buffer _indexBuffer;
 
   _M3Indices(this._primitiveType, TypedData indices) {
+    dynamic idxList;
     if (indices is Uint16List) {
+      idxList = toU16List(indices);
       _indexType = WebGL.UNSIGNED_SHORT;
       _count = indices.length;
     } else if (indices is Uint32List) {
+      idxList = toU32List(indices);
       _indexType = WebGL.UNSIGNED_INT;
       _count = indices.length;
     } else {
@@ -60,7 +63,7 @@ class _M3Indices {
     // buffers for indices
     _indexBuffer = gl.createBuffer();
     gl.bindBuffer(WebGL.ELEMENT_ARRAY_BUFFER, _indexBuffer);
-    gl.bufferData(WebGL.ELEMENT_ARRAY_BUFFER, indices, WebGL.STATIC_DRAW);
+    gl.bufferData(WebGL.ELEMENT_ARRAY_BUFFER, idxList, WebGL.STATIC_DRAW);
   }
 
   int get primitiveCount {
@@ -187,41 +190,41 @@ abstract class M3Geom {
 
     _vertexBuffer = gl.createBuffer();
     gl.bindBuffer(WebGL.ARRAY_BUFFER, _vertexBuffer);
-    gl.bufferData(WebGL.ARRAY_BUFFER, Float32List.fromList(_vertices!.buffer), WebGL.STATIC_DRAW);
+    gl.bufferData(WebGL.ARRAY_BUFFER, toF32List(_vertices!.buffer), WebGL.STATIC_DRAW);
     _vertices = null;
 
     if (_normals != null) {
       _normalBuffer = gl.createBuffer();
       gl.bindBuffer(WebGL.ARRAY_BUFFER, _normalBuffer);
-      gl.bufferData(WebGL.ARRAY_BUFFER, Float32List.fromList(_normals!.buffer), WebGL.STATIC_DRAW);
+      gl.bufferData(WebGL.ARRAY_BUFFER, toF32List(_normals!.buffer), WebGL.STATIC_DRAW);
       _normals = null;
     }
 
     if (_uvs != null) {
       _uvBuffer = gl.createBuffer();
       gl.bindBuffer(WebGL.ARRAY_BUFFER, _uvBuffer);
-      gl.bufferData(WebGL.ARRAY_BUFFER, Float32List.fromList(_uvs!.buffer), WebGL.STATIC_DRAW);
+      gl.bufferData(WebGL.ARRAY_BUFFER, toF32List(_uvs!.buffer), WebGL.STATIC_DRAW);
       _uvs = null;
     }
 
     if (_colors != null) {
       _colorBuffer = gl.createBuffer();
       gl.bindBuffer(WebGL.ARRAY_BUFFER, _colorBuffer);
-      gl.bufferData(WebGL.ARRAY_BUFFER, Float32List.fromList(_colors!.buffer), WebGL.STATIC_DRAW);
+      gl.bufferData(WebGL.ARRAY_BUFFER, toF32List(_colors!.buffer), WebGL.STATIC_DRAW);
       _colors = null;
     }
 
     if (_joints != null) {
       _jointBuffer = gl.createBuffer();
       gl.bindBuffer(WebGL.ARRAY_BUFFER, _jointBuffer);
-      gl.bufferData(WebGL.ARRAY_BUFFER, Uint16List.fromList(_joints!), WebGL.STATIC_DRAW);
+      gl.bufferData(WebGL.ARRAY_BUFFER, toU16List(_joints!), WebGL.STATIC_DRAW);
       _joints = null;
     }
 
     if (_weights != null) {
       _weightBuffer = gl.createBuffer();
       gl.bindBuffer(WebGL.ARRAY_BUFFER, _weightBuffer);
-      gl.bufferData(WebGL.ARRAY_BUFFER, Float32List.fromList(_weights!), WebGL.STATIC_DRAW);
+      gl.bufferData(WebGL.ARRAY_BUFFER, toF32List(_weights!), WebGL.STATIC_DRAW);
       _weights = null;
     }
   }

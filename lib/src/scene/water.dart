@@ -8,6 +8,8 @@ class M3WaterFlowLayer {
   Vector2 velocity = Vector2.zero();
 }
 
+enum M3WaterCameraState { aboveWater, onSurface, underwater }
+
 /// water effect, using plane reflection / refraction.
 class M3Water extends M3Entity {
   M3ProgramWater get progWater => M3Resources.programWater!; // debug: programMirror
@@ -15,15 +17,17 @@ class M3Water extends M3Entity {
 
   Plane surfacePlane = Plane.components(0, 0, 1, 0);
   M3Texture normalMap = M3Resources.texNormal; // normal-map for water wave distortion
-  double waveDistortion = 20.0;
+  double waveDistortion = 10.0;
   double reflectionDepthBias = 0.8;
   late M3Scene scene;
+  // camera view state relative to water surface
+  M3WaterCameraState cameraState = .aboveWater;
 
   static M3Mesh createWaterSurface({
     double width = 400,
     double height = 400,
-    int widthSegments = 8,
-    int heightSegments = 8,
+    int widthSegments = 40,
+    int heightSegments = 40,
     Vector2? uvScale,
   }) {
     final mtr = M3Material()
@@ -45,14 +49,12 @@ class M3Water extends M3Entity {
   final M3PlanarReflection refractionPass;
 
   // fog part:
-  M3Fog waterFog = M3Fog()
-    ..color = M3Constants.colorMountainLake
-    ..depth = 6; // fog depth: 0 mean no fog
+  double startFog = 5; // plane fog start distance
 
   // for bump flow animation
   M3WaterFlowLayer flow0 = M3WaterFlowLayer()
     ..scale = Vector2.all(3)
-    ..velocity = Vector2(0.016, -0.014);
+    ..velocity = Vector2(0.016, -0.006);
   M3WaterFlowLayer flow1 = M3WaterFlowLayer()
     ..scale = Vector2.all(7)
     ..velocity = Vector2(0.025, -0.03);
@@ -70,7 +72,6 @@ class M3Water extends M3Entity {
     setWaterTint(Vector4(tint.x, tint.y, tint.z, 0.6));
   }
 
-  bool renderSurfaceEnabled = true;
   bool get reflectionEnabled => reflectionPass.enable;
 
   set reflectionEnabled(bool value) {
@@ -120,17 +121,61 @@ class M3Water extends M3Entity {
     flow1.offset += flow1.velocity * dt;
     flow1.offset.x %= 1.0;
     flow1.offset.y %= 1.0;
+
+    cameraState = _getCameraState(scene.camera);
   }
 
-  void captureWater() {
-    progWater.attachLight(scene.light);
+  /// camera near to water, return true if camera is above water
+  bool isCameraNearWater(M3Camera camera) {
+    final state = _getCameraState(camera, epsilon: camera.nearClip * 0.5);
+    return (state != .aboveWater);
+  }
 
+  /// get water camera state from camera position to water surface
+  M3WaterCameraState _getCameraState(M3Camera camera, {double epsilon = 0.03}) {
+    final double dist = surfacePlane.distanceToVector3(camera.position);
+    M3WaterCameraState result = .onSurface;
+    if (dist < -epsilon) {
+      result = .underwater;
+    }
+
+    if (dist > epsilon) {
+      result = .aboveWater;
+    }
+
+    return result;
+  }
+
+  /// capture reflection / refraction fbos
+  void captureWater() {
+    Vector3 n = surfacePlane.normal.clone();
+    double d = surfacePlane.constant;
+
+    // fog from water surface (horizon)
+    scene.fog.plane.setFromComponents(n.x, n.y, n.z, d + startFog);
+
+    // if underwater, reflection is water fog, refraction is scene fog
+    switch (cameraState) {
+      case .underwater:
+        n = -n;
+        d = -d;
+        break;
+      case .onSurface:
+        return; // no reflection and refraction when on surface
+      case .aboveWater:
+        break;
+    }
+
+    // capture reflection
+    reflectionPass.clipPlane.setFromComponents(n.x, n.y, n.z, d);
     reflectionPass.captureReflection(scene);
 
-    waterFog.customPlane = surfacePlane;
-    refractionPass.captureRefraction(scene, waterFog);
+    // capture refraction
+    refractionPass.clipPlane.setFromComponents(n.x, n.y, n.z, d);
+    refractionPass.captureRefraction(scene);
   }
 
+  /// render water surface
   void render({M3FillMode fillMode = M3FillMode.solid}) {
     final viewer = scene.camera;
     if (fillMode == M3FillMode.solid) {
@@ -138,12 +183,14 @@ class M3Water extends M3Entity {
       gl.enable(WebGL.BLEND);
       gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA); // alpha blending
       gl.depthMask(false); // Don't write to depth buffer in blending pass
+      gl.disable(WebGL.CULL_FACE);
 
       final renderEngine = M3AppEngine.instance.renderEngine;
       bool csmEnabled = renderEngine.isShadowEnabled && scene.light.cascades.isNotEmpty;
-      csmEnabled = false;
+      // csmEnabled = false;
       final dynamic prog = csmEnabled ? progWaterCSM : progWater;
       gl.useProgram(prog.program);
+      prog.attachLight(scene.light);
       prog.applyCamera(viewer);
       prog.applyFog(scene.fog);
       prog.bindWater(this);
@@ -166,7 +213,7 @@ class M3Water extends M3Entity {
       prog.setSkinning(null);
 
       // Call setLightTBN after setMatrices to set tangent-space uniforms and light position correctly
-      final normal = surfacePlane.normal;
+      final normal = (cameraState == .aboveWater) ? surfacePlane.normal : -surfacePlane.normal;
       var tangent = Vector3(1.0, 0.0, 0.0);
       if (tangent.dot(normal).abs() > 0.9) {
         tangent = Vector3(0.0, 1.0, 0.0);
@@ -177,11 +224,28 @@ class M3Water extends M3Entity {
 
       // reflection for above water, refraction for below water
       mesh.subMeshes[0].geom.draw(prog);
+
+      // Restore depth state
+      gl.depthMask(true);
+      gl.enable(WebGL.CULL_FACE);
     } else {
+      Vector4 colorSurface;
+      switch (cameraState) {
+        case .underwater:
+          colorSurface = Vector4(1, 0, 0, 0.8);
+          break;
+        case .onSurface:
+          colorSurface = Vector4(0, 1, 0, 0.8);
+          break;
+        case .aboveWater:
+          colorSurface = Vector4(0, 1, 1, 0.8);
+          break;
+      }
+
       final progEdge = M3Resources.programSimple!;
       final waterMatrix = worldMatrix;
       progEdge.setMatrices(viewer, waterMatrix);
-      progEdge.setMaterial(waterMaterial, Vector4(0, 1, 1, 0.6));
+      progEdge.setMaterial(waterMaterial, colorSurface);
       mesh.subMeshes[0].geom.draw(progEdge, fillMode: M3FillMode.wireframe);
     }
   }

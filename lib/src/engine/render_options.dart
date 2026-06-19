@@ -20,12 +20,12 @@ class M3DebugOptions {
 
 // GLSL options
 class M3ShaderOptions {
-  bool _perPixel = false; // per-pixel lighting
+  bool _perPixel = true; // per-pixel lighting
   bool _cartoon = false; // cartoon shading
-  bool _pbr = false; // physics based rendering
-  bool _ibl = false; // image based lighting
+  bool _pbr = true; // physics based rendering
+  bool _ibl = true; // image based lighting
   int _pcf = 1; // shadow PCF: 0:none, 1:default(4-tap), 2:3x3, 3:5x5
-  bool _fog = false;
+  bool _fog = true;
 
   bool isDirty = false;
 

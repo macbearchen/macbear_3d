@@ -2,6 +2,7 @@
 // ignore: constant_identifier_names
 const String TexturedLighting_frag = r"""
 #version 300 es
+precision mediump float;
 // TexturedLighting frag-shader: ES3 //////////
 
 #ifdef ENABLE_PIXEL_LIGHTING

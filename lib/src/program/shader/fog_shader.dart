@@ -4,24 +4,38 @@ part of '../program.dart';
 mixin M3FogShader {
   RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
 
-  late UniformLocation uniformFogPlane;
-  late UniformLocation uniformFogDepth;
+  // sphere fog
+  late UniformLocation uniformFogParams; // x: sphereStart, y: sphereDepth, z: planeHeight
   late UniformLocation uniformFogColor;
+
+  // plane fog: height in fogParams.z
+  late UniformLocation uniformPlaneFog;
+  late UniformLocation uniformPlaneFogColor;
 
   M3Fog? _fog;
 
   void initFogLocation(Program prog) {
-    uniformFogPlane = gl.getUniformLocation(prog, "FogPlane");
-    uniformFogDepth = gl.getUniformLocation(prog, "FogDepth");
-    uniformFogColor = gl.getUniformLocation(prog, "FogColor");
+    // sphere fog
+    uniformFogParams = gl.getUniformLocation(prog, "uFogParams");
+    uniformFogColor = gl.getUniformLocation(prog, "uFogColor");
+
+    // plane fog
+    uniformPlaneFog = gl.getUniformLocation(prog, "uPlaneFog");
+    uniformPlaneFogColor = gl.getUniformLocation(prog, "uPlaneFogColor");
   }
 
   void applyFog(M3Fog fog) {
     bool fogEnabled = false;
 
-    if (M3Program.isLocationValid(uniformFogColor) && M3Program.isLocationValid(uniformFogDepth)) {
+    // 1. set sphere fog
+    if (M3Program.isLocationValid(uniformFogColor) && M3Program.isLocationValid(uniformFogParams)) {
+      gl.uniform3f(uniformFogParams, fog.start, fog.depth, fog.planeHeight);
       gl.uniform3fv(uniformFogColor, fog.color.storage);
-      gl.uniform1f(uniformFogDepth, fog.depth);
+      fogEnabled = true;
+    }
+    // 2. set plane fog
+    if (M3Program.isLocationValid(uniformPlaneFogColor)) {
+      gl.uniform3fv(uniformPlaneFogColor, fog.planeColor.storage);
       fogEnabled = true;
     }
     _fog = fogEnabled ? fog : null;
@@ -31,31 +45,19 @@ mixin M3FogShader {
     final fog = _fog;
     if (fog == null) return;
 
-    if (!M3Program.isLocationValid(uniformFogPlane)) {
-      debugPrint('*** M3FogShader: fog uniformFogPlane not found');
+    if (!M3Program.isLocationValid(uniformPlaneFog)) {
+      debugPrint('*** M3FogShader: fog uniformPlaneFog not found');
       return;
     }
 
-    Vector4 worldPlane;
-    final p = fog.customPlane;
-    if (p != null) {
-      // custom water plane, use opposite plane normal for refraction fog pass inside water
-      worldPlane = -Vector4(p.normal.x, p.normal.y, p.normal.z, p.constant);
-    } else {
-      // Default to camera-facing plane (standard depth fog).
-      final forward = camera.getForward();
-      final eye = camera.position;
-
-      // The plane equation is: dot(N, X) + D = 0.
-      final N = forward;
-      final D = -N.dot(eye) - (camera.farClip - fog.depth);
-      worldPlane = Vector4(N.x, N.y, N.z, D);
-    }
+    // custom water plane, use opposite plane normal for refraction fog pass inside water
+    final p = fog.plane;
+    final worldPlane = -Vector4(p.normal.x, p.normal.y, p.normal.z, p.constant);
 
     // Transform world space plane to object space:
     final worldMatrixTransposed = Matrix4.copy(worldMatrix)..transpose();
     final objectPlane = worldMatrixTransposed * worldPlane;
 
-    gl.uniform4fv(uniformFogPlane, objectPlane.storage);
+    gl.uniform4fv(uniformPlaneFog, objectPlane.storage);
   }
 }

@@ -2,6 +2,7 @@
 // ignore: constant_identifier_names
 const String Rect_frag = r"""
 #version 300 es
+precision mediump float;
 // Rect frag-shader ES3 //////////
 
 in mediump vec2 TextureCoordOut;

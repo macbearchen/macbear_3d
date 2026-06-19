@@ -58,8 +58,8 @@ class MyScene extends M3Scene {
     String strTex = 'astc/test_4x4.astc';
     // String strTex = 'data_test/land.pvr';
 
-    // M3Texture texGrid = await M3Texture.loadTexture(strTex);
-    M3Texture texGrid = M3Texture.createCheckerboard(size: 10);
+    M3Texture texGrid = await M3Texture.loadTexture(strTex);
+    // M3Texture texGrid = M3Texture.createCheckerboard(size: 10);
     meshGrid.subMeshes.first.mtr.diffuseTexture = texGrid;
   }
 

@@ -322,7 +322,7 @@ class M3Resources {
     programShadowCSM = M3ProgramShadowCSM(vsShadow, fsShadow);
 
     // water program without shadow
-    bool bSpecularLight = true;
+    bool bSpecularLight = false;
     String vsWater = SkinningVS_glsl + Water_vert;
     String fsWater = Water_frag;
     if (bSpecularLight) {
@@ -334,6 +334,7 @@ class M3Resources {
     }
     programWater = M3ProgramWater(vsWater, fsWater);
 
+    fsWater = "#define ENABLE_WATER_SPECULAR \n$fsWater";
     // water program with shadow CSM
     vsWater = "#define ENABLE_SHADOW_CSM \n$ShadowVS_glsl \n$vsWater";
     fsWater = "#define ENABLE_SHADOW_CSM \n$strShadowFS \n$fsWater";

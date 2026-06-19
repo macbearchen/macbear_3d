@@ -14,15 +14,30 @@ part 'shader/lighting_shader.dart';
 part 'shader/shadow_shader.dart';
 part 'shader/water_shader.dart';
 
-/// reflection type for render
-enum M3ReflectionType { none, planar, cubemap }
-
 /// A WebGL shader program wrapper for GLSL vertex and fragment shaders.
 ///
 /// Manages uniform locations, vertex attributes, and matrix transformations.
 ///
 /// command:
 ///   dart run build_runner build --delete-conflicting-outputs
+
+// ── Texture Unit for Mesh ───────────────────────────────
+// Slot  0 : Diffuse / baseColor map
+// Slot  1 : Normal map
+// Slot  2 : Cubemap (environment / skybox)
+// Slot  3 : Shadow map
+// ────────────────────────────────────────────────────────
+// ── Texture Unit for Water ──────────────────────────────
+// Slot  0 : Water Reflection map
+// Slot  1 : Water Normalmap
+// Slot  2 : Water Refraction map
+// Slot  3 : Shadow map
+// ────────────────────────────────────────────────────────
+
+/// reflection type for render
+enum M3ReflectionType { none, planar, cubemap }
+
+/// program for GLSL
 class M3Program {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
 

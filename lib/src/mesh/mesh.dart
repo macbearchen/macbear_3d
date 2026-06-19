@@ -91,6 +91,9 @@ class M3Skin {
 /// This class acts as the primary container for a renderable 3D object and supports
 /// loading from various file formats (.obj, .gltf, .glb).
 class M3Mesh {
+  String name = "mesh";
+
+  /// sub-meshes array
   List<M3SubMesh> subMeshes = [];
 
   /// Optional initial transform from glTF mesh node.

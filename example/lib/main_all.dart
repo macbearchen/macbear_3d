@@ -46,10 +46,10 @@ Future<void> onDidInit() async {
   appEngine.renderEngine.createShadowMap(width: 2048, height: 4096);
 
   final scene00 = StarterScene_00();
-  final scene10 = TerrainScene_06();
+  final scene06 = TerrainScene_06();
   // final testScene = SampleScene(physics: M3PhysicsSystem(M3RapierPhysicsEngine()));
   final initScene = CubeScene_01();
-  await appEngine.setScene(scene10);
+  await appEngine.setScene(initScene);
 }
 
 class MainApp extends StatelessWidget {
@@ -143,7 +143,7 @@ class _MainPageState extends State<MainPage> {
       case 1: // shadowmap
         renderEngine.options.shadows = true;
         scene.camera.csmCount = 0;
-        final halfView = 20;
+        final halfView = 12;
         scene.light.target = Vector3.zero();
         scene.light.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 100);
         scene.light.setEuler(pi / 4, -pi / 4, 0, distance: 30); // rotate light
@@ -317,8 +317,8 @@ class _MainPageState extends State<MainPage> {
   Widget getHelperWidget() {
     final renderEngine = M3AppEngine.instance.renderEngine;
     return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: .start,
+      mainAxisSize: .min,
       children: [
         FloatingActionButton(
           heroTag: 'wireframe',
@@ -386,9 +386,9 @@ class _MainPageState extends State<MainPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text("d: ", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                const Text("fog: ", style: TextStyle(color: Colors.white70, fontSize: 12)),
                 Text(
-                  scene.fog.depth.toStringAsFixed(1),
+                  scene.fog.start.toStringAsFixed(1),
                   style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(
@@ -400,14 +400,15 @@ class _MainPageState extends State<MainPage> {
                       overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
                     ),
                     child: Slider(
-                      value: scene.fog.depth,
-                      min: 5.0,
-                      max: 100.0,
+                      value: scene.fog.start,
+                      min: 10.0,
+                      max: 96.0,
                       activeColor: Colors.lightGreen,
                       inactiveColor: Colors.white24,
                       onChanged: (val) {
                         setState(() {
-                          scene.fog.depth = val;
+                          scene.fog.depth = max(min(100.0 - val, 25), 5);
+                          scene.fog.start = val;
                         });
                       },
                     ),

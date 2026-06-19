@@ -28,12 +28,13 @@ uniform lowp vec3 AxisNormal;		// as Z-axis
 // shader variable: from vert to frag
 out mediump vec2 BumpCoord0;
 out mediump vec2 BumpCoord1;
-out highp vec3 WaterToEye;		// interpolate from vert to frag: must be highp in iPad3 
-out highp float WaterToEyeLength;
+out highp vec3 eyeToObj;		// interpolate from vert to frag: must be highp in iPad3 
+out highp float eyeToObjDist;
 
 out lowp vec4 DestinationColor;
 
 #ifdef ENABLE_FOG
+out highp float fogDist;   // distance: eye to obj-vertex
 out highp vec3 fogVert;
 #endif // ENABLE_FOG
 
@@ -53,10 +54,6 @@ void main(void)
     ComputeShadowPosition(objVert.xyz, AxisNormal);
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
 
-#ifdef ENABLE_FOG
-    fogVert = objVert.xyz;
-#endif // ENABLE_FOG
-
     gl_Position = ModelviewProjection * objVert;	// pre-compute Projection * Modelview
 	
 	// Scale and translate texture coordinates used to sample the normal map - section 2.2 of white paper
@@ -65,11 +62,16 @@ void main(void)
 	
 	// The water to eye vector is used to calculate the Fresnel term
 	// and to fade out perturbations based on distance from the viewer
-	WaterToEye = EyePosition - inVertex;
-	WaterToEyeLength = length(WaterToEye);
+	eyeToObj = EyePosition - objVert.xyz;
+	eyeToObjDist = length(eyeToObj);
 	
 	// tangent-space
-	WaterToEye = vec3(dot(AxisTangent, WaterToEye), dot(AxisBinormal, WaterToEye), dot(AxisNormal, WaterToEye));
+	eyeToObj = vec3(dot(AxisTangent, eyeToObj), dot(AxisBinormal, eyeToObj), dot(AxisNormal, eyeToObj));
+
+#ifdef ENABLE_FOG
+    fogDist = eyeToObjDist;
+    fogVert = objVert.xyz;
+#endif // ENABLE_FOG
 }
 
 """;

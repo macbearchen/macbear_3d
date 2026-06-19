@@ -1,4 +1,5 @@
 #version 300 es
+precision mediump float;
 // Skybox frag-shader ES3 //////////
 
 in lowp vec4 DestinationColor;

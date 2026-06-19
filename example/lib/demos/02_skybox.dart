@@ -54,7 +54,7 @@ class SkyboxScene_02 extends DemoScene {
       uvScale: Vector2.all(10.0),
       onVertex: (x, y) {
         double rad = pi / 15;
-        return (cos(x * rad) + sin(y * rad)) * 3;
+        return (cos(x * rad) + sin(y * rad)) * 2;
       },
     );
 

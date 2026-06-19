@@ -134,7 +134,8 @@ class M3RenderEngine {
       }
 
       progLight.attachLight(scene.light);
-      // solid
+
+      // main context render pass
       mainContext.render(progLight);
 
       // reflection pass:

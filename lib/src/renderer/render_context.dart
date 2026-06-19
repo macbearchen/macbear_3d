@@ -80,19 +80,8 @@ class M3RenderContext {
     if (bOnlyOpaque) {
       return; // remark it: produce some shore effect
     }
-    // 3. add water objects to transparent queue
-    final water = scene.water;
-    if (water != null && water.renderSurfaceEnabled) {
-      final item = M3RenderItem(
-        entity: water,
-        subMesh: water.mesh.subMeshes[0],
-        worldMatrix: water.worldMatrix,
-        depth: -1,
-      );
-      transparent.add(item);
-    }
 
-    // 4. Sort transparent
+    // 3. Sort transparent
     transparent.sortTransparent();
   }
 

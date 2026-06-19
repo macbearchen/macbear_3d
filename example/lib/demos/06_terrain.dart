@@ -15,7 +15,9 @@ class TerrainScene_06 extends DemoScene {
   Future<void> load() async {
     if (isLoaded) return;
     await super.load();
+
     renderEngine.options.shader.fog = true;
+    fog.planeHeight = 6.0;
 
     camera.setEuler(-pi / 3, -pi / 9, 0, distance: 40);
     debugPrint('Camera: $camera');
@@ -36,12 +38,13 @@ class TerrainScene_06 extends DemoScene {
   Future<void> addWater() async {
     final water = M3Water();
     water.scene = this;
-    water.normalMap = M3Texture.createWaterNormalMap();
+    water.normalMap = M3Texture.createWaterNormalMap(size: 256, strength: 3.0);
 
     water.setSurfacePlane(constant: -_waterHeight);
     final waterColor = Vector3(0, 0, 1);
     // final waterColor = M3Constants.colorOcean;
     water.setWaterTint(Vector4(waterColor.x, waterColor.y, waterColor.z, 1.0));
+    water.waveDistortion = 3;
 
     setWater(water);
   }
@@ -62,6 +65,7 @@ class TerrainScene_06 extends DemoScene {
       final rot = i * pi / 15;
       // 06-2: sphere geometry
       final meshSphere = M3Mesh(geomSphere);
+      meshSphere.name = 'SphereMesh';
       meshSphere.subMeshes[0].mtr
         ..diffuseTexture = texGrid2
         ..diffuse = Vector4(1, 0.3, 0, 1)
@@ -71,6 +75,7 @@ class TerrainScene_06 extends DemoScene {
 
       // 06-3: cylinder geometry
       final meshCylinder = M3Mesh(geomCylinder);
+      meshCylinder.name = 'CylinderMesh';
       meshCylinder.subMeshes[0].mtr
         ..diffuseTexture = texGrid
         ..reflection = i * 0.1
@@ -80,12 +85,14 @@ class TerrainScene_06 extends DemoScene {
       cylinder.rotation.setEuler(rot, 0, 0);
 
       // 06-3: box geometry
-      final box = addMesh(M3Mesh(geomBox), Vector3(posX, posY + 10, posZ + 2));
+      final box = addMesh(M3Mesh(geomBox), Vector3(posX / 2, posY + 10, posZ * 1.5 + 2));
+      box.mesh.name = 'BoxMesh';
       box.mesh.subMeshes[0].mtr.diffuseTexture = texGrid;
       box.rotation.setEuler(0, 0, rot);
 
       // 06-4: torus geometry
       final torus = addMesh(M3Mesh(geomTorus), Vector3(posX, posY + 15, posZ + 2));
+      torus.mesh.name = 'TorusMesh';
       torus.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
       torus.rotation.setEuler(0, rot, 0);
     }
@@ -135,7 +142,7 @@ class TerrainScene_06 extends DemoScene {
     }
 
     final terrainMesh = M3Mesh(terrainGeom, material: terrainMtr);
-    _terrainEntity = addMesh(terrainMesh, Vector3(0, 0, -12));
+    _terrainEntity = addMesh(terrainMesh, Vector3(0, 0, -14));
 
     M3AppEngine.instance.resume();
   }
@@ -147,16 +154,22 @@ class TerrainScene_06 extends DemoScene {
     light.setEuler(totalTime * 0.2, -pi / 4, 0, distance: 30);
 
     const double rot = pi / 15;
+    int indexBox = 0;
     int indexTorus = 0;
     int indexCylinder = 0;
     for (final e in entities) {
-      if (e.mesh.subMeshes[0].geom.name == 'Torus') {
+      if (e.mesh.name == 'BoxMesh') {
+        e.setEuler(0, 0, totalTime + rot * indexBox * 0.3);
+        indexBox++;
+      }
+
+      if (e.mesh.name == 'TorusMesh') {
         e.setEuler(0, totalTime + rot * indexTorus, 0);
         indexTorus++;
       }
 
-      if (e.mesh.subMeshes[0].geom.name == 'Cylinder') {
-        e.setEuler(totalTime * 0.5 + rot * indexCylinder, 0, 0);
+      if (e.mesh.name == 'CylinderMesh') {
+        e.setEuler(totalTime + rot * indexCylinder * 0.6, 0, 0);
         indexCylinder++;
       }
     }
@@ -217,24 +230,32 @@ class TerrainScene_06 extends DemoScene {
               ),
             ),
             const SizedBox(height: 6),
+            Text(
+              "Wave Distortion: ${(water?.waveDistortion ?? 3.0).toStringAsFixed(1)}",
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            const SizedBox(height: 4),
             SizedBox(
               width: 200,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Render Surface",
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                  ),
-                  Switch(
-                    value: water?.renderSurfaceEnabled ?? false,
-                    activeThumbColor: Colors.lightGreen,
-                    onChanged: (value) {
-                      water?.renderSurfaceEnabled = value;
+              child: SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 4,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+                ),
+                child: Slider(
+                  value: (water?.waveDistortion ?? 3.0).clamp(0.0, 20.0),
+                  min: 0.0,
+                  max: 20.0,
+                  activeColor: Colors.lightGreen,
+                  inactiveColor: Colors.white24,
+                  onChanged: (value) {
+                    if (water != null) {
+                      water!.waveDistortion = value;
                       M3AppEngine.instance.refresh();
-                    },
-                  ),
-                ],
+                    }
+                  },
+                ),
               ),
             ),
             SizedBox(

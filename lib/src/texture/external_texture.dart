@@ -10,7 +10,7 @@ class M3ExternalTexture extends M3Texture {
 
   // shared memory for native bridge
 
-  M3ExternalTexture(this.source, {bool? isUseNative}) : super(generateMipmaps: false) {
+  M3ExternalTexture(this.source, {bool? isUseNative}) : super(useMipmaps: false) {
     name = "external_texture";
     if (isUseNative != null) {
       _isNativeCodec = isUseNative && _isNativeCodec;
@@ -21,7 +21,7 @@ class M3ExternalTexture extends M3Texture {
   /// Constructor to initialize from a video asset path or network URL.
   M3ExternalTexture.videoAsset(String assetPath, {bool? isUseNative})
     : source = createVideoElement(assetPath),
-      super(generateMipmaps: false) {
+      super(useMipmaps: false) {
     name = assetPath;
     if (isUseNative != null) {
       _isNativeCodec = isUseNative && _isNativeCodec;
@@ -100,7 +100,7 @@ class M3ExternalTexture extends M3Texture {
   Future<void> _updateTextureFromNative() async {
     if (PlatformInfo.isMacOS || PlatformInfo.isIOS) {
       final int id = (glTexture as dynamic).id;
-      
+
       // Try to update the surface (Native side will try zero-copy first, then fallback to pixels)
       final bool success = await M3VideoBridge.updateSurface(textureId: id);
       if (success) {
