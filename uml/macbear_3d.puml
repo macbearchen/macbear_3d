@@ -49,6 +49,7 @@ class "macbear_3d::src::mesh::mesh.dart::M3Skin" {
 }
 
 class "macbear_3d::src::mesh::mesh.dart::M3Mesh" {
+  +String name
   +List<M3SubMesh> subMeshes
   +Matrix4 initMatrix
   +M3Skin? skin
@@ -278,6 +279,7 @@ class "macbear_3d::src::util::constants.dart::M3Constants" {
   {static} +Vector3 colorWaterTint
   {static} +Vector3 colorWaterTintLake
   {static} +Vector3 colorWaterTintSea
+  {static} +List<int> permutation
 }
 
 "macbear_3d::src::util::constants.dart::M3Constants" o-- "vector_math::vector_math.dart::Matrix3"
@@ -315,12 +317,8 @@ class "macbear_3d::src::util::euler.dart::M3Euler" {
   +String toString()
 }
 
-class "macbear_3d::src::util::utility.dart::M3Utility" {
-}
-
 class "macbear_3d::src::util::noise.dart::M3Noise" {
   {static} -List<int> _p
-  {static} -List<int> _permutation
   {static} -bool _init
   {static} -void _ensureInit()
   {static} +double fade()
@@ -934,8 +932,8 @@ class "macbear_3d::src::program::program.dart::M3ReflectionType" {
 
 class "macbear_3d::src::program::program.dart::M3ProgramEye" {
   +UniformLocation uniformEyePosition
+  +UniformLocation uniformObjectScale
   +void initLocation()
-  +void setEye()
   +void setMatrices()
 }
 
@@ -997,9 +995,10 @@ class "macbear_3d::src::program::program.dart::M3ProgramWaterCSM" {
 
 abstract class "macbear_3d::src::program::program.dart::M3FogShader" {
   +RenderingContext gl
-  +UniformLocation uniformFogPlane
-  +UniformLocation uniformFogDepth
+  +UniformLocation uniformFogParams
   +UniformLocation uniformFogColor
+  +UniformLocation uniformPlaneFog
+  +UniformLocation uniformPlaneFogColor
   -M3Fog? _fog
   +void initFogLocation()
   +void applyFog()
@@ -1096,7 +1095,7 @@ class "macbear_3d::src::texture::texture.dart::M3Texture" {
   {static} -List<int> _cubeMapFaceTargets
   +String name
   -WebGLTexture _texture
-  +bool generateMipmaps
+  +bool useMipmaps
   +int target
   +int texW
   +int texH
@@ -1437,12 +1436,12 @@ class "macbear_3d::src::scene::water.dart::M3Water" {
   +double waveDistortion
   +double reflectionDepthBias
   +M3Scene scene
+  +M3WaterCameraState cameraState
   +M3PlanarReflection reflectionPass
   +M3PlanarReflection refractionPass
-  +M3Fog waterFog
+  +double startFog
   +M3WaterFlowLayer flow0
   +M3WaterFlowLayer flow1
-  +bool renderSurfaceEnabled
   +M3ProgramWater progWater
   +M3ProgramWaterCSM progWaterCSM
   +M3Material waterMaterial
@@ -1453,6 +1452,8 @@ class "macbear_3d::src::scene::water.dart::M3Water" {
   +void setSurfacePlane()
   +void resize()
   +void update()
+  +bool isCameraNearWater()
+  -M3WaterCameraState _getCameraState()
   +void captureWater()
   +void render()
   +void drawDebug()
@@ -1462,13 +1463,24 @@ class "macbear_3d::src::scene::water.dart::M3Water" {
 "macbear_3d::src::scene::water.dart::M3Water" o-- "vector_math::vector_math.dart::Plane"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::scene::scene.dart::M3Scene"
+"macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::scene::water.dart::M3WaterCameraState"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection"
-"macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::scene::fog.dart::M3Fog"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::scene::water.dart::M3WaterFlowLayer"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::program::program.dart::M3ProgramWater"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::program::program.dart::M3ProgramWaterCSM"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::texture::material.dart::M3Material"
 "macbear_3d::src::scene::entity.dart::M3Entity" <|-- "macbear_3d::src::scene::water.dart::M3Water"
+
+class "macbear_3d::src::scene::water.dart::M3WaterCameraState" {
+  +int index
+  {static} +List<M3WaterCameraState> values
+  {static} +M3WaterCameraState aboveWater
+  {static} +M3WaterCameraState onSurface
+  {static} +M3WaterCameraState underwater
+}
+
+"macbear_3d::src::scene::water.dart::M3WaterCameraState" o-- "macbear_3d::src::scene::water.dart::M3WaterCameraState"
+"dart::core::Enum" <|-- "macbear_3d::src::scene::water.dart::M3WaterCameraState"
 
 abstract class "macbear_3d::src::scene::scene.dart::M3Scene" {
   +M3InputController? inputController
@@ -1548,8 +1560,12 @@ class "macbear_3d::src::scene::skybox.dart::M3Skybox" {
 
 class "macbear_3d::src::scene::fog.dart::M3Fog" {
   +Vector3 color
+  +double start
   +double depth
-  +Plane? customPlane
+  +Vector3 planeColor
+  +double planeHeight
+  +Plane plane
+  +void setFrom()
 }
 
 "macbear_3d::src::scene::fog.dart::M3Fog" o-- "vector_math::vector_math.dart::Vector3"
@@ -2036,6 +2052,7 @@ class "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" 
   +void setRenderScale()
   +void resize()
   +void dispose()
+  -void _capture()
   +void captureReflection()
   +void captureRefraction()
   -void _renderToTexture()
@@ -2048,6 +2065,16 @@ class "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" 
 "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
 "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" o-- "vector_math::vector_math.dart::Plane"
 "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" o-- "macbear_3d::src::scene::camera.dart::M3Camera"
+
+class "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarPass" {
+  +int index
+  {static} +List<M3PlanarPass> values
+  {static} +M3PlanarPass reflection
+  {static} +M3PlanarPass refraction
+}
+
+"macbear_3d::src::reflection::planar_reflection.dart::M3PlanarPass" o-- "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarPass"
+"dart::core::Enum" <|-- "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarPass"
 
 class "macbear_3d::src::reflection::reflection_probe.dart::M3ReflectionProbe" {
   -M3Camera _camCapture
