@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   flutter_angle
   macbear_3d
+  rapier_physics
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

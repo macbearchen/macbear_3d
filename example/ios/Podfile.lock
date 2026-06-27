@@ -1,0 +1,36 @@
+PODS:
+  - Flutter (1.0.0)
+  - flutter_angle (0.4.0):
+    - Flutter
+    - FlutterAngle (~> 0.0.8)
+    - FlutterMacOS
+  - FlutterAngle (0.0.8)
+  - macbear_3d (0.8.0):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - flutter_angle (from `.symlinks/plugins/flutter_angle/darwin`)
+  - macbear_3d (from `.symlinks/plugins/macbear_3d/ios`)
+
+SPEC REPOS:
+  trunk:
+    - FlutterAngle
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  flutter_angle:
+    :path: ".symlinks/plugins/flutter_angle/darwin"
+  macbear_3d:
+    :path: ".symlinks/plugins/macbear_3d/ios"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_angle: 94259dda819a90a7d7f9c4993c4eab469f673898
+  FlutterAngle: c810891af800750361b1d0e7cc944f2338d5ae18
+  macbear_3d: fd0710d41861df83197f600abca87c0324883ccd
+
+PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
+
+COCOAPODS: 1.16.2

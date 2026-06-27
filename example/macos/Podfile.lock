@@ -7,14 +7,11 @@ PODS:
   - FlutterMacOS (1.0.0)
   - macbear_3d (0.8.0):
     - FlutterMacOS
-  - rapier_physics (0.3.1):
-    - FlutterMacOS
 
 DEPENDENCIES:
   - flutter_angle (from `Flutter/ephemeral/.symlinks/plugins/flutter_angle/darwin`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - macbear_3d (from `Flutter/ephemeral/.symlinks/plugins/macbear_3d/macos`)
-  - rapier_physics (from `Flutter/ephemeral/.symlinks/plugins/rapier_physics/macos`)
 
 SPEC REPOS:
   trunk:
@@ -27,15 +24,12 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral
   macbear_3d:
     :path: Flutter/ephemeral/.symlinks/plugins/macbear_3d/macos
-  rapier_physics:
-    :path: Flutter/ephemeral/.symlinks/plugins/rapier_physics/macos
 
 SPEC CHECKSUMS:
   flutter_angle: 94259dda819a90a7d7f9c4993c4eab469f673898
   FlutterAngle: c810891af800750361b1d0e7cc944f2338d5ae18
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   macbear_3d: 701dbe77f689d224428f84b0a8f48d5f13d4f3d3
-  rapier_physics: d4acf823675fca6a0edd64ca3829208122c8cc96
 
 PODFILE CHECKSUM: 54d867c82ac51cbd61b565781b9fada492027009
 
