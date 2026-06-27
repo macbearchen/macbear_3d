@@ -126,7 +126,7 @@ class M3RenderStats {
   @override
   String toString() {
     return '''
-${frames.toString().padLeft(6)}
+frame${frames.toString().padLeft(6)}
 mesh:$entities/$culling
 reflect:$reflection
  tri:$triangles

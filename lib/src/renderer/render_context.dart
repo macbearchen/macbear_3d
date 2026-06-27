@@ -5,10 +5,10 @@ import '../m3_internal.dart';
 enum M3FillMode { solid, wireframe }
 
 class M3RenderContext {
+  late M3Scene _scene;
   late M3Camera _viewer; // scene camera or light (light for shadow map)
-  M3Skybox? _sky;
-  M3Fog? fog;
 
+  // opaque, transparent, unlit
   final M3RenderQueue opaque = M3RenderQueue();
   final M3RenderQueue transparent = M3RenderQueue();
 
@@ -18,7 +18,12 @@ class M3RenderContext {
   final M3RenderQueue planarReflection = M3RenderQueue();
   final M3RenderQueue reflectionProbe = M3RenderQueue();
 
-  void prepareRenderQueue(M3Scene scene, M3Camera viewer, {bool bOnlyOpaque = false}) {
+  void prepareRenderQueue(
+    M3Scene scene,
+    M3Camera viewer, {
+    bool bOnlyOpaque = false,
+    M3PlanarReflection? excludeReflection,
+  }) {
     // reset queues
     opaque.clear();
     transparent.clear();
@@ -27,10 +32,9 @@ class M3RenderContext {
     planarReflection.clear();
     reflectionProbe.clear();
 
-    // store viewer, skybox and fog
+    // store scene, viewer
+    _scene = scene;
     _viewer = viewer;
-    _sky = scene.skybox;
-    fog ??= scene.fog;
 
     final stats = M3AppEngine.instance.renderEngine.stats;
 
@@ -46,6 +50,11 @@ class M3RenderContext {
 
       final meshMatrix = entity.worldMatrix * entity.mesh.initMatrix;
       for (final sub in entity.mesh.subMeshes) {
+        // skip planar reflection surface
+        if (excludeReflection != null && sub.mtr.planarReflection == excludeReflection) {
+          continue;
+        }
+
         final worldMat = meshMatrix * sub.localMatrix;
         final viewPos = viewer.viewMatrix * worldMat.getTranslation();
         // Depth for sorting (negative Z in view space is forward)
@@ -92,20 +101,6 @@ class M3RenderContext {
       transparent.items.removeWhere((item) => item.entity == e);
       unlit.items.removeWhere((item) => item.entity == e);
     }
-  }
-
-  /// exclude materials with the given planar reflection
-  void excludePlane(M3PlanarReflection reflection) {
-    opaque.items.removeWhere((item) => item.subMesh.mtr.planarReflection == reflection);
-    transparent.items.removeWhere((item) => item.subMesh.mtr.planarReflection == reflection);
-    unlit.items.removeWhere((item) => item.subMesh.mtr.planarReflection == reflection);
-  }
-
-  /// exclude materials with the given water
-  void excludeWater(M3Water water) {
-    opaque.items.removeWhere((item) => item.entity == water);
-    transparent.items.removeWhere((item) => item.entity == water);
-    unlit.items.removeWhere((item) => item.entity == water);
   }
 
   bool needsPlanarReflectionPass() {
@@ -167,10 +162,10 @@ class M3RenderContext {
     RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
     // pre-draw state
     gl.useProgram(prog.program);
-    prog.applyCamera(_viewer);
-    final hasFog = prog is M3ProgramLighting && fog != null;
-    if (hasFog) {
-      prog.applyFog(fog!); // fog supported
+    prog.applyUniforms(_viewer);
+    // apply fog to lighting programs
+    if (prog is M3ProgramLighting) {
+      prog.applyFog(_scene.fog); // fog supported
     }
 
     final stats = M3AppEngine.instance.renderEngine.stats;
@@ -178,14 +173,14 @@ class M3RenderContext {
     final mtrOverride = M3Material();
     final colorOverride = Vector4.all(1.0);
     // apply reflection cubemap
-    final M3Texture deafultCubemap = _sky?.cubemapTexture ?? M3Resources.texDefaultCube;
-    M3Texture currentCubemap = deafultCubemap;
+    final M3Texture defaultCubemap = _scene.skybox?.cubemapTexture ?? M3Resources.texDefaultCube;
+    M3Texture currentCubemap = defaultCubemap;
     prog.setEnvironmentMap(currentCubemap);
 
     for (final item in queue.items) {
       final sub = item.subMesh;
       final entity = item.entity;
-      final nextCubemap = entity.getProbe()?.cubemapTexture ?? deafultCubemap;
+      final nextCubemap = entity.getProbe()?.cubemapTexture ?? defaultCubemap;
 
       // copy material from sub
       mtrOverride.setFrom(sub.mtr);

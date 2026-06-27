@@ -19,6 +19,7 @@ class M3PhysicsSystem {
   /// constructor
   M3PhysicsSystem(this._engine);
 
+  M3PhysicsEngine get engine => _engine;
   String get info {
     return _engine.info;
   }

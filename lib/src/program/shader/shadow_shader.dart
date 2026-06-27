@@ -20,21 +20,29 @@ mixin M3ShadowShader {
   }
 
   /// Apply shadowmap related uniform variables.
-  void applyShadow(M3Light sceneLight) {
+  void _applyShadow(M3Light light) {
+    final shadowMap = M3AppEngine.instance.renderEngine.shadowMap;
+    if (shadowMap == null) return;
+
+    // shadowmap texture
+    _bindShadow(shadowMap.depthTexture);
+    // shadowmap size
     if (M3Program.isLocationValid(uniformShadowmapSize)) {
-      final shadowMap = M3AppEngine.instance.renderEngine.shadowMap!;
       gl.uniform2f(uniformShadowmapSize, shadowMap.mapW.toDouble(), shadowMap.mapH.toDouble());
     }
+    // shadowmap normal bias
     if (M3Program.isLocationValid(uniformNormalBias)) {
-      gl.uniform1f(uniformNormalBias, sceneLight.shadowNormalBias);
+      gl.uniform1f(uniformNormalBias, light.shadowNormalBias);
     }
   }
 
-  void bindShadow(WebGLTexture texture) {
-    gl.activeTexture(WebGL.TEXTURE3);
-    gl.bindTexture(WebGL.TEXTURE_2D, texture);
-    gl.uniform1i(uniformSamplerShadowmap, 3);
+  void _bindShadow(WebGLTexture texture) {
+    if (M3Program.isLocationValid(uniformSamplerShadowmap)) {
+      gl.activeTexture(WebGL.TEXTURE3);
+      gl.bindTexture(WebGL.TEXTURE_2D, texture);
+      gl.uniform1i(uniformSamplerShadowmap, 3);
 
-    gl.activeTexture(WebGL.TEXTURE0);
+      gl.activeTexture(WebGL.TEXTURE0);
+    }
   }
 }

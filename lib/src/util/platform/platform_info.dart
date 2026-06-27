@@ -88,4 +88,14 @@ class PlatformInfo {
     getGLExtensions();
     getEGLExtensions();
   }
+
+  /// WebGL function: enable extension, ex. compressed texture
+  static bool enableWebGLExtension(String extension) {
+    if (!kIsWeb) return true;
+
+    final gl = M3AppEngine.instance.renderEngine.gl;
+    final ext = gl.getExtension(extension);
+    debugPrint("Enable extension: $extension, ${ext != null ? "success" : "fail"}");
+    return ext != null;
+  }
 }

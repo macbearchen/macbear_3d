@@ -74,7 +74,6 @@ class M3RenderEngine {
     final pixelW = (width * dpr).toInt();
     final pixelH = (height * dpr).toInt();
 
-    mainContext.fog = null;
     // planar-reflection viewport by pixel size
     planarReflection.resize(width, height);
 
@@ -95,6 +94,22 @@ class M3RenderEngine {
     if (!options.debug.wireframe && options.shadows && _shadowMap != null) {
       _shadowMap!.renderDepth(scene, scene.light);
     }
+  }
+
+  /// get program shader for scene rendering
+  M3ProgramLighting getSceneProgram(M3Scene scene) {
+    M3ProgramLighting prog = M3Resources.programTexture!; // texture shader
+
+    if (isShadowEnabled) {
+      // select shadow map shader: single or cascaded
+      final M3ProgramShadow progShadow = scene.light.cascades.isEmpty
+          ? M3Resources.programShadowmap!
+          : M3Resources.programShadowCSM!;
+      prog = progShadow;
+    }
+
+    // M3ProgramLighting prog = M3Resources.programSimpleLighting!; // for debug
+    return prog;
   }
 
   /// Render scene
@@ -118,25 +133,13 @@ class M3RenderEngine {
     gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA); // WebGL.ONE
 
     if (!options.debug.wireframe) {
-      M3ProgramLighting progLight = M3Resources.programTexture!; // texture shader
-      // M3ProgramLighting progLight = M3Resources.programSimpleLighting!; // for debug
+      // get scene program
+      final prog = getSceneProgram(scene);
 
-      if (isShadowEnabled) {
-        // select shadow map shader: single or cascaded
-        final M3ProgramShadow progShadow = scene.light.cascades.isEmpty
-            ? M3Resources.programShadowmap!
-            : M3Resources.programShadowCSM!;
-        // bind shadowmap texture
-        gl.useProgram(progShadow.program);
-        progShadow.bindShadow(_shadowMap!.depthTexture);
-        progShadow.applyShadow(scene.light);
-        progLight = progShadow;
-      }
-
-      progLight.attachLight(scene.light);
+      prog.attachLight(scene.light);
 
       // main context render pass
-      mainContext.render(progLight);
+      mainContext.render(prog);
 
       // reflection pass:
       // 1. cubemap reflection (only if not using single-pass IBL)

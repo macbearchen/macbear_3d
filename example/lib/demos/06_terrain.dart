@@ -67,27 +67,30 @@ class TerrainScene_06 extends DemoScene {
       final meshSphere = M3Mesh(geomSphere);
       meshSphere.name = 'SphereMesh';
       meshSphere.subMeshes[0].mtr
-        ..diffuseTexture = texGrid2
         ..diffuse = Vector4(1, 0.3, 0, 1)
         ..specular = Vector3.all(0.6)
-        ..shininess = i * 10 + 8;
+        ..shininess = i * 10 + 8
+        // ..reflection = i * 0.1
+        // ..metallic = i * 0.1
+        // ..roughness = 1.0 - i * 0.1
+        ..diffuseTexture = texGrid2;
+
       addMesh(meshSphere, Vector3(posX, posY, posZ));
 
       // 06-3: cylinder geometry
-      final meshCylinder = M3Mesh(geomCylinder);
+      final mtrCylinder = M3Material()
+        ..setMatte()
+        ..diffuseTexture = texGrid;
+
+      final meshCylinder = M3Mesh(geomCylinder, material: mtrCylinder);
       meshCylinder.name = 'CylinderMesh';
-      meshCylinder.subMeshes[0].mtr
-        ..diffuseTexture = texGrid
-        ..reflection = i * 0.1
-        ..metallic = i * 0.1
-        ..roughness = 1.0 - i * 0.1;
       final cylinder = addMesh(meshCylinder, Vector3(posX, posY + 5, posZ + 3))..color = Vector4(1, 1, 0, 1);
       cylinder.rotation.setEuler(rot, 0, 0);
 
       // 06-3: box geometry
-      final box = addMesh(M3Mesh(geomBox), Vector3(posX / 2, posY + 10, posZ * 1.5 + 2));
+      final mtrBox = M3Material()..diffuseTexture = texGrid;
+      final box = addMesh(M3Mesh(geomBox, material: mtrBox), Vector3(posX / 2, posY + 10, posZ * 1.5 + 2));
       box.mesh.name = 'BoxMesh';
-      box.mesh.subMeshes[0].mtr.diffuseTexture = texGrid;
       box.rotation.setEuler(0, 0, rot);
 
       // 06-4: torus geometry
@@ -142,7 +145,7 @@ class TerrainScene_06 extends DemoScene {
     }
 
     final terrainMesh = M3Mesh(terrainGeom, material: terrainMtr);
-    _terrainEntity = addMesh(terrainMesh, Vector3(0, 0, -14));
+    _terrainEntity = addMesh(terrainMesh, Vector3(0, 0, -13));
 
     M3AppEngine.instance.resume();
   }

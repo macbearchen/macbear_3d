@@ -22,7 +22,7 @@ class CubeScene_01 extends DemoScene {
 
     final texName = "example/test_8x8.astc";
     final texName2 = "example/nvlobby_xneg.jpg";
-    // M3Texture texTest = await M3Texture.loadTexture(texName);
+    M3Texture texTest = await M3Texture.loadTexture(texName);
     M3Texture texGround = M3Texture.createCheckerboard(
       size: 8,
       lightColor: Vector4(0.65, 0.45, 0.25, 1),
@@ -30,7 +30,7 @@ class CubeScene_01 extends DemoScene {
     );
     // ground plane
     final mtrGround = M3Material()
-      ..diffuseTexture = texGround
+      ..diffuseTexture = texTest
       ..setMatte();
     final groundMesh = M3Mesh(
       M3PlaneGeom(80, 80, widthSegments: 20, heightSegments: 20, uvScale: Vector2.all(5.0)),

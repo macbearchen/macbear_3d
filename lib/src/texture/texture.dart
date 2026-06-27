@@ -178,7 +178,6 @@ class M3Texture {
   }
 
   void _initEmptyTarget({int faceTarget = WebGL.TEXTURE_2D}) {
-    bind();
     gl.texImage2D(faceTarget, 0, WebGL.RGBA, texW, texH, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, null);
   }
 
@@ -307,7 +306,7 @@ class M3Texture {
     final filename = url;
     if (!await M3ResourceManager.isAssetExists(filename)) {
       debugPrint('*** ERROR assets: $filename');
-      _initCheckerboard(8, Vector4(0.8, 0.3, 0.3, 1), Vector4(0.7, 0.7, 0.3, 1), faceTarget: faceTarget);
+      _initCheckerboard(8, Vector4(0.9, 0.2, 0.1, 1), Vector4(0.7, 0.6, 0.5, 1), faceTarget: faceTarget);
       return;
     }
 
@@ -323,7 +322,14 @@ class M3Texture {
       Uint8List byteData = ktxInfo.texData;
 
       final pixelFormat = ktxInfo.glFormat;
-      bind();
+      if (kIsWeb) {
+        if (!PlatformInfo.enableWebGLExtension('WEBGL_compressed_texture_astc')) {
+          debugPrint("*** ASTC extension NOT SUPPORTED, use checkerboard instead");
+        }
+        _initCheckerboard(8, Vector4(0.9, 0.2, 0.1, 1), Vector4(0.3, 0.1, 0.1, 1), faceTarget: faceTarget);
+        return;
+      }
+
       gl.compressedTexImage2D(faceTarget, 0, pixelFormat, texW, texH, 0, byteData);
       // } else if (lowerName.endsWith('.pvr')) {
       // PVR compressed texture
@@ -354,7 +360,6 @@ class M3Texture {
     }
     final pixels = byteData.buffer.asUint8List();
 
-    bind();
     gl.texImage2D(faceTarget, 0, pixelFormat, texW, texH, 0, pixelFormat, WebGL.UNSIGNED_BYTE, toU8List(pixels));
   }
 

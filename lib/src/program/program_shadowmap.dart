@@ -10,6 +10,13 @@ abstract class M3ProgramShadow extends M3ProgramLighting with M3ShadowShader {
 
     initShadowLocation(program);
   }
+
+  @override
+  void applyUniforms(M3Camera cam) {
+    super.applyUniforms(cam);
+    // for shadowmap: apply shadow
+    _applyShadow(_light!);
+  }
 }
 
 /// shadowmap program
@@ -55,8 +62,8 @@ class M3ProgramShadowCSM extends M3ProgramShadow {
   }
 
   @override
-  void applyCamera(M3Camera cam) {
-    super.applyCamera(cam);
+  void applyUniforms(M3Camera cam) {
+    super.applyUniforms(cam);
 
     if (M3Program.isLocationValid(uniformDepthCSM)) {
       final maxCSM = 4;

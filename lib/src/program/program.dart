@@ -251,8 +251,8 @@ class M3Program {
     }
   }
 
-  /// unused for now
-  void applyCamera(M3Camera cam) {
+  /// apply uniforms per frame
+  void applyUniforms(M3Camera cam) {
     if (isLocationValid(uniformCameraViewport)) {
       gl.uniform4f(
         uniformCameraViewport,

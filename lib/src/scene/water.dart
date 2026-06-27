@@ -49,7 +49,7 @@ class M3Water extends M3Entity {
   final M3PlanarReflection refractionPass;
 
   // fog part:
-  double startFog = 5; // plane fog start distance
+  double startFog = 3; // plane fog start distance
 
   // for bump flow animation
   M3WaterFlowLayer flow0 = M3WaterFlowLayer()
@@ -187,17 +187,12 @@ class M3Water extends M3Entity {
 
       final renderEngine = M3AppEngine.instance.renderEngine;
       bool csmEnabled = renderEngine.isShadowEnabled && scene.light.cascades.isNotEmpty;
-      // csmEnabled = false;
       final dynamic prog = csmEnabled ? progWaterCSM : progWater;
       gl.useProgram(prog.program);
       prog.attachLight(scene.light);
-      prog.applyCamera(viewer);
+      prog.applyUniforms(viewer);
       prog.applyFog(scene.fog);
       prog.bindWater(this);
-      if (csmEnabled) {
-        prog.bindShadow(renderEngine.shadowMap!.depthTexture);
-        prog.applyShadow(scene.light);
-      }
 
       // water material: set reflection texture if enabled
       if (reflectionPass.enable) {

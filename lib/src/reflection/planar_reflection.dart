@@ -63,16 +63,19 @@ class M3PlanarReflection {
     if (!visible) return;
 
     _camera.setFrom(scene.camera);
+
+    // shrink far clip for culling shadow casters
+    _camera.farClip *= 0.6;
+    _camera.refreshProjectionMatrix();
+    _camera.updateSplitDistances();
+
     if (pass == M3PlanarPass.reflection) {
       // reversed winding for mirrored view
       _camera.reflectViewMatrix(clipPlane);
     } else {
       // normal winding — no view flip
-      // _camera.farClip = fog.depth;
-      // _camera.refreshProjectionMatrix();
     }
 
-    _context.fog = scene.fog;
     _renderToTexture(scene, pass);
   }
 
@@ -103,15 +106,14 @@ class M3PlanarReflection {
       scene.skybox!.drawSkybox(_camera);
     }
 
-    // disable CSM, no shadow in reflection/refraction
-    _camera.csmCount = 0;
-    _camera.csmSplitDistances = [];
-
     // oblique clip:
     // reflection: clip geometry below the water, use original plane
     // refraction: clip geometry above the water, use negated plane
     final bool isReflection = pass == M3PlanarPass.reflection;
-    final p = isReflection ? clipPlane : Plane.normalconstant(-clipPlane.normal, -clipPlane.constant);
+    final n = clipPlane.normal;
+    final bias = 0; // 0.1
+    final d = clipPlane.constant - bias;
+    final p = isReflection ? Plane.normalconstant(n, d) : Plane.normalconstant(-n, -d);
     _camera.setObliqueClipPlane(p);
     _camera.updateFrustum();
 
@@ -131,19 +133,15 @@ class M3PlanarReflection {
     gl.enable(WebGL.POLYGON_OFFSET_FILL);
     gl.polygonOffset(1.1, 4.0);
 
-    final prog = M3Resources.programTexture!;
+    // get scene program
+    final prog = renderEngine.getSceneProgram(scene);
+
     prog.attachLight(scene.light);
 
-    // 1. prepare render queue
-    _context.prepareRenderQueue(scene, _camera);
+    // (1/2) prepare render queue: exclude this plane
+    _context.prepareRenderQueue(scene, _camera, excludeReflection: this);
 
-    // 2. exclude this plane and water from render queue
-    _context.excludePlane(this);
-    if (scene.water != null) {
-      _context.excludeWater(scene.water!);
-    }
-
-    // 3. render scene for planar reflection/refraction
+    // (2/2) render scene for planar reflection/refraction
     _context.render(prog);
 
     _texture.generateMipmap();

@@ -33,7 +33,7 @@ class M3Camera extends M3Projection {
   set csmCount(int val) {
     if (_csmCount != val) {
       _csmCount = val;
-      _updateSplitDistances();
+      updateSplitDistances();
     }
   }
 
@@ -84,10 +84,10 @@ class M3Camera extends M3Projection {
   @override
   void setViewport(int x, int y, int w, int h, {double fovy = 50.0, double near = 1.0, double far = 100.0}) {
     super.setViewport(x, y, w, h, fovy: fovy, near: near, far: far);
-    _updateSplitDistances();
+    updateSplitDistances();
   }
 
-  void _updateSplitDistances() {
+  void updateSplitDistances() {
     if (csmCount > 0) {
       csmSplitDistances = buildCSMSplits(csmCount, csmLambda);
       // debugPrint("csmSplitDistances: $csmSplitDistances");

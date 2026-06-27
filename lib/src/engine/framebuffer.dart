@@ -23,23 +23,21 @@ class M3Framebuffer {
     _fbo = gl.createFramebuffer();
     gl.bindFramebuffer(WebGL.FRAMEBUFFER, _fbo);
 
+    // internal format: DEPTH_COMPONENT16, DEPTH_COMPONENT24, DEPTH_COMPONENT32F
+    const depthFormat = WebGL.DEPTH_COMPONENT24;
     if (useDepthTexture) {
       // Create depth texture
       _depthTexture = gl.createTexture();
       gl.bindTexture(WebGL.TEXTURE_2D, _depthTexture!);
 
-      // Use DEPTH_COMPONENT16 for compatibility if needed, but DEPTH_COMPONENT is standard for texImage2D
-      gl.texImage2D(
-        WebGL.TEXTURE_2D,
-        0,
-        WebGL.DEPTH_COMPONENT16, // DEPTH_COMPONENT16, DEPTH_COMPONENT24, DEPTH_COMPONENT32F
-        frameW,
-        frameH,
-        0,
-        WebGL.DEPTH_COMPONENT,
-        WebGL.UNSIGNED_SHORT, // UNSIGNED_SHORT, UNSIGNED_INT, FLOAT
-        null,
-      );
+      // depthFormat → pixel type mapping
+      final pixelType = switch (depthFormat) {
+        WebGL.DEPTH_COMPONENT32F => WebGL.FLOAT,
+        WebGL.DEPTH_COMPONENT16 => WebGL.UNSIGNED_SHORT,
+        _ => WebGL.UNSIGNED_INT, // DEPTH_COMPONENT24
+      };
+
+      gl.texImage2D(WebGL.TEXTURE_2D, 0, depthFormat, frameW, frameH, 0, WebGL.DEPTH_COMPONENT, pixelType, null);
 
       gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_MAG_FILTER, WebGL.LINEAR);
       gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_MIN_FILTER, WebGL.LINEAR);
@@ -55,7 +53,7 @@ class M3Framebuffer {
       // Create depth renderbuffer
       _depthRenderbuffer = gl.createRenderbuffer();
       gl.bindRenderbuffer(WebGL.RENDERBUFFER, _depthRenderbuffer!);
-      gl.renderbufferStorage(WebGL.RENDERBUFFER, WebGL.DEPTH_COMPONENT16, frameW, frameH);
+      gl.renderbufferStorage(WebGL.RENDERBUFFER, depthFormat, frameW, frameH);
       gl.framebufferRenderbuffer(WebGL.FRAMEBUFFER, WebGL.DEPTH_ATTACHMENT, WebGL.RENDERBUFFER, _depthRenderbuffer!);
     }
 
