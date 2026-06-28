@@ -25,19 +25,21 @@ Preview the `main_all.dart` example live in your browser!
 - **Scene Graph**: Hierarchical architecture with **M3Node** for flexible entity transformations and multi-camera support.
 - **Resource Management**: Efficient centralized loading and caching for textures, meshes, and fonts, including `M3Resources.axisMesh` for coordinate systems.
 - **Multi-Geometry Support**: Added `multi-M3SubMesh` to support multiple geometries within a single `M3Mesh`.
+- **WebGL/Web Optimizations**: Platform abstraction and alignment adjustments optimized specifically for web builds.
 
 ### 🎨 Rendering & Visuals
 - **Model Loaders**: Native support for **glTF/GLB**, **OBJ**, and **BVH** formats.
 - **Skeletal Animation**: Full support for skinned meshes and bone-based animations (including `M3OctahedralGeom` for bone visualization).
 - **Advanced Lighting**: Dynamic lighting with **Cascaded Shadow Mapping (CSM)**, **PCF (Percentage Closer Filtering)** for smooth shadows, **PBR (Physically Based Rendering)** and **IBL (Image-Based Lighting)** support. Improved `RenderPipeline` with enhanced support for opaque and transparency materials.
 - **Modular Shaders**: Refactored shader system with clean `.glsl` source files and dedicated, type-safe Dart shader program wrappers (`M3FogShader`, `M3LightingShader`, `M3ShadowShader`, `M3WaterShader`) for easy uniform binding and encapsulation.
+- **Skybox & Environment**: Support for skybox environment backgrounds and reflection mapping via cubemaps.
 - **Planar Reflections**: Added support for planar reflections with `M3PlanarReflection` and Mirror shaders for high-quality reflective surfaces.
 - **Dynamic Reflection Probe**: Added `M3ReflectionProbe` for real-time cubemap capture and dynamic reflections.
 - **Water Effect**: Real-time water rendering with `M3Water` — dual-layer animated normal-map flow (supporting procedural water normal map generation at runtime via `M3Texture.createWaterNormalMap`), planar reflection & refraction, configurable wave distortion, and fog-depth underwater tinting.
+- **Terrain System**: Generate procedural terrain utilizing Perlin Noise.
 - **Fog Effect**: Introduced **M3Fog** supporting depth-based scene fog with camera-facing depth attenuation, custom color settings, and optional custom clip planes (e.g., for underwater depth tinting).
 - **RenderContext**: `M3RenderContext` bundles per-frame GPU state (viewport, matrices, lights, shadow map, reflection/water targets) for clean multi-pass rendering.
 - **Flexible Geometries**: Added `M3Axis` support for Torus, Capsule, Cylinder, and Plane for custom orientation.
-- **Resource Management**: Centralized system for loading and caching assets (geometries, meshes, textures, fonts).
 - **Text Rendering**: Generate 3D geometry from TrueType/OpenType fonts with alignment fixes for Web.
 
 ### ⚙️ Physics & Interaction
@@ -46,6 +48,7 @@ Preview the `main_all.dart` example live in your browser!
 - **Collision Detection**: Automatic AABB and Bounding Sphere calculation.
 - **Interaction**: Keyboard zoom support (+, -) and multi-touch orbit control.
 - **Touch Input**: Built-in interaction handling for 3D objects and orbit control.
+- **GUI Integration**: Seamlessly overlay and embed 2D GUI elements directly using standard Flutter widgets.
 
 <p align="center">
   <img width="400" src="img/scene09.png" />
@@ -145,24 +148,11 @@ https://pub.dev/packages/dcdg
 ```
 output to uml/macbear_3d.puml
 
-## TODO
+## Roadmap
 
-- [x] Skinned Mesh
-- [x] Skeletal Animation
-- [x] Cascaded Shadow Maps (CSM)
-- [x] PBR Material support (Metallic, Roughness)
-- [x] IBL (Image-Based Lighting)
-- [x] Terrain System (Perlin Noise)
-- [x] Skybox reflection via cubemap
-- [x] Dynamic Reflection Probe
-- [x] Physics Engine integration (Oimo Physics)
-- [x] Water effect (reflection, refraction, animated flow, fog tinting)
 - [ ] Post-processing effects (Bloom, HDR)
 - [ ] Advanced Particle System
-- [x] Resource Management System
-- [x] Text Rendering
-- [x] GUI System (Use Flutter Widgets)
-- [x] WebGL/Web support optimization (Text rendering alignment, platform abstraction)
+- [ ] Multiple lights support (Point light, Spot light)
 
 ## Contributing
 
