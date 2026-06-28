@@ -18,7 +18,8 @@ class PrimitivesScene_03 extends DemoScene {
     M3Texture texGrid2 = M3Texture.createCheckerboard(size: 6);
 
     // 02: sample cubemap
-    skybox = await createCubemapLobby(); // nvlobby cubemap
+    // skybox = await createCubemapLobby(); // nvlobby cubemap
+    skybox = M3Skybox(M3Texture.createSampleCubemap());
 
     // 03-1: plane geometry
     final plane = addMesh(M3Mesh(M3PlaneGeom(20, 20, uvScale: Vector2.all(5.0))), Vector3(0, 0, -1));

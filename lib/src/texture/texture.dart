@@ -1,20 +1,13 @@
 import 'dart:async';
 import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-import 'package:video_player/video_player.dart';
 
 // Macbear3D engine
 import '../m3_internal.dart' hide Colors;
 import 'ktx_info.dart';
-import '../util/video/video_helper.dart';
-import '../video_bridge/video_bridge.dart';
 
 // parts for texture
 part 'text_texture.dart';
-part 'external_texture.dart';
 
 /// WebGL texture wrapper supporting 2D and cubemap textures.
 ///
@@ -242,7 +235,7 @@ class M3Texture {
       Vector4(0.8, 0.3, 0.3, 1),
       Vector4(0.6, 0.4, 0.4, 1),
       Vector4(0.3, 0.8, 0.3, 1),
-      Vector4(0.4, 0.6, 0.4, 1),
+      Vector4(0.2, 0.5, 0.2, 1),
       Vector4(0.3, 0.3, 0.8, 1),
       Vector4(0.4, 0.4, 0.6, 1),
     ];
@@ -251,7 +244,7 @@ class M3Texture {
       tex._initCheckerboard(
         gridCount,
         colors[i],
-        i % 2 == 0 ? Vector4(0.6, 0.6, 0.6, 1) : Vector4(0.5, 0.5, 0.5, 1),
+        i % 2 == 0 ? Vector4(0.6, 0.6, 0.6, 1) : Vector4(0.3, 0.3, 0.3, 1),
         faceTarget: _cubeMapFaceTargets[i],
       );
     }
@@ -296,7 +289,7 @@ class M3Texture {
     tex.name = name;
 
     final img = await M3ResourceManager.createImageFromBytes(bytes);
-    await tex._loadTargetFromImage(img);
+    await tex.loadTargetFromImage(img);
     tex.generateMipmap();
     debugPrint(tex.toString());
     return tex;
@@ -335,11 +328,11 @@ class M3Texture {
       // PVR compressed texture
     } else {
       final img = await M3ResourceManager.loadImage(filename);
-      await _loadTargetFromImage(img, faceTarget: faceTarget);
+      await loadTargetFromImage(img, faceTarget: faceTarget);
     }
   }
 
-  Future<void> _loadTargetFromImage(ui.Image image, {int faceTarget = WebGL.TEXTURE_2D}) async {
+  Future<void> loadTargetFromImage(ui.Image image, {int faceTarget = WebGL.TEXTURE_2D}) async {
     texW = image.width;
     texH = image.height;
 
@@ -516,7 +509,7 @@ class M3Texture {
   static Future<M3Texture> createWoodTexture({int size = 512}) async {
     M3Texture tex = M3Texture();
     final img = await _generateWoodImage(size: size);
-    await tex._loadTargetFromImage(img);
+    await tex.loadTargetFromImage(img);
     tex.generateMipmap();
     return tex;
   }

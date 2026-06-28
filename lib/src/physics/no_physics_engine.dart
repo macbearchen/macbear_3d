@@ -52,4 +52,7 @@ class M3NoPhysicsEngine implements M3PhysicsEngine {
   M3RigidBody createRigidBody(M3RigidBodyDesc desc) {
     return M3NoRigidBody();
   }
+
+  @override
+  void removeRigidBody(M3RigidBody body) {}
 }

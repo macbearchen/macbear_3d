@@ -1,9 +1,6 @@
 // Macbear3D engine
 import '../m3_internal.dart';
-
 import 'shadow_map.dart';
-
-part 'render_options.dart';
 
 /// The WebGL rendering engine that manages shaders, framebuffers, and scene rendering.
 ///

@@ -1,4 +1,14 @@
-part of 'texture.dart';
+import 'dart:ui' as ui;
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:video_player/video_player.dart';
+
+// VideoBridge
+import '../util/video/video_helper.dart';
+import '../video_bridge/video_bridge.dart';
+
+// Macbear3D engine
+import '../m3_internal.dart';
 
 /// A texture that can be updated from an external source like a video stream or camera.
 class M3ExternalTexture extends M3Texture {
@@ -87,7 +97,7 @@ class M3ExternalTexture extends M3Texture {
 
       // If source is a ui.Image, we can use _loadTargetFromImage (inherited from M3Texture).
       if (source is ui.Image) {
-        _loadTargetFromImage(source as ui.Image);
+        loadTargetFromImage(source as ui.Image);
       } else if (source is VideoPlayerController) {
         // Note: For VideoPlayerController on Native, we need a way to get the current frame.
         // As a starting point, the user can pass a ui.Image captured from the controller.
@@ -134,7 +144,7 @@ class M3ExternalTexture extends M3Texture {
       final boundary = repaintKey!.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary != null) {
         final img = await boundary.toImage();
-        _loadTargetFromImage(img);
+        loadTargetFromImage(img);
       }
     } catch (e) {
       // debugPrint('*** ERROR capturing frame: $e');

@@ -46,7 +46,7 @@ class M3TextTexture extends M3Texture {
 
     final picture = recorder.endRecording();
     final img = await picture.toImage(texW, texH);
-    await _loadTargetFromImage(img);
+    await loadTargetFromImage(img);
   }
 
   // size depends on text content
@@ -85,6 +85,6 @@ class M3TextTexture extends M3Texture {
 
   Future<void> _createTextureFromLabel(String text) async {
     final img = await _makeLabelImage(text);
-    await _loadTargetFromImage(img);
+    await loadTargetFromImage(img);
   }
 }

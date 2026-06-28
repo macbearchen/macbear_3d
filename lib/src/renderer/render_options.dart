@@ -1,5 +1,3 @@
-part of 'render_engine.dart';
-
 /// Rendering options for the engine (wireframe, helpers, shadows, FPS display).
 class M3RenderOptions {
   // debug options

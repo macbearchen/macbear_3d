@@ -18,7 +18,7 @@ abstract class M3PhysicsEngine {
   M3RigidBody createRigidBody(M3RigidBodyDesc desc);
 
   /// remove rigid body
-  // void removeRigidBody(M3RigidBody body);
+  void removeRigidBody(M3RigidBody body);
 
   /// create collider from descriptor
   M3Collider createCollider(M3RigidBody body, M3ColliderDesc desc);

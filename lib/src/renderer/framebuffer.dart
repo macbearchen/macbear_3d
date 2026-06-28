@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 
-import 'app_engine.dart';
+import '../engine/app_engine.dart';
 
 /// A WebGL framebuffer object for off-screen rendering (e.g., shadow maps).
 ///
