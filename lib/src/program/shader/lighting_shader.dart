@@ -8,29 +8,29 @@ mixin M3LightingShader {
   late UniformLocation uniformDiffuse; // "ColorDiffuse" = inColor * LightDiffuse * MaterialDiffuse
   late UniformLocation uniformSpecular; // "ColorSpecular" = inColor * LightDiffuse * MaterialSpecular (w: Shininess)
 
-  late UniformLocation uniformLightPosition; // light position "LightPosition" (per object-space)
+  late UniformLocation uniformLightDirection; // light direction "uLightDir" (per object-space)
 
-  M3Light? _light; // active light
+  M3DirectionalLight? _light; // active light
 
   void initLightingLocation(Program prog) {
     uniformAmbient = gl.getUniformLocation(prog, "ColorAmbient");
     uniformDiffuse = gl.getUniformLocation(prog, "ColorDiffuse");
     uniformSpecular = gl.getUniformLocation(prog, "ColorSpecular");
 
-    uniformLightPosition = gl.getUniformLocation(prog, "LightPosition");
+    uniformLightDirection = gl.getUniformLocation(prog, "uLightDir");
   }
 
-  void attachLight(M3Light sceneLight) {
-    _light = sceneLight;
+  void attachLight(M3DirectionalLight dirLight) {
+    _light = dirLight;
   }
 
-  void setLightPosition(Matrix4 mMatrix) {
+  void setLightDirection(Matrix4 mMatrix) {
     if (_light == null) return;
 
-    if (M3Program.isLocationValid(uniformLightPosition)) {
+    if (M3Program.isLocationValid(uniformLightDirection)) {
       Vector4 lightDirection = Matrix4.inverted(mMatrix) * _light!.getDirection();
       lightDirection.normalize();
-      gl.uniform3fv(uniformLightPosition, lightDirection.xyz.storage);
+      gl.uniform3fv(uniformLightDirection, lightDirection.xyz.storage);
     }
   }
 }

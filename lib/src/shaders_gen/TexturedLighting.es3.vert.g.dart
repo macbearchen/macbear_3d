@@ -28,8 +28,8 @@ out lowp vec4 SpecularOut;
 #endif // ENABLE_PIXEL_LIGHTING
 
 uniform lowp vec3 ColorAmbient;
-uniform mediump vec3 EyePosition;
-uniform mediump vec3 LightPosition;
+uniform mediump vec3 uEyePos;
+uniform mediump vec3 uLightDir;
 
 out lowp vec4 DestinationColor;
 out mediump vec2 TextureCoordOut;
@@ -37,7 +37,7 @@ out mediump vec2 TextureCoordOut;
 uniform mat4 ModelviewProjection;
 
 #ifdef ENABLE_FOG
-uniform mediump vec3 ObjectScale;
+uniform mediump vec3 uObjectScale;
 out highp float fogDist;   // distance: eye to obj-vertex
 out highp vec3 fogVert;
 #endif // ENABLE_FOG
@@ -54,8 +54,8 @@ void main(void)
     }
 #endif // ENABLE_SKINNING
 
-    mediump vec3 L = LightPosition;
-    mediump vec3 eyeToObj = EyePosition - objVert.xyz;
+    mediump vec3 L = uLightDir;
+    mediump vec3 eyeToObj = uEyePos - objVert.xyz;
     highp float eyeToObjDist = length(eyeToObj);
     mediump vec3 E = eyeToObj / eyeToObjDist;
 
@@ -86,7 +86,7 @@ void main(void)
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
     
 #ifdef ENABLE_FOG
-    eyeToObj /= ObjectScale;
+    eyeToObj /= uObjectScale;
     fogDist = length(eyeToObj);
     fogVert = objVert.xyz;
 #endif // ENABLE_FOG

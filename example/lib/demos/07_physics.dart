@@ -69,7 +69,8 @@ class PhysicsScene_07 extends DemoScene {
     }
 
     // sample cubemap
-    skybox = M3Skybox(M3Texture.createSampleCubemap());
+    // skybox = M3Skybox(M3Texture.createSampleCubemap());
+    skybox = M3Skybox(M3Texture.createDefaultIBLCube());
 
     // plane geometry
     final plane = addMesh(

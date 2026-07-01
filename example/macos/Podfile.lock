@@ -1,33 +1,19 @@
 PODS:
-  - flutter_angle (0.4.0):
-    - Flutter
-    - FlutterAngle (~> 0.0.8)
-    - FlutterMacOS
-  - FlutterAngle (0.0.8)
   - FlutterMacOS (1.0.0)
   - macbear_3d (0.8.0):
     - FlutterMacOS
 
 DEPENDENCIES:
-  - flutter_angle (from `Flutter/ephemeral/.symlinks/plugins/flutter_angle/darwin`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - macbear_3d (from `Flutter/ephemeral/.symlinks/plugins/macbear_3d/macos`)
 
-SPEC REPOS:
-  trunk:
-    - FlutterAngle
-
 EXTERNAL SOURCES:
-  flutter_angle:
-    :path: Flutter/ephemeral/.symlinks/plugins/flutter_angle/darwin
   FlutterMacOS:
     :path: Flutter/ephemeral
   macbear_3d:
     :path: Flutter/ephemeral/.symlinks/plugins/macbear_3d/macos
 
 SPEC CHECKSUMS:
-  flutter_angle: 94259dda819a90a7d7f9c4993c4eab469f673898
-  FlutterAngle: c810891af800750361b1d0e7cc944f2338d5ae18
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   macbear_3d: 701dbe77f689d224428f84b0a8f48d5f13d4f3d3
 

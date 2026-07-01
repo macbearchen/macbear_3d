@@ -16,7 +16,7 @@ class M3ProgramLighting extends M3ProgramEye with M3LightingShader, M3FogShader 
   void setMatrices(M3Camera cam, Matrix4 mMatrix) {
     super.setMatrices(cam, mMatrix);
 
-    setLightPosition(mMatrix);
+    setLightDirection(mMatrix);
     setFogPlane(cam, mMatrix);
   }
 

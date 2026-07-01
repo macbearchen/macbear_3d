@@ -8,7 +8,7 @@ layout(location = 2) in mediump vec3 inNormal;
 #endif // ENABLE_SKINNING
 
 // object space
-uniform mediump vec3 EyePosition;			// eye as camera origin
+uniform mediump vec3 uEyePos;	// eye as camera origin
 uniform lowp vec4 uColor;
 
 out lowp vec4 DestinationColor;
@@ -30,7 +30,7 @@ void main(void)
 	}
 #endif // ENABLE_SKINNING
 
-	mediump vec3 eyeDir = normalize(objVert.xyz - EyePosition);	// by object-space
+	mediump vec3 eyeDir = normalize(objVert.xyz - uEyePos);	// by object-space
 	mediump vec3 reflectDir = reflect(eyeDir, objNormal);		// by object-space
 	reflectDir = mat3(Model) * reflectDir;						// by world-space
 

@@ -175,7 +175,7 @@ function glClearColor(gl, red, green, blue, alpha) {
 }
 
 function glCompressedTexImage2D(gl, target, level, internalformat, width, height, border, imageSize, data) {
-    gl.texImage2D(target, level, internalformat, width, height, border, imageSize, data);
+    gl.compressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data);
 }
 
 function glGenerateMipmap(gl, target) {

@@ -10,9 +10,9 @@ uniform lowp vec3 ColorAmbient;		// ambient RGB
 uniform lowp vec4 ColorDiffuse;		// diffuse RGBA
 uniform mediump vec4 ColorSpecular;	// specular RGB, w: shininess
 
-uniform mediump vec3 LightPosition;	// parallel light
+uniform mediump vec3 uLightDir;		// parallel light
 in mediump vec3 ObjectspaceN;
-in mediump vec3 ObjectspaceH;	// LightVector + EyeVector
+in mediump vec3 ObjectspaceH;		// LightVector + EyeVector
 
 mediump vec3 safe_normalize(mediump vec3 v) {
     mediump float len2 = max(dot(v, v), 1e-8);
@@ -106,7 +106,7 @@ lowp vec4 ShadeLit(in lowp vec4 texDiffuse)
 {
 	lowp vec4 result;
     mediump vec3 N = normalize(ObjectspaceN);
-    mediump vec3 L = LightPosition;		// parallel light source
+    mediump vec3 L = uLightDir;		// parallel light source
 
 #ifdef ENABLE_PBR
     mediump vec3 V = safe_normalize(ObjectspaceV);

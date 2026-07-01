@@ -12,7 +12,7 @@ uniform lowp vec4 uColor;
 // eye-space for camera-viewer
 uniform highp mat4 ModelviewProjection;
 // object-space (same as world-space here)
-uniform mediump vec3 EyePosition;	// eye as camera origin
+uniform mediump vec3 uEyePos;	// eye as camera origin
 
 uniform mediump vec4 BumpTranslateScale0;	// xy: translate, zw: scale
 uniform mediump vec4 BumpTranslateScale1;	// xy: translate, zw: scale
@@ -59,7 +59,7 @@ void main(void)
 	
 	// The water to eye vector is used to calculate the Fresnel term
 	// and to fade out perturbations based on distance from the viewer
-	eyeToObj = EyePosition - objVert.xyz;
+	eyeToObj = uEyePos - objVert.xyz;
 	eyeToObjDist = length(eyeToObj);
 	
 	// tangent-space

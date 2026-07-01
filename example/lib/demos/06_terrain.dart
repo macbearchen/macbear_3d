@@ -22,7 +22,7 @@ class TerrainScene_06 extends DemoScene {
     camera.setEuler(-pi / 3, -pi / 9, 0, distance: 40);
     debugPrint('Camera: $camera');
     // 2. Add Skybox
-    skybox = M3Skybox(M3Texture.createSampleCubemap());
+    skybox = M3Skybox(M3Texture.createDefaultIBLCube());
 
     // 3. Setup Terrain
     await _setupTerrain();

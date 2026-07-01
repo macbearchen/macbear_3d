@@ -67,8 +67,8 @@ class SkyboxScene_02 extends DemoScene {
     final plane = addMesh(meshPlane, Vector3(0, 0, -8)); //posZ));
 
     // 02-3: orbit around
-    final meshCube = M3Mesh(M3Resources.unitCube);
-    final meshTorus = M3Mesh(M3TorusGeom(0.6, 0.2));
+    final meshCube = createCompoundMesh();
+    final meshTorus = M3Mesh(M3TorusGeom(1, 0.33));
     meshCube.subMeshes[0].mtr
       ..reflection = 0.0
       ..metallic = 0.0

@@ -20,12 +20,19 @@ mixin M3ShadowShader {
   }
 
   /// Apply shadowmap related uniform variables.
-  void _applyShadow(M3Light light) {
+  void _applyShadow(M3DirectionalLight light) {
     final shadowMap = M3AppEngine.instance.renderEngine.shadowMap;
     if (shadowMap == null) return;
 
     // shadowmap texture
-    _bindShadow(shadowMap.depthTexture);
+    if (M3Program.isLocationValid(uniformSamplerShadowmap)) {
+      gl.activeTexture(WebGL.TEXTURE3);
+      shadowMap.depthTex.bind();
+      gl.uniform1i(uniformSamplerShadowmap, 3);
+
+      gl.activeTexture(WebGL.TEXTURE0);
+    }
+
     // shadowmap size
     if (M3Program.isLocationValid(uniformShadowmapSize)) {
       gl.uniform2f(uniformShadowmapSize, shadowMap.mapW.toDouble(), shadowMap.mapH.toDouble());
@@ -33,16 +40,6 @@ mixin M3ShadowShader {
     // shadowmap normal bias
     if (M3Program.isLocationValid(uniformNormalBias)) {
       gl.uniform1f(uniformNormalBias, light.shadowNormalBias);
-    }
-  }
-
-  void _bindShadow(WebGLTexture texture) {
-    if (M3Program.isLocationValid(uniformSamplerShadowmap)) {
-      gl.activeTexture(WebGL.TEXTURE3);
-      gl.bindTexture(WebGL.TEXTURE_2D, texture);
-      gl.uniform1i(uniformSamplerShadowmap, 3);
-
-      gl.activeTexture(WebGL.TEXTURE0);
     }
   }
 }

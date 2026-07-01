@@ -6,28 +6,23 @@ class M3ReflectionProbe {
   M3Entity? owner; // ignore capture entity
 
   final M3RenderContext _context = M3RenderContext();
-  M3Framebuffer? _fbo;
+  late M3Framebuffer _framebuffer;
   int texSize = 128;
-  M3Texture? cubemapTexture;
+  M3Texture get cubemapTexture => _framebuffer.colorTexture;
 
   bool isMirror = true;
-
-  /// Get the mathematically correct maximum mipmap level based on size
-  int get maxMipLevel => cubemapTexture?.maxMipLevel ?? (log(texSize) / ln2).floor();
 
   M3ReflectionProbe({this.texSize = 128, this.isMirror = true, double near = 0.1, double far = 200.0}) {
     // Temporary camera with 90 degree FOV
     _camCapture.csmCount = 0;
     _camCapture.setViewport(0, 0, texSize, texSize, fovy: 90.0, near: near, far: far);
-    _fbo ??= M3Framebuffer(texSize, texSize, useDepthTexture: false);
-    cubemapTexture ??= M3Texture.createEmptyCubemap(texSize);
+    _framebuffer = M3Framebuffer(texSize, texSize)
+      ..createColorTexture(target: WebGL.TEXTURE_CUBE_MAP)
+      ..createDepthRenderbuffer();
   }
 
   void dispose() {
-    _fbo?.dispose();
-    _fbo = null;
-    cubemapTexture?.dispose();
-    cubemapTexture = null;
+    _framebuffer.dispose();
   }
 
   void setOwner(M3Entity? owner) {
@@ -72,8 +67,9 @@ class M3ReflectionProbe {
     prog.attachLight(scene.light);
 
     for (int i = 0; i < 6; i++) {
-      // Bind face
-      _fbo!.bindFace(faces[i], cubemapTexture!.glTexture);
+      // Bind FBO, then attach texture face
+      _framebuffer.bind();
+      cubemapTexture.attachToFramebuffer(WebGL.COLOR_ATTACHMENT0, faces[i]);
 
       // Clear
       final bg = M3AppEngine.backgroundColor;
@@ -110,7 +106,7 @@ class M3ReflectionProbe {
       }
       _context.render(prog);
     }
-    cubemapTexture!.generateMipmap();
+    cubemapTexture.generateMipmap();
     // Restore state
     renderEngine.bindDefaultFramebuffer();
   }

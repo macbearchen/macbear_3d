@@ -15,7 +15,7 @@ class M3ProgramWater extends M3ProgramLighting with M3WaterShader {
     if (_light != null) {
       Vector3 srcLight = _light!.position;
       Vector3 tangentLight = Vector3(srcLight.dot(tangent), srcLight.dot(binormal), srcLight.dot(normal));
-      gl.uniform3fv(uniformLightPosition, tangentLight.storage);
+      gl.uniform3fv(uniformLightDirection, tangentLight.storage);
     }
     // water TBN
     _setTBN(tangent, binormal, normal);
@@ -37,7 +37,7 @@ class M3ProgramWaterCSM extends M3ProgramShadowCSM with M3WaterShader {
     if (_light != null) {
       Vector3 srcLight = _light!.position;
       Vector3 tangentLight = Vector3(srcLight.dot(tangent), srcLight.dot(binormal), srcLight.dot(normal));
-      gl.uniform3fv(uniformLightPosition, tangentLight.storage);
+      gl.uniform3fv(uniformLightDirection, tangentLight.storage);
     }
     // water TBN
     _setTBN(tangent, binormal, normal);

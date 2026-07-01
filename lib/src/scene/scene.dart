@@ -22,12 +22,12 @@ abstract class M3Scene {
   M3InputController? inputController;
   final M3PhysicsSystem physicsSystem;
 
-  final _light = M3Light();
+  final _light = M3DirectionalLight();
   final _camera = M3Camera();
   List<M3Camera> cameras = [];
 
   M3Camera get camera => cameras[0];
-  M3Light get light => _light;
+  M3DirectionalLight get light => _light;
 
   // physics entities
   final List<M3Entity> entities = [];
@@ -117,7 +117,7 @@ abstract class M3Scene {
     }
   }
 
-  void drawDebug() {}
+  void debugDraw() {}
 
   // render helper: zero, camera, light, wireframe
   void drawHelper() {

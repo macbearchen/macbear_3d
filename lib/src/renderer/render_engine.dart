@@ -178,7 +178,7 @@ class M3RenderEngine {
     if (options.debug.showMaps) {
       if (!options.debug.wireframe && options.shadows && _shadowMap != null) {
         final width = 200 / _shadowMap!.mapH * _shadowMap!.mapW;
-        _shadowMap!.drawDebugDepth(5, engine.appHeight - 210, width, 200);
+        _shadowMap!.debugDrawDepth(5, engine.appHeight - 210, width, 200);
       }
       // show planar reflection
       if (mainContext.needsPlanarReflectionPass()) {
@@ -189,12 +189,12 @@ class M3RenderEngine {
         final w = planarReflection.width * ratio;
         final h = planarReflection.height * ratio;
 
-        planarReflection.drawDebugReflection(x, y, w, h);
+        planarReflection.debugDrawReflection(x, y, w, h);
       }
 
       final water = engine.activeScene?.water;
       if (water != null) {
-        water.drawDebug();
+        water.debugDraw();
       }
 
       prog2D.setModelMatrix(Matrix4.identity());

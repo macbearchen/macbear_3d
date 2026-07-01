@@ -69,7 +69,7 @@ class M3Skin {
     }
 
     if (_debugCount < 1) {
-      debugPrint('M3Skin: first bone matrix storage: ${boneMatrices[0].storage}');
+      // debugPrint('M3Skin: first bone matrix storage: ${boneMatrices[0].storage}');
       _debugCount++;
     }
   }

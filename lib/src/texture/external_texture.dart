@@ -60,9 +60,7 @@ class M3ExternalTexture extends M3Texture {
     if (_isNativeCodec) {
       if (PlatformInfo.isMacOS || PlatformInfo.isIOS) {
         // Pass the native GL texture ID to the macOS/iOS side.
-        // In flutter_angle, glTexture.id is the actual GL handle.
-        final int id = (glTexture as dynamic).id;
-        isPlaying = await M3VideoBridge.registerSurface(textureId: id, assetPath: assetPath);
+        isPlaying = await M3VideoBridge.registerSurface(textureId: glId, assetPath: assetPath);
         return isPlaying;
       }
     }
@@ -73,7 +71,7 @@ class M3ExternalTexture extends M3Texture {
   Future<void> releaseNativeBridge() async {
     if (_isNativeCodec) {
       if (PlatformInfo.isMacOS || PlatformInfo.isIOS) {
-        await M3VideoBridge.release(textureId: (glTexture as dynamic).id);
+        await M3VideoBridge.release(textureId: glId);
         isPlaying = false;
       }
     }
@@ -109,10 +107,8 @@ class M3ExternalTexture extends M3Texture {
 
   Future<void> _updateTextureFromNative() async {
     if (PlatformInfo.isMacOS || PlatformInfo.isIOS) {
-      final int id = (glTexture as dynamic).id;
-
       // Try to update the surface (Native side will try zero-copy first, then fallback to pixels)
-      final bool success = await M3VideoBridge.updateSurface(textureId: id);
+      final bool success = await M3VideoBridge.updateSurface(textureId: glId);
       if (success) {
         return;
       }
@@ -121,7 +117,7 @@ class M3ExternalTexture extends M3Texture {
     if (PlatformInfo.isAndroid) {
       // Native OES texture is updated directly by the native side (e.g., SurfaceTexture).
       // We trigger the latching of the next frame here.
-      await M3VideoBridge.updateSurface(textureId: (glTexture as dynamic).id);
+      await M3VideoBridge.updateSurface(textureId: glId);
       return;
     }
   }
@@ -163,7 +159,7 @@ class M3ExternalTexture extends M3Texture {
     videoPlay(source);
     isPlaying = true;
     if (_isNativeCodec) {
-      M3VideoBridge.play(textureId: (glTexture as dynamic).id);
+      M3VideoBridge.play(textureId: glId);
     }
   }
 
@@ -172,7 +168,7 @@ class M3ExternalTexture extends M3Texture {
     videoPause(source);
     isPlaying = false;
     if (_isNativeCodec) {
-      M3VideoBridge.pause(textureId: (glTexture as dynamic).id);
+      M3VideoBridge.pause(textureId: glId);
     }
   }
 
@@ -180,7 +176,7 @@ class M3ExternalTexture extends M3Texture {
   void seekTo(Duration duration) {
     videoSeekTo(source, duration);
     if (_isNativeCodec) {
-      M3VideoBridge.seekTo(textureId: (glTexture as dynamic).id, seconds: duration.inMilliseconds / 1000.0);
+      M3VideoBridge.seekTo(textureId: glId, seconds: duration.inMilliseconds / 1000.0);
     }
   }
 
@@ -195,7 +191,7 @@ class M3ExternalTexture extends M3Texture {
       return Duration(milliseconds: (seconds * 1000).toInt());
     } else {
       if (_isNativeCodec) {
-        final seconds = await M3VideoBridge.getDuration(textureId: (glTexture as dynamic).id);
+        final seconds = await M3VideoBridge.getDuration(textureId: glId);
         return Duration(milliseconds: (seconds * 1000).toInt());
       } else if (source is VideoPlayerController) {
         final controller = source as VideoPlayerController;
@@ -214,7 +210,7 @@ class M3ExternalTexture extends M3Texture {
       return Duration(milliseconds: (seconds * 1000).toInt());
     } else {
       if (_isNativeCodec) {
-        final seconds = await M3VideoBridge.getPosition(textureId: (glTexture as dynamic).id);
+        final seconds = await M3VideoBridge.getPosition(textureId: glId);
         return Duration(milliseconds: (seconds * 1000).toInt());
       } else if (source is VideoPlayerController) {
         final controller = source as VideoPlayerController;

@@ -7,7 +7,7 @@ class ObjTeapotScene_04 extends DemoScene {
   M3Entity? _teapot;
   M3Material? mtrTeapot;
 
-  bool isDrawDebug = false;
+  bool isDebugDraw = false;
   bool isEnableProbe = true;
   bool isEnablePlanar = true;
 
@@ -73,8 +73,8 @@ class ObjTeapotScene_04 extends DemoScene {
     _plane.rotation.setEuler(pi / 12, 0, 0);
 
     // 04-4: orbit around
-    final meshCube = M3Mesh(M3Resources.unitCube);
-    final meshTorus = M3Mesh(M3TorusGeom(0.4, 0.1));
+    final meshCube = createCompoundMesh();
+    final meshTorus = M3Mesh(M3TorusGeom(0.6, 0.2));
     meshCube.subMeshes[0].mtr
       ..reflection = 0.0
       ..metallic = 0.0
@@ -83,12 +83,12 @@ class ObjTeapotScene_04 extends DemoScene {
     _orbit1 = addMesh(meshCube, Vector3(5, 2, 1));
     _orbit1
       ..rotation.setEuler(0, pi / 3, 0)
-      ..color = Vector4(0.3, 1.0, 0.4, 1.0);
+      ..color = Vector4(1.0, 1.0, 0.3, 1.0);
 
     _orbit2 = addMesh(meshTorus, Vector3(0, 6, 0));
     _orbit2
       ..rotation.setEuler(0, pi / 7, 0)
-      ..color = Vector4(1.0, 0.1, 0.0, 1.0);
+      ..color = Vector4(0.2, 0.3, 0.96, 1.0);
 
     // 04-5: reflection probe
     _probe = M3ReflectionProbe(near: 0.2, far: 50.0);
@@ -145,8 +145,8 @@ class ObjTeapotScene_04 extends DemoScene {
   }
 
   @override
-  void drawDebug() {
-    if (!isDrawDebug) return;
+  void debugDraw() {
+    if (!isDebugDraw) return;
 
     // test for skybox
     Matrix4 boxMatrix = Matrix4.identity();
@@ -200,7 +200,7 @@ class ObjTeapotScene_04 extends DemoScene {
               style: fm.TextStyle(color: fm.Colors.white, fontWeight: fm.FontWeight.bold),
             ),
             const fm.SizedBox(height: 8),
-            _buildToggle("Debug", () => isDrawDebug, (val) => isDrawDebug = val),
+            _buildToggle("Debug", () => isDebugDraw, (val) => isDebugDraw = val),
             _buildToggle("Enable", () => isEnableProbe, (val) => setReflectionProbe(val)),
             const fm.SizedBox(height: 16),
             const fm.Text(

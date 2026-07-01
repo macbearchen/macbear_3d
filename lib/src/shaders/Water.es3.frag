@@ -61,7 +61,7 @@ lowp vec4 BlendReflectionRefraction(in lowp vec3 vAccumulatedNormal, in lowp vec
 #ifdef ENABLE_WATER_SPECULAR
 // tangent-space by light
 uniform lowp vec3 LightDiffuse;		// diffuse of light
-uniform mediump vec3 LightPosition;	// parallel light
+uniform mediump vec3 uLightDir;		// parallel light
 #endif // ENABLE_WATER_SPECULAR
 		  
 void main(void)
@@ -82,7 +82,7 @@ void main(void)
 
 #ifdef ENABLE_WATER_SPECULAR
 	// specular part:
-	mediump vec3 H = normalize(eyeToObjNormal + LightPosition);
+	mediump vec3 H = normalize(eyeToObjNormal + uLightDir);
 	mediump float sf = max(0.0, dot(H, vAccumulatedNormal));
 //	mediump float sf = clamp(dot(H, vAccumulatedNormal), 0.0, 1.0);
 	sf = pow(sf, 120.0);

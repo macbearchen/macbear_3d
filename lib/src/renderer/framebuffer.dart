@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_angle/flutter_angle.dart';
+// Macbear3D engine
+import 'dart:typed_data';
 
-import '../engine/app_engine.dart';
+import '../m3_internal.dart';
 
 /// A WebGL framebuffer object for off-screen rendering (e.g., shadow maps).
 ///
@@ -13,51 +13,72 @@ class M3Framebuffer {
   int frameH = 1024;
 
   late Framebuffer _fbo;
-  WebGLTexture? _depthTexture;
   Renderbuffer? _depthRenderbuffer;
+  M3Texture? _colorTexture;
+  M3Texture? _depthTexture;
 
-  WebGLTexture get depthTexture => _depthTexture!;
+  M3Texture get depthTexture => _depthTexture!;
+  M3Texture get colorTexture => _colorTexture!;
 
-  M3Framebuffer(this.frameW, this.frameH, {bool useDepthTexture = true}) {
+  M3Framebuffer(this.frameW, this.frameH) {
     // Create FBO
     _fbo = gl.createFramebuffer();
     gl.bindFramebuffer(WebGL.FRAMEBUFFER, _fbo);
+  }
 
-    // internal format: DEPTH_COMPONENT16, DEPTH_COMPONENT24, DEPTH_COMPONENT32F
-    const depthFormat = WebGL.DEPTH_COMPONENT24;
-    if (useDepthTexture) {
-      // Create depth texture
-      _depthTexture = gl.createTexture();
-      gl.bindTexture(WebGL.TEXTURE_2D, _depthTexture!);
-
-      // depthFormat → pixel type mapping
-      final pixelType = switch (depthFormat) {
-        WebGL.DEPTH_COMPONENT32F => WebGL.FLOAT,
-        WebGL.DEPTH_COMPONENT16 => WebGL.UNSIGNED_SHORT,
-        _ => WebGL.UNSIGNED_INT, // DEPTH_COMPONENT24
-      };
-
-      gl.texImage2D(WebGL.TEXTURE_2D, 0, depthFormat, frameW, frameH, 0, WebGL.DEPTH_COMPONENT, pixelType, null);
-
-      gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_MAG_FILTER, WebGL.LINEAR);
-      gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_MIN_FILTER, WebGL.LINEAR);
-      gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_WRAP_S, WebGL.CLAMP_TO_EDGE);
-      gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_WRAP_T, WebGL.CLAMP_TO_EDGE);
-
-      // depth-Z compare mode
-      gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_COMPARE_MODE, WebGL.COMPARE_REF_TO_TEXTURE);
-      gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_COMPARE_FUNC, WebGL.LESS);
-
-      gl.framebufferTexture2D(WebGL.FRAMEBUFFER, WebGL.DEPTH_ATTACHMENT, WebGL.TEXTURE_2D, _depthTexture!, 0);
+  /// Create color texture
+  M3Texture? createColorTexture({int target = WebGL.TEXTURE_2D}) {
+    M3Texture? tex;
+    int texTarget = WebGL.TEXTURE_2D;
+    if (target == WebGL.TEXTURE_CUBE_MAP) {
+      tex = M3Texture.createEmptyCubemap(frameW);
+      texTarget = WebGL.TEXTURE_CUBE_MAP_POSITIVE_X;
+    } else if (target == WebGL.TEXTURE_2D) {
+      tex = M3Texture.createEmpty2D(frameW, frameH, wrap: WebGL.CLAMP_TO_EDGE);
     } else {
-      // Create depth renderbuffer
-      _depthRenderbuffer = gl.createRenderbuffer();
-      gl.bindRenderbuffer(WebGL.RENDERBUFFER, _depthRenderbuffer!);
-      gl.renderbufferStorage(WebGL.RENDERBUFFER, depthFormat, frameW, frameH);
-      gl.framebufferRenderbuffer(WebGL.FRAMEBUFFER, WebGL.DEPTH_ATTACHMENT, WebGL.RENDERBUFFER, _depthRenderbuffer!);
+      assert(false, "Unsupported target: $target");
     }
+    tex?.attachToFramebuffer(WebGL.COLOR_ATTACHMENT0, texTarget);
 
-    // Check status
+    _colorTexture = tex;
+    _checkStatus();
+    return tex;
+  }
+
+  /// Create depth texture
+  /// internal format: DEPTH_COMPONENT16, DEPTH_COMPONENT24, DEPTH_COMPONENT32F
+  M3Texture createDepthTexture({int depthFormat = WebGL.DEPTH_COMPONENT24}) {
+    M3Texture tex = M3Texture(useMipmaps: false, wrap: WebGL.CLAMP_TO_EDGE)
+      ..name = 'depth'
+      ..texW = frameW
+      ..texH = frameH;
+
+    // depthFormat → pixel type mapping
+    final pixelType = switch (depthFormat) {
+      WebGL.DEPTH_COMPONENT32F => WebGL.FLOAT,
+      WebGL.DEPTH_COMPONENT16 => WebGL.UNSIGNED_SHORT,
+      _ => WebGL.UNSIGNED_INT, // DEPTH_COMPONENT24
+    };
+
+    // depth-Z compare mode
+    gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_COMPARE_MODE, WebGL.COMPARE_REF_TO_TEXTURE);
+    gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_COMPARE_FUNC, WebGL.LESS);
+
+    gl.texImage2D(WebGL.TEXTURE_2D, 0, depthFormat, frameW, frameH, 0, WebGL.DEPTH_COMPONENT, pixelType, null);
+    tex.attachToFramebuffer(WebGL.DEPTH_ATTACHMENT, WebGL.TEXTURE_2D);
+
+    _depthTexture = tex;
+    _checkStatus();
+    return tex;
+  }
+
+  /// Create depth renderbuffer
+  void createDepthRenderbuffer({int depthFormat = WebGL.DEPTH_COMPONENT24}) {
+    _depthRenderbuffer = gl.createRenderbuffer();
+    gl.bindRenderbuffer(WebGL.RENDERBUFFER, _depthRenderbuffer!);
+    gl.renderbufferStorage(WebGL.RENDERBUFFER, depthFormat, frameW, frameH);
+    gl.framebufferRenderbuffer(WebGL.FRAMEBUFFER, WebGL.DEPTH_ATTACHMENT, WebGL.RENDERBUFFER, _depthRenderbuffer!);
+
     _checkStatus();
   }
 
@@ -65,26 +86,45 @@ class M3Framebuffer {
     assert(() {
       final status = gl.checkFramebufferStatus(WebGL.FRAMEBUFFER);
       if (status != WebGL.FRAMEBUFFER_COMPLETE) {
-        debugPrint("FBO error: $status");
+        String msg = 'n/a';
+        switch (status) {
+          case WebGL.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+            msg = 'missing attachment';
+            break;
+          case WebGL.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+            msg = 'incomplete dimensions';
+            break;
+          case WebGL.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+            msg = 'incomplete missing attachment';
+            break;
+          case WebGL.FRAMEBUFFER_UNSUPPORTED:
+            msg = 'unsupported';
+            break;
+          default:
+            msg = '0x${status.toRadixString(16).toUpperCase()} unknown';
+            break;
+        }
+        debugPrint("*** FBO error: $msg");
       }
 
       return true;
     }());
   }
 
-  void bindFace(int faceTarget, WebGLTexture colorTexture) {
-    bind();
-    gl.framebufferTexture2D(WebGL.FRAMEBUFFER, WebGL.COLOR_ATTACHMENT0, faceTarget, colorTexture, 0);
-  }
-
+  /// Bind this FBO and set viewport size
   void bind() {
     gl.bindFramebuffer(WebGL.FRAMEBUFFER, _fbo);
     gl.viewport(0, 0, frameW, frameH);
+
+    if (_colorTexture == null) {
+      gl.drawBuffers(Uint32List.fromList([WebGL.NONE]));
+    }
     _checkStatus();
   }
 
   void dispose() {
-    if (_depthTexture != null) gl.deleteTexture(_depthTexture!);
+    _colorTexture?.dispose();
+    _depthTexture?.dispose();
     if (_depthRenderbuffer != null) gl.deleteRenderbuffer(_depthRenderbuffer!);
     gl.deleteFramebuffer(_fbo);
   }

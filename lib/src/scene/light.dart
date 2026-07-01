@@ -15,29 +15,13 @@ class M3ShadowCascade {
 /// A directional or positional light source for scene illumination.
 ///
 /// Extends [M3Camera] for shadow map rendering. Provides ambient and diffuse color blending.
-class M3Light extends M3Camera {
+abstract class M3Light extends M3Camera {
   static Vector3 ambient = Vector3(0.2, 0.2, 0.2);
   Vector3 color = Colors.white.rgb - ambient;
-
-  bool isDirectional = true; // positional or directional
-  bool isCameraAligned = true; // align camera to light
-  // double shadowBias = 0.002;
-  double shadowNormalBias = 0.05;
-  double csmPaddingNear = 2.0;
-  double csmPaddingFar = 2.0;
-
-  List<M3ShadowCascade> cascades = [];
 
   M3Light() {
     setLookat(Vector3(2, 0, 8), Vector3.zero(), Vector3(0, 0, 1));
     csmCount = 0;
-  }
-
-  Vector4 getDirection() {
-    Vector4 dirZ = viewMatrix.getRow(2);
-    dirZ.w = 0.0; // direction vector
-
-    return dirZ;
   }
 
   static Vector4 blendRGBA(Vector4 a, Vector4 b) {
@@ -46,6 +30,34 @@ class M3Light extends M3Camera {
 
   static Vector3 blendRGB(Vector3 a, Vector3 b) {
     return Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
+  }
+
+  @override
+  void drawHelper(M3Program prog, M3Camera viewer) {
+    super.drawHelper(prog, viewer);
+  }
+}
+
+/// directional light
+class M3DirectionalLight extends M3Light {
+  bool isCameraAligned = true; // align camera to light
+  // double shadowBias = 0.002;
+  double shadowNormalBias = 0.05;
+  double csmPaddingNear = 2.0;
+  double csmPaddingFar = 2.0;
+
+  List<M3ShadowCascade> cascades = [];
+
+  M3DirectionalLight() {
+    isCameraAligned = false;
+  }
+
+  /// get light direction
+  Vector4 getDirection() {
+    Vector4 dirZ = viewMatrix.getRow(2);
+    dirZ.w = 0.0; // direction vector
+
+    return dirZ;
   }
 
   void updateShadowCascades(M3Camera cam) {
@@ -210,10 +222,15 @@ class M3Light extends M3Camera {
         final frustumMatrix = Matrix4.inverted(crop.projectionMatrix * viewMatrix);
         prog.setMaterial(mtrHelper, Vector4(0, 0, 1, 0.3));
         prog.setMatrices(viewer, frustumMatrix);
-        M3Resources.debugFrustum.draw(prog, fillMode: M3FillMode.solid);
+        // M3Resources.debugFrustum.draw(prog, fillMode: M3FillMode.wireframe);
         prog.setMaterial(mtrHelper, Vector4(0, 0, 1, 1));
         M3Resources.debugFrustum.draw(prog, fillMode: M3FillMode.wireframe);
       }
     }
   }
+}
+
+/// point light
+class M3PointLight extends M3Light {
+  double radius = 5.0;
 }

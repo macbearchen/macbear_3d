@@ -29,4 +29,16 @@ class DemoScene extends M3Scene {
 
     return skybox;
   }
+
+  M3Mesh createCompoundMesh() {
+    final mtrRed = M3Material()
+      ..diffuse = Vector4(1, 0, 0, 1)
+      ..setMatte();
+    // 02-3: orbit around
+    final meshCube = M3Mesh(M3Resources.unitCube);
+    final cylinder = M3SubMesh(M3Resources.unitCylinder, material: mtrRed);
+    cylinder.localMatrix.scaleByVector3(Vector3(0.5, 0.5, 4));
+    meshCube.subMeshes.add(cylinder);
+    return meshCube;
+  }
 }

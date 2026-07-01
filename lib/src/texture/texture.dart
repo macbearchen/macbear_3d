@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:ui' as ui;
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Matrix4;
 
 // Macbear3D engine
 import '../m3_internal.dart' hide Colors;
@@ -27,7 +27,7 @@ class M3Texture {
 
   String name = "noname";
   late WebGLTexture _texture;
-  WebGLTexture get glTexture => _texture;
+  int get glId => _texture.id;
   final bool useMipmaps;
   final int target; // GL_TEXTURE_2D, GL_TEXTURE_CUBE_MAP
   int texW = 32;
@@ -47,12 +47,14 @@ class M3Texture {
     final int wrapMode = wrap ?? (isCubemap ? WebGL.CLAMP_TO_EDGE : WebGL.REPEAT);
 
     bind();
+    // wrap: (s, t, r)
     gl.texParameteri(target, WebGL.TEXTURE_WRAP_S, wrapMode);
     gl.texParameteri(target, WebGL.TEXTURE_WRAP_T, wrapMode);
     if (isCubemap) {
       gl.texParameteri(target, WebGL.TEXTURE_WRAP_R, wrapMode);
     }
 
+    // filter: (min, mag)
     final minFilter = useMipmaps ? WebGL.LINEAR_MIPMAP_LINEAR : WebGL.LINEAR;
     gl.texParameteri(target, WebGL.TEXTURE_MIN_FILTER, minFilter); // NEAREST, GL_LINEAR_MIPMAP_LINEAR
     gl.texParameteri(target, WebGL.TEXTURE_MAG_FILTER, WebGL.LINEAR); // NEAREST
@@ -63,6 +65,12 @@ class M3Texture {
     gl.deleteTexture(_texture);
   }
 
+  /// attach texture to framebuffer
+  void attachToFramebuffer(int attachment, int texTarget) {
+    gl.framebufferTexture2D(WebGL.FRAMEBUFFER, attachment, texTarget, _texture, 0);
+  }
+
+  /// bind texture
   void bind() {
     gl.bindTexture(target, _texture);
   }
@@ -116,40 +124,123 @@ class M3Texture {
 
   /// Create a default IBL cubemap with simple sky/ground gradient colors.
   static M3Texture createDefaultIBLCube() {
-    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, useMipmaps: false);
-    tex.name = "default_ibl_cube";
+    const int size = 16;
+    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, useMipmaps: true)
+      ..name = "default_ibl_cube"
+      ..texW = size
+      ..texH = size;
 
     final colorSky = Vector4(0.5, 0.7, 0.9, 1.0); // Light bluish sky
     final colorGround = Vector4(0.2, 0.2, 0.2, 1.0); // Dark neutral gray ground
     final colorHorizon = Vector4(0.5, 0.5, 0.5, 1.0); // Neutral gray horizon
 
-    // Faces: +X, -X, +Y, -Y, +Z, -Z
-    tex._initColorPixel(colorHorizon, faceTarget: _cubeMapFaceTargets[0]); // Right
-    tex._initColorPixel(colorHorizon, faceTarget: _cubeMapFaceTargets[1]); // Left
-    tex._initColorPixel(colorSky, faceTarget: _cubeMapFaceTargets[2]); // Top (+Y)
-    tex._initColorPixel(colorGround, faceTarget: _cubeMapFaceTargets[3]); // Bottom (-Y)
-    tex._initColorPixel(colorHorizon, faceTarget: _cubeMapFaceTargets[4]); // Back
-    tex._initColorPixel(colorHorizon, faceTarget: _cubeMapFaceTargets[5]); // Front
+    Vector4 lerpColor(Vector4 a, Vector4 b, double t) {
+      return Vector4(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t);
+    }
 
+    final Uint8List data = Uint8List(size * size * 4);
+
+    for (int faceIndex = 0; faceIndex < 6; faceIndex++) {
+      final faceTarget = _cubeMapFaceTargets[faceIndex];
+      int offset = 0;
+
+      for (int j = 0; j < size; j++) {
+        final double v = (j + 0.5) / size * 2.0 - 1.0;
+        for (int i = 0; i < size; i++) {
+          final double u = (i + 0.5) / size * 2.0 - 1.0;
+
+          // Determine the 3D direction vector based on WebGL/OpenGL cubemap face conventions:
+          // https://www.khronos.org/opengl/wiki/Cubemap_Texture
+          double x = 0;
+          double y = 0;
+          double z = 0;
+
+          switch (faceIndex) {
+            case 0: // +X (Right)
+              x = 1.0;
+              y = -v;
+              z = -u;
+              break;
+            case 1: // -X (Left)
+              x = -1.0;
+              y = -v;
+              z = u;
+              break;
+            case 2: // +Y (Top)
+              x = u;
+              y = 1.0;
+              z = v;
+              break;
+            case 3: // -Y (Bottom)
+              x = u;
+              y = -1.0;
+              z = -v;
+              break;
+            case 4: // +Z (Back/Front)
+              x = u;
+              y = -v;
+              z = 1.0;
+              break;
+            case 5: // -Z (Front/Back)
+              x = -u;
+              y = -v;
+              z = -1.0;
+              break;
+          }
+
+          final double len = sqrt(x * x + y * y + z * z);
+          final double dx = x / len;
+          final double dy = y / len;
+
+          Vector4 color;
+          if (dy >= 0.0) {
+            color = lerpColor(colorHorizon, colorSky, sqrt(dy));
+          } else {
+            color = lerpColor(colorHorizon, colorGround, sqrt(-dy));
+          }
+
+          // Apply directional color biases:
+          // - +X and -X directions get a subtle red bias (proportional to |dx|)
+          // - +Y and -Y directions get a subtle green bias (proportional to |dy|)
+          final double r = (color.r + dx.abs() * 0.15).clamp(0.0, 1.0);
+          final double g = (color.g + dy.abs() * 0.10).clamp(0.0, 1.0);
+          final double b = color.b;
+          final double a = color.a;
+
+          data[offset] = (r * 255.0).round().clamp(0, 255);
+          data[offset + 1] = (g * 255.0).round().clamp(0, 255);
+          data[offset + 2] = (b * 255.0).round().clamp(0, 255);
+          data[offset + 3] = (a * 255.0).round().clamp(0, 255);
+          offset += 4;
+        }
+      }
+
+      tex.bind();
+      tex.gl.texImage2D(faceTarget, 0, WebGL.RGBA, size, size, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(data));
+    }
+
+    tex.generateMipmap();
     return tex;
   }
 
   /// Create an empty 2D texture with a specified size.
   static M3Texture createEmpty2D(int width, int height, {bool useMipmaps = true, int? wrap}) {
-    M3Texture tex = M3Texture(useMipmaps: useMipmaps, wrap: wrap);
-    tex.name = "empty_2d_${width}x$height";
-    tex.texW = width;
-    tex.texH = height;
-    tex._initEmptyTarget(faceTarget: WebGL.TEXTURE_2D);
+    M3Texture tex = M3Texture(useMipmaps: useMipmaps, wrap: wrap)
+      ..name = "empty_2d_${width}x$height"
+      ..texW = width
+      ..texH = height
+      .._initEmptyTarget(faceTarget: WebGL.TEXTURE_2D);
+
     return tex;
   }
 
   /// Create an empty cubemap with a specified size (all 6 faces filled with a neutral gray color).
   static M3Texture createEmptyCubemap(int size) {
-    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, useMipmaps: true);
-    tex.name = "empty_cubemap_${size}x$size";
-    tex.texW = size;
-    tex.texH = size;
+    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, useMipmaps: true)
+      ..name = "empty_cubemap_${size}x$size"
+      ..texW = size
+      ..texH = size;
+
     for (int i = 0; i < 6; i++) {
       tex._initEmptyTarget(faceTarget: _cubeMapFaceTargets[i]);
     }
@@ -318,9 +409,9 @@ class M3Texture {
       if (kIsWeb) {
         if (!PlatformInfo.enableWebGLExtension('WEBGL_compressed_texture_astc')) {
           debugPrint("*** ASTC extension NOT SUPPORTED, use checkerboard instead");
+          _initCheckerboard(8, Vector4(1.0, 0.3, 0.1, 1), Vector4(0.7, 0.1, 0.0, 1), faceTarget: faceTarget);
+          return;
         }
-        _initCheckerboard(8, Vector4(0.9, 0.2, 0.1, 1), Vector4(0.3, 0.1, 0.1, 1), faceTarget: faceTarget);
-        return;
       }
 
       gl.compressedTexImage2D(faceTarget, 0, pixelFormat, texW, texH, 0, byteData);
@@ -606,5 +697,11 @@ class M3Texture {
       completer.complete(img);
     });
     return completer.future;
+  }
+
+  /// debug draw on screen
+  void debugDraw(double x, double y, double scaleX, double scaleY) {
+    final Matrix4 mat = Matrix4.compose(Vector3(x, y, 0.0), Quaternion.identity(), Vector3(scaleX, scaleY, 1.0));
+    M3Shape2D.drawImage(this, mat);
   }
 }

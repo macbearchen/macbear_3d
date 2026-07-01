@@ -399,7 +399,7 @@ class M3AppEngine with ChangeNotifier {
       renderEngine.renderScene(scene);
 
       // draw debug: only implement when needed
-      scene.drawDebug();
+      scene.debugDraw();
 
       // draw Helper
       if (renderEngine.options.debug.showHelpers) {

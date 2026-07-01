@@ -245,10 +245,10 @@ class M3Water extends M3Entity {
     }
   }
 
-  void drawDebug() {
+  void debugDraw() {
     final passes = {reflectionPass, refractionPass};
 
-    const ratio = 0.5;
+    const ratio = 0.4;
     double x = 8;
     double y = 8;
     double w = 0;
@@ -257,20 +257,13 @@ class M3Water extends M3Entity {
       if (pass.enable && pass.visible) {
         w = pass.width * ratio;
         h = pass.height * ratio;
-        pass.drawDebugReflection(x, y, w, h);
+        pass.debugDrawReflection(x, y, w, h);
         x += w + 2;
       }
     }
 
     // water normal map
-    Matrix4 matRect = Matrix4.identity();
-    matRect.setTranslation(Vector3(x, y, 0.0));
-    w = normalMap.texW * ratio;
-    h = normalMap.texH * ratio;
-    final scaleNormalMap = Vector3(w / normalMap.texW, h / normalMap.texH, 1.0);
-
-    matRect.scaleByVector3(scaleNormalMap);
-    M3Shape2D.drawImage(normalMap, matRect);
+    normalMap.debugDraw(x, y, ratio, ratio);
   }
 
   void dispose() {

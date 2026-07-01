@@ -67,8 +67,7 @@ class MyScene extends M3Scene {
   void render2D() {
     super.render2D();
 
-    Matrix4 mat2D = Matrix4.identity();
     final texDebug = M3Resources.text2D.mtr.diffuseTexture;
-    M3Shape2D.drawImage(texDebug, mat2D);
+    texDebug.debugDraw(0, 0, 0.6, 0.6);
   }
 }

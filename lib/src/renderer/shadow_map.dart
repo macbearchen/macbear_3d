@@ -10,13 +10,9 @@ class M3ShadowMap {
   final M3Framebuffer _framebuffer;
   int get mapW => _framebuffer.frameW;
   int get mapH => _framebuffer.frameH;
-  WebGLTexture get depthTexture => _framebuffer.depthTexture;
-  M3Texture? _tex;
-  M3Texture get texDepth {
-    return _tex ??= M3Texture.fromWebGLTexture(depthTexture, texW: mapW, texH: mapH);
-  }
+  M3Texture get depthTex => _framebuffer.depthTexture;
 
-  M3ShadowMap(int width, int height) : _framebuffer = M3Framebuffer(width, height) {
+  M3ShadowMap(int width, int height) : _framebuffer = M3Framebuffer(width, height)..createDepthTexture() {
     debugPrint('create M3ShadowMap: $width x $height');
   }
 
@@ -26,12 +22,11 @@ class M3ShadowMap {
   }
 
   void dispose() {
-    _tex?.dispose();
     _framebuffer.dispose();
   }
 
   /// Render depth map from light's perspective
-  void renderDepth(M3Scene scene, M3Light light) {
+  void renderDepth(M3Scene scene, M3DirectionalLight light) {
     final renderEngine = M3AppEngine.instance.renderEngine;
     final gl = renderEngine.gl;
     final prog = M3Resources.programSimple!;
@@ -56,9 +51,9 @@ class M3ShadowMap {
 
     gl.clear(WebGL.DEPTH_BUFFER_BIT);
 
-    if (light.isDirectional) {
-      light.updateShadowCascades(scene.cameras[0]);
-    }
+    // prepare CSM
+    light.updateShadowCascades(scene.cameras[0]);
+
     // check if use cascaded shadow map
     if (light.cascades.isNotEmpty) {
       // cascaded shadow mapping
@@ -95,13 +90,10 @@ class M3ShadowMap {
   }
 
   /// Draw shadow depth map for debugging
-  void drawDebugDepth(double x, double y, double width, double height) {
-    Matrix4 matRect = Matrix4.identity();
-    matRect.setTranslation(Vector3(x, y, 0.0));
+  void debugDrawDepth(double x, double y, double width, double height) {
+    M3Texture depthTex = _framebuffer.depthTexture;
     // size 200x200
-    final scale = Vector3(width / texDepth.texW, height / texDepth.texH, 1.0);
-    matRect.scaleByVector3(scale);
-    // use depth texture from shadow buffer
-    M3Shape2D.drawImage(texDepth, matRect);
+    final scale = Vector3(width / depthTex.texW, height / depthTex.texH, 1.0);
+    depthTex.debugDraw(x, y, scale.x, scale.y);
   }
 }

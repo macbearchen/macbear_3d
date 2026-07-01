@@ -11,8 +11,8 @@ class M3ProgramEye extends M3Program {
   void initLocation() {
     super.initLocation();
 
-    uniformEyePosition = gl.getUniformLocation(program, "EyePosition");
-    uniformObjectScale = gl.getUniformLocation(program, "ObjectScale");
+    uniformEyePosition = gl.getUniformLocation(program, "uEyePos");
+    uniformObjectScale = gl.getUniformLocation(program, "uObjectScale");
   }
 
   @override

@@ -5,30 +5,27 @@ enum M3PlanarPass { reflection, refraction }
 
 class M3PlanarReflection {
   final M3RenderContext _context = M3RenderContext();
-  late M3Framebuffer _fbo;
-  late M3Texture _texture;
+  late M3Framebuffer _framebuffer;
 
   /// get reflection pixel size
-  int get width => _texture.texW;
-  int get height => _texture.texH;
-  M3Texture get texture => _texture;
+  int get width => texture.texW;
+  int get height => texture.texH;
+  M3Texture get texture => _framebuffer.colorTexture;
 
   final Plane clipPlane = Plane.components(0, 0, 1, 0);
   final M3Camera _camera = M3Camera(); // reflection camera to render reflection
 
   bool enable = true;
   bool visible = true;
-
-  /// Get the mathematically correct maximum mipmap level based on dimensions
-  int get maxMipLevel => _texture.maxMipLevel;
   double _renderScale;
 
   /// width / height: default size of reflection image
   /// resolutionScale: scale ratio of width and height
   M3PlanarReflection({int width = 16, int height = 16, double resolutionScale = 0.5}) : _renderScale = resolutionScale {
     assert(resolutionScale > 0 && resolutionScale <= 1.0);
-    _fbo = M3Framebuffer(width, height, useDepthTexture: false);
-    _texture = M3Texture.createEmpty2D(width, height, wrap: WebGL.CLAMP_TO_EDGE);
+    _framebuffer = M3Framebuffer(width, height)
+      ..createColorTexture()
+      ..createDepthRenderbuffer();
   }
 
   void setRenderScale(double scale) {
@@ -46,13 +43,13 @@ class M3PlanarReflection {
     if (width == this.width && height == this.height) return;
 
     dispose();
-    _fbo = M3Framebuffer(width, height, useDepthTexture: false);
-    _texture = M3Texture.createEmpty2D(width, height, wrap: WebGL.CLAMP_TO_EDGE);
+    _framebuffer = M3Framebuffer(width, height)
+      ..createColorTexture()
+      ..createDepthRenderbuffer();
   }
 
   void dispose() {
-    _texture.dispose();
-    _fbo.dispose();
+    _framebuffer.dispose();
   }
 
   void _capture(M3Scene scene, M3PlanarPass pass) {
@@ -96,7 +93,10 @@ class M3PlanarReflection {
     final renderEngine = M3AppEngine.instance.renderEngine;
     final gl = renderEngine.gl;
 
-    _fbo.bindFace(WebGL.TEXTURE_2D, _texture.glTexture);
+    // Bind FBO, then attach texture face
+    _framebuffer.bind();
+    texture.attachToFramebuffer(WebGL.COLOR_ATTACHMENT0, WebGL.TEXTURE_2D);
+
     // Clear
     final bg = Vector3(0, 0, 0);
     gl.clearColor(bg.r, bg.g, bg.b, 1.0);
@@ -144,7 +144,7 @@ class M3PlanarReflection {
     // (2/2) render scene for planar reflection/refraction
     _context.render(prog);
 
-    _texture.generateMipmap();
+    texture.generateMipmap();
 
     gl.frontFace(WebGL.CCW); // Restore
     gl.polygonOffset(0, 0);
@@ -160,14 +160,10 @@ class M3PlanarReflection {
   }
 
   /// Draw reflection map for debugging
-  void drawDebugReflection(double x, double y, double width, double height) {
+  void debugDrawReflection(double x, double y, double width, double height) {
     if (!enable || !visible) return;
 
-    Matrix4 matRect = Matrix4.identity();
-    matRect.setTranslation(Vector3(x, y, 0.0));
     final scale = Vector3(width / this.width, height / this.height, 1.0);
-    matRect.scaleByVector3(scale);
-    // use depth texture from shadow buffer
-    M3Shape2D.drawImage(_texture, matRect);
+    texture.debugDraw(x, y, scale.x, scale.y);
   }
 }

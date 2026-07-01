@@ -17,8 +17,8 @@ uniform lowp vec4 ColorDiffuse;		// diffuse RGBA
 uniform mediump vec4 ColorSpecular;	// specular RGB, w: shininess
 
 // object-space
-uniform vec3 EyePosition;		// eye as camera origin
-uniform vec3 LightPosition;		// parallel light
+uniform vec3 uEyePos;		// eye as camera origin
+uniform vec3 uLightDir;		// parallel light
 
 // shader variable: from vert to frag
 out lowp vec4 DestinationColor;
@@ -36,8 +36,8 @@ void main(void) {
 
 	// object-space: normal, light-position, eye-position
 	vec3 N = objNormal;
-	vec3 L = LightPosition;							// parallel light source
-	vec3 E = normalize(EyePosition - objVert.xyz);	// vertex to eye
+	vec3 L = uLightDir;								// parallel light source
+	vec3 E = normalize(uEyePos - objVert.xyz);	// vertex to eye
 	vec3 H = normalize(L + E);
 
 	float df = max(0.0, dot(N, L));
