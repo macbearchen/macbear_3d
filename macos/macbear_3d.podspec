@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'macbear_3d'
-  s.version          = '0.8.0'
+  s.version          = '0.9.1'
   s.summary          = 'Macbear 3D engine with video bridge.'
   s.description      = <<-DESC
 A new Flutter plugin project.
@@ -14,13 +14,13 @@ A new Flutter plugin project.
   s.author           = { 'Your Company' => 'email@example.com' }
 
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
+  s.source_files = 'macbear_3d/Sources/macbear_3d/**/*.swift'
 
   # If your plugin requires a privacy manifest, for example if it collects user
   # data, update the PrivacyInfo.xcprivacy file to describe your plugin's
   # privacy impact, and then uncomment this line. For more information,
   # see https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
-  # s.resource_bundles = {'m3_video_bridge_privacy' => ['Resources/PrivacyInfo.xcprivacy']}
+  s.resource_bundles = {'macbear_3d_privacy' => ['macbear_3d/Sources/macbear_3d/PrivacyInfo.xcprivacy']}
 
   s.dependency 'FlutterMacOS'
 

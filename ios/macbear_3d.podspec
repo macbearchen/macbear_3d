@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'macbear_3d'
-  s.version          = '0.8.0'
+  s.version          = '0.9.1'
   s.summary          = 'Macbear 3D engine with video bridge.'
   s.description      = <<-DESC
 A new Flutter plugin project.
@@ -13,7 +13,7 @@ A new Flutter plugin project.
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
+  s.source_files = 'macbear_3d/Sources/macbear_3d/**/*.swift'
   s.dependency 'Flutter'
   s.platform = :ios, '11.0'
 
