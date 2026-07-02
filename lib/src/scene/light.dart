@@ -1,5 +1,6 @@
 // Macbear3D engine
 import '../m3_internal.dart';
+import '../renderer/shadow_map.dart';
 
 class M3ShadowCascade {
   Matrix4 projectionMatrix = Matrix4.identity();
@@ -19,9 +20,19 @@ abstract class M3Light extends M3Camera {
   static Vector3 ambient = Vector3(0.2, 0.2, 0.2);
   Vector3 color = Colors.white.rgb - ambient;
 
+  // shadow map
+  bool castShadow = true;
+  M3ShadowMap? shadowMap;
+
   M3Light() {
     setLookat(Vector3(2, 0, 8), Vector3.zero(), Vector3(0, 0, 1));
     csmCount = 0;
+  }
+
+  /// set shadow map
+  void setShadowMap(M3ShadowMap? sm) {
+    shadowMap = sm;
+    castShadow = sm != null;
   }
 
   static Vector4 blendRGBA(Vector4 a, Vector4 b) {
@@ -167,10 +178,9 @@ class M3DirectionalLight extends M3Light {
       double maxY = splitCenterLight.y + radius;
 
       // 3. Texel Snapping
-      final shadowMap = M3AppEngine.instance.renderEngine.shadowMap!;
-      final double shadowResolutionX = shadowMap.mapW.toDouble();
+      final double shadowResolutionX = shadowMap!.mapW.toDouble();
       final double atlasScaleV = cascades[i].atlasScaleV;
-      final double shadowResolutionY = shadowMap.mapH.toDouble() * atlasScaleV;
+      final double shadowResolutionY = shadowMap!.mapH.toDouble() * atlasScaleV;
 
       double worldUnitsPerTexelX = (maxX - minX) / shadowResolutionX;
       double worldUnitsPerTexelY = (maxY - minY) / shadowResolutionY;

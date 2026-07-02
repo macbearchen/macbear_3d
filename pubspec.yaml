@@ -24,7 +24,7 @@ dependencies:
   build: ^4.0.3
   flutter:
     sdk: flutter
-  flutter_angle: ^0.4.0
+  flutter_angle: ^0.4.1
   http: ^1.6.0
   image: ^4.9.1
   vector_math: ^2.2.0

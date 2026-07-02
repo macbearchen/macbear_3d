@@ -1,6 +1,6 @@
-// Macbear3D engine
 import 'dart:typed_data';
 
+// Macbear3D engine
 import '../m3_internal.dart';
 
 /// A WebGL framebuffer object for off-screen rendering (e.g., shadow maps).

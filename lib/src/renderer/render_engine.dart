@@ -88,9 +88,9 @@ class M3RenderEngine {
 
   /// Render shadow map
   void renderShadowMap(M3Scene scene) {
-    if (!options.debug.wireframe && options.shadows && _shadowMap != null) {
-      _shadowMap!.renderDepth(scene, scene.light);
-    }
+    if (options.debug.wireframe || !options.shadows) return;
+    // directional light (ex: sun, moon)
+    scene.dirLight.shadowMap?.renderDepth(scene, scene.dirLight);
   }
 
   /// get program shader for scene rendering
@@ -99,7 +99,7 @@ class M3RenderEngine {
 
     if (isShadowEnabled) {
       // select shadow map shader: single or cascaded
-      final M3ProgramShadow progShadow = scene.light.cascades.isEmpty
+      final M3ProgramShadow progShadow = scene.dirLight.cascades.isEmpty
           ? M3Resources.programShadowmap!
           : M3Resources.programShadowCSM!;
       prog = progShadow;
@@ -133,7 +133,7 @@ class M3RenderEngine {
       // get scene program
       final prog = getSceneProgram(scene);
 
-      prog.attachLight(scene.light);
+      prog.attachLight(scene.dirLight);
 
       // main context render pass
       mainContext.render(prog);
@@ -176,9 +176,12 @@ class M3RenderEngine {
 
     // 2D helper
     if (options.debug.showMaps) {
-      if (!options.debug.wireframe && options.shadows && _shadowMap != null) {
-        final width = 200 / _shadowMap!.mapH * _shadowMap!.mapW;
-        _shadowMap!.debugDrawDepth(5, engine.appHeight - 210, width, 200);
+      if (!options.debug.wireframe && options.shadows) {
+        final sm = shadowMap;
+        if (sm != null) {
+          final width = 200 / sm.mapH * sm.mapW;
+          sm.debugDrawDepth(5, engine.appHeight - 210, width, 200);
+        }
       }
       // show planar reflection
       if (mainContext.needsPlanarReflectionPass()) {

@@ -21,7 +21,7 @@ mixin M3ShadowShader {
 
   /// Apply shadowmap related uniform variables.
   void _applyShadow(M3DirectionalLight light) {
-    final shadowMap = M3AppEngine.instance.renderEngine.shadowMap;
+    final shadowMap = light.shadowMap;
     if (shadowMap == null) return;
 
     // shadowmap texture

@@ -74,6 +74,7 @@ class _MainPageState extends State<MainPage> {
   // 2 - csm
   int shadowMode = 2;
   int _selectedSceneIndex = 1; // 00 starter, 01-08 scenes, 9 sample
+  bool _showSettings = true;
 
   @override
   void initState() {
@@ -144,10 +145,10 @@ class _MainPageState extends State<MainPage> {
         renderEngine.options.shadows = true;
         scene.camera.csmCount = 0;
         final halfView = 12;
-        scene.light.target = Vector3.zero();
-        scene.light.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 100);
-        scene.light.setEuler(pi / 4, -pi / 4, 0, distance: 30); // rotate light
-        scene.light.refreshProjectionMatrix();
+        scene.dirLight.target = Vector3.zero();
+        scene.dirLight.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 100);
+        scene.dirLight.setEuler(pi / 4, -pi / 4, 0, distance: 30); // rotate light
+        scene.dirLight.refreshProjectionMatrix();
         break;
       case 2: // cascade shadow map
         renderEngine.options.shadows = true;
@@ -165,12 +166,14 @@ class _MainPageState extends State<MainPage> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          getHelperWidget(),
-          const SizedBox(height: 10),
-          getFogWidget(),
-          const SizedBox(height: 10),
-          getShaderWidget(),
-          const SizedBox(height: 10),
+          if (_showSettings) ...[
+            getHelperWidget(),
+            const SizedBox(height: 10),
+            getFogWidget(),
+            const SizedBox(height: 10),
+            getShaderWidget(),
+            const SizedBox(height: 10),
+          ],
           getTutorialWidget(),
         ],
       ),
@@ -178,7 +181,7 @@ class _MainPageState extends State<MainPage> {
         children: [
           const M3View(),
           Positioned(top: 10, right: 5, child: getTimeScaleWidget()),
-          if (M3AppEngine.instance.activeScene != null)
+          if (_showSettings && M3AppEngine.instance.activeScene != null)
             M3AppEngine.instance.activeScene!.buildUI(context) ?? const SizedBox.shrink(),
         ],
       ),
@@ -227,6 +230,21 @@ class _MainPageState extends State<MainPage> {
                   });
                 },
               ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Container(width: 1, height: 16, color: Colors.white24),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _showSettings = !_showSettings;
+              });
+            },
+            child: Icon(
+              _showSettings ? Icons.settings : Icons.settings_outlined,
+              color: _showSettings ? Colors.lightGreen : Colors.white70,
+              size: 20,
             ),
           ),
         ],

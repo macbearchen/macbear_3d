@@ -63,7 +63,7 @@ class PbrTestScene_09 extends DemoScene {
     super.update(delta);
 
     // rotate light
-    light.setEuler(light.euler.yaw + delta * 0.1, -pi / 3, 0, distance: light.distanceToTarget);
+    dirLight.setEuler(dirLight.euler.yaw + delta * 0.1, -pi / 3, 0, distance: dirLight.distanceToTarget);
 
     // Rotate camera slowly
     // camera.setEuler(

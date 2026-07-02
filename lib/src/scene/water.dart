@@ -186,10 +186,10 @@ class M3Water extends M3Entity {
       gl.disable(WebGL.CULL_FACE);
 
       final renderEngine = M3AppEngine.instance.renderEngine;
-      bool csmEnabled = renderEngine.isShadowEnabled && scene.light.cascades.isNotEmpty;
+      bool csmEnabled = renderEngine.isShadowEnabled && scene.dirLight.cascades.isNotEmpty;
       final dynamic prog = csmEnabled ? progWaterCSM : progWater;
       gl.useProgram(prog.program);
-      prog.attachLight(scene.light);
+      prog.attachLight(scene.dirLight);
       prog.applyUniforms(viewer);
       prog.applyFog(scene.fog);
       prog.bindWater(this);

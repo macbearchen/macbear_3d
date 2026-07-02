@@ -154,7 +154,7 @@ class TerrainScene_06 extends DemoScene {
   void update(double delta) {
     super.update(delta);
     // Rotating the light to see terrain shadows moving
-    light.setEuler(totalTime * 0.2, -pi / 4, 0, distance: 30);
+    dirLight.setEuler(totalTime * 0.2, -pi / 4, 0, distance: 30);
 
     const double rot = pi / 15;
     int indexBox = 0;

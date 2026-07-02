@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 
@@ -45,6 +46,7 @@ class M3KeyboardManager {
 
   /// Check if a logical key is currently pressed
   bool isPressed(LogicalKeyboardKey key) {
+    if (_isTextFieldFocused()) return false;
     return HardwareKeyboard.instance.logicalKeysPressed.contains(key);
   }
 
@@ -66,7 +68,21 @@ class M3KeyboardManager {
   /// INTERNAL
   /// ===========================
 
+  bool _isTextFieldFocused() {
+    final primaryFocus = FocusManager.instance.primaryFocus;
+    if (primaryFocus != null && primaryFocus.context != null) {
+      final context = primaryFocus.context!;
+      return context.widget is EditableText ||
+          context.findAncestorWidgetOfExactType<EditableText>() != null;
+    }
+    return false;
+  }
+
   bool _handleKeyEvent(KeyEvent event) {
+    if (_isTextFieldFocused()) {
+      return false;
+    }
+
     final physical = event.physicalKey;
     final logical = event.logicalKey;
 

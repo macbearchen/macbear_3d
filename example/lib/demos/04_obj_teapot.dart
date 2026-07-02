@@ -118,7 +118,7 @@ class ObjTeapotScene_04 extends DemoScene {
     double sec = totalTime;
     double orbitAngle = sec * pi / 6;
 
-    light.setEuler(sec * pi / 18, -pi / 3, 0, distance: light.distanceToTarget); // rotate light
+    dirLight.setEuler(sec * pi / 18, -pi / 3, 0, distance: dirLight.distanceToTarget); // rotate light
     // debugPrint('Light Direction: $dirLight');
 
     // mirrored plane

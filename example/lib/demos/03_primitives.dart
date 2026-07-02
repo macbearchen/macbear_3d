@@ -121,7 +121,7 @@ class PrimitivesScene_03 extends DemoScene {
     super.update(delta);
 
     double sec = totalTime;
-    light.setEuler(sec * pi / 5, -pi / 3, 0, distance: light.distanceToTarget); // rotate light
+    dirLight.setEuler(sec * pi / 5, -pi / 3, 0, distance: dirLight.distanceToTarget); // rotate light
     // debugPrint('Light Direction: $dirLight');
 
     if (_pyramid != null) {

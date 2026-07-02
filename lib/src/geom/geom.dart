@@ -10,7 +10,6 @@ import '../gltf/gltf_parser.dart';
 
 import 'primitive/height_field.dart';
 import 'text/ear_clipping.dart';
-import 'text/ttf_parser.dart';
 
 // part for geom
 part 'debug/debug_axis_geom.dart';

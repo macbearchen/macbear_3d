@@ -22,12 +22,15 @@ abstract class M3Scene {
   M3InputController? inputController;
   final M3PhysicsSystem physicsSystem;
 
-  final _light = M3DirectionalLight();
+  // lights
+  final dirLight = M3DirectionalLight();
+  final pointLight = M3PointLight();
+
+  // camera
   final _camera = M3Camera();
   List<M3Camera> cameras = [];
 
   M3Camera get camera => cameras[0];
-  M3DirectionalLight get light => _light;
 
   // physics entities
   final List<M3Entity> entities = [];
@@ -46,8 +49,9 @@ abstract class M3Scene {
 
     // sun light
     int halfView = 8;
-    light.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 50);
-    light.setEuler(pi / 5, -pi / 3, 0, distance: 15); // rotate light
+    dirLight.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 50);
+    dirLight.setEuler(pi / 5, -pi / 3, 0, distance: 15); // rotate light
+    dirLight.setShadowMap(renderEngine.shadowMap);
   }
 
   void dispose() {
@@ -174,7 +178,7 @@ abstract class M3Scene {
     renderEngine.planarReflection.drawHelper(camera);
 
     progSimple.setMaterial(mtrHelper, Colors.yellow);
-    light.drawHelper(progSimple, camera);
+    dirLight.drawHelper(progSimple, camera);
   }
 
   void render2D() {}

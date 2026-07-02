@@ -136,7 +136,7 @@ class M3PlanarReflection {
     // get scene program
     final prog = renderEngine.getSceneProgram(scene);
 
-    prog.attachLight(scene.light);
+    prog.attachLight(scene.dirLight);
 
     // (1/2) prepare render queue: exclude this plane
     _context.prepareRenderQueue(scene, _camera, excludeReflection: this);

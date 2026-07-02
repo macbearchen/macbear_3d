@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 
 // Macbear3D engine
 import '../m3_internal.dart';
-import '../geom/text/ttf_parser.dart';
 
 /// Manager responsible for loading, caching, and providing access to various engine resources.
 ///
