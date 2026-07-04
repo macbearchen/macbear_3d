@@ -110,8 +110,6 @@ class AnimatedScene_05 extends DemoScene {
 
     double sec = totalTime;
 
-    dirLight.setEuler(sec * pi / 18, -pi / 3, 0, distance: dirLight.distanceToTarget); // rotate light
-
     // Update Fox Animation Cycle
     if (_fox != null) {
       _foxAnimTimer += delta;

@@ -11,6 +11,7 @@ mixin M3LightingShader {
   late UniformLocation uniformLightDirection; // light direction "uLightDir" (per object-space)
 
   M3DirectionalLight? _light; // active light
+  final List<M3PointLight> _pointLights = [];
 
   void initLightingLocation(Program prog) {
     uniformAmbient = gl.getUniformLocation(prog, "ColorAmbient");
@@ -28,9 +29,10 @@ mixin M3LightingShader {
     if (_light == null) return;
 
     if (M3Program.isLocationValid(uniformLightDirection)) {
-      Vector4 lightDirection = Matrix4.inverted(mMatrix) * _light!.getDirection();
-      lightDirection.normalize();
-      gl.uniform3fv(uniformLightDirection, lightDirection.xyz.storage);
+      Vector3 lightDir = _light!.getDirection();
+      Vector4 localDir = Matrix4.inverted(mMatrix) * Vector4(lightDir.x, lightDir.y, lightDir.z, 0.0);
+      localDir.normalize();
+      gl.uniform3fv(uniformLightDirection, localDir.xyz.storage);
     }
   }
 }

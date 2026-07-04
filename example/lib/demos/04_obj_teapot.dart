@@ -118,9 +118,6 @@ class ObjTeapotScene_04 extends DemoScene {
     double sec = totalTime;
     double orbitAngle = sec * pi / 6;
 
-    dirLight.setEuler(sec * pi / 18, -pi / 3, 0, distance: dirLight.distanceToTarget); // rotate light
-    // debugPrint('Light Direction: $dirLight');
-
     // mirrored plane
     Quaternion rotPlane = Quaternion.euler(0, 0, -orbitAngle / 10.0);
     rotPlane *= Quaternion.euler(pi / 10, 0, 0);
@@ -172,11 +169,10 @@ class ObjTeapotScene_04 extends DemoScene {
   fm.Widget buildUI(fm.BuildContext context) {
     if (mtrTeapot == null) return const fm.SizedBox.shrink();
 
-    return fm.Positioned(
-      top: 10,
-      left: 10,
+    return fm.SafeArea(
+      bottom: false,
       child: fm.Container(
-        padding: const fm.EdgeInsets.all(12),
+        padding: const fm.EdgeInsets.all(8),
         decoration: fm.BoxDecoration(color: fm.Colors.black54, borderRadius: fm.BorderRadius.circular(12)),
         child: fm.Column(
           mainAxisSize: fm.MainAxisSize.min,
@@ -186,7 +182,7 @@ class ObjTeapotScene_04 extends DemoScene {
               "Teapot Material",
               style: fm.TextStyle(color: fm.Colors.white, fontWeight: fm.FontWeight.bold),
             ),
-            const fm.SizedBox(height: 8),
+            const fm.SizedBox(height: 5),
             _buildSlider("Metallic", () => mtrTeapot!.metallic, (val) {
               mtrTeapot!.metallic = val;
             }),
@@ -194,20 +190,20 @@ class ObjTeapotScene_04 extends DemoScene {
               mtrTeapot!.roughness = val;
               mtrTeapot!.reflection = 1.0 - val;
             }),
-            const fm.SizedBox(height: 16),
+            const fm.SizedBox(height: 10),
             const fm.Text(
               "Reflection Probe",
               style: fm.TextStyle(color: fm.Colors.white, fontWeight: fm.FontWeight.bold),
             ),
-            const fm.SizedBox(height: 8),
+            const fm.SizedBox(height: 5),
             _buildToggle("Debug", () => isDebugDraw, (val) => isDebugDraw = val),
             _buildToggle("Enable", () => isEnableProbe, (val) => setReflectionProbe(val)),
-            const fm.SizedBox(height: 16),
+            const fm.SizedBox(height: 10),
             const fm.Text(
               "Planar Reflection",
               style: fm.TextStyle(color: fm.Colors.white, fontWeight: fm.FontWeight.bold),
             ),
-            const fm.SizedBox(height: 8),
+            const fm.SizedBox(height: 5),
             _buildToggle("Enable", () => isEnablePlanar, (val) => setPlanarReflection(val)),
           ],
         ),

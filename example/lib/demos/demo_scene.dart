@@ -14,6 +14,16 @@ class DemoScene extends M3Scene {
     // skybox = await createCubemapLobby(); // nvlobby cubemap
   }
 
+  @override
+  void update(double delta) {
+    super.update(delta);
+
+    double sec = totalTime;
+    // rotate light
+    dirLight.viewer.setEuler(sec * pi / 18, -pi / 3, 0, distance: dirLight.viewer.distanceToTarget);
+    // debugPrint('Light Direction: $dirLight');
+  }
+
   // create nvlobby cubemap
   Future<M3Skybox> createCubemapLobby() async {
     final strPrefix = 'example/nvlobby_';

@@ -187,12 +187,13 @@ class M3Water extends M3Entity {
 
       final renderEngine = M3AppEngine.instance.renderEngine;
       bool csmEnabled = renderEngine.isShadowEnabled && scene.dirLight.cascades.isNotEmpty;
-      final dynamic prog = csmEnabled ? progWaterCSM : progWater;
+      final M3ProgramLighting prog = csmEnabled ? progWaterCSM : progWater;
+
       gl.useProgram(prog.program);
       prog.attachLight(scene.dirLight);
       prog.applyUniforms(viewer);
       prog.applyFog(scene.fog);
-      prog.bindWater(this);
+      (prog as M3WaterShader).bindWater(this);
 
       // water material: set reflection texture if enabled
       if (reflectionPass.enable) {

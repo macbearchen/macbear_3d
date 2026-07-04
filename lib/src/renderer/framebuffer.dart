@@ -46,7 +46,8 @@ class M3Framebuffer {
   }
 
   /// Create depth texture
-  /// internal format: DEPTH_COMPONENT16, DEPTH_COMPONENT24, DEPTH_COMPONENT32F
+  /// internal format: DEPTH_COMPONENT16, (DEPTH_COMPONENT24), DEPTH_COMPONENT32F
+  /// with stencil format: DEPTH24_STENCIL8
   M3Texture createDepthTexture({int depthFormat = WebGL.DEPTH_COMPONENT24}) {
     M3Texture tex = M3Texture(useMipmaps: false, wrap: WebGL.CLAMP_TO_EDGE)
       ..name = 'depth'
@@ -57,7 +58,7 @@ class M3Framebuffer {
     final pixelType = switch (depthFormat) {
       WebGL.DEPTH_COMPONENT32F => WebGL.FLOAT,
       WebGL.DEPTH_COMPONENT16 => WebGL.UNSIGNED_SHORT,
-      _ => WebGL.UNSIGNED_INT, // DEPTH_COMPONENT24
+      _ => WebGL.UNSIGNED_INT, // DEPTH_COMPONENT24, DEPTH24_STENCIL8
     };
 
     // depth-Z compare mode
@@ -65,19 +66,29 @@ class M3Framebuffer {
     gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_COMPARE_FUNC, WebGL.LESS);
 
     gl.texImage2D(WebGL.TEXTURE_2D, 0, depthFormat, frameW, frameH, 0, WebGL.DEPTH_COMPONENT, pixelType, null);
-    tex.attachToFramebuffer(WebGL.DEPTH_ATTACHMENT, WebGL.TEXTURE_2D);
+
+    final attachment = switch (depthFormat) {
+      WebGL.DEPTH24_STENCIL8 => WebGL.DEPTH_STENCIL_ATTACHMENT,
+      _ => WebGL.DEPTH_ATTACHMENT,
+    };
+    tex.attachToFramebuffer(attachment, WebGL.TEXTURE_2D);
 
     _depthTexture = tex;
     _checkStatus();
     return tex;
   }
 
-  /// Create depth renderbuffer
-  void createDepthRenderbuffer({int depthFormat = WebGL.DEPTH_COMPONENT24}) {
+  /// Create depth renderbuffer: DEPTH_COMPONENT24, (DEPTH24_STENCIL8)
+  void createDepthRenderbuffer({int depthFormat = WebGL.DEPTH24_STENCIL8}) {
     _depthRenderbuffer = gl.createRenderbuffer();
     gl.bindRenderbuffer(WebGL.RENDERBUFFER, _depthRenderbuffer!);
     gl.renderbufferStorage(WebGL.RENDERBUFFER, depthFormat, frameW, frameH);
-    gl.framebufferRenderbuffer(WebGL.FRAMEBUFFER, WebGL.DEPTH_ATTACHMENT, WebGL.RENDERBUFFER, _depthRenderbuffer!);
+
+    final attachment = switch (depthFormat) {
+      WebGL.DEPTH24_STENCIL8 => WebGL.DEPTH_STENCIL_ATTACHMENT,
+      _ => WebGL.DEPTH_ATTACHMENT,
+    };
+    gl.framebufferRenderbuffer(WebGL.FRAMEBUFFER, attachment, WebGL.RENDERBUFFER, _depthRenderbuffer!);
 
     _checkStatus();
   }

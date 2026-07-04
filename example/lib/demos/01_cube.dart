@@ -57,9 +57,8 @@ Click buttons to test examples.
   7. Physics scene
   8. Text 3D scene
   9. PBR Test scene''';
-    return fm.Positioned(
-      top: 50,
-      left: 8,
+    return fm.SafeArea(
+      bottom: false,
       child: fm.Container(
         padding: const fm.EdgeInsets.all(12),
         decoration: fm.BoxDecoration(color: fm.Colors.black54, borderRadius: fm.BorderRadius.circular(12)),

@@ -145,10 +145,11 @@ class _MainPageState extends State<MainPage> {
         renderEngine.options.shadows = true;
         scene.camera.csmCount = 0;
         final halfView = 12;
-        scene.dirLight.target = Vector3.zero();
-        scene.dirLight.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 100);
-        scene.dirLight.setEuler(pi / 4, -pi / 4, 0, distance: 30); // rotate light
-        scene.dirLight.refreshProjectionMatrix();
+        final lightViewer = scene.dirLight.viewer;
+        lightViewer.target = Vector3.zero();
+        lightViewer.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 100);
+        lightViewer.setEuler(pi / 4, -pi / 4, 0, distance: 30); // rotate light
+        lightViewer.refreshProjectionMatrix();
         break;
       case 2: // cascade shadow map
         renderEngine.options.shadows = true;
@@ -180,7 +181,7 @@ class _MainPageState extends State<MainPage> {
       body: Stack(
         children: [
           const M3View(),
-          Positioned(top: 10, right: 5, child: getTimeScaleWidget()),
+          Positioned(top: 2, right: 2, child: SafeArea(bottom: false, child: getTimeScaleWidget())),
           if (_showSettings && M3AppEngine.instance.activeScene != null)
             M3AppEngine.instance.activeScene!.buildUI(context) ?? const SizedBox.shrink(),
         ],

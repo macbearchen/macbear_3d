@@ -208,13 +208,8 @@ class M3RenderEngine {
     // Render Statistics
     Matrix4 matStats = Matrix4.identity();
     if (options.debug.showStats) {
-      matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 60, 50, 0));
-      matStats.scaleByVector3(Vector3.all(0.5));
-      final fpsText = engine.fps.toStringAsFixed(2);
-      M3Resources.text2D.drawText(fpsText, matStats, color: Vector4(0, 1, 0, 1));
-
-      matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 100, 66, 0));
-      matStats.scaleByVector3(Vector3.all(0.9));
+      matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 100, 80, 0));
+      matStats.scaleByVector3(Vector3.all(0.45));
       // Render Stats
       M3Resources.text2D.drawText(stats.toString(), matStats, color: Vector4(1, 1, 1, 1));
 
@@ -235,6 +230,15 @@ csm=${scene.camera.csmCount}''';
         matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 200, 0));
         M3Resources.text2D.drawText(probesText, matStats, color: Vector4(0, 1, 1, 1));
       }
+
+      // FPS
+      matStats.scaleByVector3(Vector3.all(1.4));
+      final fpsText = engine.fps.toStringAsFixed(2);
+      matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 59, 221, 0));
+      M3Resources.text2D.drawText(fpsText, matStats, color: Vector4(0, 0, 0, 1));
+      matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 60, 220, 0));
+      final fpsColor = engine.fps > 30 ? Vector4(0, 1, 0, 1) : Vector4(1, 0, 0, 1);
+      M3Resources.text2D.drawText(fpsText, matStats, color: fpsColor);
     }
 
     // Physics Statistics

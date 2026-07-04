@@ -153,8 +153,6 @@ class TerrainScene_06 extends DemoScene {
   @override
   void update(double delta) {
     super.update(delta);
-    // Rotating the light to see terrain shadows moving
-    dirLight.setEuler(totalTime * 0.2, -pi / 4, 0, distance: 30);
 
     const double rot = pi / 15;
     int indexBox = 0;
@@ -180,9 +178,8 @@ class TerrainScene_06 extends DemoScene {
 
   @override
   Widget buildUI(BuildContext context) {
-    return Positioned(
-      top: 56,
-      right: 110,
+    return SafeArea(
+      bottom: false,
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(12)),

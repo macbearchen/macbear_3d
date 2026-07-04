@@ -49,8 +49,9 @@ abstract class M3Scene {
 
     // sun light
     int halfView = 8;
-    dirLight.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 50);
-    dirLight.setEuler(pi / 5, -pi / 3, 0, distance: 15); // rotate light
+    final lightViewer = dirLight.viewer;
+    lightViewer.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 50);
+    lightViewer.setEuler(pi / 5, -pi / 3, 0, distance: 15); // rotate light
     dirLight.setShadowMap(renderEngine.shadowMap);
   }
 

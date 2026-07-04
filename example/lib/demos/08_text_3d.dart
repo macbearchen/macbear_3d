@@ -82,7 +82,6 @@ class Text3DScene_08 extends DemoScene {
     super.update(delta);
 
     double sec = totalTime;
-    dirLight.setEuler(sec * pi / 6, -pi / 5, 0, distance: dirLight.distanceToTarget); // rotate light
   }
 
   void _updateText() {
@@ -107,9 +106,8 @@ class Text3DScene_08 extends DemoScene {
 
   @override
   Widget buildUI(BuildContext context) {
-    return Positioned(
-      top: 10,
-      left: 10,
+    return SafeArea(
+      bottom: false,
       child: Container(
         width: 200,
         padding: const EdgeInsets.all(12),

@@ -12,6 +12,14 @@ class M3ProgramLighting extends M3ProgramEye with M3LightingShader, M3FogShader 
     initFogLocation(program);
   }
 
+  void setLightTBN(Vector3 tangent, Vector3 binormal, Vector3 normal) {
+    if (_light != null) {
+      Vector3 lightDir = _light!.getDirection();
+      Vector3 tbnDir = Vector3(lightDir.dot(tangent), lightDir.dot(binormal), lightDir.dot(normal));
+      gl.uniform3fv(uniformLightDirection, tbnDir.storage);
+    }
+  }
+
   @override
   void setMatrices(M3Camera cam, Matrix4 mMatrix) {
     super.setMatrices(cam, mMatrix);

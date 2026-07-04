@@ -53,29 +53,30 @@ class M3ShadowMap {
 
     // prepare CSM
     light.updateShadowCascades(scene.cameras[0]);
+    final lightViewer = light.viewer;
 
     // check if use cascaded shadow map
     if (light.cascades.isNotEmpty) {
       // cascaded shadow mapping
-      final backupMatrix = light.projectionMatrix;
+      final backupMatrix = lightViewer.projectionMatrix;
       for (final cascade in light.cascades) {
         // viewport for the cascaded-shadow
         final int y = (cascade.atlasBiasV * mapH).toInt();
         final int height = (cascade.atlasScaleV * mapH).toInt();
         gl.viewport(0, y, mapW, height);
-        light.projectionMatrix = cascade.projectionMatrix;
+        lightViewer.projectionMatrix = cascade.projectionMatrix;
         // frustum matrix for culling
-        light.updateFrustum();
+        lightViewer.updateFrustum();
         // shadowmap render scene only opaque
-        _context.prepareRenderQueue(scene, light, bOnlyOpaque: true);
+        _context.prepareRenderQueue(scene, lightViewer, bOnlyOpaque: true);
         _context.render(prog);
       }
-      light.projectionMatrix = backupMatrix;
-      light.updateFrustum();
+      lightViewer.projectionMatrix = backupMatrix;
+      lightViewer.updateFrustum();
     } else {
-      light.updateFrustum();
+      lightViewer.updateFrustum();
       // shadowmap render scene only opaque
-      _context.prepareRenderQueue(scene, light, bOnlyOpaque: true);
+      _context.prepareRenderQueue(scene, lightViewer, bOnlyOpaque: true);
       _context.render(prog);
     }
 

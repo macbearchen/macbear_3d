@@ -19,7 +19,7 @@ class PhysicsScene_07 extends DemoScene {
     camera2.setLookat(Vector3(0, 4, 5), Vector3.zero(), Vector3(0, 0, 1));
     cameras.add(camera2);
 
-    dirLight.setEuler(0, -pi / 3, 0, distance: dirLight.distanceToTarget); // rotate light
+    dirLight.viewer.setEuler(0, -pi / 3, 0, distance: dirLight.viewer.distanceToTarget); // rotate light
 
     M3Texture texGrid = M3Texture.createCheckerboard(size: 6);
     final cubeMesh = M3Mesh(M3Resources.unitCube);
@@ -90,6 +90,5 @@ class PhysicsScene_07 extends DemoScene {
     super.update(delta);
 
     double sec = totalTime;
-    dirLight.setEuler(sec * pi / 18, -pi / 3, 0, distance: dirLight.distanceToTarget); // rotate light
   }
 }

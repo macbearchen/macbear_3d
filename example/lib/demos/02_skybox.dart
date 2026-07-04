@@ -93,9 +93,8 @@ class SkyboxScene_02 extends DemoScene {
   @override
   Widget? buildUI(BuildContext context) {
     if (_gpuInfo == null) return null;
-    return Positioned(
-      top: 8,
-      left: 8,
+    return SafeArea(
+      bottom: false,
       child: Container(
         padding: const EdgeInsets.all(8),
         color: Colors.black54,
