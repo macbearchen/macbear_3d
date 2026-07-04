@@ -1,8 +1,6 @@
 ## 0.9.2
 
 * Add:
-  * **Point Light Support**: Added `M3PointLight` structure with packed UBO logic (`packUBO()`) and built-in point light calculations via a new GLSL shader (`Lights.es3.glsl`).
-  * **Multiple Lights Support**: Enhanced program and renderer classes to support multiple active light sources.
   * **Swift Package Manager (SPM) Support**: Added SPM integration for iOS and macOS builds.
   * **Framebuffer DEPTH24_STENCIL8 Support**: Configured renderbuffer and depth texture creation to support depth-stencil formats with the correct `DEPTH_STENCIL_ATTACHMENT`.
 
