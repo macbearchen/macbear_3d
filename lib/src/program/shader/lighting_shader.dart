@@ -11,7 +11,7 @@ mixin M3LightingShader {
   late UniformLocation uniformLightDirection; // light direction "uLightDir" (per object-space)
 
   M3DirectionalLight? _light; // active light
-  final List<M3PointLight> _pointLights = [];
+  // final List<M3PointLight> _pointLights = [];
 
   void initLightingLocation(Program prog) {
     uniformAmbient = gl.getUniformLocation(prog, "ColorAmbient");
