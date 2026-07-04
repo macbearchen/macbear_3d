@@ -31,7 +31,10 @@ class M3AppEngine with ChangeNotifier {
   // update elspsed
   final Stopwatch _stopwatch = Stopwatch();
 
-  late Ticker ticker;
+  // The active update/render ticker. It is created by the hosting M3View
+  // (via its TickerProvider) on mount and released on unmount, so it is null
+  // whenever no M3View is currently attached to this (singleton) engine.
+  Ticker? ticker;
   Duration _lastElapsed = Duration.zero;
   double timeScale = 1.0; // global time scale
 
@@ -127,6 +130,33 @@ class M3AppEngine with ChangeNotifier {
     };
   }
 
+  /// Detaches an unmounting [M3View] from the engine without releasing any GL
+  /// resources.
+  ///
+  /// Stops and disposes the view-owned [ticker] and leaves the ANGLE context,
+  /// framebuffer texture and render engine resident, so that a later [M3View]
+  /// mount can [remount] and resume rendering instantly (no ANGLE / texture /
+  /// resource re-initialisation). This is the counterpart to [remount]; for a
+  /// permanent, app-exit teardown of the whole engine call [dispose] instead.
+  void unmount() {
+    final t = ticker;
+    if (t != null) {
+      if (t.isActive) t.stop(canceled: true);
+      t.dispose();
+      ticker = null;
+    }
+    debugPrint("--- M3AppEngine.unmount: view detached, engine kept warm ---");
+  }
+
+  /// Re-attaches the render loop after an [M3View] has (re)mounted.
+  ///
+  /// The heavy initialisation in [initApp] is skipped once the engine is
+  /// already initialised, so remounting an [M3View] is cheap. Pairs with
+  /// [unmount] to make the view lifecycle symmetric and self-documenting.
+  void remount() {
+    resume();
+  }
+
   // dispose app
   @override
   void dispose() {
@@ -134,8 +164,12 @@ class M3AppEngine with ChangeNotifier {
     keyboard.stop();
 
     // for ticker
-    ticker.stop(canceled: true);
-    ticker.dispose();
+    final t = ticker;
+    if (t != null) {
+      t.stop(canceled: true);
+      t.dispose();
+      ticker = null;
+    }
 
     // for render engine
     renderEngine.dispose();
@@ -180,8 +214,9 @@ class M3AppEngine with ChangeNotifier {
     if (!_didInit) {
       return;
     }
-    if (ticker.isActive) {
-      ticker.stop();
+    final t = ticker;
+    if (t != null && t.isActive) {
+      t.stop();
     }
     debugPrint("--- app pause ---");
   }
@@ -190,8 +225,9 @@ class M3AppEngine with ChangeNotifier {
     if (!_didInit) {
       return;
     }
-    if (!ticker.isActive) {
-      ticker.start();
+    final t = ticker;
+    if (t != null && !t.isActive) {
+      t.start();
       _lastElapsed = Duration.zero;
     }
     debugPrint("+++ app resume +++");

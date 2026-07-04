@@ -34,15 +34,20 @@ class _M3ViewState extends State<M3View> with SingleTickerProviderStateMixin, Wi
     final screenH = size.height.toInt();
     debugPrint("=== M3View: initState addPostFrameCallback ($mounted) ($screenW x $screenH) dpr: $dpr ===");
 
-    // ticker to update and render
+    // ticker to update and render (owned by this view; released via unmount())
     final engine = M3AppEngine.instance;
     engine.ticker = createTicker(engine.updateRender);
 
-    // init AppEngine
+    // init AppEngine (skipped internally when the engine is already initialised,
+    // e.g. when this M3View is a remount of a previously torn-down view)
     await engine.initApp(width: screenW, height: screenH, dpr: dpr);
 
+    // The view may have left the tree during the async init above; if so,
+    // dispose() has already run unmount() and there is nothing to resume.
+    if (!mounted) return;
+
     setState(() {
-      engine.resume();
+      engine.remount();
       debugPrint("=== setState after initApp ===");
     });
   }
@@ -66,7 +71,9 @@ class _M3ViewState extends State<M3View> with SingleTickerProviderStateMixin, Wi
     _debounceTimer?.cancel(); // Cancel timer if active
     WidgetsBinding.instance.removeObserver(this);
 
-    M3AppEngine.instance.dispose();
+    // Detach from the (singleton) engine but keep it warm for a later remount.
+    // Full GL teardown is an explicit, separate call: M3AppEngine.dispose().
+    M3AppEngine.instance.unmount();
 
     super.dispose();
   }
