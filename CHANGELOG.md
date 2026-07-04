@@ -1,3 +1,18 @@
+## 0.9.2
+
+* Add:
+  * **Point Light Support**: Added `M3PointLight` structure with packed UBO logic (`packUBO()`) and built-in point light calculations via a new GLSL shader (`Lights.es3.glsl`).
+  * **Multiple Lights Support**: Enhanced program and renderer classes to support multiple active light sources.
+  * **Swift Package Manager (SPM) Support**: Added SPM integration for iOS and macOS builds.
+  * **Framebuffer DEPTH24_STENCIL8 Support**: Configured renderbuffer and depth texture creation to support depth-stencil formats with the correct `DEPTH_STENCIL_ATTACHMENT`.
+
+* Update / Refactor:
+  * **Light System Refactoring**: Restructured `M3Light` and `M3DirectionalLight` to use an internal `viewer` (`M3Camera`) delegate instead of inheriting directly from `M3Camera`.
+  * **Code Reorganization**: Grouped renderer-related files (`framebuffer.dart`, `render_engine.dart`, `render_options.dart`, `shadow_map.dart`) under the `lib/src/renderer/` directory.
+  * **Physics & Rigidbody Updates**: Added `removeRigidBody` method and updated `rapier_physics` dependency version.
+  * **Demos & UI Refinement**: Centralized light rotation updates in `DemoScene.update`, updated 3D text demo with an interactive UI, and optimized UI layouts with proper SafeAreas.
+  * **WebGL Texture Fallbacks**: Added ASTC texture compression check and automatic fallback to checkerboard on unsupported web environments.
+
 ## 0.9.1
 
 * Add:

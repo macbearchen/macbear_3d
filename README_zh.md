@@ -57,7 +57,7 @@
 
 ```yaml
 dependencies:
-  macbear_3d: ^0.9.1
+  macbear_3d: ^0.9.2
 ```
 
 ## 快速上手

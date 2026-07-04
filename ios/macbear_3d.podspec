@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'macbear_3d'
-  s.version          = '0.9.1'
+  s.version          = '0.9.2'
   s.summary          = 'Macbear 3D engine with video bridge.'
   s.description      = <<-DESC
 A new Flutter plugin project.
