@@ -131,9 +131,8 @@ class "macbear_3d::src::anim::bvh_animator.dart::BvhAnimator" {
 "macbear_3d::src::anim::bvh_animator.dart::BvhAnimator" o-- "macbear_3d::src::anim::bvh_data.dart::BvhData"
 
 class "macbear_3d::src::renderer::render_context.dart::M3RenderContext" {
+  -M3Scene _scene
   -M3Camera _viewer
-  -M3Skybox? _sky
-  +M3Fog? fog
   +M3RenderQueue opaque
   +M3RenderQueue transparent
   +M3RenderQueue unlit
@@ -141,8 +140,6 @@ class "macbear_3d::src::renderer::render_context.dart::M3RenderContext" {
   +M3RenderQueue reflectionProbe
   +void prepareRenderQueue()
   +void excludeEntities()
-  +void excludePlane()
-  +void excludeWater()
   +bool needsPlanarReflectionPass()
   +bool needsReflectionProbePass()
   +void render()
@@ -150,9 +147,8 @@ class "macbear_3d::src::renderer::render_context.dart::M3RenderContext" {
   -void _executeQueue()
 }
 
+"macbear_3d::src::renderer::render_context.dart::M3RenderContext" o-- "macbear_3d::src::scene::scene.dart::M3Scene"
 "macbear_3d::src::renderer::render_context.dart::M3RenderContext" o-- "macbear_3d::src::scene::camera.dart::M3Camera"
-"macbear_3d::src::renderer::render_context.dart::M3RenderContext" o-- "macbear_3d::src::scene::skybox.dart::M3Skybox"
-"macbear_3d::src::renderer::render_context.dart::M3RenderContext" o-- "macbear_3d::src::scene::fog.dart::M3Fog"
 "macbear_3d::src::renderer::render_context.dart::M3RenderContext" o-- "macbear_3d::src::renderer::render_queue.dart::M3RenderQueue"
 
 class "macbear_3d::src::renderer::render_context.dart::M3FillMode" {
@@ -164,6 +160,29 @@ class "macbear_3d::src::renderer::render_context.dart::M3FillMode" {
 
 "macbear_3d::src::renderer::render_context.dart::M3FillMode" o-- "macbear_3d::src::renderer::render_context.dart::M3FillMode"
 "dart::core::Enum" <|-- "macbear_3d::src::renderer::render_context.dart::M3FillMode"
+
+class "macbear_3d::src::renderer::framebuffer.dart::M3Framebuffer" {
+  +int frameW
+  +int frameH
+  -Framebuffer _fbo
+  -Renderbuffer? _depthRenderbuffer
+  -M3Texture? _colorTexture
+  -M3Texture? _depthTexture
+  +RenderingContext gl
+  +M3Texture depthTexture
+  +M3Texture colorTexture
+  +M3Texture? createColorTexture()
+  +M3Texture createDepthTexture()
+  +void createDepthRenderbuffer()
+  -void _checkStatus()
+  +void bind()
+  +void dispose()
+}
+
+"macbear_3d::src::renderer::framebuffer.dart::M3Framebuffer" o-- "flutter_angle::shared::classes.dart::Framebuffer"
+"macbear_3d::src::renderer::framebuffer.dart::M3Framebuffer" o-- "flutter_angle::shared::classes.dart::Renderbuffer"
+"macbear_3d::src::renderer::framebuffer.dart::M3Framebuffer" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
+"macbear_3d::src::renderer::framebuffer.dart::M3Framebuffer" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 
 class "macbear_3d::src::renderer::render_queue.dart::M3RenderItem" {
   +M3Entity entity
@@ -186,6 +205,53 @@ class "macbear_3d::src::renderer::render_queue.dart::M3RenderQueue" {
   +void sortTransparent()
 }
 
+class "macbear_3d::src::renderer::shadow_map.dart::M3ShadowMap" {
+  -M3RenderContext _context
+  -M3Framebuffer _framebuffer
+  +int mapW
+  +int mapH
+  +M3Texture depthTex
+  +String toString()
+  +void dispose()
+  +void renderDepth()
+  +void debugDrawDepth()
+}
+
+"macbear_3d::src::renderer::shadow_map.dart::M3ShadowMap" o-- "macbear_3d::src::renderer::render_context.dart::M3RenderContext"
+"macbear_3d::src::renderer::shadow_map.dart::M3ShadowMap" o-- "macbear_3d::src::renderer::framebuffer.dart::M3Framebuffer"
+"macbear_3d::src::renderer::shadow_map.dart::M3ShadowMap" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
+
+class "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" {
+  +RenderingContext gl
+  +M3PlanarReflection planarReflection
+  +List<M3ReflectionProbe> probes
+  -M3ShadowMap? _shadowMap
+  +M3RenderContext mainContext
+  -M3Projection _projection2D
+  +M3RenderOptions options
+  +M3RenderStats stats
+  +M3ShadowMap? shadowMap
+  +bool isShadowEnabled
+  +void init()
+  +void cleanProbes()
+  +void dispose()
+  +void createShadowMap()
+  +void bindDefaultFramebuffer()
+  +void resize()
+  +void renderShadowMap()
+  +M3ProgramLighting getSceneProgram()
+  +void renderScene()
+  +void render2D()
+}
+
+"macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection"
+"macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::renderer::shadow_map.dart::M3ShadowMap"
+"macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::renderer::render_context.dart::M3RenderContext"
+"macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::scene::camera.dart::M3Projection"
+"macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::engine::render_options.dart::M3RenderOptions"
+"macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::engine::render_options.dart::M3RenderStats"
+
 class "macbear_3d::src::util::platform::platform_info.dart::GraphicsInfo" {
   +String vendor
   +String renderer
@@ -205,6 +271,7 @@ class "macbear_3d::src::util::platform::platform_info.dart::PlatformInfo" {
   {static} +String getOS()
   {static} +GraphicsInfo getGraphicsInfo()
   {static} +void checkGLExtensions()
+  {static} +bool enableWebGLExtension()
 }
 
 class "macbear_3d::src::util::platform::platform_info_vulkan.dart::VkApplicationInfo" {
@@ -344,6 +411,7 @@ class "macbear_3d::src::input::keyboard.dart::M3KeyboardManager" {
   +void stop()
   +bool isPressed()
   +String? getActionByKey()
+  -bool _isTextFieldFocused()
   -bool _handleKeyEvent()
   -void _startRepeat()
   -void _stopRepeat()
@@ -627,7 +695,7 @@ class "macbear_3d::src::geom::geom.dart::_M3Indices" {
 }
 
 "macbear_3d::src::geom::geom.dart::_M3Indices" o-- "flutter_angle::shared::classes.dart::Buffer"
-"macbear_3d::src::geom::geom.dart::_M3Indices" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::geom::geom.dart::_M3Indices" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 
 class "macbear_3d::src::geom::geom.dart::M3Bounding" {
   +Aabb3 aabb
@@ -674,7 +742,7 @@ abstract class "macbear_3d::src::geom::geom.dart::M3Geom" {
 "macbear_3d::src::geom::geom.dart::M3Geom" o-- "dart::typed_data::Uint16List"
 "macbear_3d::src::geom::geom.dart::M3Geom" o-- "dart::typed_data::Float32List"
 "macbear_3d::src::geom::geom.dart::M3Geom" o-- "flutter_angle::shared::classes.dart::Buffer"
-"macbear_3d::src::geom::geom.dart::M3Geom" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::geom::geom.dart::M3Geom" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 
 class "macbear_3d::src::geom::geom.dart::M3ShadingMode" {
   +int index
@@ -905,7 +973,7 @@ class "macbear_3d::src::program::program.dart::M3Program" {
   +void setProjectionMatrix()
   +void setModelMatrix()
   +void setMVPMatrix()
-  +void applyCamera()
+  +void applyUniforms()
   +void setMatrices()
   +void setMaterial()
   +void setEnvironmentMap()
@@ -917,7 +985,7 @@ class "macbear_3d::src::program::program.dart::M3Program" {
 "macbear_3d::src::program::program.dart::M3Program" o-- "flutter_angle::shared::classes.dart::WebGLShader"
 "macbear_3d::src::program::program.dart::M3Program" o-- "flutter_angle::shared::classes.dart::Program"
 "macbear_3d::src::program::program.dart::M3Program" o-- "flutter_angle::shared::classes.dart::UniformLocation"
-"macbear_3d::src::program::program.dart::M3Program" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::program::program.dart::M3Program" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 
 class "macbear_3d::src::program::program.dart::M3ReflectionType" {
   +int index
@@ -942,6 +1010,7 @@ class "macbear_3d::src::program::program.dart::M3ProgramEye" {
 
 class "macbear_3d::src::program::program.dart::M3ProgramLighting" {
   +void initLocation()
+  +void setLightTBN()
   +void setMatrices()
   +void setMaterial()
 }
@@ -952,6 +1021,7 @@ class "macbear_3d::src::program::program.dart::M3ProgramLighting" {
 
 abstract class "macbear_3d::src::program::program.dart::M3ProgramShadow" {
   +void initLocation()
+  +void applyUniforms()
 }
 
 "macbear_3d::src::program::program.dart::M3ProgramLighting" <|-- "macbear_3d::src::program::program.dart::M3ProgramShadow"
@@ -970,7 +1040,7 @@ class "macbear_3d::src::program::program.dart::M3ProgramShadowCSM" {
   +UniformLocation uniformMatrixCSM
   +UniformLocation uniformDepthCSM
   +void initLocation()
-  +void applyCamera()
+  +void applyUniforms()
   +void setMatrices()
 }
 
@@ -1005,7 +1075,7 @@ abstract class "macbear_3d::src::program::program.dart::M3FogShader" {
   +void setFogPlane()
 }
 
-"macbear_3d::src::program::program.dart::M3FogShader" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::program::program.dart::M3FogShader" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 "macbear_3d::src::program::program.dart::M3FogShader" o-- "flutter_angle::shared::classes.dart::UniformLocation"
 "macbear_3d::src::program::program.dart::M3FogShader" o-- "macbear_3d::src::scene::fog.dart::M3Fog"
 
@@ -1014,16 +1084,17 @@ abstract class "macbear_3d::src::program::program.dart::M3LightingShader" {
   +UniformLocation uniformAmbient
   +UniformLocation uniformDiffuse
   +UniformLocation uniformSpecular
-  +UniformLocation uniformLightPosition
-  -M3Light? _light
+  +UniformLocation uniformLightDirection
+  -M3DirectionalLight? _light
+  -List<M3PointLight> _pointLights
   +void initLightingLocation()
   +void attachLight()
-  +void setLightPosition()
+  +void setLightDirection()
 }
 
-"macbear_3d::src::program::program.dart::M3LightingShader" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::program::program.dart::M3LightingShader" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 "macbear_3d::src::program::program.dart::M3LightingShader" o-- "flutter_angle::shared::classes.dart::UniformLocation"
-"macbear_3d::src::program::program.dart::M3LightingShader" o-- "macbear_3d::src::scene::light.dart::M3Light"
+"macbear_3d::src::program::program.dart::M3LightingShader" o-- "macbear_3d::src::scene::light.dart::M3DirectionalLight"
 
 abstract class "macbear_3d::src::program::program.dart::M3ShadowShader" {
   +RenderingContext gl
@@ -1031,11 +1102,10 @@ abstract class "macbear_3d::src::program::program.dart::M3ShadowShader" {
   +UniformLocation uniformShadowmapSize
   +UniformLocation uniformNormalBias
   +void initShadowLocation()
-  +void applyShadow()
-  +void bindShadow()
+  -void _applyShadow()
 }
 
-"macbear_3d::src::program::program.dart::M3ShadowShader" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::program::program.dart::M3ShadowShader" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 "macbear_3d::src::program::program.dart::M3ShadowShader" o-- "flutter_angle::shared::classes.dart::UniformLocation"
 
 abstract class "macbear_3d::src::program::program.dart::M3WaterShader" {
@@ -1051,7 +1121,7 @@ abstract class "macbear_3d::src::program::program.dart::M3WaterShader" {
   -void _setTBN()
 }
 
-"macbear_3d::src::program::program.dart::M3WaterShader" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::program::program.dart::M3WaterShader" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 "macbear_3d::src::program::program.dart::M3WaterShader" o-- "flutter_angle::shared::classes.dart::UniformLocation"
 
 class "macbear_3d::src::texture::material.dart::M3Material" {
@@ -1101,10 +1171,11 @@ class "macbear_3d::src::texture::texture.dart::M3Texture" {
   +int texH
   {static} -WebGLTexture _textureNone
   +RenderingContext gl
-  +WebGLTexture glTexture
+  +int glId
   +int maxMipLevel
   +void setParameters()
   +void dispose()
+  +void attachToFramebuffer()
   +void bind()
   +void unbind()
   +void generateMipmap()
@@ -1123,14 +1194,15 @@ class "macbear_3d::src::texture::texture.dart::M3Texture" {
   {static} +dynamic loadCubemap()
   {static} +dynamic createFromBytes()
   -dynamic _loadTarget()
-  -dynamic _loadTargetFromImage()
+  +dynamic loadTargetFromImage()
   {static} +M3Texture createWaterNormalMap()
   {static} +dynamic createWoodTexture()
   {static} -dynamic _generateWoodImage()
+  +void debugDraw()
 }
 
 "macbear_3d::src::texture::texture.dart::M3Texture" o-- "flutter_angle::shared::classes.dart::WebGLTexture"
-"macbear_3d::src::texture::texture.dart::M3Texture" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::texture::texture.dart::M3Texture" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 
 class "macbear_3d::src::texture::texture.dart::M3TextTexture" {
   +String text
@@ -1145,30 +1217,6 @@ class "macbear_3d::src::texture::texture.dart::M3TextTexture" {
 
 "macbear_3d::src::texture::texture.dart::M3TextTexture" o-- "flutter::src::painting::text_style.dart::TextStyle"
 "macbear_3d::src::texture::texture.dart::M3Texture" <|-- "macbear_3d::src::texture::texture.dart::M3TextTexture"
-
-class "macbear_3d::src::texture::texture.dart::M3ExternalTexture" {
-  +dynamic source
-  +bool isPlaying
-  +GlobalKey<State<StatefulWidget>>? repaintKey
-  -bool _isCapturing
-  -bool _isNativeCodec
-  +void dispose()
-  {static} +dynamic createVideo()
-  +dynamic initNativeBridge()
-  +dynamic releaseNativeBridge()
-  +void update()
-  -dynamic _updateTextureFromNative()
-  -dynamic _captureNativeFrame()
-  {static} +M3ExternalTexture createFromVideo()
-  +void play()
-  +void pause()
-  +void seekTo()
-  +dynamic getDuration()
-  +dynamic getPosition()
-}
-
-"macbear_3d::src::texture::texture.dart::M3ExternalTexture" o-- "flutter::src::widgets::framework.dart::GlobalKey<State<StatefulWidget>>"
-"macbear_3d::src::texture::texture.dart::M3Texture" <|-- "macbear_3d::src::texture::texture.dart::M3ExternalTexture"
 
 abstract class "macbear_3d::src::texture::ktx_info.dart::M3GL" {
   {static} +int COMPRESSED_RGBA_ASTC_4x4_KHR
@@ -1221,6 +1269,30 @@ class "macbear_3d::src::texture::ktx_info.dart::_Ktx2Level" {
   +int uncompressedLength
 }
 
+class "macbear_3d::src::texture::external_texture.dart::M3ExternalTexture" {
+  +dynamic source
+  +bool isPlaying
+  +GlobalKey<State<StatefulWidget>>? repaintKey
+  -bool _isCapturing
+  -bool _isNativeCodec
+  +void dispose()
+  {static} +dynamic createVideo()
+  +dynamic initNativeBridge()
+  +dynamic releaseNativeBridge()
+  +void update()
+  -dynamic _updateTextureFromNative()
+  -dynamic _captureNativeFrame()
+  {static} +M3ExternalTexture createFromVideo()
+  +void play()
+  +void pause()
+  +void seekTo()
+  +dynamic getDuration()
+  +dynamic getPosition()
+}
+
+"macbear_3d::src::texture::external_texture.dart::M3ExternalTexture" o-- "flutter::src::widgets::framework.dart::GlobalKey<State<StatefulWidget>>"
+"macbear_3d::src::texture::texture.dart::M3Texture" <|-- "macbear_3d::src::texture::external_texture.dart::M3ExternalTexture"
+
 class "macbear_3d::src::physics::physics_system.dart::M3PhysicsSystem" {
   -M3PhysicsEngine _engine
   -double _accumulator
@@ -1228,6 +1300,7 @@ class "macbear_3d::src::physics::physics_system.dart::M3PhysicsSystem" {
   -int _maxStepsPerFrame
   -Map<int, M3Entity> _bodyToEntity
   -double _interpolationAlpha
+  +M3PhysicsEngine engine
   +String info
   +dynamic init()
   +void dispose()
@@ -1269,6 +1342,7 @@ class "macbear_3d::src::physics::no_physics_engine.dart::M3NoPhysicsEngine" {
   +void step()
   +M3Collider createCollider()
   +M3RigidBody createRigidBody()
+  +void removeRigidBody()
 }
 
 "macbear_3d::src::physics::physics_engine.dart::M3PhysicsEngine" <|-- "macbear_3d::src::physics::no_physics_engine.dart::M3NoPhysicsEngine"
@@ -1279,6 +1353,7 @@ abstract class "macbear_3d::src::physics::physics_engine.dart::M3PhysicsEngine" 
   +void dispose()
   +void resetWorld()
   +M3RigidBody createRigidBody()
+  +void removeRigidBody()
   +M3Collider createCollider()
   +void step()
 }
@@ -1402,25 +1477,44 @@ class "macbear_3d::src::scene::light.dart::M3ShadowCascade" {
 
 "macbear_3d::src::scene::light.dart::M3ShadowCascade" o-- "vector_math::vector_math.dart::Matrix4"
 
-class "macbear_3d::src::scene::light.dart::M3Light" {
+abstract class "macbear_3d::src::scene::light.dart::M3Light" {
   {static} +Vector3 ambient
+  +Vector3 position
   +Vector3 color
-  +bool isDirectional
+  +bool castShadow
+  +M3ShadowMap? shadowMap
+  +void setShadowMap()
+  {static} +Vector4 blendRGBA()
+  {static} +Vector3 blendRGB()
+  +void drawHelper()
+}
+
+"macbear_3d::src::scene::light.dart::M3Light" o-- "vector_math::vector_math.dart::Vector3"
+"macbear_3d::src::scene::light.dart::M3Light" o-- "macbear_3d::src::renderer::shadow_map.dart::M3ShadowMap"
+
+class "macbear_3d::src::scene::light.dart::M3DirectionalLight" {
   +bool isCameraAligned
   +double shadowNormalBias
   +double csmPaddingNear
   +double csmPaddingFar
   +List<M3ShadowCascade> cascades
-  +Vector4 getDirection()
-  {static} +Vector4 blendRGBA()
-  {static} +Vector3 blendRGB()
+  +M3Camera viewer
+  +Vector3 getDirection()
   +void updateShadowCascades()
   -void _updateCascadeAtlasV()
   +void drawHelper()
 }
 
-"macbear_3d::src::scene::light.dart::M3Light" o-- "vector_math::vector_math.dart::Vector3"
-"macbear_3d::src::scene::camera.dart::M3Camera" <|-- "macbear_3d::src::scene::light.dart::M3Light"
+"macbear_3d::src::scene::light.dart::M3DirectionalLight" o-- "macbear_3d::src::scene::camera.dart::M3Camera"
+"macbear_3d::src::scene::light.dart::M3Light" <|-- "macbear_3d::src::scene::light.dart::M3DirectionalLight"
+
+class "macbear_3d::src::scene::light.dart::M3PointLight" {
+  +double range
+  +double intensity
+  +Float32List packUBO()
+}
+
+"macbear_3d::src::scene::light.dart::M3Light" <|-- "macbear_3d::src::scene::light.dart::M3PointLight"
 
 class "macbear_3d::src::scene::water.dart::M3WaterFlowLayer" {
   +Vector2 offset
@@ -1456,7 +1550,7 @@ class "macbear_3d::src::scene::water.dart::M3Water" {
   -M3WaterCameraState _getCameraState()
   +void captureWater()
   +void render()
-  +void drawDebug()
+  +void debugDraw()
   +void dispose()
 }
 
@@ -1485,7 +1579,8 @@ class "macbear_3d::src::scene::water.dart::M3WaterCameraState" {
 abstract class "macbear_3d::src::scene::scene.dart::M3Scene" {
   +M3InputController? inputController
   +M3PhysicsSystem physicsSystem
-  -M3Light _light
+  +M3DirectionalLight dirLight
+  +M3PointLight pointLight
   -M3Camera _camera
   +List<M3Camera> cameras
   +List<M3Entity> entities
@@ -1497,7 +1592,6 @@ abstract class "macbear_3d::src::scene::scene.dart::M3Scene" {
   +M3RenderEngine renderEngine
   +RenderingContext gl
   +M3Camera camera
-  +M3Light light
   +bool isLoaded
   +double totalTime
   +void dispose()
@@ -1507,7 +1601,7 @@ abstract class "macbear_3d::src::scene::scene.dart::M3Scene" {
   +void setWater()
   +void savePhysicsStates()
   +void update()
-  +void drawDebug()
+  +void debugDraw()
   +void drawHelper()
   +void drawCameraHelper()
   +void render2D()
@@ -1516,13 +1610,14 @@ abstract class "macbear_3d::src::scene::scene.dart::M3Scene" {
 
 "macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::input::touch.dart::M3InputController"
 "macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::physics::physics_system.dart::M3PhysicsSystem"
-"macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::scene::light.dart::M3Light"
+"macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::scene::light.dart::M3DirectionalLight"
+"macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::scene::light.dart::M3PointLight"
 "macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::scene::camera.dart::M3Camera"
 "macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::scene::skybox.dart::M3Skybox"
 "macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::scene::water.dart::M3Water"
 "macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::scene::fog.dart::M3Fog"
-"macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::engine::render_engine.dart::M3RenderEngine"
-"macbear_3d::src::scene::scene.dart::M3Scene" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine"
+"macbear_3d::src::scene::scene.dart::M3Scene" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 
 class "macbear_3d::src::scene::scene.dart::SampleScene" {
   -M3BoxGeom _geomCube
@@ -1556,7 +1651,7 @@ class "macbear_3d::src::scene::skybox.dart::M3Skybox" {
 }
 
 "macbear_3d::src::scene::skybox.dart::M3Skybox" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
-"macbear_3d::src::scene::skybox.dart::M3Skybox" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::scene::skybox.dart::M3Skybox" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 
 class "macbear_3d::src::scene::fog.dart::M3Fog" {
   +Vector3 color
@@ -1619,7 +1714,7 @@ class "macbear_3d::src::scene::camera.dart::M3Camera" {
   +Vector3 getForward()
   +void updateFrustum()
   +void setViewport()
-  -void _updateSplitDistances()
+  +void updateSplitDistances()
   +List<double> buildCSMSplits()
   +void setLookat()
   +void move()
@@ -1716,7 +1811,7 @@ class "macbear_3d::src::engine::app_engine.dart::M3AppEngine" {
 "macbear_3d::src::engine::app_engine.dart::M3AppEngine" o-- "flutter_angle::desktop::angle.dart::FlutterAngleTexture"
 "macbear_3d::src::engine::app_engine.dart::M3AppEngine" o-- "vector_math::vector_math.dart::Vector3"
 "macbear_3d::src::engine::app_engine.dart::M3AppEngine" o-- "null::dynamic Function()"
-"macbear_3d::src::engine::app_engine.dart::M3AppEngine" o-- "macbear_3d::src::engine::render_engine.dart::M3RenderEngine"
+"macbear_3d::src::engine::app_engine.dart::M3AppEngine" o-- "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine"
 "macbear_3d::src::engine::app_engine.dart::M3AppEngine" o-- "macbear_3d::src::input::touch.dart::M3TouchManager"
 "macbear_3d::src::engine::app_engine.dart::M3AppEngine" o-- "macbear_3d::src::input::keyboard.dart::M3KeyboardManager"
 "macbear_3d::src::engine::app_engine.dart::M3AppEngine" o-- "macbear_3d::src::engine::resource_manager.dart::M3ResourceManager"
@@ -1724,44 +1819,6 @@ class "macbear_3d::src::engine::app_engine.dart::M3AppEngine" {
 "macbear_3d::src::engine::app_engine.dart::M3AppEngine" o-- "macbear_3d::src::scene::scene.dart::M3Scene"
 "macbear_3d::src::engine::app_engine.dart::M3AppEngine" o-- "flutter_angle::shared::classes.dart::Framebuffer"
 "flutter::src::foundation::change_notifier.dart::ChangeNotifier" <|-- "macbear_3d::src::engine::app_engine.dart::M3AppEngine"
-
-class "macbear_3d::src::engine::framebuffer.dart::M3Framebuffer" {
-  +int frameW
-  +int frameH
-  -Framebuffer _fbo
-  -WebGLTexture? _depthTexture
-  -Renderbuffer? _depthRenderbuffer
-  +RenderingContext gl
-  +WebGLTexture depthTexture
-  -void _checkStatus()
-  +void bindFace()
-  +void bind()
-  +void dispose()
-}
-
-"macbear_3d::src::engine::framebuffer.dart::M3Framebuffer" o-- "flutter_angle::shared::classes.dart::Framebuffer"
-"macbear_3d::src::engine::framebuffer.dart::M3Framebuffer" o-- "flutter_angle::shared::classes.dart::WebGLTexture"
-"macbear_3d::src::engine::framebuffer.dart::M3Framebuffer" o-- "flutter_angle::shared::classes.dart::Renderbuffer"
-"macbear_3d::src::engine::framebuffer.dart::M3Framebuffer" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
-
-class "macbear_3d::src::engine::shadow_map.dart::M3ShadowMap" {
-  -M3RenderContext _context
-  -M3Framebuffer _framebuffer
-  -M3Texture? _tex
-  +int mapW
-  +int mapH
-  +WebGLTexture depthTexture
-  +M3Texture texDepth
-  +String toString()
-  +void dispose()
-  +void renderDepth()
-  +void drawDebugDepth()
-}
-
-"macbear_3d::src::engine::shadow_map.dart::M3ShadowMap" o-- "macbear_3d::src::renderer::render_context.dart::M3RenderContext"
-"macbear_3d::src::engine::shadow_map.dart::M3ShadowMap" o-- "macbear_3d::src::engine::framebuffer.dart::M3Framebuffer"
-"macbear_3d::src::engine::shadow_map.dart::M3ShadowMap" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
-"macbear_3d::src::engine::shadow_map.dart::M3ShadowMap" o-- "flutter_angle::shared::classes.dart::WebGLTexture"
 
 class "macbear_3d::src::engine::resources.dart::M3Resources" {
   {static} +M3Texture texWhite
@@ -1840,46 +1897,16 @@ class "macbear_3d::src::engine::resource_manager.dart::M3ResourceManager" {
   {static} +dynamic createImageFromBytes()
 }
 
-class "macbear_3d::src::engine::render_engine.dart::M3RenderEngine" {
-  +RenderingContext gl
-  +M3PlanarReflection planarReflection
-  +List<M3ReflectionProbe> probes
-  -M3ShadowMap? _shadowMap
-  +M3RenderContext mainContext
-  -M3Projection _projection2D
-  +M3RenderOptions options
-  +M3RenderStats stats
-  +M3ShadowMap? shadowMap
-  +bool isShadowEnabled
-  +void init()
-  +void cleanProbes()
-  +void dispose()
-  +void createShadowMap()
-  +void bindDefaultFramebuffer()
-  +void resize()
-  +void renderShadowMap()
-  +void renderScene()
-  +void render2D()
-}
-
-"macbear_3d::src::engine::render_engine.dart::M3RenderEngine" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
-"macbear_3d::src::engine::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection"
-"macbear_3d::src::engine::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::engine::shadow_map.dart::M3ShadowMap"
-"macbear_3d::src::engine::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::renderer::render_context.dart::M3RenderContext"
-"macbear_3d::src::engine::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::scene::camera.dart::M3Projection"
-"macbear_3d::src::engine::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::engine::render_engine.dart::M3RenderOptions"
-"macbear_3d::src::engine::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::engine::render_engine.dart::M3RenderStats"
-
-class "macbear_3d::src::engine::render_engine.dart::M3RenderOptions" {
+class "macbear_3d::src::engine::render_options.dart::M3RenderOptions" {
   +M3DebugOptions debug
   +M3ShaderOptions shader
   +bool shadows
 }
 
-"macbear_3d::src::engine::render_engine.dart::M3RenderOptions" o-- "macbear_3d::src::engine::render_engine.dart::M3DebugOptions"
-"macbear_3d::src::engine::render_engine.dart::M3RenderOptions" o-- "macbear_3d::src::engine::render_engine.dart::M3ShaderOptions"
+"macbear_3d::src::engine::render_options.dart::M3RenderOptions" o-- "macbear_3d::src::engine::render_options.dart::M3DebugOptions"
+"macbear_3d::src::engine::render_options.dart::M3RenderOptions" o-- "macbear_3d::src::engine::render_options.dart::M3ShaderOptions"
 
-class "macbear_3d::src::engine::render_engine.dart::M3DebugOptions" {
+class "macbear_3d::src::engine::render_options.dart::M3DebugOptions" {
   +bool wireframe
   +bool showHelpers
   +bool showCamera
@@ -1888,7 +1915,7 @@ class "macbear_3d::src::engine::render_engine.dart::M3DebugOptions" {
   +bool showPhysicsStats
 }
 
-class "macbear_3d::src::engine::render_engine.dart::M3ShaderOptions" {
+class "macbear_3d::src::engine::render_options.dart::M3ShaderOptions" {
   -bool _perPixel
   -bool _cartoon
   -bool _pbr
@@ -1904,7 +1931,7 @@ class "macbear_3d::src::engine::render_engine.dart::M3ShaderOptions" {
   +int pcf
 }
 
-class "macbear_3d::src::engine::render_engine.dart::M3RenderStats" {
+class "macbear_3d::src::engine::render_options.dart::M3RenderStats" {
   +bool enabled
   +int frames
   +int vertices
@@ -1966,7 +1993,7 @@ class "macbear_3d::src::2d::shape_2d.dart::M3Shape2D" {
 "macbear_3d::src::2d::shape_2d.dart::M3Shape2D" o-- "vector_math::vector_math_lists.dart::Vector2List"
 "macbear_3d::src::2d::shape_2d.dart::M3Shape2D" o-- "flutter_angle::shared::classes.dart::Buffer"
 "macbear_3d::src::2d::shape_2d.dart::M3Shape2D" o-- "macbear_3d::src::texture::material.dart::M3Material"
-"macbear_3d::src::2d::shape_2d.dart::M3Shape2D" o-- "flutter_angle::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::2d::shape_2d.dart::M3Shape2D" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 "macbear_3d::src::2d::shape_2d.dart::M3Shape2D" o-- "macbear_3d::src::program::program.dart::M3Program"
 
 class "macbear_3d::src::2d::shape_2d.dart::M3Rectangle2D" {
@@ -2038,8 +2065,7 @@ class "macbear_3d::src::widgets::view.dart::_M3ViewState" {
 
 class "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" {
   -M3RenderContext _context
-  -M3Framebuffer _fbo
-  -M3Texture _texture
+  -M3Framebuffer _framebuffer
   +Plane clipPlane
   -M3Camera _camera
   +bool enable
@@ -2048,7 +2074,6 @@ class "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" 
   +int width
   +int height
   +M3Texture texture
-  +int maxMipLevel
   +void setRenderScale()
   +void resize()
   +void dispose()
@@ -2057,14 +2082,14 @@ class "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" 
   +void captureRefraction()
   -void _renderToTexture()
   +void drawHelper()
-  +void drawDebugReflection()
+  +void debugDrawReflection()
 }
 
 "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" o-- "macbear_3d::src::renderer::render_context.dart::M3RenderContext"
-"macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" o-- "macbear_3d::src::engine::framebuffer.dart::M3Framebuffer"
-"macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
+"macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" o-- "macbear_3d::src::renderer::framebuffer.dart::M3Framebuffer"
 "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" o-- "vector_math::vector_math.dart::Plane"
 "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" o-- "macbear_3d::src::scene::camera.dart::M3Camera"
+"macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
 
 class "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarPass" {
   +int index
@@ -2080,11 +2105,10 @@ class "macbear_3d::src::reflection::reflection_probe.dart::M3ReflectionProbe" {
   -M3Camera _camCapture
   +M3Entity? owner
   -M3RenderContext _context
-  -M3Framebuffer? _fbo
+  -M3Framebuffer _framebuffer
   +int texSize
-  +M3Texture? cubemapTexture
   +bool isMirror
-  +int maxMipLevel
+  +M3Texture cubemapTexture
   +void dispose()
   +void setOwner()
   +void captureProbe()
@@ -2093,7 +2117,7 @@ class "macbear_3d::src::reflection::reflection_probe.dart::M3ReflectionProbe" {
 "macbear_3d::src::reflection::reflection_probe.dart::M3ReflectionProbe" o-- "macbear_3d::src::scene::camera.dart::M3Camera"
 "macbear_3d::src::reflection::reflection_probe.dart::M3ReflectionProbe" o-- "macbear_3d::src::scene::entity.dart::M3Entity"
 "macbear_3d::src::reflection::reflection_probe.dart::M3ReflectionProbe" o-- "macbear_3d::src::renderer::render_context.dart::M3RenderContext"
-"macbear_3d::src::reflection::reflection_probe.dart::M3ReflectionProbe" o-- "macbear_3d::src::engine::framebuffer.dart::M3Framebuffer"
+"macbear_3d::src::reflection::reflection_probe.dart::M3ReflectionProbe" o-- "macbear_3d::src::renderer::framebuffer.dart::M3Framebuffer"
 "macbear_3d::src::reflection::reflection_probe.dart::M3ReflectionProbe" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
 
 
