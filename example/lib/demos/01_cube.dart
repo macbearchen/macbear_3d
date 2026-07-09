@@ -14,7 +14,7 @@ class CubeScene_01 extends DemoScene {
     fog.planeHeight = 0.0;
 
     // 01: box geometry
-    final box = addMesh(M3Mesh(M3BoxGeom(1.0, 1.0, 1.0)), Vector3.zero());
+    final box = addMesh(M3Mesh(M3BoxGeom(1.0, 1.0, 1.0)), Vector3(0, 0, 2));
     box.scale.setValues(1, 1, 1);
 
     // axis gizmo
@@ -33,7 +33,7 @@ class CubeScene_01 extends DemoScene {
       ..diffuseTexture = texTest
       ..setMatte();
     final groundMesh = M3Mesh(
-      M3PlaneGeom(80, 80, widthSegments: 20, heightSegments: 20, uvScale: Vector2.all(5.0)),
+      M3PlaneGeom(20, 20, widthSegments: 20, heightSegments: 20, uvScale: Vector2.all(2.0)),
       material: mtrGround,
     );
     final entity = addMesh(groundMesh, Vector3(0, 0, -1));

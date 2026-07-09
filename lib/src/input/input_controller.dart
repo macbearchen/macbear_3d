@@ -39,7 +39,7 @@ class M3CameraOrbitController extends M3InputController {
       final pinch = touchMgr.getPinch();
       if (pinch != null) {
         applyZoom(pinch);
-        debugPrint("Scale: ${pinch.scale}, Center: ${pinch.center}");
+        M3Log.i('M3InputController', 'Scale: ${pinch.scale}, Center: ${pinch.center}');
       } else {
         if (touch.buttons == 1) {
           applyOrbit(touch);
@@ -82,7 +82,7 @@ class M3CameraOrbitController extends M3InputController {
     offset = offset * distance / 200;
     final moveTo = camera.cameraToWorldMatrix.getRotation() * Vector3(-offset.x, offset.y, 0);
     camera.target += moveTo;
-    // debugPrint("Offset: $offset, MoveTo: $moveTo, Target: ${camera.target}");
+    // M3Log.d('M3InputController', 'Offset: $offset, MoveTo: $moveTo, Target: ${camera.target}');
 
     final euler = camera.euler;
     camera.setEuler(euler.yaw, euler.pitch, euler.roll, distance: distance);
@@ -164,8 +164,7 @@ class M3CameraOrbitController extends M3InputController {
         camera.viewportH,
         fovy: camera.degreeFovY,
       );
-
-      debugPrint("camera: $camera");
+      M3Log.i('M3InputController', 'camera: $camera');
     }
   }
 }

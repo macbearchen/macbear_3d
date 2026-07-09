@@ -32,7 +32,7 @@ class _M3ViewState extends State<M3View> with SingleTickerProviderStateMixin, Wi
     final size = await _getValidSize(context);
     final screenW = size.width.toInt();
     final screenH = size.height.toInt();
-    debugPrint("=== M3View: initState addPostFrameCallback ($mounted) ($screenW x $screenH) dpr: $dpr ===");
+    M3Log.i('M3View', 'initState addPostFrameCallback ($mounted) ($screenW x $screenH) dpr: $dpr');
 
     // ticker to update and render
     final engine = M3AppEngine.instance;
@@ -43,7 +43,7 @@ class _M3ViewState extends State<M3View> with SingleTickerProviderStateMixin, Wi
 
     setState(() {
       engine.resume();
-      debugPrint("=== setState after initApp ===");
+      M3Log.i('M3View', 'setState after initApp');
     });
   }
 
@@ -73,7 +73,7 @@ class _M3ViewState extends State<M3View> with SingleTickerProviderStateMixin, Wi
 
   @override
   void didChangeMetrics() {
-    debugPrint(">>> didChangeMetrics");
+    M3Log.d('M3View', '>>> didChangeMetrics');
     final engine = M3AppEngine.instance;
     engine.pause(); // pause ticker during resize
     _debounceTimer?.cancel(); // Clear existing timer
@@ -87,7 +87,7 @@ class _M3ViewState extends State<M3View> with SingleTickerProviderStateMixin, Wi
 
       setState(() {
         engine.resume();
-        debugPrint("<<< setState after didChangeMetrics");
+        M3Log.d('M3View', '<<< setState after didChangeMetrics');
       });
     });
   }

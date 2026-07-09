@@ -15,12 +15,6 @@ class PhysicsScene_07 extends DemoScene {
 
     camera.setEuler(pi / 6, -pi / 6, 0, distance: 12);
 
-    final camera2 = M3Camera();
-    camera2.setLookat(Vector3(0, 4, 5), Vector3.zero(), Vector3(0, 0, 1));
-    cameras.add(camera2);
-
-    dirLight.viewer.setEuler(0, -pi / 3, 0, distance: dirLight.viewer.distanceToTarget); // rotate light
-
     M3Texture texGrid = M3Texture.createCheckerboard(size: 6);
     final cubeMesh = M3Mesh(M3Resources.unitCube);
     cubeMesh.subMeshes[0].mtr.diffuseTexture = texGrid;

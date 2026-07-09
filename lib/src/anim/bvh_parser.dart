@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:vector_math/vector_math.dart';
+import '../util/log.dart';
 import 'bvh_data.dart';
 
 /// A parser for Biovision Hierarchy (BVH) files.
@@ -29,11 +29,7 @@ class BvhParser {
       final offsetLine = lines[lineIndex++];
       final offsetParts = offsetLine.split(RegExp(r'\s+'));
       if (offsetParts[0] != 'OFFSET') throw FormatException('Expected OFFSET');
-      final offset = Vector3(
-        double.parse(offsetParts[1]),
-        double.parse(offsetParts[2]),
-        double.parse(offsetParts[3]),
-      );
+      final offset = Vector3(double.parse(offsetParts[1]), double.parse(offsetParts[2]), double.parse(offsetParts[3]));
 
       final channels = <String>[];
       int? jointChannelOffset;
@@ -90,15 +86,8 @@ class BvhParser {
       final values = motionLine.split(RegExp(r'\s+')).map(double.parse).toList();
       frames.add(values);
     }
+    M3Log.i('BvhParser', 'BvhParser: Parsed ${allJoints.length} joints, $frameCount frames');
 
-    debugPrint('BvhParser: Parsed ${allJoints.length} joints, $frameCount frames');
-
-    return BvhData(
-      root: root,
-      frameCount: frameCount,
-      frameTime: frameTime,
-      allJoints: allJoints,
-      frames: frames,
-    );
+    return BvhData(root: root, frameCount: frameCount, frameTime: frameTime, allJoints: allJoints, frames: frames);
   }
 }

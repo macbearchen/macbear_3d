@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:web/web.dart' as web;
+import '../log.dart';
 import 'platform_info.dart';
 
 bool isPlatformAndroid() => false;
@@ -31,15 +31,15 @@ void getGLExtensions() {
 
   final extensions = gl.getSupportedExtensions();
   if (extensions != null) {
-    debugPrint('Supported WebGL Extensions:');
+    M3Log.i('PlatformInfo', 'Supported WebGL Extensions:');
     for (var i = 0; i < extensions.length; i++) {
-      debugPrint('- ${extensions[i]}');
+      M3Log.i('PlatformInfo', '${extensions[i]}');
     }
   }
 }
 
 void getEGLExtensions() {
-  debugPrint("EGL info not available on Web (using WebGL)");
+  M3Log.w('PlatformInfo', 'EGL info not available on Web (using WebGL)');
 }
 
 GraphicsInfo getGpuInfo() {

@@ -132,9 +132,9 @@ abstract class M3Geom {
   final List<_M3Indices> _edgeIndices = []; // wireframe edges
 
   int get vertexCount => _vertexCount;
-  int getTriangleCount({M3FillMode fillMode = M3FillMode.solid}) {
+  int getTriangleCount({M3FillMode fillMode = .solid}) {
     int count = 0;
-    final indices = fillMode == M3FillMode.solid ? _faceIndices : _edgeIndices;
+    final indices = fillMode == .solid ? _faceIndices : _edgeIndices;
     for (var surface in indices) {
       count += surface.primitiveCount;
     }
@@ -359,7 +359,7 @@ abstract class M3Geom {
   }
 
   /// Renders the geometry using the specified shader program.
-  void draw(M3Program prog, {M3FillMode fillMode = M3FillMode.solid}) {
+  void draw(M3Program prog, {M3FillMode fillMode = .solid}) {
     if (_vertexBuffer != null) {
       gl.bindBuffer(WebGL.ARRAY_BUFFER, _vertexBuffer);
       gl.enableVertexAttribArray(prog.attribVertex.id);
@@ -391,7 +391,7 @@ abstract class M3Geom {
       gl.vertexAttribPointer(prog.attribBoneWeight.id, 4, WebGL.FLOAT, false, 0, 0);
     }
 
-    List<_M3Indices> drawSurfaces = fillMode == M3FillMode.solid ? _faceIndices : _edgeIndices;
+    List<_M3Indices> drawSurfaces = fillMode == .solid ? _faceIndices : _edgeIndices;
     for (var surface in drawSurfaces) {
       surface.draw();
     }

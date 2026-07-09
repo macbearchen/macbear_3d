@@ -98,7 +98,7 @@ class M3Program {
     // check shader compile status
     if (gl.getShaderParameter(_shaderVert, WebGL.COMPILE_STATUS) == false) {
       final log = gl.getShaderInfoLog(_shaderVert);
-      debugPrint("--- VERTEX SHADER COMPILE ERROR ---\n$log\n--- SOURCE ---\n$strVert");
+      M3Log.e('M3Program VS ERROR', '$log\n--- SOURCE ---\n$strVert');
     }
 
     // fragment shader
@@ -109,7 +109,7 @@ class M3Program {
     // check shader compile status
     if (gl.getShaderParameter(_shaderFrag, WebGL.COMPILE_STATUS) == false) {
       final log = gl.getShaderInfoLog(_shaderFrag);
-      debugPrint("--- FRAGMENT SHADER COMPILE ERROR ---\n$log\n--- SOURCE ---\n$strFrag");
+      M3Log.e('M3Program FS ERROR', '$log\n--- SOURCE ---\n$strFrag');
     }
 
     // create program and attach shader
@@ -133,7 +133,7 @@ class M3Program {
     final param = gl.getProgramParameter(program, WebGL.LINK_STATUS);
     if (param.id == false) {
       final log = gl.getProgramInfoLog(program);
-      debugPrint("--- PROGRAM LINK ERROR ---\n$log");
+      M3Log.e('M3Program LINK ERROR', '$log');
     }
 
     gl.useProgram(program);
@@ -264,7 +264,7 @@ class M3Program {
     }
   }
 
-  void setMatrices(M3Camera cam, Matrix4 mMatrix) {
+  void setMatrices(M3Camera cam, Matrix4 mMatrix, [Matrix4? mMatrixInv]) {
     // Projection matrix
     setProjectionMatrix(cam.projectionMatrix);
 
@@ -280,12 +280,12 @@ class M3Program {
 
   void setMaterial(M3Material mtr, Vector4 color) {
     if (isLocationValid(uniformColor)) {
-      // mColor4 colorMix;
-      // colorMix = color * mtr.m_diffuse;
+      final Vector4 colorMix = Vector4.copy(color);
+      colorMix.multiply(mtr.diffuse);
       // only work when NOT glEnableVertexAttribArray(m_attribColor)
       // gl.vertexAttrib4fv(attribColor.id, pRGBA); // diffuse as glColor4f in fixed-function GL 1.x
 
-      gl.uniform4fv(uniformColor, color.storage);
+      gl.uniform4fv(uniformColor, colorMix.storage);
     }
 
     // texture matrix

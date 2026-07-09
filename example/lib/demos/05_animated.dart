@@ -117,7 +117,7 @@ class AnimatedScene_05 extends DemoScene {
         _foxAnimTimer = 0.0;
         _foxAnimIndex = (_foxAnimIndex + 1) % 3;
         _fox!.mesh.animator?.crossFade(_foxAnimIndex, 0.5);
-        debugPrint('Fox animation cross-fade to index: $_foxAnimIndex');
+        M3Log.i('AnimatedScene', 'Fox animation cross-fade to index: $_foxAnimIndex');
       }
     }
 

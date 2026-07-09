@@ -23,9 +23,9 @@ void initPlatformImpl() {
   if (Platform.isAndroid) {
     bool hasVulkan = PlatformInfoVulkan.shouldInitVulkan();
     useAngleAndroid = hasVulkan;
-    debugPrint("--- Android GPU Detection (init) ---");
-    debugPrint("Vulkan Support Detected: $hasVulkan");
-    debugPrint("Current useAngle setting: $useAngleAndroid");
+    M3Log.i('PlatformInfo', 'Android GPU Detection (init)');
+    M3Log.i('PlatformInfo', 'Vulkan Support Detected: $hasVulkan');
+    M3Log.i('PlatformInfo', 'Current useAngle setting: $useAngleAndroid');
   }
 }
 
@@ -35,7 +35,7 @@ void getGLExtensions() {
     int numExt = gl.getIntegerv(0x821D);
     for (int i = 0; i < numExt; i++) {
       final s0 = gl.getStringi(WebGL.EXTENSIONS, i);
-      debugPrint("- #$i = $s0");
+      M3Log.i('GLext', '$i = $s0');
     }
   }
 }
@@ -49,7 +49,7 @@ typedef EglQueryStringDart = Pointer<Uint8> Function(Pointer<Void> display, int 
 void getEGLExtensions() {
   final eglLib = _loadEGLLib();
   if (eglLib == null) {
-    debugPrint("EGL library not found");
+    M3Log.e('EGL', 'EGL library not found');
     return;
   }
 
@@ -64,12 +64,12 @@ void getEGLExtensions() {
         .asFunction();
 
     final display = eglGetCurrentDisplay();
-    debugPrint("EGL Display: $display");
+    M3Log.i('EGL', 'EGL Display: $display');
 
     // 1. Client Extensions (Display is EGL_NO_DISPLAY = nullptr)
     final clientExtsPtr = eglQueryString(nullptr, EGL_EXTENSIONS);
     if (clientExtsPtr.address != 0) {
-      debugPrint("EGL Client Extensions:");
+      M3Log.i('EGL', 'EGL Client Extensions:');
       _printExtensionList(clientExtsPtr.cast<Utf8>().toDartString());
     }
 
@@ -77,12 +77,12 @@ void getEGLExtensions() {
     if (display.address != 0) {
       final displayExtsPtr = eglQueryString(display, EGL_EXTENSIONS);
       if (displayExtsPtr.address != 0) {
-        debugPrint("EGL Display Extensions:");
+        M3Log.i('EGL', 'EGL Display Extensions:');
         _printExtensionList(displayExtsPtr.cast<Utf8>().toDartString());
       }
     }
   } catch (e) {
-    debugPrint("Error querying EGL extensions: $e");
+    M3Log.e('EGL', 'Error querying EGL extensions: $e');
   } finally {
     eglLib.close();
   }
@@ -93,7 +93,7 @@ void _printExtensionList(String extensions) {
   for (var i = 0; i < list.length; i++) {
     final ext = list[i].trim();
     if (ext.isNotEmpty) {
-      debugPrint("- #$i = $ext");
+      M3Log.d('EGLext', '$i = $ext');
     }
   }
 }
@@ -165,8 +165,7 @@ String safeGetString(Pointer<Uint8> ptr) {
 
 GraphicsInfo getGpuInfo() {
   if (Platform.isAndroid) {
-    debugPrint("--- Android GPU Detection ---");
-    debugPrint("Current useAngle setting: $useAngleAndroid");
+    M3Log.i('Android GPU', 'Current useAngle setting: $useAngleAndroid');
   }
 
   final glesLib = _loadGLESv2Lib();

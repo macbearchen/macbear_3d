@@ -1,7 +1,7 @@
 import 'dart:typed_data';
-import 'package:flutter/foundation.dart';
 import 'package:vector_math/vector_math.dart';
 
+import '../util/log.dart';
 import 'gltf_accessor.dart';
 
 /// glTF 文件解析結果
@@ -76,7 +76,7 @@ class GltfDocument {
         rootNodes.add(i);
       }
     }
-    debugPrint('GltfDocument: found ${rootNodes.length} root nodes: $rootNodes');
+    M3Log.i('GltfDocument', 'Found ${rootNodes.length} root nodes: $rootNodes');
   }
 
   /// 取得 Accessor 資料

@@ -349,7 +349,7 @@ class M3Texture {
     tex.name = url;
     await tex._loadTarget(url);
 
-    debugPrint(tex.toString());
+    M3Log.i('M3Texture', tex.toString());
     return tex;
   }
 
@@ -367,7 +367,7 @@ class M3Texture {
     // 6 faces for cubemap
     for (int i = 0; i < 6; i++) {
       await tex._loadTarget(urls[i], faceTarget: _cubeMapFaceTargets[i]);
-      debugPrint(tex.toString());
+      M3Log.i('M3Texture', tex.toString());
     }
     tex.generateMipmap();
     tex.unbind();
@@ -382,14 +382,14 @@ class M3Texture {
     final img = await M3ResourceManager.createImageFromBytes(bytes);
     await tex.loadTargetFromImage(img);
     tex.generateMipmap();
-    debugPrint(tex.toString());
+    M3Log.i('M3Texture', tex.toString());
     return tex;
   }
 
   Future<void> _loadTarget(String url, {int faceTarget = WebGL.TEXTURE_2D}) async {
     final filename = url;
     if (!await M3ResourceManager.isAssetExists(filename)) {
-      debugPrint('*** ERROR assets: $filename');
+      M3Log.e('M3Texture', 'assets: $filename');
       _initCheckerboard(8, Vector4(0.9, 0.2, 0.1, 1), Vector4(0.7, 0.6, 0.5, 1), faceTarget: faceTarget);
       return;
     }
@@ -408,7 +408,7 @@ class M3Texture {
       final pixelFormat = ktxInfo.glFormat;
       if (kIsWeb) {
         if (!PlatformInfo.enableWebGLExtension('WEBGL_compressed_texture_astc')) {
-          debugPrint("*** ASTC extension NOT SUPPORTED, use checkerboard instead");
+          M3Log.w('M3Texture', 'ASTC extension NOT SUPPORTED, use checkerboard instead');
           _initCheckerboard(8, Vector4(1.0, 0.3, 0.1, 1), Vector4(0.7, 0.1, 0.0, 1), faceTarget: faceTarget);
           return;
         }
@@ -439,7 +439,7 @@ class M3Texture {
 
     final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
     if (byteData == null) {
-      debugPrint('*** ERROR: M3Texture.toByteData returned null');
+      M3Log.e('M3Texture', 'M3Texture.toByteData returned null');
       return;
     }
     final pixels = byteData.buffer.asUint8List();

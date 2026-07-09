@@ -22,14 +22,13 @@ class GraphicsInfo {
   @override
   String toString() {
     return '''
-==============================
 [ Graphics Information ]
 ------------------------------
 Vendor: $vendor
 Renderer: $renderer
 Version: $version
 Shading version: $shadingVersion
-==============================''';
+''';
   }
 }
 
@@ -56,7 +55,7 @@ class PlatformInfo {
   // GPU info: Vendor, Renderer, GLSL version
   static GraphicsInfo getGraphicsInfo() {
     final info = getGpuInfo();
-    debugPrint('$info');
+    M3Log.s('GPU Info', '$info');
     return info;
   }
 
@@ -82,7 +81,7 @@ class PlatformInfo {
 
     _glParamNames.forEach((key, name) {
       final val = gl.getParameter(key);
-      debugPrint("$name = $val");
+      M3Log.s('GL Info', '$name = $val');
     });
 
     getGLExtensions();
@@ -95,7 +94,7 @@ class PlatformInfo {
 
     final gl = M3AppEngine.instance.renderEngine.gl;
     final ext = gl.getExtension(extension);
-    debugPrint("Enable extension: $extension, ${ext != null ? "success" : "fail"}");
+    M3Log.h('WebGL', 'Enable extension: $extension, ${ext != null ? "success" : "fail"}');
     return ext != null;
   }
 }

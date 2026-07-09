@@ -58,7 +58,7 @@ class M3Skybox {
     prog.setMaterial(mtr, Vector4.all(1.0));
     prog.setEnvironmentMap(cubeTexture);
 
-    M3Resources.debugFrustum.draw(prog, fillMode: M3FillMode.solid);
+    M3Resources.debugFrustum.draw(prog, fillMode: .solid);
 
     gl.depthMask(true);
     gl.enable(WebGL.DEPTH_TEST);

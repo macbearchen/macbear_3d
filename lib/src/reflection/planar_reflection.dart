@@ -152,11 +152,24 @@ class M3PlanarReflection {
     renderEngine.bindDefaultFramebuffer();
   }
 
-  /// draw helper
-  void drawHelper(M3Camera viewer) {
+  /// draw reflection camera
+  void drawReflectionCamera(M3Camera viewer) {
     if (!enable || !visible) return;
 
-    _camera.drawHelper(M3Resources.programSimple!, viewer);
+    M3Camera mirrorCamera = _camera;
+    if (M3Resources.debugCamera != null) {
+      mirrorCamera = M3Resources.debugCamera!.clone();
+      // shrink far clip for culling shadow casters
+      mirrorCamera.farClip *= 0.6;
+      mirrorCamera.refreshProjectionMatrix();
+      mirrorCamera.updateSplitDistances();
+
+      // reversed winding for mirrored view
+      mirrorCamera.reflectViewMatrix(clipPlane);
+      mirrorCamera.setObliqueClipPlane(clipPlane);
+      mirrorCamera.updateFrustum();
+    }
+    mirrorCamera.drawHelper(M3Resources.programSimple!, viewer);
   }
 
   /// Draw reflection map for debugging

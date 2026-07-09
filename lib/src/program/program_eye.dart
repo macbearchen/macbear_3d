@@ -16,8 +16,8 @@ class M3ProgramEye extends M3Program {
   }
 
   @override
-  void setMatrices(M3Camera cam, Matrix4 mMatrix) {
-    super.setMatrices(cam, mMatrix);
+  void setMatrices(M3Camera cam, Matrix4 mMatrix, [Matrix4? mMatrixInv]) {
+    super.setMatrices(cam, mMatrix, mMatrixInv);
 
     if (M3Program.isLocationValid(uniformEyePosition)) {
       // ModelView matrix
@@ -39,7 +39,7 @@ class M3ProgramEye extends M3Program {
           gl.uniform3fv(uniformObjectScale, objScale.storage);
         }
       } else {
-        debugPrint('M3ProgramEye.setMatrices: det = 0.0');
+        M3Log.w('M3ProgramEye', 'setMatrices: det is ZERO!');
       }
     }
   }

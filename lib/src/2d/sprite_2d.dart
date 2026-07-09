@@ -38,7 +38,7 @@ class M3Sprite2D {
     _rect.setRectangle(0, 0, spriteW, spriteH);
     _rect.mappingUV(0, 0, tex.texW.toDouble(), tex.texH.toDouble());
     _rect.createVBO(WebGL.STATIC_DRAW);
-    debugPrint(_rect.toString());
+    M3Log.d('Sprite2D', _rect.toString());
   }
 
   void dispose() {

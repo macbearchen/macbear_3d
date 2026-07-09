@@ -13,7 +13,7 @@ void main() {
 }
 
 Future<void> onDidInit() async {
-  debugPrint('main.dart: onDidInit');
+  M3Log.h('example/main.dart', 'onDidInit');
   final appEngine = M3AppEngine.instance;
   appEngine.renderEngine.createShadowMap(width: 1024, height: 1024);
   M3AppEngine.backgroundColor = Vector3(0.1, 0.6, 0.3);

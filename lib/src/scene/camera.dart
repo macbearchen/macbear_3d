@@ -90,7 +90,7 @@ class M3Camera extends M3Projection {
   void updateSplitDistances() {
     if (csmCount > 0) {
       csmSplitDistances = buildCSMSplits(csmCount, csmLambda);
-      // debugPrint("csmSplitDistances: $csmSplitDistances");
+      // M3Log.d('M3Camera', 'csmSplitDistances: $csmSplitDistances');
     } else {
       csmSplitDistances = [];
     }
@@ -114,9 +114,9 @@ class M3Camera extends M3Projection {
 
   /// Set camera look-at target and compute view matrix.
   void setLookat(Vector3 eye, Vector3 target, Vector3 up) {
-    position = eye;
-    this.target = target;
-    this.up = up;
+    position.setFrom(eye);
+    this.target.setFrom(target);
+    this.up.setFrom(up);
     distanceToTarget = (target - position).length;
 
     viewMatrix = makeViewMatrix(eye, target, up);
@@ -255,29 +255,27 @@ $euler
     if (viewer == this) {
       return;
     }
-    prog.setMatrices(viewer, cameraToWorldMatrix);
-    M3Resources.debugAxis.draw(prog, fillMode: M3FillMode.wireframe);
+    // camera position
+    M3Resources.axisDotMesh.draw(prog, viewer, cameraToWorldMatrix);
+
+    M3Material mtrHelper = M3Material();
 
     Matrix4 targetMatrix = Matrix4.identity();
     targetMatrix.setTranslation(target);
+    prog.setMaterial(mtrHelper, Vector4.all(1.0));
     prog.setMatrices(viewer, targetMatrix);
-    M3Resources.debugDot.draw(prog, fillMode: M3FillMode.wireframe);
+    M3Resources.debugDot.draw(prog, fillMode: .wireframe);
 
     Matrix4 frustumMatrix = Matrix4.inverted(projectionMatrix * viewMatrix);
     prog.setMatrices(viewer, frustumMatrix);
-    M3Resources.debugFrustum.draw(prog, fillMode: M3FillMode.wireframe);
-
-    // near clip
-    Matrix4 matNear = frustumMatrix.clone()..translateByVector3(Vector3(0, -0.2, -0.995));
-    prog.setMatrices(viewer, matNear);
-    M3Resources.debugView.draw(prog, fillMode: M3FillMode.wireframe);
+    // M3Resources.debugFrustum.draw(prog, fillMode: .wireframe);
+    M3Resources.frustumMesh.draw(prog, viewer, frustumMatrix, fillMode: .wireframe);
 
     // draw split distance
     if (csmCount > 0) {
-      M3Material mtrHelper = M3Material();
-      prog.setMaterial(mtrHelper, Colors.blue);
+      final colors = [Colors.red, Colors.green, Colors.blue, Colors.yellow];
       M3Projection proj = M3Projection();
-      for (int i = 0; i < csmSplitDistances.length - 1; i++) {
+      for (int i = 0; i < csmSplitDistances.length - 2; i++) {
         proj.setViewport(
           viewportX,
           viewportY,
@@ -288,12 +286,15 @@ $euler
           far: csmSplitDistances[i + 1],
         );
 
+        final color = colors[i % colors.length];
+        color.a = 0.4;
+        prog.setMaterial(mtrHelper, color);
+
         Matrix4 splitMatrix = Matrix4.inverted(proj.projectionMatrix * viewMatrix);
-        splitMatrix.translateByVector3(Vector3(0, -0.2, 1));
+        splitMatrix.translateByVector3(Vector3(0, -0.1, 1));
         prog.setMatrices(viewer, splitMatrix);
-        M3Resources.debugView.draw(prog, fillMode: M3FillMode.wireframe);
+        M3Resources.debugView.draw(prog, fillMode: .wireframe);
       }
     }
   }
 }
-

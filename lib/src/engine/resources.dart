@@ -34,100 +34,27 @@ class M3Resources {
   static final texDefaultCube = M3Texture.createDefaultIBLCube();
 
   // axis gizmo mesh
+  static M3Mesh? _axisDotMesh;
   static M3Mesh? _axisGizmoMesh;
-  static M3Mesh get axisGizmoMesh {
-    if (_axisGizmoMesh == null) {
-      List<M3SubMesh> subMeshes = [];
-      final mtrRed = M3Material()
-        ..diffuse = Vector4(1, 0, 0, 1)
-        ..setMatte();
-      final mtrGreen = mtrRed.clone()..diffuse = Vector4(0, 1, 0, 1);
-      final mtrBlue = mtrRed.clone()..diffuse = Vector4(0, 0, 1, 1);
-      final mtrWhite = mtrRed.clone()..diffuse = Vector4(1, 1, 1, 1);
+  static M3Mesh? _frustumMesh;
+  static M3Mesh get axisDotMesh => _axisDotMesh ??= M3MeshFactory.createAxisDot();
+  static M3Mesh get axisGizmoMesh => _axisGizmoMesh ??= M3MeshFactory.createAxisGizmo();
+  static M3Mesh get frustumMesh => _frustumMesh ??= M3MeshFactory.createFrustum();
 
-      // alpha blend
-      final base = 0.8;
-      final alpha = 0.5;
-      final mtrRedAlpha = mtrRed.clone()
-        ..diffuse = Vector4(base, 0, 0, alpha)
-        ..alphaMode = M3AlphaMode.blend;
-      final mtrGreenAlpha = mtrRed.clone()
-        ..diffuse = Vector4(0, base, 0, alpha)
-        ..alphaMode = M3AlphaMode.blend;
-      final mtrBlueAlpha = mtrRed.clone()
-        ..diffuse = Vector4(0, 0, base, alpha)
-        ..alphaMode = M3AlphaMode.blend;
-
-      // 3 axes: positive
-      final axisX = M3SubMesh(unitCube, material: mtrRed);
-      final axisScale = 5.0;
-      axisX.localMatrix
-        ..translateByVector3(Vector3(axisScale * 0.5, 0, 0))
-        ..scaleByVector3(Vector3(axisScale, 0.1, 0.1));
-      subMeshes.add(axisX);
-      final axisY = M3SubMesh(unitCube, material: mtrGreen);
-      axisY.localMatrix
-        ..translateByVector3(Vector3(0, axisScale * 0.5, 0))
-        ..scaleByVector3(Vector3(0.1, axisScale, 0.1));
-      subMeshes.add(axisY);
-      final axisZ = M3SubMesh(unitCube, material: mtrBlue);
-      axisZ.localMatrix
-        ..translateByVector3(Vector3(0, 0, axisScale * 0.5))
-        ..scaleByVector3(Vector3(0.1, 0.1, axisScale));
-      subMeshes.add(axisZ);
-
-      // 3 axes: negative
-      final axisXAlpha = M3SubMesh(unitCube, material: mtrRedAlpha);
-      axisXAlpha.localMatrix
-        ..translateByVector3(Vector3(-axisScale * 0.5, 0, 0))
-        ..scaleByVector3(Vector3(axisScale, 0.1, 0.1));
-      subMeshes.add(axisXAlpha);
-      final axisYAlpha = M3SubMesh(unitCube, material: mtrGreenAlpha);
-      axisYAlpha.localMatrix
-        ..translateByVector3(Vector3(0, -axisScale * 0.5, 0))
-        ..scaleByVector3(Vector3(0.1, axisScale, 0.1));
-      subMeshes.add(axisYAlpha);
-      final axisZAlpha = M3SubMesh(unitCube, material: mtrBlueAlpha);
-      axisZAlpha.localMatrix
-        ..translateByVector3(Vector3(0, 0, -axisScale * 0.5))
-        ..scaleByVector3(Vector3(0.1, 0.1, axisScale));
-      subMeshes.add(axisZAlpha);
-
-      // 3 arrows
-      final arrowScale = Vector3(0.4, 0.4, 0.4);
-      final arrowX = M3SubMesh(M3PyramidGeom(1, 1, 1, axis: M3Axis.x), material: mtrRed);
-      arrowX.localMatrix
-        ..translateByVector3(Vector3(axisScale, 0, 0))
-        ..scaleByVector3(arrowScale);
-      subMeshes.add(arrowX);
-      final arrowY = M3SubMesh(M3PyramidGeom(1, 1, 1, axis: M3Axis.y), material: mtrGreen);
-      arrowY.localMatrix
-        ..translateByVector3(Vector3(0, axisScale, 0))
-        ..scaleByVector3(arrowScale);
-      subMeshes.add(arrowY);
-      final arrowZ = M3SubMesh(M3PyramidGeom(1, 1, 1, axis: M3Axis.z), material: mtrBlue);
-      arrowZ.localMatrix
-        ..translateByVector3(Vector3(0, 0, axisScale))
-        ..scaleByVector3(arrowScale);
-      subMeshes.add(arrowZ);
-
-      final origin = M3SubMesh(debugDot, material: mtrWhite);
-      subMeshes.add(origin);
-
-      _axisGizmoMesh = M3Mesh(null);
-      _axisGizmoMesh!.subMeshes = subMeshes;
-    }
-    return _axisGizmoMesh!;
-  }
+  // ------------------------------
+  // Camera: debug
+  // ------------------------------
+  static M3Camera? debugCamera;
 
   // ------------------------------
   // Geometries: debug
   // ------------------------------
   static final debugAxis = M3DebugAxisGeom(size: 0.5);
+  static final debugPointLight = M3SphereGeom(1.0, widthSegments: 8, heightSegments: 4);
   static final debugSphere = M3DebugSphereGeom(radius: 1.0);
   static final debugFrustum = M3BoxGeom(2.0, 2.0, 2.0);
   static final debugDot = M3OctahedralGeom(0.25);
-  static final debugView = M3PlaneGeom(1.6, 1.6, widthSegments: 5, heightSegments: 4);
+  static final debugView = M3PlaneGeom(1.8, 1.8, widthSegments: 6, heightSegments: 4);
 
   // ------------------------------
   // Unit geometries
@@ -191,18 +118,28 @@ class M3Resources {
   static final _SkinNormalVS_glsl = "#define ENABLE_NORMAL \n$SkinningVS_glsl";
 
   static Future<void> init() async {
-    debugPrint('M3Resources: init starting...');
+    M3Log.i('M3Resources', 'init starting...');
     // Textures
     texWhite;
     texNormal;
     texDefaultCube;
-    debugPrint('M3Resources: basic textures initialized');
+    M3Log.i('M3Resources', 'basic textures initialized');
+
+    // debug camera for directional-light shadow map frustum only
+    debugCamera = M3Camera(); // remark to disable debug camera
+    debugCamera
+      ?..setViewport(0, 0, 8, 5, fovy: 45, near: 1, far: 30)
+      ..target.setFrom(Vector3(-10, 0, 1))
+      ..setEuler(0, -pi / 5, 0, distance: 4);
 
     // Mesh
+    axisDotMesh;
     axisGizmoMesh;
+    frustumMesh;
 
     // Geometries
     debugAxis;
+    debugPointLight;
     debugSphere;
     debugFrustum;
     debugDot;
@@ -213,17 +150,17 @@ class M3Resources {
     unitBone;
     unitOctahedral;
     unitSphere;
-    debugPrint('M3Resources: unit geometries initialized');
+    M3Log.i('M3Resources', 'unit geometries initialized');
 
     // 2D
     line;
     triangle;
     rectUnit;
     _text2D = await M3Text2D.createText2D(fontSize: 30);
-    debugPrint('M3Resources: text2D initialized');
+    M3Log.i('M3Resources', 'text2D initialized');
 
     // Programs
-    debugPrint('M3Resources: initializing shader programs...');
+    M3Log.i('M3Resources', 'initializing shader programs...');
     programSimple = M3Program(SkinningVS_glsl + Simple_vert, Simple_frag);
     programSkybox = M3Program(Skybox_vert, Skybox_frag);
     programRectangle = M3Program(Rect_vert, Rect_frag);
@@ -257,7 +194,7 @@ class M3Resources {
     // lighting related programs
     setLightingProgram(M3ShaderOptions());
 
-    debugPrint('+++ M3Resources init done+++');
+    M3Log.i('M3Resources', 'init done');
   }
 
   static void setLightingProgram(M3ShaderOptions options) {
@@ -326,7 +263,7 @@ class M3Resources {
     String fsWater = Water_frag;
     // bool bSpecularLight = false;
     // if (bSpecularLight) {
-    // fsWater = "#define ENABLE_WATER_SPECULAR \n$fsWater";
+    //   fsWater = "#define ENABLE_WATER_SPECULAR \n$fsWater";
     // }
     if (options.fog) {
       vsWater = "#define ENABLE_FOG \n$vsWater";
@@ -334,7 +271,6 @@ class M3Resources {
     }
     programWater = M3ProgramWater(vsWater, fsWater);
 
-    // fsWater = "#define ENABLE_WATER_SPECULAR \n$fsWater";
     // water program with shadow CSM
     vsWater = "#define ENABLE_SHADOW_CSM \n$ShadowVS_glsl \n$vsWater";
     fsWater = "#define ENABLE_SHADOW_CSM \n$strShadowFS \n$fsWater";
@@ -356,6 +292,7 @@ class M3Resources {
 
     // Geometries
     debugAxis.dispose();
+    debugPointLight.dispose();
     debugSphere.dispose();
     debugFrustum.dispose();
     debugDot.dispose();

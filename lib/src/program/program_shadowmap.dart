@@ -15,7 +15,7 @@ abstract class M3ProgramShadow extends M3ProgramLighting with M3ShadowShader {
   void applyUniforms(M3Camera cam) {
     super.applyUniforms(cam);
     // for shadowmap: apply shadow
-    _applyShadow(_light!);
+    _applyShadow(_dirLight!);
   }
 }
 
@@ -33,11 +33,11 @@ class M3ProgramShadowmap extends M3ProgramShadow {
   }
 
   @override
-  void setMatrices(M3Camera cam, Matrix4 mMatrix) {
-    super.setMatrices(cam, mMatrix);
+  void setMatrices(M3Camera cam, Matrix4 mMatrix, [Matrix4? mMatrixInv]) {
+    super.setMatrices(cam, mMatrix, mMatrixInv);
 
     if (M3Program.isLocationValid(uniformMatrixShadowmap)) {
-      final viewer = _light!.viewer;
+      final viewer = _dirLight!.lightViewer;
       // light-space
       Matrix4 lightMatrix = viewer.projectionMatrix * viewer.viewMatrix * mMatrix;
       Matrix4 shadowMatrix = M3Constants.biasMatrix * lightMatrix;
@@ -80,10 +80,10 @@ class M3ProgramShadowCSM extends M3ProgramShadow {
   }
 
   @override
-  void setMatrices(M3Camera cam, Matrix4 mMatrix) {
-    super.setMatrices(cam, mMatrix);
+  void setMatrices(M3Camera cam, Matrix4 mMatrix, [Matrix4? mMatrixInv]) {
+    super.setMatrices(cam, mMatrix, mMatrixInv);
 
-    final light = _light!;
+    final light = _dirLight!;
     if (M3Program.isLocationValid(uniformMatrixCSM)) {
       final maxCSM = 4;
       final numCSM = min(maxCSM, light.cascades.length);
@@ -99,7 +99,7 @@ class M3ProgramShadowCSM extends M3ProgramShadow {
         biasMatrix.setEntry(1, 3, halfH + cascade.atlasBiasV);
 
         // light-space
-        Matrix4 lightMatrix = cascade.projectionMatrix * light.viewer.viewMatrix * mMatrix;
+        Matrix4 lightMatrix = cascade.projectionMatrix * light.lightViewer.viewMatrix * mMatrix;
         Matrix4 shadowMatrix = biasMatrix * lightMatrix;
         matricesBuffer.setRange(i * 16, i * 16 + 16, shadowMatrix.storage);
       }

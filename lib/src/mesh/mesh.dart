@@ -67,11 +67,6 @@ class M3Skin {
       // This transforms vertices from MeshLocal -> JointLocal(Bind) -> JointWorld -> MeshLocal
       boneMatrices[i].setFrom(meshWorldInv * jointNode.worldMatrix * ibm);
     }
-
-    if (_debugCount < 1) {
-      // debugPrint('M3Skin: first bone matrix storage: ${boneMatrices[0].storage}');
-      _debugCount++;
-    }
   }
 
   /// Creates a copy of this skin pointing to a new set of joint nodes.
@@ -82,8 +77,6 @@ class M3Skin {
       jointNodes: newNodes,
     );
   }
-
-  int _debugCount = 0;
 }
 
 /// A 3D mesh object that combines geometry, material properties, and optional skin for animation.

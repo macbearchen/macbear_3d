@@ -16,7 +16,7 @@ class M3TextTexture extends M3Texture {
     tex.texW = width;
     tex.texH = height;
     await tex._updateTexture();
-    debugPrint(tex.toString());
+    M3Log.i('M3TextTexture', tex.toString());
     return tex;
   }
 
@@ -54,7 +54,7 @@ class M3TextTexture extends M3Texture {
     final tex = M3TextTexture._(text, style: style);
     tex.name = "createFromText: ${tex.name}";
     await tex._createTextureFromLabel(text);
-    debugPrint(tex.toString());
+    M3Log.i('M3TextTexture', tex.toString());
     return tex;
   }
 

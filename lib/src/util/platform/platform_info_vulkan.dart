@@ -3,7 +3,7 @@
 import 'dart:ffi';
 import 'dart:io';
 import 'package:ffi/ffi.dart';
-import 'package:flutter/foundation.dart';
+import '../log.dart';
 
 // --- Vulkan 結構體與常數定義 ---
 const int VK_SUCCESS = 0;
@@ -92,7 +92,7 @@ class PlatformInfoVulkan {
     try {
       libVulkan = DynamicLibrary.open('libvulkan.so');
     } catch (e) {
-      debugPrint("[macbear_3d] libvulkan.so not found.");
+      M3Log.e('PlatformInfo', 'libvulkan.so not found.');
       return false;
     }
 
@@ -101,7 +101,9 @@ class PlatformInfoVulkan {
     final vkEnumeratePhysicalDevices = libVulkan
         .lookupFunction<NativeEnumeratePhysicalDevices, DartEnumeratePhysicalDevices>('vkEnumeratePhysicalDevices');
     final vkGetPhysicalDeviceProperties = libVulkan
-        .lookupFunction<NativeGetPhysicalDeviceProperties, DartGetPhysicalDeviceProperties>('vkGetPhysicalDeviceProperties');
+        .lookupFunction<NativeGetPhysicalDeviceProperties, DartGetPhysicalDeviceProperties>(
+          'vkGetPhysicalDeviceProperties',
+        );
 
     Pointer<Void> instance = nullptr;
     final Pointer<Pointer<Void>> instancePtr = calloc<Pointer<Void>>();
@@ -156,8 +158,10 @@ class PlatformInfoVulkan {
         final int apiVersion = propsPtr.ref.apiVersion;
         final int vendorID = propsPtr.ref.vendorID;
         final String name = _decodeDeviceName(propsPtr.ref.deviceName);
-
-        debugPrint("[macbear_3d] Found GPU: $name (Vendor: 0x${vendorID.toRadixString(16)}, API: ${apiVersion >> 22}.${(apiVersion >> 12) & 0x3FF}.${apiVersion & 0xFFF})");
+        M3Log.i(
+          "PlatformInfo",
+          "Found GPU: $name (Vendor: 0x${vendorID.toRadixString(16)}, API: ${apiVersion >> 22}.${(apiVersion >> 12) & 0x3FF}.${apiVersion & 0xFFF})",
+        );
 
         if (_isDeviceCompatible(vendorID, name, apiVersion)) {
           _gpuName = name;
@@ -172,18 +176,17 @@ class PlatformInfoVulkan {
       malloc.free(deviceCountPtr);
 
       if (!compatibilityPassed) {
-        debugPrint("[macbear_3d] No compatible Vulkan GPU found (filtered by denylist).");
+        M3Log.e('PlatformInfo', 'No compatible Vulkan GPU found (filtered by denylist).');
         vkDestroyInstance(instance, nullptr);
         return false;
       }
-
-      debugPrint("[macbear_3d] Vulkan check passed. Using: $_gpuName");
+      M3Log.i('PlatformInfo', 'Vulkan check passed. Using: $_gpuName');
 
       // 清理並回傳成功
       vkDestroyInstance(instance, nullptr);
       return true;
     } catch (e) {
-      debugPrint("[macbear_3d] Vulkan probe error: $e");
+      M3Log.e('PlatformInfo', 'Vulkan probe error: $e');
       return false;
     } finally {
       // 釋放記憶體
@@ -203,7 +206,7 @@ class PlatformInfoVulkan {
     if (apiVersion < vk11) {
       // 如果是早期 Mali 或 PowerVR 且只有 1.0，通常不建議使用
       if (vendorID == 0x13B5 || vendorID == 0x1010) {
-        debugPrint("[macbear_3d] Filtering out legacy ARM/PowerVR with Vulkan 1.0");
+        M3Log.h('PlatformInfo', 'Filtering out legacy ARM/PowerVR with Vulkan 1.0');
         return false;
       }
     }
@@ -211,12 +214,12 @@ class PlatformInfoVulkan {
     // 2. 針對特定惡名昭彰的型號過濾 (例如 GE8320)
     final String upperName = name.toUpperCase();
     if (upperName.contains("GE8320")) {
-      debugPrint("[macbear_3d] Filtering out PowerVR GE8320 due to instability.");
+      M3Log.h('PlatformInfo', 'Filtering out PowerVR GE8320 due to instability.');
       return false;
     }
 
     if (upperName.contains("MALI-T")) {
-      debugPrint("[macbear_3d] Filtering out legacy Mali-T series.");
+      M3Log.h('PlatformInfo', 'Filtering out legacy Mali-T series.');
       return false;
     }
 

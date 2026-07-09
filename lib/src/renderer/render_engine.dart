@@ -30,7 +30,7 @@ class M3RenderEngine {
 
   // constructor
   M3RenderEngine() {
-    debugPrint("--- M3RenderEngine constructor ---");
+    M3Log.i('M3RenderEngine', 'constructor');
   }
 
   void init() {
@@ -66,7 +66,7 @@ class M3RenderEngine {
 
   /// resize rendering engine when application size changed
   void resize(int width, int height, double dpr) {
-    debugPrint("=== App resize ($width x $height) dpr: $dpr ===");
+    M3Log.i('M3RenderEngine', 'App resize ($width x $height) dpr: $dpr');
 
     final pixelW = (width * dpr).toInt();
     final pixelH = (height * dpr).toInt();
@@ -91,6 +91,9 @@ class M3RenderEngine {
     if (options.debug.wireframe || !options.shadows) return;
     // directional light (ex: sun, moon)
     scene.dirLight.shadowMap?.renderDepth(scene, scene.dirLight);
+
+    // point light
+    
   }
 
   /// get program shader for scene rendering
@@ -147,9 +150,9 @@ class M3RenderEngine {
       scene.water?.render();
     } else {
       // wireframe
-      mainContext.render(M3Resources.programSimple!, fillMode: M3FillMode.wireframe);
+      mainContext.render(M3Resources.programSimple!, fillMode: .wireframe);
       // water wireframe
-      scene.water?.render(fillMode: M3FillMode.wireframe);
+      scene.water?.render(fillMode: .wireframe);
     }
   }
 

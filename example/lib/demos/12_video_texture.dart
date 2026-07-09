@@ -20,7 +20,7 @@ class VideoTextureScene_12 extends DemoScene {
     if (isLoaded) return;
     await super.load();
 
-    dirLight.viewer.setEuler(pi / 4, -pi / 4, 0);
+    dirLight.lightViewer.setEuler(pi / 4, -pi / 4, 0);
 
     final video480 = 'assets/example/big-buck-bunny-480p-30sec.mp4';
     final video1080 = 'assets/example/big-buck-bunny-1080p-30sec.mp4';

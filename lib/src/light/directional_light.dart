@@ -1,6 +1,4 @@
-// Macbear3D engine
-import '../m3_internal.dart';
-import '../renderer/shadow_map.dart';
+part of 'light.dart';
 
 class M3ShadowCascade {
   Matrix4 projectionMatrix = Matrix4.identity();
@@ -13,61 +11,25 @@ class M3ShadowCascade {
   }
 }
 
-/// A directional or positional light source for scene illumination.
-///
-/// Extends [M3Camera] for shadow map rendering. Provides ambient and diffuse color blending.
-abstract class M3Light {
-  static Vector3 ambient = Vector3(0.2, 0.2, 0.2);
-  Vector3 position = Vector3.zero();
-  Vector3 color = Colors.white.rgb - ambient;
-
-  // shadow map
-  bool castShadow = true;
-  M3ShadowMap? shadowMap;
-
-  /// set shadow map
-  void setShadowMap(M3ShadowMap? sm) {
-    shadowMap = sm;
-    castShadow = sm != null;
-  }
-
-  static Vector4 blendRGBA(Vector4 a, Vector4 b) {
-    return Vector4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
-  }
-
-  static Vector3 blendRGB(Vector3 a, Vector3 b) {
-    return Vector3(a.x * b.x, a.y * b.y, a.z * b.z);
-  }
-
-  void drawHelper(M3Program prog, M3Camera viewer) {
-    Matrix4 targetMatrix = Matrix4.identity();
-    targetMatrix.setTranslation(position);
-    prog.setMatrices(viewer, targetMatrix);
-    M3Resources.debugDot.draw(prog, fillMode: M3FillMode.wireframe);
-    // M3Resources.unitSphere.draw(prog, fillMode: M3FillMode.solid);
-  }
-}
-
 /// directional light
 class M3DirectionalLight extends M3Light {
   bool isCameraAligned = true; // align camera to light
-  // double shadowBias = 0.002;
   double shadowNormalBias = 0.05;
   double csmPaddingNear = 2.0;
   double csmPaddingFar = 2.0;
 
   List<M3ShadowCascade> cascades = [];
-  M3Camera viewer = M3Camera();
+  M3Camera lightViewer = M3Camera();
 
   M3DirectionalLight() {
-    viewer.setLookat(Vector3(2, 0, 8), Vector3.zero(), Vector3(0, 0, 1));
+    lightViewer.setLookat(Vector3(2, 0, 8), Vector3.zero(), Vector3(0, 0, 1));
 
-    isCameraAligned = false;
+    // isCameraAligned = false;
   }
 
   /// get light direction
   Vector3 getDirection() {
-    return viewer.viewMatrix.getRow(2).xyz; // Z axis
+    return lightViewer.viewMatrix.getRow(2).xyz; // Z axis
   }
 
   void updateShadowCascades(M3Camera cam) {
@@ -90,11 +52,11 @@ class M3DirectionalLight extends M3Light {
       final Vector3 centroidWorld = cam.cameraToWorldMatrix.transform3(centroidCam);
 
       // maintain light direction (Z-axis of viewMatrix is backward direction)
-      final Vector3 dirLightBackward = viewer.viewMatrix.getRow(2).xyz;
+      final Vector3 dirLightBackward = lightViewer.viewMatrix.getRow(2).xyz;
       // update light eye/target to center on frustum
-      final double dist = viewer.distanceToTarget;
-      viewer.target.setFrom(centroidWorld);
-      viewer.position.setFrom(viewer.target + dirLightBackward * dist);
+      final double dist = lightViewer.distanceToTarget;
+      lightViewer.target.setFrom(centroidWorld);
+      lightViewer.position.setFrom(lightViewer.target + dirLightBackward * dist);
 
       // check for gimbal lock (singularity when light direction is parallel to up vector)
       Vector3 safeUp = -cam.viewMatrix.getRow(2).xyz;
@@ -105,7 +67,7 @@ class M3DirectionalLight extends M3Light {
           safeUp = cam.viewMatrix.getRow(0).xyz; // camera right
         }
       }
-      viewer.setLookat(viewer.position, viewer.target, safeUp);
+      lightViewer.setLookat(lightViewer.position, lightViewer.target, safeUp);
     }
 
     if (cascades.length != count) {
@@ -115,7 +77,7 @@ class M3DirectionalLight extends M3Light {
     final double aspect = cam.viewportW / cam.viewportH;
     final double tanHalfFov = tan(radians(cam.degreeFovY) / 2.0);
     final Matrix4 camToWorld = cam.cameraToWorldMatrix;
-    final Matrix4 worldToLight = viewer.viewMatrix;
+    final Matrix4 worldToLight = lightViewer.viewMatrix;
 
     // 1. Calculate the overall Z-range for the entire camera frustum in light space
     // This ensures all cascades share the same near/far clipping planes for consistency.
@@ -226,39 +188,25 @@ class M3DirectionalLight extends M3Light {
 
     if (cascades.isNotEmpty) {
       M3Material mtrHelper = M3Material();
-      for (int i = 0; i < cascades.length; i++) {
+      final colors = [Colors.red, Colors.green, Colors.blue, Colors.white];
+      for (int i = cascades.length - 1; i >= 0; i--) {
+        final color = colors[i % colors.length];
+        color.a = 0.33;
         final crop = cascades[i];
-        final frustumMatrix = Matrix4.inverted(crop.projectionMatrix * viewer.viewMatrix);
-        prog.setMaterial(mtrHelper, Vector4(0, 0, 1, 0.3));
+        // camera frustum split
+        final frustumMatrix = Matrix4.inverted(crop.projectionMatrix * lightViewer.viewMatrix);
+        prog.setMaterial(mtrHelper, color);
         prog.setMatrices(viewer, frustumMatrix);
-        // M3Resources.debugFrustum.draw(prog, fillMode: M3FillMode.wireframe);
-        prog.setMaterial(mtrHelper, Vector4(0, 0, 1, 1));
-        M3Resources.debugFrustum.draw(prog, fillMode: M3FillMode.wireframe);
+        M3Resources.debugFrustum.draw(prog, fillMode: .wireframe);
+
+        // far-clip plane
+        final clipMatrix = Matrix4.identity()
+          ..rotateX(pi / 2)
+          ..setTranslation(Vector3(0, 0, -1));
+        final farMatrix = Matrix4.inverted(clipMatrix * crop.projectionMatrix * lightViewer.viewMatrix);
+        prog.setMatrices(viewer, farMatrix);
+        M3Resources.debugView.draw(prog, fillMode: .solid);
       }
     }
-  }
-}
-
-/// point light
-class M3PointLight extends M3Light {
-  double range = 5.0; // packed in position(w)
-  double intensity = 1.0; // packed in color(alpha)
-
-  // 封裝函數：直接回傳一個 Float32List
-  Float32List packUBO() {
-    // 預分配 8 個 float (32 bytes)，剛好填滿兩個 vec4
-    final buffer = Float32List(8);
-
-    buffer[0] = position.x;
-    buffer[1] = position.y;
-    buffer[2] = position.z;
-    buffer[3] = range;
-
-    buffer[4] = color.x;
-    buffer[5] = color.y;
-    buffer[6] = color.z;
-    buffer[7] = intensity;
-
-    return buffer;
   }
 }

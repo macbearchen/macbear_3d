@@ -20,7 +20,7 @@ class TerrainScene_06 extends DemoScene {
     fog.planeHeight = 6.0;
 
     camera.setEuler(-pi / 3, -pi / 9, 0, distance: 40);
-    debugPrint('Camera: $camera');
+    M3Log.i('TerrainScene', 'Camera: $camera');
     // 2. Add Skybox
     skybox = M3Skybox(M3Texture.createDefaultIBLCube());
 

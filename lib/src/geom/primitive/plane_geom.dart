@@ -158,10 +158,10 @@ class M3PlaneGeom extends M3Geom {
             Vector3 dirX = vertices[index] - vertices[index + 1];
             Vector3 dirY = vertices[index] - vertices[index + widthSegments + 1];
             vn = dirY.cross(dirX).normalized();
+            if (flipFace) vn.negate();
           } else {
             vn = normals[index - 1]; // end-dot same as previous
           }
-          if (flipFace) vn.negate();
           normals[index] = vn;
           index++;
         }
@@ -179,7 +179,8 @@ class M3PlaneGeom extends M3Geom {
       final indices = (_vertexCount > 65535) ? Uint32List(numIndex) : Uint16List(numIndex);
       index = 0;
       if (flipFace) {
-        indices[index++] = 0;
+        indices[0] = 0;
+        index++;
       }
 
       for (i = 0; i < heightSegments; i++) {

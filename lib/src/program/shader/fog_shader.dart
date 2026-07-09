@@ -46,7 +46,7 @@ mixin M3FogShader {
     if (fog == null) return;
 
     if (!M3Program.isLocationValid(uniformPlaneFog)) {
-      debugPrint('*** M3FogShader: fog uniformPlaneFog not found');
+      M3Log.w('M3FogShader', 'Fog uniformPlaneFog not found');
       return;
     }
 

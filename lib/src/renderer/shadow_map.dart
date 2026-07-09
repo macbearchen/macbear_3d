@@ -13,7 +13,7 @@ class M3ShadowMap {
   M3Texture get depthTex => _framebuffer.depthTexture;
 
   M3ShadowMap(int width, int height) : _framebuffer = M3Framebuffer(width, height)..createDepthTexture() {
-    debugPrint('create M3ShadowMap: $width x $height');
+    M3Log.i('M3ShadowMap', 'create FBO: $width x $height');
   }
 
   @override
@@ -53,7 +53,7 @@ class M3ShadowMap {
 
     // prepare CSM
     light.updateShadowCascades(scene.cameras[0]);
-    final lightViewer = light.viewer;
+    final lightViewer = light.lightViewer;
 
     // check if use cascaded shadow map
     if (light.cascades.isNotEmpty) {

@@ -115,7 +115,7 @@ class M3Framebuffer {
             msg = '0x${status.toRadixString(16).toUpperCase()} unknown';
             break;
         }
-        debugPrint("*** FBO error: $msg");
+        M3Log.e('Framebuffer', 'FBO error: $msg');
       }
 
       return true;

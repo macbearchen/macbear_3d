@@ -161,7 +161,7 @@ class ObjTeapotScene_04 extends DemoScene {
       probeMatrix.setTranslation(Vector3(5, 5, 5));
       probeMatrix.scaleByVector3(Vector3.all(3));
 
-      M3Skybox.drawCube(camera, probeMatrix, probe.cubemapTexture!, writeDepth: true);
+      M3Skybox.drawCube(camera, probeMatrix, probe.cubemapTexture, writeDepth: true);
     }
   }
 

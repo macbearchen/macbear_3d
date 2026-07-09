@@ -20,8 +20,8 @@ class DemoScene extends M3Scene {
 
     double sec = totalTime;
     // rotate light
-    dirLight.viewer.setEuler(sec * pi / 18, -pi / 3, 0, distance: dirLight.viewer.distanceToTarget);
-    // debugPrint('Light Direction: $dirLight');
+    dirLight.lightViewer.setEuler(sec * pi / 18, -pi / 3, 0); // rotate light
+    // M3Log.d('DemoScene', 'Light Direction: $dirLight');
   }
 
   // create nvlobby cubemap

@@ -6,9 +6,12 @@ class M3RenderItem {
   final M3Entity entity;
   final M3SubMesh subMesh;
   final Matrix4 worldMatrix;
+  late Matrix4 worldMatrixInv;
   final double depth;
 
-  M3RenderItem({required this.entity, required this.subMesh, required this.worldMatrix, required this.depth});
+  M3RenderItem({required this.entity, required this.subMesh, required this.worldMatrix, required this.depth}) {
+    worldMatrixInv = Matrix4.inverted(worldMatrix);
+  }
 
   /// Priority for sorting opaque objects.
   /// Group by Material (program + texture) then by proximity.

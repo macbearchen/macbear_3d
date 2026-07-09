@@ -25,7 +25,7 @@ class M3ExternalTexture extends M3Texture {
     if (isUseNative != null) {
       _isNativeCodec = isUseNative && _isNativeCodec;
     }
-    debugPrint('*** M3ExternalTexture: isNativeCodec= $_isNativeCodec');
+    M3Log.i('M3ExternalTexture', 'isNativeCodec= $_isNativeCodec');
   }
 
   /// Constructor to initialize from a video asset path or network URL.
@@ -36,7 +36,7 @@ class M3ExternalTexture extends M3Texture {
     if (isUseNative != null) {
       _isNativeCodec = isUseNative && _isNativeCodec;
     }
-    debugPrint('*** M3ExternalTexture.videoAsset: isNativeCodec= $_isNativeCodec');
+    M3Log.i('M3ExternalTexture', 'videoAsset: isNativeCodec= $_isNativeCodec');
   }
 
   @override
@@ -50,7 +50,7 @@ class M3ExternalTexture extends M3Texture {
     final texture = M3ExternalTexture.videoAsset(assetPath, isUseNative: isUseNative);
     if (texture._isNativeCodec) {
       texture.isPlaying = await texture.initNativeBridge(assetPath);
-      debugPrint('*** M3ExternalTexture: source created= ${texture.isPlaying} for $assetPath');
+      M3Log.i('M3ExternalTexture', 'source created= ${texture.isPlaying} for $assetPath');
     }
     return texture;
   }
@@ -143,7 +143,7 @@ class M3ExternalTexture extends M3Texture {
         loadTargetFromImage(img);
       }
     } catch (e) {
-      // debugPrint('*** ERROR capturing frame: $e');
+      // M3Log.e('M3ExternalTexture', 'capturing frame: $e');
     } finally {
       _isCapturing = false;
     }

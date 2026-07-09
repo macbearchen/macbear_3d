@@ -5,7 +5,7 @@ import '../m3_internal.dart';
 
 export 'camera.dart';
 export 'entity.dart';
-export 'light.dart';
+export '../light/light.dart';
 export 'skybox.dart';
 export 'fog.dart';
 
@@ -24,10 +24,10 @@ abstract class M3Scene {
 
   // lights
   final dirLight = M3DirectionalLight();
-  final pointLight = M3PointLight();
+  final List<M3PointLight> pointLights = [];
 
   // camera
-  final _camera = M3Camera();
+  final M3Camera _camera = M3Camera();
   List<M3Camera> cameras = [];
 
   M3Camera get camera => cameras[0];
@@ -49,10 +49,34 @@ abstract class M3Scene {
 
     // sun light
     int halfView = 8;
-    final lightViewer = dirLight.viewer;
+    final lightViewer = dirLight.lightViewer;
+    lightViewer.target = Vector3(1, 1, 3);
     lightViewer.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 50);
-    lightViewer.setEuler(pi / 5, -pi / 3, 0, distance: 15); // rotate light
+    lightViewer.setEuler(pi / 5, -pi / 3, 0, distance: 25); // rotate light
     dirLight.setShadowMap(renderEngine.shadowMap);
+
+    initPointLights(4);
+  }
+
+  void initPointLights(int count) {
+    pointLights.clear();
+    List<Vector3> positions = [
+      Vector3(0, 0, 8),
+      Vector3(10, 0, 8),
+      Vector3(20, 0, 8),
+      Vector3(10, 10, 8),
+      Vector3(0, 10, 8),
+    ];
+    List<Vector3> colors = [Vector3(1, 1, 0), Vector3(0, 1, 1), Vector3(1, 0, 1), Vector3(1, 1, 1), Vector3(1, 0, 0)];
+
+    for (int i = 0; i < count; i++) {
+      final pointLight = M3PointLight()
+        ..range = 8
+        ..position = positions[i]
+        ..color = colors[i % 5];
+
+      pointLights.add(pointLight);
+    }
   }
 
   void dispose() {
@@ -68,7 +92,7 @@ abstract class M3Scene {
     _isLoaded = true;
 
     await physicsSystem.init();
-    debugPrint('<<< Physics System >>>\n${physicsSystem.info}\n');
+    M3Log.i('M3Scene', '<<< Physics System>>> \n${physicsSystem.info}\n');
   }
 
   M3Entity addMesh(M3Mesh mesh, Vector3 position) {
@@ -138,9 +162,7 @@ abstract class M3Scene {
       if (!camera.isVisible(entity.worldBounding)) continue;
 
       // origin axis
-      progSimple.setMatrices(camera, entity.worldMatrix);
-      progSimple.setMaterial(mtr, Colors.red);
-      M3Resources.debugAxis.draw(progSimple);
+      M3Resources.axisDotMesh.draw(progSimple, camera, entity.worldMatrix);
 
       // bounding sphere
       Sphere worldSphere = entity.worldBounding.sphere;
@@ -160,7 +182,24 @@ abstract class M3Scene {
       matAabb.scaleByVector3(extents);
       progSimple.setMaterial(mtr, Colors.lime);
       progSimple.setMatrices(camera, matAabb);
-      M3Resources.debugFrustum.draw(progSimple, fillMode: M3FillMode.wireframe);
+      M3Resources.debugFrustum.draw(progSimple, fillMode: .wireframe);
+    }
+  }
+
+  void drawLightHelper() {
+    M3Program progSimple = M3Resources.programSimple!;
+    M3Material mtr = M3Material();
+
+    gl.useProgram(progSimple.program);
+    gl.uniform1i(progSimple.uniformBoneCount, 0);
+
+    progSimple.setMaterial(mtr, Colors.white);
+    dirLight.drawHelper(progSimple, camera);
+
+    for (final light in pointLights) {
+      Vector4 c = Vector4(light.color.x, light.color.y, light.color.z, 1);
+      progSimple.setMaterial(mtr, c);
+      light.drawHelper(progSimple, camera);
     }
   }
 
@@ -169,17 +208,9 @@ abstract class M3Scene {
     gl.useProgram(progSimple.program);
     gl.uniform1i(progSimple.uniformBoneCount, 0);
 
-    M3Material mtrHelper = M3Material();
     for (final cam in cameras) {
-      progSimple.setMaterial(mtrHelper, Colors.skyBlue);
       cam.drawHelper(progSimple, camera);
     }
-
-    // draw reflection camera
-    renderEngine.planarReflection.drawHelper(camera);
-
-    progSimple.setMaterial(mtrHelper, Colors.yellow);
-    dirLight.drawHelper(progSimple, camera);
   }
 
   void render2D() {}

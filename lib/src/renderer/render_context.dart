@@ -112,12 +112,12 @@ class M3RenderContext {
   }
 
   /// render all render queues
-  void render(M3Program prog, {M3FillMode fillMode = M3FillMode.solid}) {
+  void render(M3Program prog, {M3FillMode fillMode = .solid}) {
     // (1/3) Opaque objects
     _executeQueue(opaque, prog, fillMode: fillMode);
 
     // (2/3) Unlit objects
-    if (fillMode == M3FillMode.solid) {
+    if (fillMode == .solid) {
       final progUnlit = M3Resources.programExternalOES!;
       _executeQueue(unlit, progUnlit);
     }
@@ -156,7 +156,7 @@ class M3RenderContext {
   }
 
   /// execute queue with shader
-  void _executeQueue(M3RenderQueue queue, M3Program prog, {M3FillMode fillMode = M3FillMode.solid}) {
+  void _executeQueue(M3RenderQueue queue, M3Program prog, {M3FillMode fillMode = .solid}) {
     if (queue.isEmpty) return;
 
     RenderingContext gl = M3AppEngine.instance.renderEngine.gl;

@@ -176,9 +176,9 @@ class M3Water extends M3Entity {
   }
 
   /// render water surface
-  void render({M3FillMode fillMode = M3FillMode.solid}) {
+  void render({M3FillMode fillMode = .solid}) {
     final viewer = scene.camera;
-    if (fillMode == M3FillMode.solid) {
+    if (fillMode == .solid) {
       RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
       gl.enable(WebGL.BLEND);
       gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA); // alpha blending
@@ -242,7 +242,7 @@ class M3Water extends M3Entity {
       final waterMatrix = worldMatrix;
       progEdge.setMatrices(viewer, waterMatrix);
       progEdge.setMaterial(waterMaterial, colorSurface);
-      mesh.subMeshes[0].geom.draw(progEdge, fillMode: M3FillMode.wireframe);
+      mesh.subMeshes[0].geom.draw(progEdge, fillMode: .wireframe);
     }
   }
 

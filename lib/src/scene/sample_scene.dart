@@ -15,7 +15,7 @@ class SampleScene extends M3Scene {
     if (isLoaded) return;
     await super.load();
 
-    dirLight.viewer.setLookat(Vector3(0, 0, 60), Vector3(0, 0, 1), Vector3(0, 1, 0));
+    dirLight.lightViewer.setLookat(Vector3(0, 0, 60), Vector3(0, 0, 1), Vector3(0, 1, 0));
 
     camera.setLookat(Vector3(0, 6, 8), Vector3(0, 0, 2), Vector3(0, 0, 1));
     camera.setEuler(pi / 6, -pi / 5, 0, distance: 10);
@@ -105,8 +105,8 @@ class SampleScene extends M3Scene {
 
     double sec = totalTime;
 
-    dirLight.viewer.setEuler(sec * pi / 18, -pi / 1.8, 0, distance: dirLight.viewer.distanceToTarget); // rotate light
-    // debugPrint('Light Direction: $dirLight');
+    dirLight.lightViewer.setEuler(sec * pi / 18, -pi / 1.8, 0); // rotate light
+    // M3Log.d('M3SampleScene', 'Light Direction: $dirLight');
   }
 
   @override

@@ -64,13 +64,13 @@ class M3AppEngine with ChangeNotifier {
 
   Future<void> initApp({int width = 100, int height = 100, double dpr = 1.0}) async {
     if (_didInit) {
-      debugPrint("--- initApp: context already initialized ---");
+      M3Log.w('AppEngine', 'initApp: context already initialized');
       return;
     }
     initTick = DateTime.now().millisecondsSinceEpoch;
 
-    debugPrint("<<< $version >>>");
-    debugPrint("--- ${PlatformInfo.getOS()}: initApp($width x $height)  dpr: $dpr ---");
+    M3Log.s('AppEngine', version);
+    M3Log.s('AppEngine', '${PlatformInfo.getOS()}: initApp($width x $height)  dpr: $dpr');
 
     initKeyboard();
 
@@ -84,7 +84,7 @@ class M3AppEngine with ChangeNotifier {
 
     // init render engine
     renderEngine.gl = _sourceTexture.getContext();
-    debugPrint("--- ANGLE context ready ---");
+    M3Log.i('AppEngine', 'ANGLE context ready');
     appWidth = width;
     appHeight = height;
     devicePixelRatio = dpr;
@@ -102,28 +102,28 @@ class M3AppEngine with ChangeNotifier {
       await onDidInit!();
     }
     notifyListeners();
-    debugPrint("*** initApp done ***");
+    M3Log.i('AppEngine', 'initApp done');
   }
 
   void initKeyboard() {
     keyboard.start();
     keyboard.onKeyDown = (e) {
-      debugPrint("KeyDown: ${e.logicalKey}");
+      M3Log.d('AppEngine', 'KeyDown: ${e.logicalKey}');
       activeScene?.inputController?.onKeyDown(e);
     };
 
     keyboard.onKeyRepeat = (key) {
-      debugPrint("Repeat: ${key.debugName}");
+      M3Log.d('AppEngine', 'Repeat: ${key.debugName}');
       activeScene?.inputController?.onKeyRepeat(key);
     };
 
     keyboard.onKeyUp = (e) {
-      debugPrint("KeyUp: $e");
+      M3Log.d('AppEngine', 'KeyUp: $e');
       activeScene?.inputController?.onKeyUp(e);
     };
 
     keyboard.onActionDown = (action) {
-      debugPrint("Action: $action");
+      M3Log.d('AppEngine', 'Action: $action');
     };
   }
 
@@ -183,7 +183,7 @@ class M3AppEngine with ChangeNotifier {
     if (ticker.isActive) {
       ticker.stop();
     }
-    debugPrint("--- app pause ---");
+    M3Log.s('AppEngine', 'app pause');
   }
 
   void resume() {
@@ -194,13 +194,13 @@ class M3AppEngine with ChangeNotifier {
       ticker.start();
       _lastElapsed = Duration.zero;
     }
-    debugPrint("+++ app resume +++");
+    M3Log.s('AppEngine', 'app resume');
   }
 
   double _getTime() => DateTime.now().millisecondsSinceEpoch / 1000.0;
 
   Widget getAppWidget() {
-    debugPrint("--- getAppWidget ---");
+    M3Log.s('AppEngine', 'getAppWidget');
     if (!_didInit) {
       // --- Macbear 3D ---
       // *** Copyright information, please do not delete
@@ -227,7 +227,7 @@ class M3AppEngine with ChangeNotifier {
           event.buttons,
           _getTime(),
         );
-        debugPrint("Pointer(${event.pointer}: down at ${point.toString()}");
+        M3Log.d('AppEngine', 'Pointer(${event.pointer}: down at ${point.toString()}');
         final touch = touchManager.onTouchDown(event.pointer, point);
         activeScene?.inputController?.onTouchDown(touch);
       },
@@ -237,7 +237,7 @@ class M3AppEngine with ChangeNotifier {
           event.buttons,
           _getTime(),
         );
-        // debugPrint("Pointer(${event.pointer}: move at ${point.toString()}");
+        // M3Log.d('AppEngine', 'Pointer(${event.pointer}: move at ${point.toString()}');
         final touch = touchManager.onTouchMove(event.pointer, point);
         if (touch != null) {
           activeScene?.inputController?.onTouchMove(touch);
@@ -249,7 +249,7 @@ class M3AppEngine with ChangeNotifier {
           event.buttons,
           _getTime(),
         );
-        debugPrint("Pointer(${event.pointer}: up at ${point.toString()}");
+        M3Log.d('AppEngine', 'Pointer(${event.pointer}: up at ${point.toString()}');
         final touch = touchManager.onTouchUp(event.pointer, point);
         if (touch != null) {
           activeScene?.inputController?.onTouchUp(touch);
@@ -258,12 +258,12 @@ class M3AppEngine with ChangeNotifier {
       },
       onPointerCancel: (event) {
         final Vector2 posTouch = Vector2(event.localPosition.dx, event.localPosition.dy);
-        debugPrint("Pointer(${event.pointer}) cancel at: $posTouch");
+        M3Log.d('AppEngine', 'Pointer(${event.pointer}) cancel at: $posTouch');
         touchManager.touches.remove(event.pointer);
       },
       onPointerSignal: (event) {
         if (event is PointerScrollEvent) {
-          debugPrint("Pointer(${event.pointer}) scroll: ${event.scrollDelta.dy}");
+          M3Log.d('AppEngine', 'Pointer(${event.pointer}) scroll: ${event.scrollDelta.dy}');
           activeScene?.inputController?.onScroll(event.scrollDelta.dy);
         }
       },
@@ -272,13 +272,13 @@ class M3AppEngine with ChangeNotifier {
   }
 
   Future<bool> onResize(int width, int height, double dpr) async {
-    debugPrint("--- onResize: ($width x $height) dpr: $dpr (init=$_didInit) ---");
+    M3Log.i('AppEngine', 'onResize: ($width x $height) dpr: $dpr (init=$_didInit)');
     if (!_didInit) {
       return false;
     }
 
     if (width == appWidth && height == appHeight && dpr == devicePixelRatio) {
-      debugPrint("*** onResize: ignore ***");
+      M3Log.w('AppEngine', 'onResize: ignore');
       return false;
     }
 
@@ -338,12 +338,12 @@ class M3AppEngine with ChangeNotifier {
           _fpsFrameCount = 0;
         }
       } catch (e) {
-        debugPrint('*** ERROR updateRender: $e');
+        M3Log.e('AppEngine', 'updateRender: $e');
       } finally {
         _updating = false;
       }
     } else {
-      debugPrint('Too slow');
+      M3Log.w('AppEngine', 'Too slow');
     }
   }
 
@@ -351,7 +351,7 @@ class M3AppEngine with ChangeNotifier {
   void _update(Duration delta) {
     double dt = delta.inMicroseconds / 1000000.0;
     double sdt = dt * timeScale;
-    // debugPrint('update= $delta');
+    // M3Log.d('AppEngine', 'update= $delta');
 
     final scene = activeScene;
     if (scene != null) {
@@ -409,6 +409,21 @@ class M3AppEngine with ChangeNotifier {
       // draw camera frustums
       if (renderEngine.options.debug.showCamera) {
         scene.drawCameraHelper();
+        // for debug camera frustum only
+        M3Resources.debugCamera?.drawHelper(M3Resources.programSimple!, scene.camera);
+
+        if (renderEngine.mainContext.needsPlanarReflectionPass()) {
+          // renderEngine.planarReflection.drawReflectionCamera(scene.camera); // remark for ignore
+        }
+      }
+
+      // draw light helper
+      if (renderEngine.options.debug.showLight) {
+        if (M3Resources.debugCamera != null) {
+          // for debug directional light frustum only
+          scene.dirLight.updateShadowCascades(M3Resources.debugCamera!);
+        }
+        scene.drawLightHelper();
       }
     }
     // 3. render 2D: UI, text etc.

@@ -13,16 +13,16 @@ class M3ProgramLighting extends M3ProgramEye with M3LightingShader, M3FogShader 
   }
 
   void setLightTBN(Vector3 tangent, Vector3 binormal, Vector3 normal) {
-    if (_light != null) {
-      Vector3 lightDir = _light!.getDirection();
+    if (_dirLight != null) {
+      Vector3 lightDir = _dirLight!.getDirection();
       Vector3 tbnDir = Vector3(lightDir.dot(tangent), lightDir.dot(binormal), lightDir.dot(normal));
       gl.uniform3fv(uniformLightDirection, tbnDir.storage);
     }
   }
 
   @override
-  void setMatrices(M3Camera cam, Matrix4 mMatrix) {
-    super.setMatrices(cam, mMatrix);
+  void setMatrices(M3Camera cam, Matrix4 mMatrix, [Matrix4? mMatrixInv]) {
+    super.setMatrices(cam, mMatrix, mMatrixInv);
 
     setLightDirection(mMatrix);
     setFogPlane(cam, mMatrix);
@@ -42,14 +42,14 @@ class M3ProgramLighting extends M3ProgramEye with M3LightingShader, M3FogShader 
 
     // diffuse: RGBA
     if (M3Program.isLocationValid(uniformDiffuse)) {
-      outDiffuse.xyz = M3Light.blendRGB(_light!.color, outDiffuse.rgb);
+      outDiffuse.xyz = M3Light.blendRGB(_dirLight!.color, outDiffuse.rgb);
       gl.uniform4fv(uniformDiffuse, outDiffuse.storage);
     }
 
     // specular: RGB
     if (M3Program.isLocationValid(uniformSpecular)) {
       Vector3 outSpecular = M3Light.blendRGB(mtr.specular, color.rgb);
-      outSpecular = M3Light.blendRGB(_light!.color, outSpecular);
+      outSpecular = M3Light.blendRGB(_dirLight!.color, outSpecular);
 
       // Pass as vec4: RGB, w = Shininess
       gl.uniform4f(uniformSpecular, outSpecular.x, outSpecular.y, outSpecular.z, mtr.shininess);

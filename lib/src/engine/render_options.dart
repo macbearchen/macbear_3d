@@ -11,6 +11,7 @@ class M3DebugOptions {
   bool wireframe = false;
   bool showHelpers = false;
   bool showCamera = false; // camera frustum
+  bool showLight = false; // light helper
   bool showMaps = false; // texture maps
   bool showStats = true;
   bool showPhysicsStats = false;
