@@ -93,7 +93,6 @@ class M3RenderEngine {
     scene.dirLight.shadowMap?.renderDepth(scene, scene.dirLight);
 
     // point light
-    
   }
 
   /// get program shader for scene rendering
@@ -136,7 +135,8 @@ class M3RenderEngine {
       // get scene program
       final prog = getSceneProgram(scene);
 
-      prog.attachLight(scene.dirLight);
+      prog.attachDirectionalLight(scene.dirLight);
+      prog.attachPointLights(scene.pointLights);
 
       // main context render pass
       mainContext.render(prog);

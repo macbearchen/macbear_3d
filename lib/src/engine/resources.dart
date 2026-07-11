@@ -20,6 +20,7 @@ import '../shaders_gen/Water.es3.frag.g.dart';
 import '../shaders_gen/Water.es3.vert.g.dart';
 // GLSL functions include
 import '../shaders_gen/glsl/FogFS.es3.glsl.g.dart';
+import '../shaders_gen/glsl/LightFS.es3.glsl.g.dart';
 import '../shaders_gen/glsl/PixelFS.es3.glsl.g.dart';
 import '../shaders_gen/glsl/ShadowFS.es3.glsl.g.dart';
 import '../shaders_gen/glsl/ShadowVS.es3.glsl.g.dart';
@@ -224,6 +225,7 @@ class M3Resources {
       // add pixel lighting shader to vertex/fragment shader for final result
       strVert = "#define ENABLE_PIXEL_LIGHTING \n$strVert";
       strFrag = "#define ENABLE_PIXEL_LIGHTING \n$strFrag \n$PixelFS_glsl ";
+      strFrag = strFrag + LightFS_glsl;
     }
 
     if (options.fog) {
@@ -231,6 +233,7 @@ class M3Resources {
       strFrag = "$FogFS_glsl \n$strFrag"; // define ENABLE_FOG in Fog_frag
     }
 
+    M3Log.i('setLightingProgram', 'prepare lighting');
     programTexture = M3ProgramLighting(strVert, strFrag);
 
     // shadow map, CSM, PCF

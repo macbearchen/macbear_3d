@@ -14,6 +14,7 @@ class M3PlanarReflection {
 
   final Plane clipPlane = Plane.components(0, 0, 1, 0);
   final M3Camera _camera = M3Camera(); // reflection camera to render reflection
+  final double farClipRatio = 0.5;
 
   bool enable = true;
   bool visible = true;
@@ -62,7 +63,7 @@ class M3PlanarReflection {
     _camera.setFrom(scene.camera);
 
     // shrink far clip for culling shadow casters
-    _camera.farClip *= 0.6;
+    _camera.farClip *= farClipRatio;
     _camera.refreshProjectionMatrix();
     _camera.updateSplitDistances();
 
@@ -136,7 +137,8 @@ class M3PlanarReflection {
     // get scene program
     final prog = renderEngine.getSceneProgram(scene);
 
-    prog.attachLight(scene.dirLight);
+    prog.attachDirectionalLight(scene.dirLight);
+    prog.attachPointLights(scene.pointLights);
 
     // (1/2) prepare render queue: exclude this plane
     _context.prepareRenderQueue(scene, _camera, excludeReflection: this);
@@ -160,7 +162,7 @@ class M3PlanarReflection {
     if (M3Resources.debugCamera != null) {
       mirrorCamera = M3Resources.debugCamera!.clone();
       // shrink far clip for culling shadow casters
-      mirrorCamera.farClip *= 0.6;
+      mirrorCamera.farClip *= farClipRatio;
       mirrorCamera.refreshProjectionMatrix();
       mirrorCamera.updateSplitDistances();
 

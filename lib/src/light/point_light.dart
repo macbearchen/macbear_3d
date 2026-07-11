@@ -6,13 +6,17 @@ class M3PointLight extends M3Light {
   double intensity = 1.0; // packed in color(alpha)
 
   // 封裝函數：直接回傳一個 Float32List
-  Float32List packUBO() {
+  Float32List packBuffer(Matrix4 mMatrixInv) {
+    // world space -> object space
+    Vector4 localPos = Vector4(position.x, position.y, position.z, 1.0);
+    localPos = mMatrixInv * localPos;
+
     // 預分配 8 個 float (32 bytes)，剛好填滿兩個 vec4
     final buffer = Float32List(8);
 
-    buffer[0] = position.x;
-    buffer[1] = position.y;
-    buffer[2] = position.z;
+    buffer[0] = localPos.x;
+    buffer[1] = localPos.y;
+    buffer[2] = localPos.z;
     buffer[3] = range;
 
     buffer[4] = color.x;

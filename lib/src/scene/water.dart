@@ -190,7 +190,8 @@ class M3Water extends M3Entity {
       final M3ProgramLighting prog = csmEnabled ? progWaterCSM : progWater;
 
       gl.useProgram(prog.program);
-      prog.attachLight(scene.dirLight);
+      prog.attachDirectionalLight(scene.dirLight);
+      prog.attachPointLights(scene.pointLights);
       prog.applyUniforms(viewer);
       prog.applyFog(scene.fog);
       (prog as M3WaterShader).bindWater(this);

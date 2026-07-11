@@ -12,6 +12,11 @@ class M3ProgramLighting extends M3ProgramEye with M3LightingShader, M3FogShader 
     initFogLocation(program);
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   void setLightTBN(Vector3 tangent, Vector3 binormal, Vector3 normal) {
     if (_dirLight != null) {
       Vector3 lightDir = _dirLight!.getDirection();
@@ -24,7 +29,7 @@ class M3ProgramLighting extends M3ProgramEye with M3LightingShader, M3FogShader 
   void setMatrices(M3Camera cam, Matrix4 mMatrix, [Matrix4? mMatrixInv]) {
     super.setMatrices(cam, mMatrix, mMatrixInv);
 
-    setLightDirection(mMatrix);
+    setLightUniforms(mMatrix);
     setFogPlane(cam, mMatrix);
   }
 

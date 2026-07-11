@@ -34,9 +34,9 @@ class AnimatedScene_05 extends DemoScene {
     // plane geometry
     final meshPlane = M3Mesh(M3PlaneGeom(30, 30, uvScale: Vector2.all(4.0)));
     meshPlane.subMeshes[0].mtr
-      ..reflection = 0.5
-      ..roughness = 0.2
-      ..metallic = 0.5
+      ..reflection = 0.3
+      ..roughness = 0.0
+      ..metallic = 0.3
       ..planarReflection = renderEngine.planarReflection
       ..diffuseTexture = texGround;
 

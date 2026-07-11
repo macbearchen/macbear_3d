@@ -19,6 +19,8 @@ mediump vec3 safe_normalize(mediump vec3 v) {
     return v * inversesqrt(len2);
 }
 
+lowp vec3 CalculateLighting();
+
 #ifdef ENABLE_PBR
 in mediump vec3 ObjectspaceV;
 uniform mediump vec3 uParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level
@@ -165,10 +167,10 @@ lowp vec4 ShadeLit(in lowp vec4 texDiffuse)
     result.a = texDiffuse.a * ColorDiffuse.a;
 	result.rgb = texDiffuse.rgb * (ColorAmbient + ColorDiffuse.rgb * df);
     result.rgb = result.rgb + ColorSpecular.rgb * sf;
-
-    return result;//vec4(1.0, 0.3, 0.0, 1.0);
-
 #endif // ENABLE_PBR
+
+    vec3 light = CalculateLighting() * texDiffuse.rgb;
+    result.rgb = result.rgb + light;
 
 	return result;
 }
@@ -205,6 +207,9 @@ lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse)
 	// unlit = ambient 
 	result = texDiffuse * vec4(ColorAmbient, ColorDiffuse.a);
 #endif // ENABLE_PBR
+
+    vec3 light = CalculateLighting() * texDiffuse.rgb;
+    result.rgb = result.rgb + light;
 
 	return result;
 }

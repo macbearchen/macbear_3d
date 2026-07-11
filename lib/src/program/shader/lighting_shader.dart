@@ -8,10 +8,13 @@ mixin M3LightingShader {
   late UniformLocation uniformDiffuse; // "ColorDiffuse" = inColor * LightDiffuse * MaterialDiffuse
   late UniformLocation uniformSpecular; // "ColorSpecular" = inColor * LightDiffuse * MaterialSpecular (w: Shininess)
 
+  // directional light related:
   late UniformLocation uniformLightDirection; // light direction "uLightDir" (per object-space)
 
+  M3PointLightManager pointLightManager = M3PointLightManager();
+
+  // scene lights:
   M3DirectionalLight? _dirLight; // directional light
-  final List<M3PointLight> _pointLights = [];
 
   void initLightingLocation(Program prog) {
     uniformAmbient = gl.getUniformLocation(prog, "ColorAmbient");
@@ -19,22 +22,34 @@ mixin M3LightingShader {
     uniformSpecular = gl.getUniformLocation(prog, "ColorSpecular");
 
     uniformLightDirection = gl.getUniformLocation(prog, "uLightDir");
+
+    // light manager
+    pointLightManager.initLocation(prog);
   }
 
-  void attachLight(M3DirectionalLight dirLight) {
+  /// directional light: scene only support one directional light.
+  void attachDirectionalLight(M3DirectionalLight dirLight) {
     _dirLight = dirLight;
   }
 
-  void setLightDirection(Matrix4 mMatrix) {
+  /// point light: scene support multiple point lights.
+  void attachPointLights(List<M3PointLight> pointLights) {
+    pointLightManager.attachPointLights(pointLights);
+  }
+
+  /// set light uniforms.
+  void setLightUniforms(Matrix4 mMatrix) {
+    Matrix4 matInv = Matrix4.inverted(mMatrix);
+
+    // directional light:
     if (_dirLight != null && M3Program.isLocationValid(uniformLightDirection)) {
       Vector3 lightDir = _dirLight!.getDirection();
-      Vector4 localDir = Matrix4.inverted(mMatrix) * Vector4(lightDir.x, lightDir.y, lightDir.z, 0.0);
+      Vector4 localDir = matInv * Vector4(lightDir.x, lightDir.y, lightDir.z, 0.0);
       localDir.normalize();
       gl.uniform3fv(uniformLightDirection, localDir.xyz.storage);
     }
-  }
 
-  void setPointLights(Matrix4 mMatrix) {
-    if (_pointLights.isNotEmpty) {}
+    // point lights
+    pointLightManager.setLightUniforms(matInv);
   }
 }

@@ -61,17 +61,17 @@ abstract class M3Scene {
   void initPointLights(int count) {
     pointLights.clear();
     List<Vector3> positions = [
-      Vector3(0, 0, 8),
-      Vector3(10, 0, 8),
-      Vector3(20, 0, 8),
-      Vector3(10, 10, 8),
-      Vector3(0, 10, 8),
+      Vector3(0, 0, 2),
+      Vector3(10, 0, 2),
+      Vector3(0, 10, 2),
+      Vector3(10, 10, 2),
+      Vector3(20, 0, 2),
     ];
-    List<Vector3> colors = [Vector3(1, 1, 0), Vector3(0, 1, 1), Vector3(1, 0, 1), Vector3(1, 1, 1), Vector3(1, 0, 0)];
+    List<Vector3> colors = [Vector3(1, 1, 0), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1), Vector3(1, 0, 1)];
 
     for (int i = 0; i < count; i++) {
       final pointLight = M3PointLight()
-        ..range = 8
+        ..range = 9
         ..position = positions[i]
         ..color = colors[i % 5];
 

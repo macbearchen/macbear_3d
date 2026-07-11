@@ -9,13 +9,19 @@ class CubeScene_01 extends DemoScene {
     if (isLoaded) return;
     await super.load();
 
+    camera.setEuler(-pi / 9, -pi / 4, 0, distance: 24);
+
     // fog
     fog.depth = 0.0;
     fog.planeHeight = 0.0;
 
     // 01: box geometry
-    final box = addMesh(M3Mesh(M3BoxGeom(1.0, 1.0, 1.0)), Vector3(0, 0, 2));
-    box.scale.setValues(1, 1, 1);
+    for (int i = 0; i < 10; i++) {
+      for (int j = 0; j < 10; j++) {
+        final box = addMesh(M3Mesh(M3BoxGeom(1.0, 1.0, 1.0)), Vector3(i * 2, j * 2, 0));
+        // box.scale.setValues(1, 1, 1);
+      }
+    }
 
     // axis gizmo
     addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 0));
