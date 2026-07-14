@@ -7,6 +7,7 @@ in mediump vec2 BumpCoord0;
 in mediump vec2 BumpCoord1;
 in highp vec3 eyeToObj;		// interpolate from vert to frag: must be highp in iPad3 
 in highp float eyeToObjDist;
+in highp vec3 ObjectspaceV;    // Object space Vertex
 
 uniform mediump float WaveDistortion;
 
@@ -63,7 +64,11 @@ lowp vec4 BlendReflectionRefraction(in lowp vec3 vAccumulatedNormal, in lowp vec
 uniform lowp vec3 LightDiffuse;		// diffuse of light
 uniform mediump vec3 uLightDir;		// parallel light
 #endif // ENABLE_WATER_SPECULAR
-		  
+
+#ifdef ENABLE_FOG
+lowp vec4 ApplyFog(in lowp vec4 texResult);
+#endif // ENABLE_FOG
+
 void main(void)
 {
 	// Use normalisation cube map instead of normalize() - See section 3.3.1 of white paper for more info

@@ -24,7 +24,7 @@ class M3ShaderOptions {
   bool _pbr = true; // physics based rendering
   bool _ibl = true; // image based lighting
   int _pcf = 1; // shadow PCF: 0:none, 1:default(4-tap), 2:3x3, 3:5x5
-  bool _fog = true;
+  bool _fog = false;
 
   bool isDirty = false;
 

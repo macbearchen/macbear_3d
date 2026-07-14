@@ -11,10 +11,6 @@ class CubeScene_01 extends DemoScene {
 
     camera.setEuler(-pi / 9, -pi / 4, 0, distance: 24);
 
-    // fog
-    fog.depth = 0.0;
-    fog.planeHeight = 0.0;
-
     // 01: box geometry
     for (int i = 0; i < 10; i++) {
       for (int j = 0; j < 10; j++) {
@@ -36,14 +32,14 @@ class CubeScene_01 extends DemoScene {
     );
     // ground plane
     final mtrGround = M3Material()
-      ..diffuseTexture = texTest
+      // ..diffuseTexture = texTest
       ..setMatte();
     final groundMesh = M3Mesh(
-      M3PlaneGeom(20, 20, widthSegments: 20, heightSegments: 20, uvScale: Vector2.all(2.0)),
+      M3PlaneGeom(100, 100, widthSegments: 4, heightSegments: 4, uvScale: Vector2.all(10.0)),
       material: mtrGround,
     );
     final entity = addMesh(groundMesh, Vector3(0, 0, -1));
-    entity.color = Vector4(1, 1, 1, 1);
+    entity.color = Vector4(1, 0.6, 0, 1);
   }
 
   @override

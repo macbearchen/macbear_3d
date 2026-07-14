@@ -71,7 +71,6 @@ abstract class M3Scene {
 
     for (int i = 0; i < count; i++) {
       final pointLight = M3PointLight()
-        ..range = 9
         ..position = positions[i]
         ..color = colors[i % 5];
 

@@ -5,6 +5,14 @@ const String TexturedLighting_frag = r"""
 precision mediump float;
 // TexturedLighting frag-shader: ES3 //////////
 
+uniform lowp vec3 ColorAmbient;		// ambient RGB
+
+in mediump vec2 TextureCoordOut;
+uniform sampler2D SamplerDiffuse;	// GL_TEXTURE0
+
+uniform mediump vec3 uEyePos;
+in highp vec3 ObjectspaceV;    // Object space Vertex
+
 #ifdef ENABLE_PIXEL_LIGHTING
 // per pixel lighting: "glsl/Pixel.es3.frag" must append on this shader
 lowp vec4 ShadeLit(in lowp vec4 texDiffuse);
@@ -12,7 +20,6 @@ lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse);
 
 #else
 // per vertex lighting
-uniform lowp vec3 ColorAmbient;		// ambient RGB
 in lowp vec4 SpecularOut;	// separate specular added
 in lowp vec4 DestinationColor;
 
@@ -32,8 +39,9 @@ lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse)
 }
 #endif // ENABLE_PIXEL_LIGHTING
 
-in mediump vec2 TextureCoordOut;
-uniform sampler2D SamplerDiffuse;	// GL_TEXTURE0
+#ifdef ENABLE_FOG
+lowp vec4 ApplyFog(in lowp vec4 texResult);
+#endif // ENABLE_FOG
 
 out vec4 fragColor;
 

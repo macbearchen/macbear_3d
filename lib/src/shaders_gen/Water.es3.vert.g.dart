@@ -30,12 +30,12 @@ out mediump vec2 BumpCoord0;
 out mediump vec2 BumpCoord1;
 out highp vec3 eyeToObj;		// interpolate from vert to frag: must be highp in iPad3 
 out highp float eyeToObjDist;
+out highp vec3 ObjectspaceV;    // Object space Vertex
 
 out lowp vec4 DestinationColor;
 
 #ifdef ENABLE_FOG
 out highp float fogDist;   // distance: eye to obj-vertex
-out highp vec3 fogVert;
 #endif // ENABLE_FOG
 
 void main(void)
@@ -70,7 +70,7 @@ void main(void)
 
 #ifdef ENABLE_FOG
     fogDist = eyeToObjDist;
-    fogVert = objVert.xyz;
+	ObjectspaceV = objVert.xyz;
 #endif // ENABLE_FOG
 }
 

@@ -44,9 +44,9 @@ abstract class M3Light {
 class M3PointLightManager {
   RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
 
-  static const int _maxLights = 4;
+  static const int _maxLights = 8;
   static const int _maxShadow = 3;
-  static const int _matCount = 2; // 4 盞燈 / 2 盞每個 mat4
+  static const int _matCount = 4; // 8 點光源, 每 mat4 兩盞點光源
 
   final Float32List _lightMats = Float32List(_matCount * 16);
   final Int32List _counts = Int32List.fromList([0, 0]);

@@ -230,7 +230,7 @@ class M3Resources {
 
     if (options.fog) {
       strVert = "#define ENABLE_FOG \n$strVert";
-      strFrag = "$FogFS_glsl \n$strFrag"; // define ENABLE_FOG in Fog_frag
+      strFrag = "#define ENABLE_FOG \n$strFrag \n$FogFS_glsl";
     }
 
     M3Log.i('setLightingProgram', 'prepare lighting');
@@ -270,7 +270,7 @@ class M3Resources {
     // }
     if (options.fog) {
       vsWater = "#define ENABLE_FOG \n$vsWater";
-      fsWater = "$FogFS_glsl \n$fsWater"; // define ENABLE_FOG in Fog_frag
+      fsWater = "#define ENABLE_FOG \n$fsWater \n$FogFS_glsl";
     }
     programWater = M3ProgramWater(vsWater, fsWater);
 

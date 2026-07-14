@@ -15,11 +15,9 @@ layout(location = 2) in mediump vec3 inNormal;
 layout(location = 3) in mediump vec2 inTexCoord;
 uniform lowp vec4 uColor;
 
+out highp vec3 ObjectspaceV;    // Object space Vertex
+
 #ifdef ENABLE_PIXEL_LIGHTING
-out mediump vec3 ObjectspaceH;
-#ifdef ENABLE_PBR
-out mediump vec3 ObjectspaceV;
-#endif // ENABLE_PBR
 out mediump vec3 ObjectspaceN;
 #else
 uniform lowp vec4 ColorDiffuse;
@@ -39,7 +37,6 @@ uniform mat4 ModelviewProjection;
 #ifdef ENABLE_FOG
 uniform mediump vec3 uObjectScale;
 out highp float fogDist;   // distance: eye to obj-vertex
-out highp vec3 fogVert;
 #endif // ENABLE_FOG
 
 void main(void)
@@ -59,11 +56,9 @@ void main(void)
     highp float eyeToObjDist = length(eyeToObj);
     mediump vec3 E = eyeToObj / eyeToObjDist;
 
+    ObjectspaceV = objVert.xyz;
+
 #ifdef ENABLE_PIXEL_LIGHTING
-    ObjectspaceH = normalize(L + E);
-    #ifdef ENABLE_PBR
-    ObjectspaceV = E;
-    #endif
     ObjectspaceN = objNormal;
 #else
     #ifdef BLINN_PHONG_SPECULAR
@@ -88,7 +83,6 @@ void main(void)
 #ifdef ENABLE_FOG
     eyeToObj /= uObjectScale;
     fogDist = length(eyeToObj);
-    fogVert = objVert.xyz;
 #endif // ENABLE_FOG
 
     TextureCoordOut = inTexCoord;

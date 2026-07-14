@@ -439,8 +439,8 @@ class _MainPageState extends State<MainPage> {
                       inactiveColor: Colors.white24,
                       onChanged: (val) {
                         setState(() {
-                          scene.fog.depth = max(min(100.0 - val, 25), 5);
                           scene.fog.start = val;
+                          scene.fog.depth = max(min(100.0 - scene.fog.start, 25), 5);
                         });
                       },
                     ),

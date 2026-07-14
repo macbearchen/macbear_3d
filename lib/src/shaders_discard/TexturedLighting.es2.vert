@@ -11,11 +11,11 @@ attribute mediump vec2 inTexCoord;
 uniform lowp vec4 uColor;
 
 #ifdef ENABLE_PIXEL_LIGHTING
-varying mediump vec3 ObjectspaceH;	// LightPos + EyePos
+varying mediump vec3 ObjectspaceN;	// Object space Normal
+varying mediump vec3 ObjectspaceH;	// LightVector + EyeVector
 #ifdef ENABLE_PBR
 varying mediump vec3 ObjectspaceV;	// Eye vector (V)
 #endif // ENABLE_PBR
-varying mediump vec3 ObjectspaceN;
 #else // ENABLE_PIXEL_LIGHTING
 // color combined by light and material
 uniform lowp vec4 ColorDiffuse;		// diffuse RGBA

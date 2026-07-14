@@ -4,12 +4,13 @@ const String LightFS_glsl = r"""
 #version 300 es
 
 // uPointLights[0]：light0, light1
-// light0: row0: positionRange(xyz:pos,w:range), row1: colorIntensity(rgb:color,a:intensity)
-// light1: row2: positionRange(xyz:pos,w:range), row3: colorIntensity(rgb:color,a:intensity)
+// light0: col0: positionRange(xyz:pos,w:range), col1: colorIntensity(rgb:color,a:intensity)
+// light1: col2: positionRange(xyz:pos,w:range), col3: colorIntensity(rgb:color,a:intensity)
+// same for uPointLights[1,2,3]
 // uPointLights[1]：light2, light3
-// light2: row0: positionRange(xyz:pos,w:range), row1: colorIntensity(rgb:color,a:intensity)
-// light3: row2: positionRange(xyz:pos,w:range), row3: colorIntensity(rgb:color,a:intensity)
-uniform mediump mat4 uPointLights[2];
+// uPointLights[2]：light4, light5
+// uPointLights[3]：light6, light7
+uniform mediump mat4 uPointLights[4];
 
 uniform mediump ivec2 uPointLightCounts; // x=lightCount, y=shadowCastingCount
 
