@@ -14,7 +14,14 @@ mediump vec3 safe_normalize(mediump vec3 v) {
     return v * inversesqrt(len2);
 }
 
+// multi-point-lights
 lowp vec3 CalculateLighting();
+
+// View direction from surface to eye. Used by both Lit (for H = V+L) and Unlit (for IBL) paths.
+mediump vec3 ComputeViewDir() {
+    mediump vec3 ObjToEye = uEyePos - ObjectspaceV;
+    return safe_normalize(ObjToEye);
+}
 
 #ifdef ENABLE_PBR
 uniform mediump vec3 uParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level
@@ -59,12 +66,6 @@ mediump vec3 fresnelSchlick(mediump float cosTheta, mediump vec3 F0) {
 }
 
 // ---- Shared PBR helpers (new: factor out logic duplicated between ShadeLit/ShadeUnlit) ----
-
-// View direction from surface to eye. Used by both Lit (for H = V+L) and Unlit (for IBL) paths.
-mediump vec3 ComputeViewDir() {
-    mediump vec3 ObjToEye = uEyePos - ObjectspaceV;
-    return safe_normalize(ObjToEye);
-}
 
 // F0 reflectance at normal incidence, blended toward albedo by metallic.
 mediump vec3 ComputeF0(mediump vec3 baseColor) {
