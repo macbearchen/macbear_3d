@@ -30,7 +30,7 @@ Preview the `main_all.dart` example live in your browser!
 ### 🎨 Rendering & Visuals
 - **Model Loaders**: Native support for **glTF/GLB**, **OBJ**, and **BVH** formats.
 - **Skeletal Animation**: Full support for skinned meshes and bone-based animations (including `M3OctahedralGeom` for bone visualization).
-- **Advanced Lighting**: Dynamic lighting supporting **8 multi-point-lights**, **Cascaded Shadow Mapping (CSM)**, **PCF (Percentage Closer Filtering)** for smooth shadows, **PBR (Physically Based Rendering)** and **IBL (Image-Based Lighting)**. Improved `RenderPipeline` with enhanced support for opaque and transparency materials.
+- **Advanced Lighting**: Dynamic lighting supporting **1 directional light and 8 point lights**, **Cascaded Shadow Mapping (CSM)**, **PCF (Percentage Closer Filtering)** for smooth shadows, **PBR (Physically Based Rendering)** and **IBL (Image-Based Lighting)**. Improved `RenderPipeline` with enhanced support for opaque and transparency materials.
 - **Modular Shaders**: Refactored shader system with clean `.glsl` source files and dedicated, type-safe Dart shader program wrappers (`M3FogShader`, `M3LightingShader`, `M3ShadowShader`, `M3WaterShader`) for easy uniform binding and encapsulation.
 - **Skybox & Environment**: Support for skybox environment backgrounds and reflection mapping via cubemaps.
 - **Planar Reflections**: Added support for planar reflections with `M3PlanarReflection` and Mirror shaders for high-quality reflective surfaces.
@@ -152,7 +152,7 @@ output to uml/macbear_3d.puml
 
 - [ ] Post-processing effects (Bloom, HDR)
 - [ ] Advanced Particle System
-- [/] Multiple lights support (Point light supports 8 multi-lights, Spot light in progress)
+- [/] Multiple lights support (1 directional light and 8 point lights supported, Spot light in progress)
 
 ## Contributing
 
