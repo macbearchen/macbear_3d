@@ -15,6 +15,8 @@ class M3DebugOptions {
   bool showMaps = false; // texture maps
   bool showStats = true;
   bool showPhysicsStats = false;
+
+  bool lightBulb = true; // point light bulb
 }
 
 // GLSL options

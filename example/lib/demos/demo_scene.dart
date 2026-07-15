@@ -12,6 +12,11 @@ class DemoScene extends M3Scene {
     camera.setEuler(pi / 6, -pi / 6, 0, distance: 12);
 
     // skybox = await createCubemapLobby(); // nvlobby cubemap
+    initPointLights(7);
+    pointLights[0].position.y = 0.2;
+    pointLights[0].position.z = 1;
+    pointLights[0].intensity = 3;
+    pointLights[0].range = 9;
   }
 
   @override
@@ -22,6 +27,9 @@ class DemoScene extends M3Scene {
     // rotate light
     dirLight.lightViewer.setEuler(sec * pi / 18, -pi / 3, 0); // rotate light
     // M3Log.d('DemoScene', 'Light Direction: $dirLight');
+
+    // move point lights
+    pointLights[0].position.x = 10 * (sin(sec * 0.5));
   }
 
   // create nvlobby cubemap

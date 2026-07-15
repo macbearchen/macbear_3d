@@ -11,6 +11,7 @@ in mediump vec2 BumpCoord1;
 in highp vec3 eyeToObj;		// interpolate from vert to frag: must be highp in iPad3 
 in highp float eyeToObjDist;
 in highp vec3 ObjectspaceV;    // Object space Vertex
+uniform mediump vec3 uInvObjScale;
 
 uniform mediump float WaveDistortion;
 
@@ -72,6 +73,9 @@ uniform mediump vec3 uLightDir;		// parallel light
 lowp vec4 ApplyFog(in lowp vec4 texResult);
 #endif // ENABLE_FOG
 
+// multi-point-lights
+lowp vec3 CalculateLighting(vec3 fragPos, vec3 N);
+
 void main(void)
 {
 	// Use normalisation cube map instead of normalize() - See section 3.3.1 of white paper for more info
@@ -102,8 +106,17 @@ void main(void)
 #endif // ENABLE_WATER_SPECULAR
 
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
-	resultColor = ShadeLitWithShadow(resultColor);
+	lowp float litFactor = ComputeShadowLitFactor();
+	if (litFactor >= 1.0) {
+		resultColor = ShadeLit(resultColor);
+	} else if (litFactor <= 0.0) {
+		resultColor = ShadeUnlit(resultColor);
+	} else {
+		resultColor = mix(ShadeUnlit(resultColor), ShadeLit(resultColor), litFactor);
+	}
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
+
+	resultColor.rgb += CalculateLighting(ObjectspaceV, vAccumulatedNormal) * 0.3;
 
 #ifdef ENABLE_FOG
 	resultColor = ApplyFog(resultColor);

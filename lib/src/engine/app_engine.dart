@@ -423,6 +423,10 @@ class M3AppEngine with ChangeNotifier {
           // for debug directional light frustum only
           scene.dirLight.updateShadowCascades(M3Resources.debugCamera!);
         }
+        scene.dirLight.drawHelper(M3Resources.programSimple!, scene.camera);
+        scene.drawLightHelper(drawBulb: false);
+      }
+      if (renderEngine.options.debug.lightBulb) {
         scene.drawLightHelper();
       }
     }

@@ -55,24 +55,37 @@ abstract class M3Scene {
     lightViewer.setEuler(pi / 5, -pi / 3, 0, distance: 25); // rotate light
     dirLight.setShadowMap(renderEngine.shadowMap);
 
-    initPointLights(4);
+    initPointLights(0);
   }
 
   void initPointLights(int count) {
     pointLights.clear();
+    double z = 1;
     List<Vector3> positions = [
-      Vector3(0, 0, 2),
-      Vector3(10, 0, 2),
-      Vector3(0, 10, 2),
-      Vector3(10, 10, 2),
-      Vector3(20, 0, 2),
+      Vector3(0, 0, z),
+      Vector3(8, 0, z),
+      Vector3(0, 8, z),
+      Vector3(8, 8, z),
+      Vector3(-8, 0, z),
+      Vector3(0, -8, z),
+      Vector3(-8, -8, z),
+      Vector3(0, 0, 5),
     ];
-    List<Vector3> colors = [Vector3(1, 1, 0), Vector3(1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1), Vector3(1, 0, 1)];
+    List<Vector3> colors = [
+      Vector3(1, 1, 1),
+      Vector3(1, 0, 0),
+      Vector3(0, 1, 0),
+      Vector3(0, 0, 1),
+      Vector3(1, 0, 1),
+      Vector3(0, 1, 1),
+      Vector3(1, 1, 0),
+      Vector3(1, 0.5, 0),
+    ];
 
     for (int i = 0; i < count; i++) {
       final pointLight = M3PointLight()
         ..position = positions[i]
-        ..color = colors[i % 5];
+        ..color = colors[i % 6];
 
       pointLights.add(pointLight);
     }
@@ -185,7 +198,7 @@ abstract class M3Scene {
     }
   }
 
-  void drawLightHelper() {
+  void drawLightHelper({bool drawBulb = true}) {
     M3Program progSimple = M3Resources.programSimple!;
     M3Material mtr = M3Material();
 
@@ -193,12 +206,16 @@ abstract class M3Scene {
     gl.uniform1i(progSimple.uniformBoneCount, 0);
 
     progSimple.setMaterial(mtr, Colors.white);
-    dirLight.drawHelper(progSimple, camera);
 
     for (final light in pointLights) {
       Vector4 c = Vector4(light.color.x, light.color.y, light.color.z, 1);
       progSimple.setMaterial(mtr, c);
-      light.drawHelper(progSimple, camera);
+
+      if (drawBulb) {
+        light.drawBulb(progSimple, camera);
+      } else {
+        light.drawHelper(progSimple, camera);
+      }
     }
   }
 

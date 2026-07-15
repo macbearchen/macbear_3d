@@ -35,8 +35,9 @@ abstract class M3Light {
   void drawHelper(M3Program prog, M3Camera viewer) {
     Matrix4 targetMatrix = Matrix4.identity();
     targetMatrix.setTranslation(position);
+    targetMatrix.scaleByVector3(Vector3.all(0.1));
     prog.setMatrices(viewer, targetMatrix);
-    M3Resources.debugDot.draw(prog);
+    M3Resources.debugPointLight.draw(prog);
   }
 }
 

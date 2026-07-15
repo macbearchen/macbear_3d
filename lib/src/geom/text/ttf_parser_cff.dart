@@ -1,4 +1,4 @@
-// ignore_for_file: unused_local_variable, prefer_interpolation_to_compose_strings
+// ignore_for_file: curly_braces_in_flow_control_structures, unused_local_variable, prefer_interpolation_to_compose_strings
 part of 'ttf_parser.dart';
 
 extension M3TrueTypeParserCff on M3TrueTypeParser {

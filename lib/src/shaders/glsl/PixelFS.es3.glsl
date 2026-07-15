@@ -15,7 +15,7 @@ mediump vec3 safe_normalize(mediump vec3 v) {
 }
 
 // multi-point-lights
-lowp vec3 CalculateLighting();
+lowp vec3 CalculateLighting(vec3 fragPos, vec3 N);
 
 // View direction from surface to eye. Used by both Lit (for H = V+L) and Unlit (for IBL) paths.
 mediump vec3 ComputeViewDir() {
@@ -178,7 +178,7 @@ lowp vec4 ShadeLit(in lowp vec4 texDiffuse)
     resultColor = resultColor + ColorSpecular.rgb * sf;
 #endif // ENABLE_PBR
 
-    resultColor += CalculateLighting() * diffuse.rgb;
+    resultColor += CalculateLighting(ObjectspaceV, ObjectspaceN) * diffuse.rgb;
 
 	return vec4(resultColor, diffuse.a);
 }
@@ -210,7 +210,7 @@ lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse)
 	resultColor = texDiffuse.rgb * ColorAmbient;
 #endif // ENABLE_PBR
 
-    resultColor += CalculateLighting() * diffuse.rgb;
+    resultColor += CalculateLighting(ObjectspaceV, ObjectspaceN) * diffuse.rgb;
 
 	return vec4(resultColor, diffuse.a);
 }

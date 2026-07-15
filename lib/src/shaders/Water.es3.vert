@@ -62,11 +62,12 @@ void main(void)
 	eyeToObj = uEyePos - objVert.xyz;
 	eyeToObjDist = length(eyeToObj);
 	
+	ObjectspaceV = objVert.xyz;
+
 	// tangent-space
 	eyeToObj = vec3(dot(AxisTangent, eyeToObj), dot(AxisBinormal, eyeToObj), dot(AxisNormal, eyeToObj));
 
 #ifdef ENABLE_FOG
     fogDist = eyeToObjDist;
-	ObjectspaceV = objVert.xyz;
 #endif // ENABLE_FOG
 }

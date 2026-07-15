@@ -14,9 +14,9 @@ class PbrTestScene_09 extends DemoScene {
 
     final sphereGeom = M3Resources.unitSphere;
 
-    int rows = 5;
-    int cols = 5;
-    double spacing = 2.5;
+    int rows = 8;
+    int cols = 8;
+    double spacing = 3;
 
     for (int i = 0; i < rows; i++) {
       double metallic = i / (rows - 1);
@@ -25,7 +25,7 @@ class PbrTestScene_09 extends DemoScene {
 
         final mesh = M3Mesh(sphereGeom);
         mesh.subMeshes[0].mtr
-          ..diffuse = Vector4(0.0, 1.0, 0.0, 1.0)
+          ..diffuse = Vector4(0.5, 1.0, 0.5, 1.0)
           ..reflection = metallic
           ..metallic = metallic
           ..roughness = max(roughness, 0.05); // Avoid zero roughness for GGX
@@ -35,13 +35,13 @@ class PbrTestScene_09 extends DemoScene {
 
         final ball = addMesh(mesh, Vector3(x, y, 0));
         ball.rotation.setEuler(i * pi / 10, j * pi / 20, 0);
-        ball.scale = Vector3.all(1.5);
+        ball.scale = Vector3.all((i + 5) * 0.2);
       }
     }
 
     final groundZ = -2.0;
     // Add a ground plane
-    final geomPlane = M3PlaneGeom(20, 20);
+    final geomPlane = M3PlaneGeom(30, 30);
     final plane = addMesh(M3Mesh(geomPlane), Vector3(0, 0, groundZ));
     plane.mesh.subMeshes[0].mtr
       ..diffuse = Vector4(0.2, 0.9, 0.7, 1.0)
@@ -63,11 +63,7 @@ class PbrTestScene_09 extends DemoScene {
     super.update(delta);
 
     // Rotate camera slowly
-    // camera.setEuler(
-    //   camera.euler.yaw + delta * 0.1,
-    //   camera.euler.pitch,
-    //   camera.euler.roll,
-    //   distance: camera.distanceToTarget,
-    // );
+    final euler = camera.euler;
+    camera.setEuler(euler.yaw + delta * 0.1, euler.pitch, 0, distance: camera.distanceToTarget);
   }
 }

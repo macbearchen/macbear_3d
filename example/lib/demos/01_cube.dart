@@ -39,7 +39,7 @@ class CubeScene_01 extends DemoScene {
       material: mtrGround,
     );
     final entity = addMesh(groundMesh, Vector3(0, 0, -1));
-    entity.color = Vector4(1, 0.6, 0, 1);
+    // entity.color = Vector4(1, 0.6, 0, 1);
   }
 
   @override

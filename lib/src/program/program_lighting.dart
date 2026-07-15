@@ -12,11 +12,6 @@ class M3ProgramLighting extends M3ProgramEye with M3LightingShader, M3FogShader 
     initFogLocation(program);
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   void setLightTBN(Vector3 tangent, Vector3 binormal, Vector3 normal) {
     if (_dirLight != null) {
       Vector3 lightDir = _dirLight!.getDirection();

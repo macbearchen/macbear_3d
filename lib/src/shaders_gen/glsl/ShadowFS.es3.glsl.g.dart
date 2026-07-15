@@ -59,11 +59,8 @@ uniform highp vec4 DepthCSM;		// depth clip-plane
 in highp vec4 LightcoordShadowmap;	// light-space coordinate-system
 #endif // ENABLE_SHADOW_CSM
 
-// shade lit/unlit functions
-lowp vec4 ShadeLit(in lowp vec4 texDiffuse);
-lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse);
-// shade lit with shadow
-lowp vec4 ShadeLitWithShadow(in lowp vec4 texDiffuse)
+// compute litFactor with shadow
+lowp float ComputeShadowLitFactor()
 {
 #ifdef ENABLE_SHADOW_CSM
 	highp vec4 lightCoord = LightcoordCSM[3];
@@ -76,22 +73,15 @@ lowp vec4 ShadeLitWithShadow(in lowp vec4 texDiffuse)
 	else if (gl_FragCoord.z < DepthCSM.z) {
 		lightCoord = LightcoordCSM[2];
 	}
-	else {
-		lightCoord = LightcoordCSM[3];
-	}
 #else // ENABLE_SHADOW_MAP
 	highp vec4 lightCoord = LightcoordShadowmap;
 #endif // ENABLE_SHADOW_CSM
 
-	lowp vec4 texResult;
 	if (lightCoord.s < 0.0 || lightCoord.t < 0.0 || lightCoord.s > 1.0 || lightCoord.t > 1.0) {
-		texResult = ShadeLit(texDiffuse);		// lit area
+		return 1.0; // lit area
 	} else {
-		lowp float factorLit = ComputeShadowPCF(lightCoord); 	// shadow area with PCF
-		texResult = mix(ShadeUnlit(texDiffuse), ShadeLit(texDiffuse), factorLit);
+		return ComputeShadowPCF(lightCoord); // shadow area with PCF
 	}
-
-    return texResult;
 }
 
 """;

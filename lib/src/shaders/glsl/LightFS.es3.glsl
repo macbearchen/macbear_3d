@@ -11,13 +11,12 @@ uniform mediump mat4 uPointLights[4];
 
 uniform mediump ivec2 uPointLightCounts; // x=lightCount, y=shadowCastingCount
 
-float calcAttenuation(float dist, float radius) {
-    float distSq = dist * dist;
-    float rangeSq = radius * radius;
-    float atten = 1.0 / max(distSq, 0.0001);
-    float ratio = distSq / rangeSq;
+// UE4 windowed inverse-square attenuation (Karis 2013)
+// +1.0 避免光源近距離過曝/firefly，rangeFade 讓光照在 radius 邊界平滑歸零
+float calcAttenuation(float distSq, float radiusSq) {
+    float ratio = distSq / radiusSq;
     float rangeFade = clamp(1.0 - ratio * ratio, 0.0, 1.0);
-    return atten * rangeFade * rangeFade;
+    return (rangeFade * rangeFade) / (distSq + 1.0);
 }
 
 vec3 calcPointLight(int i, vec3 fragPos, vec3 N, bool castShadow) {
@@ -25,22 +24,22 @@ vec3 calcPointLight(int i, vec3 fragPos, vec3 N, bool castShadow) {
     int localIndex = i % 2;    // 該 mat4 裡的第幾盞燈
 
     mat4 m = uPointLights[matIndex];
-    vec4 positionRange  = localIndex == 0 ? m[0] : m[2];
+    vec4 positionRangeSq = localIndex == 0 ? m[0] : m[2];
     vec4 colorIntensity = localIndex == 0 ? m[1] : m[3];
 
-    vec3 lightPos = positionRange.xyz;
-    float radius   = positionRange.w;
-    vec3 lightColor = colorIntensity.rgb;
-    float intensity  = colorIntensity.a;
+    vec3 lightPos = positionRangeSq.xyz;
+    float radiusSq = positionRangeSq.w;
 
     vec3 L = lightPos - fragPos;
-    float dist = length(L);
-    L = normalize(L);
+    L *= uInvObjScale;
+    float distSq = dot(L, L);          // 用它算距離平方
+    L = L * inversesqrt(max(distSq, 0.0001)); // 就地 normalize，覆寫成單位向量
 
-    float atten = calcAttenuation(dist, radius);
+    float atten = calcAttenuation(distSq, radiusSq);
     float NdotL = max(dot(N, L), 0.0);
 
-    vec3 radiance = lightColor * intensity * atten * NdotL;
+    // colorIntensity: rgb -> lightColor, a -> lightIntensity
+    vec3 radiance = colorIntensity.rgb * colorIntensity.a * atten * NdotL;
 
     if (castShadow) {
         // TODO: DPSM shadow lookup 接進來
@@ -52,13 +51,10 @@ vec3 calcPointLight(int i, vec3 fragPos, vec3 N, bool castShadow) {
 }
 
 // point lights lighting in object space
-lowp vec3 CalculateLighting() {
+lowp vec3 CalculateLighting(vec3 fragPos, vec3 N) {
     vec3 result = vec3(0.0);
     int lightCount = uPointLightCounts.x;
     int shadowCount = uPointLightCounts.y;
-
-    vec3 fragPos = ObjectspaceV;
-    vec3 N = ObjectspaceN;
 
     for (int i = 0; i < lightCount; i++) {
         bool castShadow = i < shadowCount;
@@ -66,25 +62,3 @@ lowp vec3 CalculateLighting() {
     }
     return result;
 }
-
-/*
-in vec3 vWorldPos;
-in vec3 vNormal;
-
-out vec4 fragColor;
-
-void main() {
-    vec3 N = normalize(vNormal);
-
-    vec3 result = vec3(0.0);
-    int lightCount = uPointLightCounts.x;
-    int shadowCount = uPointLightCounts.y;
-
-    for (int i = 0; i < lightCount; i++) {
-        bool castShadow = i < shadowCount;
-        result += calcPointLight(i, vWorldPos, N, castShadow);
-    }
-
-    fragColor = vec4(result, 1.0);
-}
-*/

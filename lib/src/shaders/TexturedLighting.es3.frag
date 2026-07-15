@@ -8,6 +8,7 @@ in mediump vec2 TextureCoordOut;
 uniform sampler2D SamplerDiffuse;	// GL_TEXTURE0
 
 uniform mediump vec3 uEyePos;
+uniform mediump vec3 uInvObjScale;
 in highp vec3 ObjectspaceV;    // Object space Vertex
 
 #ifdef ENABLE_PIXEL_LIGHTING
@@ -56,7 +57,14 @@ void main(void)
 	
 	////////// shadow map //////////
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
-	texResult = ShadeLitWithShadow(texResult);
+	lowp float litFactor = ComputeShadowLitFactor();
+	if (litFactor >= 1.0) {
+		texResult = ShadeLit(texResult);
+	} else if (litFactor <= 0.0) {
+		texResult = ShadeUnlit(texResult);
+	} else {
+		texResult = mix(ShadeUnlit(texResult), ShadeLit(texResult), litFactor);
+	}
 #else // no shadow
     texResult = ShadeLit(texResult);
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM

@@ -35,7 +35,7 @@ Future<void> main() async {
   final shaderOptions = M3AppEngine.instance.renderEngine.options.shader;
   final debugOptions = M3AppEngine.instance.renderEngine.options.debug;
   // debugOptions.showLight = true;
-  debugOptions.showCamera = true;
+  debugOptions.showCamera = false;
   shaderOptions.pcf = 2;
   shaderOptions.perPixel = true;
   shaderOptions.pbr = true;

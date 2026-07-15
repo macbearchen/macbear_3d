@@ -224,8 +224,8 @@ class M3Resources {
       }
       // add pixel lighting shader to vertex/fragment shader for final result
       strVert = "#define ENABLE_PIXEL_LIGHTING \n$strVert";
-      strFrag = "#define ENABLE_PIXEL_LIGHTING \n$strFrag \n$PixelFS_glsl ";
-      strFrag = strFrag + LightFS_glsl;
+      strFrag = "#define ENABLE_PIXEL_LIGHTING \n$strFrag";
+      strFrag = strFrag + LightFS_glsl + PixelFS_glsl;
     }
 
     if (options.fog) {
@@ -263,7 +263,7 @@ class M3Resources {
 
     // water program without shadow
     String vsWater = SkinningVS_glsl + Water_vert;
-    String fsWater = Water_frag;
+    String fsWater = Water_frag + LightFS_glsl;
     // bool bSpecularLight = false;
     // if (bSpecularLight) {
     //   fsWater = "#define ENABLE_WATER_SPECULAR \n$fsWater";
