@@ -6,7 +6,6 @@
   * **Shadow Rendering Enhancement**: Improved shadow blending in `TexturedLighting` fragment shader by linear mixing unlit and lit states based on `ComputeShadowLitFactor` instead of binary states.
   * **Light Helpers Refactoring**: Separated point light bulb rendering (`drawBulb`) from range rendering (`drawHelper`) in visualization tools.
   * **Point Light Calculation Update**: Updated point light calculations in `LightFS` to accept explicit positions and normal vectors and handle object-space scale adjustments (`uInvObjScale`).
-  * **Generated Shaders**: Regenerated `.g.dart` shader files containing the optimized GLSL implementations.
 
 ## 0.9.2
 
