@@ -74,7 +74,7 @@ Add `macbear_3d` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  macbear_3d: ^0.9.2
+  macbear_3d: ^0.9.3
 ```
 
 ## Usage

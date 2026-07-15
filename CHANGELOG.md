@@ -1,3 +1,13 @@
+## 0.9.3
+
+* Optimize / Refactor:
+  * **Shader & Attenuation Optimization**: Replaced distance-based calculation with squared distance and radius directly in shaders (using UE4's windowed inverse-square attenuation) to avoid expensive square root operations.
+  * **Point Light Data Packing**: Point light ranges are now squared on the Dart side before being sent to the GPU as part of the light's position vector `w` component.
+  * **Shadow Rendering Enhancement**: Improved shadow blending in `TexturedLighting` fragment shader by linear mixing unlit and lit states based on `ComputeShadowLitFactor` instead of binary states.
+  * **Light Helpers Refactoring**: Separated point light bulb rendering (`drawBulb`) from range rendering (`drawHelper`) in visualization tools.
+  * **Point Light Calculation Update**: Updated point light calculations in `LightFS` to accept explicit positions and normal vectors and handle object-space scale adjustments (`uInvObjScale`).
+  * **Generated Shaders**: Regenerated `.g.dart` shader files containing the optimized GLSL implementations.
+
 ## 0.9.2
 
 * Add:
