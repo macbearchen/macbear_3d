@@ -1,4 +1,6 @@
-## 0.9.3
+[English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
+
+## 0.9.3 (2026-07-15)
 
 * Optimize / Refactor:
   * **Shader & Attenuation Optimization**: Replaced distance-based calculation with squared distance and radius directly in shaders (using UE4's windowed inverse-square attenuation) to avoid expensive square root operations.
@@ -7,7 +9,7 @@
   * **Light Helpers Refactoring**: Separated point light bulb rendering (`drawBulb`) from range rendering (`drawHelper`) in visualization tools.
   * **Point Light Calculation Update**: Updated point light calculations in `LightFS` to accept explicit positions and normal vectors and handle object-space scale adjustments (`uInvObjScale`).
 
-## 0.9.2
+## 0.9.2 (2026-07-04)
 
 * Add:
   * **Swift Package Manager (SPM) Support**: Added SPM integration for iOS and macOS builds.
@@ -20,7 +22,7 @@
   * **Demos & UI Refinement**: Centralized light rotation updates in `DemoScene.update`, updated 3D text demo with an interactive UI, and optimized UI layouts with proper SafeAreas.
   * **WebGL Texture Fallbacks**: Added ASTC texture compression check and automatic fallback to checkerboard on unsupported web environments.
 
-## 0.9.1
+## 0.9.1 (2026-06-19)
 
 * Add:
   * **Modular Shader System**: Refactored shader pipeline to use `.glsl` extensions (e.g., `PixelFS.es3.glsl`, `SkinningVS.es3.glsl`). Added new shader source files `FogFS.es3.glsl`, `ShadowFS.es3.glsl`, and `ShadowVS.es3.glsl`.
@@ -38,7 +40,7 @@
   * **Planar Reflections**: Added customizable render scaling (`setRenderScale`) for reflection and refraction passes to optimize performance, and unified oblique clipping plane calculations.
   * **UML Generation Tool**: Updated `gen_uml.sh` to temporarily comment out annotations causing older analyzer tool crashes during class diagram generation.
 
-## 0.9.0
+## 0.9.0 (2026-05-24)
 
 * Add:
   * **Water Effect**: Introduced `M3Water` with animated dual-layer normal-map flow, planar reflection & refraction, fog-depth underwater tinting, and configurable wave distortion (`lib/src/scene/water.dart`).
@@ -58,7 +60,7 @@
   * **Geometries**: Significant updates to `M3PlaneGeom`, `M3Material`, and primitives to support new rendering features.
   * **Examples**: All demos updated to use the new API; `main.dart` and `main_all.dart` refreshed.
 
-## 0.8.1
+## 0.8.1 (2026-05-02)
 
 * Update:
   * **Project Structure**: Reorganized example files into a `demos/` subdirectory for better maintainability.
@@ -69,7 +71,7 @@
   * **Core Engine**: Removed legacy `physics_engine.dart` in favor of streamlined physics integration.
   * **Shaders**: Updated ES3 shaders with PCF shadow support.
 
-## 0.8.0
+## 0.8.0 (2026-04-17)
 
 * Update:
   * **Physics**: Switched to `M3OimoPhysics` for more robust Oimo physics integration and easier primitive management.
@@ -81,7 +83,7 @@
   * **Core Engine**: Refactored internal architecture and optimized scene graph management.
   * **Platform**: Removed direct `dart:io` dependencies to improve web and cross-platform compatibility.
 
-## 0.7.2
+## 0.7.2 (2026-04-12)
 
 * Update:
   * **Geometry**: Added `M3Axis axis` support for Torus, Capsule, Cylinder, and Plane geometries for flexible base orientation.
@@ -93,14 +95,14 @@
   * **Plugin Conversion**: `macbear_3d` is now a Flutter plugin to support native video textures on Android, iOS, and macOS.
   * **Publishing**: Resolved path dependency issues for pub.dev publication.
 
-## 0.7.1
+## 0.7.1 (2026-03-20)
 
 * Update:
   * **Assets**: Moved fonts into the package assets (`assets/fonts`).
   * **BVH Loader**: Added support for Biovision Hierarchy (BVH) files.
   * **Bone Mesh**: Added `M3OctahedralGeom` for bone visualization.
 
-## 0.7.0
+## 0.7.0 (2026-03-04)
 
 * Update:
   * **OpenGL ES 3.0 Support**: Upgraded unified shaders from ES2 to ES3 (GLSL 3.00 ES).
@@ -110,13 +112,13 @@
   * **Dynamic Reflection Probe**: Added `M3ReflectionProbe` for real-time cubemap capture and dynamic reflections.
   * **Internal**: Improved engine disposal and minor texture unbind cleanup.
 
-## 0.6.1
+## 0.6.1 (2026-02-21)
 
 * Add:
   * **Support Web build**: Optimized for WebGL and Flutter Web integration.
   * **Live Demo**: Created automatic deployment to [GitHub Pages](https://macbearchen.github.io/macbear_3d/).
 
-## 0.6.0
+## 0.6.0 (2026-02-11)
 
 * Add:
   * **Terrain System**: Procedural terrain generation using Perlin Noise (`M3TerrainGeom`, `M3PerlinNoise`).
@@ -127,19 +129,19 @@
   * **Platform Abstraction**: Separated logic for Native and Web (`PlatformInfo`).
   * **GUI System**: Adopted Flutter Widgets for UI.
 
-## 0.5.0
+## 0.5.0 (2026-01-29)
 
 * Add:
   * **Reflection**: Added cubemap-based reflection (`renderReflection`).
 
-## 0.4.0
+## 0.4.0 (2026-01-24)
 
 * Add:
   * **Core Engine**: Refactored `updateRender` to use `delta` duration for precise physics and animation timing.
   * **Skinned Meshes**: Fixed world-space bounding box calculations and improved animation stability.
   * **Resource Management**: Improved handling of font assets and added loading state support.
 
-## 0.3.0
+## 0.3.0 (2026-01-17)
 
 * Add:
   * **Cascaded Shadow Maps (CSM)**: Support for multiple shadow cascades (up to 4) for high-quality shadows over large distances.
@@ -148,7 +150,7 @@
   * **Dynamic Shadow Mode Switching**: Ability to switch between standard shadow mapping and CSM at runtime.
   * **Performance Optimizations**: Efficient shadow atlas management and reduced draw calls for shadows.
 
-## 0.2.0
+## 0.2.0 (2026-01-12)
 
 * Add: 
   * **Bounding Volumes**: Automatic AABB and Bounding Sphere calculation for all geometries.
@@ -157,13 +159,13 @@
   * **3D Text**: New `M3TextGeom` for generating 3D geometry from text strings.
   * **Render Stats**: Real-time monitoring of engine performance (FPS, vertices, triangles, draw calls).
 
-## 0.1.1
+## 0.1.1 (2026-01-03)
 
 * Add: 
   * UML diagram. https://open-vsx.org/vscode/item?itemName=jebbs.plantuml
   * screenshot images.
 
-## 0.1.0
+## 0.1.0 (2026-01-02)
 
 * Initial release of Macbear 3D engine.
 * Features:
