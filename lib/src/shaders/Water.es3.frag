@@ -70,8 +70,10 @@ uniform mediump vec3 uLightDir;		// parallel light
 lowp vec4 ApplyFog(in lowp vec4 texResult);
 #endif // ENABLE_FOG
 
+#ifdef ENABLE_POINT_LIGHTS
 // multi-point-lights
 lowp vec3 CalculateLighting(vec3 fragPos, vec3 N);
+#endif // ENABLE_POINT_LIGHTS
 
 void main(void)
 {
@@ -113,7 +115,9 @@ void main(void)
 	}
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
 
+#ifdef ENABLE_POINT_LIGHTS
 	resultColor.rgb += CalculateLighting(ObjectspaceV, vAccumulatedNormal) * 0.3;
+#endif
 
 #ifdef ENABLE_FOG
 	resultColor = ApplyFog(resultColor);

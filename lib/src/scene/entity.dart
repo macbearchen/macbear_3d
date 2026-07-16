@@ -44,6 +44,10 @@ class M3Entity extends M3Node {
         final localAabb = localBounding.aabb;
         final matWorldSub = worldMatrix * mesh.initMatrix * sub.localMatrix;
 
+        final subWorldAabb = sub.worldBounding.aabb;
+        subWorldAabb.min.setValues(double.infinity, double.infinity, double.infinity);
+        subWorldAabb.max.setValues(double.negativeInfinity, double.negativeInfinity, double.negativeInfinity);
+
         final v = Vector3.zero();
         for (int i = 0; i < 8; i++) {
           v.setValues(
@@ -52,8 +56,12 @@ class M3Entity extends M3Node {
             (i & 4) == 0 ? localAabb.min.z : localAabb.max.z,
           );
           matWorldSub.transform3(v);
+          subWorldAabb.hullPoint(v);
           worldAabb.hullPoint(v);
         }
+
+        sub.worldBounding.sphere.center.setFrom(subWorldAabb.center);
+        sub.worldBounding.sphere.radius = (subWorldAabb.max - subWorldAabb.min).length / 2;
       }
 
       // If skin exists, also hull all bone world positions

@@ -49,7 +49,14 @@ class M3RenderContext {
       if (stats.enabled) stats.entities++;
 
       final meshMatrix = entity.worldMatrix * entity.mesh.initMatrix;
+      final subMeshCount = entity.mesh.subMeshes.length;
       for (final sub in entity.mesh.subMeshes) {
+        // submesh culling check (skipped for single-submesh meshes)
+        if (subMeshCount > 1 && !viewer.isVisible(sub.worldBounding)) {
+          if (stats.enabled) stats.culling++;
+          continue;
+        }
+
         // skip planar reflection surface
         if (excludeReflection != null && sub.mtr.planarReflection == excludeReflection) {
           continue;

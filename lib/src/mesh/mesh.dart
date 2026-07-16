@@ -19,6 +19,9 @@ class M3SubMesh {
   /// The index of the glTF node this submesh is associated with, used for node animations.
   int? nodeIndex;
 
+  /// World bounding volume (AABB and Sphere) for culling
+  final M3Bounding worldBounding = M3Bounding();
+
   M3SubMesh(this.geom, {M3Material? material}) : mtr = material ?? M3Material();
 }
 

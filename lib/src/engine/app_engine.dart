@@ -402,8 +402,8 @@ class M3AppEngine with ChangeNotifier {
       scene.debugDraw();
 
       // draw Helper
-      if (renderEngine.options.debug.showHelpers) {
-        scene.drawHelper();
+      if (renderEngine.options.debug.showHelpers != M3HelperType.none) {
+        scene.drawHelper(renderEngine.options.debug.showHelpers);
       }
 
       // draw camera frustums

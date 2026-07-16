@@ -161,7 +161,7 @@ abstract class M3Scene {
   void debugDraw() {}
 
   // render helper: zero, camera, light, wireframe
-  void drawHelper() {
+  void drawHelper(M3HelperType helperType) {
     M3Program progSimple = M3Resources.programSimple!;
     M3Material mtr = M3Material();
 
@@ -169,32 +169,65 @@ abstract class M3Scene {
     gl.useProgram(progSimple.program);
     gl.uniform1i(progSimple.uniformBoneCount, 0);
 
+    final showEntity = helperType == M3HelperType.entity || helperType == M3HelperType.both;
+    final showSubMesh = helperType == M3HelperType.subMesh || helperType == M3HelperType.both;
+
     for (final entity in entities) {
       // culling
       if (!camera.isVisible(entity.worldBounding)) continue;
 
-      // origin axis
-      M3Resources.axisDotMesh.draw(progSimple, camera, entity.worldMatrix);
+      if (showEntity) {
+        // origin axis
+        M3Resources.axisDotMesh.draw(progSimple, camera, entity.worldMatrix);
 
-      // bounding sphere
-      Sphere worldSphere = entity.worldBounding.sphere;
-      if (worldSphere.radius > 0) {
-        Matrix4 matSphere = Matrix4.identity();
-        matSphere.translateByVector3(worldSphere.center);
-        matSphere.scaleByVector3(Vector3.all(worldSphere.radius * 1.03));
-        progSimple.setMaterial(mtr, Colors.magenta);
-        progSimple.setMatrices(camera, matSphere);
-        M3Resources.debugSphere.draw(progSimple);
+        // bounding sphere
+        Sphere worldSphere = entity.worldBounding.sphere;
+        if (worldSphere.radius > 0) {
+          Matrix4 matSphere = Matrix4.identity();
+          matSphere.translateByVector3(worldSphere.center);
+          matSphere.scaleByVector3(Vector3.all(worldSphere.radius * 1.03));
+          progSimple.setMaterial(mtr, Colors.magenta);
+          progSimple.setMatrices(camera, matSphere);
+          M3Resources.debugSphere.draw(progSimple);
+        }
+        // AABB
+        final matAabb = Matrix4.identity();
+        matAabb.translateByVector3(entity.worldBounding.aabb.center);
+        Vector3 extents = (entity.worldBounding.aabb.max - entity.worldBounding.aabb.min) / 2;
+        extents += Vector3.all(0.03);
+        matAabb.scaleByVector3(extents);
+        progSimple.setMaterial(mtr, Colors.lime);
+        progSimple.setMatrices(camera, matAabb);
+        M3Resources.debugFrustum.draw(progSimple, fillMode: .wireframe);
       }
-      // AABB
-      final matAabb = Matrix4.identity();
-      matAabb.translateByVector3(entity.worldBounding.aabb.center);
-      Vector3 extents = (entity.worldBounding.aabb.max - entity.worldBounding.aabb.min) / 2;
-      extents += Vector3.all(0.03);
-      matAabb.scaleByVector3(extents);
-      progSimple.setMaterial(mtr, Colors.lime);
-      progSimple.setMatrices(camera, matAabb);
-      M3Resources.debugFrustum.draw(progSimple, fillMode: .wireframe);
+
+      if (showSubMesh) {
+        final meshMatrix = entity.worldMatrix * entity.mesh.initMatrix;
+        for (final sub in entity.mesh.subMeshes) {
+          // culling
+          if (!camera.isVisible(sub.worldBounding)) continue;
+
+          // bounding sphere
+          Sphere subSphere = sub.worldBounding.sphere;
+          if (subSphere.radius > 0) {
+            Matrix4 matSphere = Matrix4.identity();
+            matSphere.translateByVector3(subSphere.center);
+            matSphere.scaleByVector3(Vector3.all(subSphere.radius * 1.01));
+            progSimple.setMaterial(mtr, Colors.cyan);
+            progSimple.setMatrices(camera, matSphere);
+            M3Resources.debugSphere.draw(progSimple);
+          }
+          // AABB
+          final matAabb = Matrix4.identity();
+          matAabb.translateByVector3(sub.worldBounding.aabb.center);
+          Vector3 extents = (sub.worldBounding.aabb.max - sub.worldBounding.aabb.min) / 2;
+          extents += Vector3.all(0.01);
+          matAabb.scaleByVector3(extents);
+          progSimple.setMaterial(mtr, Colors.yellow);
+          progSimple.setMatrices(camera, matAabb);
+          M3Resources.debugFrustum.draw(progSimple, fillMode: .wireframe);
+        }
+      }
     }
   }
 

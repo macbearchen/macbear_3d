@@ -1,3 +1,10 @@
+enum M3HelperType {
+  none,
+  entity,
+  subMesh,
+  both,
+}
+
 /// Rendering options for the engine (wireframe, helpers, shadows, FPS display).
 class M3RenderOptions {
   // debug options
@@ -9,7 +16,7 @@ class M3RenderOptions {
 
 class M3DebugOptions {
   bool wireframe = false;
-  bool showHelpers = false;
+  M3HelperType showHelpers = M3HelperType.none;
   bool showCamera = false; // camera frustum
   bool showLight = false; // light helper
   bool showMaps = false; // texture maps
@@ -27,8 +34,22 @@ class M3ShaderOptions {
   bool _ibl = true; // image based lighting
   int _pcf = 1; // shadow PCF: 0:none, 1:default(4-tap), 2:3x3, 3:5x5
   bool _fog = false;
+  bool _pointLights = true; // point lights
 
   bool isDirty = false;
+
+  // --- pointLights ---
+  bool get pointLights => _pointLights;
+  set pointLights(bool v) {
+    if (_pointLights == v) return;
+    _pointLights = v;
+    isDirty = true;
+
+    // pointLights 開啟時，自動強制 perPixel
+    if (_pointLights) {
+      if (!_perPixel) perPixel = true;
+    }
+  }
 
   // --- fog ---
   bool get fog => _fog;
@@ -45,10 +66,11 @@ class M3ShaderOptions {
     _perPixel = v;
     isDirty = true;
 
-    // perPixel 關閉時，cartoon 與 pbr 一定要關
+    // perPixel 關閉時，cartoon, pbr, pointLights 一定要關
     if (!_perPixel) {
       if (_cartoon) _cartoon = false;
       if (pbr) pbr = false; // 這也會自動連動關閉 ibl
+      if (_pointLights) _pointLights = false;
     }
   }
 

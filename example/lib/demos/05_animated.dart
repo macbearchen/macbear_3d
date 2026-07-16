@@ -56,6 +56,11 @@ class AnimatedScene_05 extends DemoScene {
     _duck = addMesh(meshDuck, Vector3(-4, -4, 0));
     _duck!.scale = Vector3.all(1.0);
 
+    final duck2 = addMesh(meshDuck, Vector3(-8, -4, 0));
+    duck2
+      ..rotation = Quaternion.euler(0, pi / 2, 0) * Quaternion.euler(pi / 3, 0, 0)
+      ..scale = Vector3.all(2.5);
+
     final meshFox = await M3Mesh.load('example/Fox.glb');
     meshFox.animator?.play(0);
     _fox = addMesh(meshFox, Vector3(-2, 0, 0));

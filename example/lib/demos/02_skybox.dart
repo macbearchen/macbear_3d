@@ -36,25 +36,25 @@ class SkyboxScene_02 extends DemoScene {
 
     M3Texture texGround = M3Texture.createCheckerboard(
       size: 8,
-      lightColor: Vector4(0.65, 0.45, 0.25, 1),
-      darkColor: Vector4(0.36, 0.22, 0.12, 1),
+      lightColor: Vector4(0.65, 0.75, 0.55, 1),
+      darkColor: Vector4(0.76, 0.82, 0.62, 1),
     );
 
     // Apply mirror shader to ground
-    const posZ = -30.0;
+    const posZ = -3.0;
     renderEngine.planarReflection.clipPlane.setFromComponents(0, 0, 1, -posZ);
     // renderEngine.planarReflection.setRenderScale(0.3);
 
     // 06-1: plane geometry
     final geomPlane = M3PlaneGeom(
-      200,
-      200,
+      100,
+      100,
       widthSegments: 100,
       heightSegments: 100,
       uvScale: Vector2.all(10.0),
       onVertex: (x, y) {
-        double rad = pi / 15;
-        return (cos(x * rad) + sin(y * rad)) * 2;
+        double rad = pi / 5;
+        return (cos(x * rad) + sin(y * rad)) * 1.2;
       },
     );
 
@@ -64,7 +64,7 @@ class SkyboxScene_02 extends DemoScene {
       // ..planarReflection = renderEngine.planarReflection
       ..diffuseTexture = texGround;
 
-    final plane = addMesh(meshPlane, Vector3(0, 0, -8)); //posZ));
+    final plane = addMesh(meshPlane, Vector3(0, 0, posZ));
 
     // 02-3: orbit around
     final meshCube = createCompoundMesh();

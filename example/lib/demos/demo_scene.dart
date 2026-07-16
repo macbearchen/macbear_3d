@@ -13,9 +13,7 @@ class DemoScene extends M3Scene {
 
     // skybox = await createCubemapLobby(); // nvlobby cubemap
     initPointLights(7);
-    pointLights[0].position.y = 0.2;
-    pointLights[0].position.z = 1;
-    pointLights[0].intensity = 3;
+    pointLights[0].intensity = 2.5;
     pointLights[0].range = 9;
   }
 
@@ -29,7 +27,14 @@ class DemoScene extends M3Scene {
     // M3Log.d('DemoScene', 'Light Direction: $dirLight');
 
     // move point lights
-    pointLights[0].position.x = 10 * (sin(sec * 0.5));
+    final cosSec = cos(sec * 0.3);
+    final sinSec = sin(sec * 0.3);
+
+    pointLights[0].position.setValues(7 * cosSec, 7 * sinSec, 1.5);
+    pointLights[1].position.setValues(3 * -sinSec, 3 * -cosSec, 0.7);
+    pointLights[2].position.x = 8 * sinSec;
+    pointLights[3].position.y = 8 * sinSec;
+    pointLights[4].position.y = 8 * cosSec;
   }
 
   // create nvlobby cubemap
