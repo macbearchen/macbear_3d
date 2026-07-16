@@ -2,6 +2,9 @@
 
 ## 0.9.3 (2026-07-15)
 
+* 新增功能 (Add):
+  * **控制台日誌工具 (M3Log)**：在 `lib/src/util/log.dart` 中新增 `M3Log` 工具類別，支援結構化且具 ANSI 顏色的 debug、info、warning、error、system 與 highlight 日誌輸出。
+
 * 優化與重構 (Optimize / Refactor):
   * **著色器與光照衰減優化**：在著色器中直接使用距離與半徑的平方進行衰減計算（採用 UE4 的 windowed inverse-square 衰減公式），避免昂貴的平方根計算。
   * **點光源數據封裝**：點光源的影響範圍（range）現在會先在 Dart 端進行平方運算，然後作為光源位置向量的 `w` 分量傳送給 GPU。

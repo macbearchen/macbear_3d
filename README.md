@@ -26,6 +26,7 @@ Preview the `main_all.dart` example live in your browser!
 - **Resource Management**: Efficient centralized loading and caching for textures, meshes, and fonts, including `M3Resources.axisMesh` for coordinate systems.
 - **Multi-Geometry Support**: Added `multi-M3SubMesh` to support multiple geometries within a single `M3Mesh`.
 - **WebGL/Web Optimizations**: Platform abstraction and alignment adjustments optimized specifically for web builds.
+- **Console Logger (M3Log)**: Built-in `M3Log` class for structured, ANSI-colored debug, info, warning, error, system, and highlight console logging.
 
 ### 🎨 Rendering & Visuals
 - **Model Loaders**: Native support for **glTF/GLB**, **OBJ**, and **BVH** formats.

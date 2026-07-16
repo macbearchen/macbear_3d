@@ -27,6 +27,7 @@
 - **資源管理**: 預建的高效集中式加載與快取機制（紋理、模型、字體），包含用於座標系的 `M3Resources.axisMesh`。
 - **多重幾何支援**: 新增 `multi-M3SubMesh` 支援在單個 `M3Mesh` 中包含多個幾何體。
 - **WebGL/Web 優化**: 針對 Web 建置優化平台抽象化與文字對齊調整。
+- **控制台日誌工具 (M3Log)**：內建 `M3Log` 類別，支援結構化且具 ANSI 顏色的偵錯 (debug)、資訊 (info)、警告 (warning)、錯誤 (error)、系統 (system) 與高亮 (highlight) 控制台日誌輸出。
 
 ### 🎨 渲染與視覺
 - **模型加載**: 原生支援 **glTF/GLB**、**OBJ** 與 **BVH (骨架動畫)** 格式。

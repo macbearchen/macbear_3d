@@ -2,6 +2,9 @@
 
 ## 0.9.3 (2026-07-15)
 
+* Add:
+  * **Console Logger (M3Log)**: Added `M3Log` class in `lib/src/util/log.dart` for structured, ANSI-colored debug, info, warning, error, system, and highlight console logging.
+
 * Optimize / Refactor:
   * **Shader & Attenuation Optimization**: Replaced distance-based calculation with squared distance and radius directly in shaders (using UE4's windowed inverse-square attenuation) to avoid expensive square root operations.
   * **Point Light Data Packing**: Point light ranges are now squared on the Dart side before being sent to the GPU as part of the light's position vector `w` component.
