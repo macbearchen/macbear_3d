@@ -17,7 +17,8 @@ screenshots:
 
 environment:
   sdk: ^3.10.0
-  flutter: ">=1.17.0"
+  flutter: '>=3.44.0'
+
 
 dependencies:
   ffi: ^2.2.0

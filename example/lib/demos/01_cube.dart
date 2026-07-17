@@ -32,7 +32,7 @@ class CubeScene_01 extends DemoScene {
     );
     // ground plane
     final mtrGround = M3Material()
-      // ..diffuseTexture = texTest
+      ..diffuseTexture = texTest
       ..setMatte();
     final groundMesh = M3Mesh(
       M3PlaneGeom(100, 100, widthSegments: 4, heightSegments: 4, uvScale: Vector2.all(10.0)),

@@ -1,7 +1,7 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
-## 0.9.3 <small>(2026-07-15)</small>
-
+## 0.9.3
+#### 2026-07-15
 * 新增功能 (Add):
   * **控制台日誌工具 (M3Log)**：在 `lib/src/util/log.dart` 中新增 `M3Log` 工具類別，支援結構化且具 ANSI 顏色的 debug、info、warning、error、system 與 highlight 日誌輸出。
 
@@ -12,8 +12,8 @@
   * **光源輔助線重構**：在視覺化輔助工具中，將點光源燈泡渲染（`drawBulb`）與範圍球渲染（`drawHelper`）進行分離。
   * **點光源計算更新**：更新 `LightFS` 中的點光源計算，使其接收明確的位置與法向量，並處理物體空間的縮放調整（`uInvObjScale`）。
 
-## 0.9.2 <small>(2026-07-04)</small>
-
+## 0.9.2
+#### 2026-07-04
 * 新增功能 (Add):
   * **Swift Package Manager (SPM) 支援**：為 iOS 和 macOS 建置新增了 SPM 整合支援。
   * **Framebuffer DEPTH24_STENCIL8 支援**：配置了 renderbuffer 和 depth 紋理的建立，以使用正確的 `DEPTH_STENCIL_ATTACHMENT` 支援深度與模板格式。
@@ -25,8 +25,8 @@
   * **範例與 UI 優化**：將光源旋轉更新集中到 `DemoScene.update` 中，使用互動式 UI 更新了 3D 文字範例，並使用 `SafeArea` 優化了 UI 版面配置。
   * **WebGL 紋理回退方案**：新增了 ASTC 紋理壓縮支援檢查，並在不支援的網頁環境下自動回退至棋盤格紋理。
 
-## 0.9.1 <small>(2026-06-19)</small>
-
+## 0.9.1
+#### 2026-06-19
 * 新增功能 (Add):
   * **模組化著色器系統**：重構著色器管線，使用 `.glsl` 副檔名（例如 `PixelFS.es3.glsl`, `SkinningVS.es3.glsl`）。新增著色器原始檔 `FogFS.es3.glsl`, `ShadowFS.es3.glsl` 與 `ShadowVS.es3.glsl`。
   * **著色器程式封裝**：引入專用且型別安全的 Dart 包裝器（位於 `lib/src/program/shader/` 下的 `M3FogShader`, `M3LightingShader`, `M3ShadowShader` 與 `M3WaterShader`），用以封裝 WebGL uniform 變數綁定與初始化邏輯。
@@ -63,8 +63,8 @@
   * **幾何體**：對 `M3PlaneGeom`, `M3Material` 和基本幾何體進行了重大更新，以支援新的渲染特性。
   * **範例項目**：所有範例皆已更新以使用新版 API；重構了 `main.dart` 和 `main_all.dart`。
 
-## 0.8.1 <small>(2026-05-02)</small>
-
+## 0.8.1
+#### 2026-05-02
 * 更新功能 (Update):
   * **專案結構**：將範例檔案整理到 `demos/` 子目錄下，以提高可維護性。
   * **場景圖 (Scene Graph)**：引入 `M3Node` 以改善階層式變換與場景管理；重構了 `M3Entity` 和 `M3Transform`。
@@ -74,8 +74,8 @@
   * **核心引擎**：移除了舊有的 `physics_engine.dart`，改用更精簡的物理引擎整合方案。
   * **著色器**：更新了支援 PCF 陰影的 ES3 著色器。
 
-## 0.8.0 <small>(2026-04-17)</small>
-
+## 0.8.0
+#### 2026-04-17
 * 更新功能 (Update):
   * **物理引擎**：切換至 `M3OimoPhysics`，實現更健全的 Oimo 物理整合與更簡單的幾何體管理。
   * **幾何體**：新增用於儲存高度資料的 `M3HeightField`、用於除錯定位點與骨骼的 `M3OctahedralGeom`，並改進了 `M3PlaneGeom` 的高度圖轉換邏輯。
@@ -86,8 +86,8 @@
   * **核心引擎**：重構了內部架構並優化了場景圖管理。
   * **平台相容**：移成了對 `dart:io` 的直接依賴，以提升網頁和跨平台的相容性。
 
-## 0.7.2 <small>(2026-04-12)</small>
-
+## 0.7.2
+#### 2026-04-12
 * 更新功能 (Update):
   * **幾何體**：為 Torus, Capsule, Cylinder 和 Plane 幾何體新增了 `M3Axis axis` 支援，以實現靈活的基礎朝向設定。
   * **輸入控制**：在 `M3CameraOrbitController` 中新增了鍵盤縮放支援 (+, -)。
@@ -98,15 +98,15 @@
   * **外掛轉換**：將 `macbear_3d` 轉換為 Flutter 插件，以支援 Android, iOS 和 macOS 上的原生視訊紋理。
   * **發布準備**：解決了發布至 pub.dev 的路徑依賴問題。
 
-## 0.7.1 <small>(2026-03-20)</small>
-
+## 0.7.1
+#### 2026-03-20
 * 更新功能 (Update):
   * **資源路徑**：將字型移至套件資產中 (`assets/fonts`)。
   * **BVH 載入器**：新增對 Biovision Hierarchy (BVH) 檔案的支援。
   * **骨骼網格**：新增用於骨骼視覺化的 `M3OctahedralGeom`。
 
-## 0.7.0 <small>(2026-03-04)</small>
-
+## 0.7.0
+#### 2026-03-04
 * 更新功能 (Update):
   * **OpenGL ES 3.0 支援**：將統一著色器從 ES2 升級至 ES3 (GLSL 3.00 ES)。
   * **ES2 清理**：將舊版 ES2 著色器移至 `shaders_discard` 目錄。
@@ -115,14 +115,14 @@
   * **動態反射探針**：新增了 `M3ReflectionProbe` 以支援即時環境捕捉與動態反射。
   * **內部優化**：改進了引擎釋放邏輯與微小的紋理釋放清理。
 
-## 0.6.1 <small>(2026-02-21)</small>
-
+## 0.6.1
+#### 2026-02-21
 * 新增功能 (Add):
   * **網頁建置支援**：針對 WebGL 與 Flutter Web 進行了優化整合。
   * **線上展示**：建立了自動部署至 [GitHub Pages](https://macbearchen.github.io/macbear_3d/) 的工作流。
 
-## 0.6.0 <small>(2026-02-11)</small>
-
+## 0.6.0
+#### 2026-02-11
 * 新增功能 (Add):
   * **地形系統**：支援使用柏林雜訊程序化生成地形 (`M3TerrainGeom`, `M3PerlinNoise`)。
   * **PBR 著色**：在 `M3Material` 中新增了對物理基礎渲染（金屬度、粗糙度）的支援。
@@ -132,20 +132,21 @@
   * **平台抽象**：將原生平台與網頁平台的邏輯進行分離 (`PlatformInfo`)。
   * **GUI 系統**：改用 Flutter Widget 來構建 UI。
 
-## 0.5.0 <small>(2026-01-29)</small>
-
+## 0.5.0
+#### 2026-01-29
 * 新增功能 (Add):
   * **鏡面反射**：新增了基於 Cubemap 的反射渲染 (`renderReflection`)。
 
-## 0.4.0 <small>(2026-01-24)</small>
+## 0.4.0
+#### 2026-01-24
 
 * 新增功能 (Add):
   * **核心引擎**：重構了 `updateRender` 以使用 `delta` 持續時間，從而進行精確的物理與動畫計時。
   * **骨骼皮膚網格**：修正了世界空間包圍盒的計算，並提升了動畫的穩定性。
   * **資源管理**：改善了字型資產的處理，並新增了載入狀態的支援。
 
-## 0.3.0 <small>(2026-01-17)</small>
-
+## 0.3.0
+#### 2026-01-17
 * 新增功能 (Add):
   * **級聯陰影貼圖 (CSM)**：支援多達 4 個陰影級聯，以在大範圍距離內呈現高品質陰影。
   * **陰影穩定性**：實作了基於包圍球的級聯計算與紋素對齊（texel snapping），以消除陰影閃爍。
@@ -153,8 +154,8 @@
   * **動態陰影模式切換**：支援在執行期於標準陰影貼圖與 CSM 之間進行動態切換。
   * **效能優化**：高效的陰影圖集（shadow atlas）管理並減少了陰影繪製呼叫。
 
-## 0.2.0 <small>(2026-01-12)</small>
-
+## 0.2.0
+#### 2026-01-12
 * 新增功能 (Add):
   * **包圍體**：為所有幾何體實作了自動計算 AABB 與包圍球。
   * **資源管理器**：提供用於載入與快取資產（幾何體、網格、紋理、字型）的集中式系統。
@@ -162,14 +163,14 @@
   * **3D 文字**：新增 `M3TextGeom` 以便從文字字串生成 3D 幾何體。
   * **渲染統計**：即時監測引擎效能指標（FPS、頂點數、三角形數、繪製呼叫次數）。
 
-## 0.1.1 <small>(2026-01-03)</small>
-
+## 0.1.1
+#### 2026-01-03
 * 新增功能 (Add):
   * UML 類別圖支援。
   * 專案螢幕截圖。
 
-## 0.1.0 <small>(2026-01-02)</small>
-
+## 0.1.0
+#### 2026-01-02
 * Macbear 3D 引擎首個版本發布。
 * 主要特性：
   * 透過 flutter_angle 支援 OpenGL ES。

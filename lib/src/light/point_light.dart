@@ -2,7 +2,7 @@ part of 'light.dart';
 
 /// point light
 class M3PointLight extends M3Light {
-  double range = 5.0; // packed in position(w: range^2)
+  double range = 8.0; // packed in position(w: range^2)
   double intensity = 1.0; // packed in color(alpha)
 
   // 封裝函數：直接回傳一個 Float32List
