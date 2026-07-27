@@ -286,10 +286,10 @@ packages:
     dependency: "direct main"
     description:
       name: rapier_physics
-      sha256: "4144bc4c1296faf4a84c2f6f3fe2b2d483253082a90b12b7a30020f421948123"
+      sha256: fe4f240b118db06ca37cb6247ccc5388e70c65aa6b9f5e394187696ea8c12a81
       url: "https://pub.dev"
     source: hosted
-    version: "0.4.0"
+    version: "0.4.1"
   sky_engine:
     dependency: transitive
     description: flutter

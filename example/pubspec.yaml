@@ -11,7 +11,7 @@ dependencies:
 
   macbear_3d:
     path: ../   # pub.dev 會自動處理
-  rapier_physics: ^0.4.0
+  rapier_physics: ^0.4.1
   video_player: ^2.11.1
 
 dev_dependencies:
