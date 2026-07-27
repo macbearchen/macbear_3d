@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 
 import 'package:vector_math/vector_math_lists.dart';
 import 'package:image/image.dart' as img;
@@ -9,6 +8,7 @@ import '../m3_internal.dart';
 import '../gltf/gltf_parser.dart';
 
 import 'primitive/height_field.dart';
+import 'text/contour.dart';
 import 'text/ear_clipping.dart';
 
 // part for geom
@@ -18,14 +18,14 @@ part 'primitive/box_geom.dart';
 part 'primitive/capsule_geom.dart';
 part 'primitive/cylinder_geom.dart';
 part 'primitive/ellipsoid_geom.dart';
+part 'primitive/line_geom.dart';
 part 'primitive/octahedral_geom.dart';
 part 'primitive/plane_geom.dart';
 part 'primitive/pyramid_geom.dart';
 part 'primitive/sphere_geom.dart';
-part 'primitive/terrain_geom.dart';
 part 'primitive/torus_geom.dart';
 part 'text/text_geom.dart';
-part 'text/contour.dart';
+part 'terrain_geom.dart';
 part 'gltf_geom.dart';
 part 'obj_geom.dart';
 

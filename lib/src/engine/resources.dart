@@ -61,7 +61,7 @@ class M3Resources {
   // Unit geometries
   // ------------------------------
   static final unitCube = M3BoxGeom(1.0, 1.0, 1.0);
-  static final unitCylinder = M3CylinderGeom(0.5, 0.5, 1.0);
+  static final unitCylinder = M3CylinderGeom(topRadius: 0.5, bottomRadius: 0.5, height: 1);
   static final unitBone = M3OctahedralGeom(0.5, bias: Vector3(-0.6, 0, 0));
   static final unitOctahedral = M3OctahedralGeom(0.5);
   static final unitSphere = M3SphereGeom(0.5);

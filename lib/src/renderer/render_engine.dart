@@ -113,7 +113,6 @@ class M3RenderEngine {
 
   /// Render scene
   void renderScene(M3Scene scene) {
-    stats.reset();
     stats.frames++;
 
     // draw skybox

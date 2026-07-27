@@ -107,7 +107,13 @@ class M3RapierPhysicsEngine implements M3PhysicsEngine {
       case M3ColliderShapeType.cone:
         rapierDesc = rapier.ColliderDesc.cone(desc.halfHeight, desc.radius);
         break;
-      case M3ColliderShapeType.capsule:
+      case M3ColliderShapeType.capsuleX:
+        rapierDesc = rapier.ColliderDesc.capsule(desc.halfHeight, desc.radius);
+        break;
+      case M3ColliderShapeType.capsuleY:
+        rapierDesc = rapier.ColliderDesc.capsule(desc.halfHeight, desc.radius);
+        break;
+      case M3ColliderShapeType.capsuleZ:
         rapierDesc = rapier.ColliderDesc.capsule(desc.halfHeight, desc.radius);
         break;
       case M3ColliderShapeType.heightfield:

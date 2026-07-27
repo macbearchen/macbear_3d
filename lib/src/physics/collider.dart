@@ -1,6 +1,17 @@
 part of 'physics_engine.dart';
 
-enum M3ColliderShapeType { cuboid, ball, cylinder, cone, capsule, heightfield }
+// dart format off
+enum M3ColliderShapeType {
+  cuboid,
+  ball,
+  cylinder,
+  cone,
+  capsuleX,
+  capsuleY,
+  capsuleZ,
+  heightfield,
+}
+// dart format on
 
 /// Collider descriptor
 class M3ColliderDesc {
@@ -22,9 +33,11 @@ class M3ColliderDesc {
 
   M3ColliderDesc.cuboid(this.hx, this.hy, this.hz) : shapeType = M3ColliderShapeType.cuboid;
   M3ColliderDesc.ball(this.radius) : shapeType = M3ColliderShapeType.ball;
-  M3ColliderDesc.cylinder(this.radius, this.halfHeight) : shapeType = M3ColliderShapeType.cylinder;
-  M3ColliderDesc.cone(this.radius, this.halfHeight) : shapeType = M3ColliderShapeType.cone;
-  M3ColliderDesc.capsule(this.radius, this.halfHeight) : shapeType = M3ColliderShapeType.capsule;
+  M3ColliderDesc.cylinder({required this.radius, required this.halfHeight}) : shapeType = M3ColliderShapeType.cylinder;
+  M3ColliderDesc.cone({required this.radius, required this.halfHeight}) : shapeType = M3ColliderShapeType.cone;
+  M3ColliderDesc.capsuleX({required this.radius, required this.halfHeight}) : shapeType = M3ColliderShapeType.capsuleX;
+  M3ColliderDesc.capsuleY({required this.radius, required this.halfHeight}) : shapeType = M3ColliderShapeType.capsuleY;
+  M3ColliderDesc.capsuleZ({required this.radius, required this.halfHeight}) : shapeType = M3ColliderShapeType.capsuleZ;
 }
 
 abstract class M3Collider {}

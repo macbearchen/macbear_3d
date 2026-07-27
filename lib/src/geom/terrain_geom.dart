@@ -1,4 +1,4 @@
-part of '../geom.dart';
+part of 'geom.dart';
 
 /// Procedural terrain geometry using Perlin noise.
 class M3TerrainGeom extends M3Geom {
@@ -129,9 +129,12 @@ class M3TerrainGeom extends M3Geom {
     localBounding.sphere.radius = Vector3(hx, hy, maxHeight).length;
   }
 
-  /// Create a terrain geometry from a [ui.Image] heightmap.
+  /// Create a terrain geometry from an [img.Image] heightmap.
+  /// Works for both 8-bit and 16-bit source images — sampling is
+  /// normalized against `image.maxChannelValue`, so bit depth is
+  /// handled transparently.
   static Future<M3TerrainGeom> fromHeightmapImage(
-    ui.Image image,
+    img.Image image,
     double width,
     double height, {
     int widthSegments = 64,
@@ -139,19 +142,11 @@ class M3TerrainGeom extends M3Geom {
     double maxHeight = 5.0,
     Vector2? uvScale,
   }) async {
-    final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
-    if (byteData == null) {
-      throw Exception("Failed to get raw RGBA bytes from heightmap image");
-    }
-    final pixels = byteData.buffer.asUint8List();
-    final imgW = image.width;
-    final imgH = image.height;
-
     final geom = M3TerrainGeom._internal(
       width,
       height,
       (ratioX, ratioY, px, py) {
-        return _sampleHeight(pixels, imgW, imgH, ratioX, ratioY, maxHeight);
+        return _sampleHeight(image, ratioX, ratioY, maxHeight);
       },
       widthSegments: widthSegments,
       heightSegments: heightSegments,
@@ -175,87 +170,23 @@ class M3TerrainGeom extends M3Geom {
     final buffer = await M3ResourceManager.loadBuffer(assetPath);
     final u8list = buffer.asUint8List();
 
-    if (_is16BitPng(u8list)) {
-      return from16BitPngBytes(
-        u8list,
-        width,
-        height,
-        widthSegments: widthSegments,
-        heightSegments: heightSegments,
-        maxHeight: maxHeight,
-        uvScale: uvScale,
-      );
-    }
-
-    final image = await M3ResourceManager.createImageFromBytes(u8list);
-    return fromHeightmapImage(
-      image,
-      width,
-      height,
-      widthSegments: widthSegments,
-      heightSegments: heightSegments,
-      maxHeight: maxHeight,
-      uvScale: uvScale,
-    );
-  }
-
-  /// Detects if the PNG bytes represent a 16-bit image by inspecting the IHDR chunk.
-  static bool _is16BitPng(Uint8List bytes) {
-    if (bytes.length < 29) return false;
-    // Check PNG signature: 89 50 4E 47 0D 0A 1A 0A
-    if (bytes[0] != 0x89 ||
-        bytes[1] != 0x50 ||
-        bytes[2] != 0x4E ||
-        bytes[3] != 0x47 ||
-        bytes[4] != 0x0D ||
-        bytes[5] != 0x0A ||
-        bytes[6] != 0x1A ||
-        bytes[7] != 0x0A) {
-      return false;
-    }
-    // Check IHDR chunk type: "IHDR"
-    if (bytes[12] != 0x49 || // I
-        bytes[13] != 0x48 || // H
-        bytes[14] != 0x44 || // D
-        bytes[15] != 0x52) {
-      // R
-      return false;
-    }
-    int bitDepth = bytes[24];
-    return bitDepth == 16;
-  }
-
-  /// Create a terrain geometry from 16-bit PNG bytes.
-  static Future<M3TerrainGeom> from16BitPngBytes(
-    Uint8List bytes,
-    double width,
-    double height, {
-    int widthSegments = 64,
-    int heightSegments = 64,
-    double maxHeight = 5.0,
-    Vector2? uvScale,
-  }) async {
-    final decoded = img.decodePng(bytes);
+    final decoded = img.decodeImage(u8list);
     if (decoded == null) {
-      throw Exception("Failed to decode 16-bit PNG");
+      throw Exception("Failed to decode heightmap image: $assetPath");
     }
 
-    final geom = M3TerrainGeom._internal(
+    return fromHeightmapImage(
+      decoded,
       width,
       height,
-      (ratioX, ratioY, px, py) {
-        return _sampleHeight16Bit(decoded, ratioX, ratioY, maxHeight);
-      },
       widthSegments: widthSegments,
       heightSegments: heightSegments,
       maxHeight: maxHeight,
       uvScale: uvScale,
     );
-    geom.name = "TerrainFrom16BitHeightmap";
-    return geom;
   }
 
-  static double _sampleHeight16Bit(img.Image image, double u, double v, double maxHeight) {
+  static double _sampleHeight(img.Image image, double u, double v, double maxHeight) {
     final imgW = image.width;
     final imgH = image.height;
     // Bilinear interpolation for smooth height sample
@@ -269,10 +200,10 @@ class M3TerrainGeom extends M3Geom {
     double tx = px - x0;
     double ty = py - y0;
 
-    double h00 = _getPixelHeight16Bit(image, x0, y0);
-    double h10 = _getPixelHeight16Bit(image, x1, y0);
-    double h01 = _getPixelHeight16Bit(image, x0, y1);
-    double h11 = _getPixelHeight16Bit(image, x1, y1);
+    double h00 = _getPixelHeight(image, x0, y0);
+    double h10 = _getPixelHeight(image, x1, y0);
+    double h01 = _getPixelHeight(image, x0, y1);
+    double h11 = _getPixelHeight(image, x1, y1);
 
     double h0 = h00 * (1.0 - tx) + h10 * tx;
     double h1 = h01 * (1.0 - tx) + h11 * tx;
@@ -280,42 +211,10 @@ class M3TerrainGeom extends M3Geom {
     return (h0 * (1.0 - ty) + h1 * ty) * maxHeight;
   }
 
-  static double _getPixelHeight16Bit(img.Image image, int x, int y) {
+  static double _getPixelHeight(img.Image image, int x, int y) {
     final pixel = image.getPixel(x, y);
     // Average RGB for grayscale elevation value, normalized by maxChannelValue
+    // (works for both 8-bit and 16-bit sources automatically)
     return (pixel.r + pixel.g + pixel.b) / (3 * image.maxChannelValue);
-  }
-
-  static double _sampleHeight(Uint8List pixels, int imgW, int imgH, double u, double v, double maxHeight) {
-    // Bilinear interpolation for smooth height sample
-    double px = u * (imgW - 1);
-    double py = v * (imgH - 1);
-    int x0 = px.floor().clamp(0, imgW - 1);
-    int x1 = (x0 + 1).clamp(0, imgW - 1);
-    int y0 = py.floor().clamp(0, imgH - 1);
-    int y1 = (y0 + 1).clamp(0, imgH - 1);
-
-    double tx = px - x0;
-    double ty = py - y0;
-
-    double h00 = _getPixelHeight(pixels, imgW, x0, y0);
-    double h10 = _getPixelHeight(pixels, imgW, x1, y0);
-    double h01 = _getPixelHeight(pixels, imgW, x0, y1);
-    double h11 = _getPixelHeight(pixels, imgW, x1, y1);
-
-    double h0 = h00 * (1.0 - tx) + h10 * tx;
-    double h1 = h01 * (1.0 - tx) + h11 * tx;
-
-    return (h0 * (1.0 - ty) + h1 * ty) * maxHeight;
-  }
-
-  static double _getPixelHeight(Uint8List pixels, int imgW, int x, int y) {
-    int idx = (y * imgW + x) * 4;
-    if (idx >= pixels.length) return 0.0;
-    int r = pixels[idx];
-    int g = pixels[idx + 1];
-    int b = pixels[idx + 2];
-    // Average RGB for grayscale elevation value
-    return (r + g + b) / 765.0; // 3 * 255
   }
 }

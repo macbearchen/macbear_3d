@@ -3,7 +3,7 @@ import '../main_all.dart';
 
 // ignore: camel_case_types
 class PhysicsScene_07 extends DemoScene {
-  final _geomCylinder = M3CylinderGeom(0.5, 0.5, 1.0, axis: M3Axis.y);
+  final _geomCylinder = M3CylinderGeom(topRadius: 0.5, bottomRadius: 0.5, height: 1.0, axis: M3Axis.y);
 
   // constructor
   PhysicsScene_07() : super(physics: M3PhysicsSystem(M3RapierPhysicsEngine()));
@@ -26,7 +26,7 @@ class PhysicsScene_07 extends DemoScene {
     cylinderMesh.subMeshes[0].mtr.diffuseTexture = texGrid;
 
     // 07-1: physics static ground
-    physicsSystem.addBox(5, 5, 2, M3RigidBodyDesc.fixed()..position = Vector3(0, 0, -2));
+    physicsSystem.addBox(5, 5, 2, desc: M3RigidBodyDesc.fixed()..position = Vector3(0, 0, -2));
 
     List<Vector3> arrayPos = [Vector3(0, 0, 0), Vector3(3, 0, 0), Vector3(0, 3, 0), Vector3(.5, .6, 3)];
     List<Vector4> arrayColor = [Colors.yellow, Colors.red, Colors.green, Colors.blue];
@@ -38,7 +38,7 @@ class PhysicsScene_07 extends DemoScene {
 
       // visual entity
       final entity = addMesh(cubeMesh, pos)..color = arrayColor[i];
-      final rb = physicsSystem.addBox(0.5, 0.5, 0.5, M3RigidBodyDesc.dynamic()..position = pos);
+      final rb = physicsSystem.addBox(0.5, 0.5, 0.5, desc: M3RigidBodyDesc.dynamic()..position = pos);
       physicsSystem.attachEntity(entity, rb);
     }
 
@@ -48,7 +48,7 @@ class PhysicsScene_07 extends DemoScene {
       final pos = arrayPos[i].clone() + Vector3(0.3, 0.6, 3.0);
 
       final entity = addMesh(ballMesh, pos)..color = arrayColor[i];
-      final rb = physicsSystem.addSphere(0.5, M3RigidBodyDesc.dynamic()..position = pos);
+      final rb = physicsSystem.addSphere(0.5, desc: M3RigidBodyDesc.dynamic()..position = pos);
       physicsSystem.attachEntity(entity, rb);
     }
 
@@ -58,7 +58,11 @@ class PhysicsScene_07 extends DemoScene {
       final pos = Vector3(i - 0.2, i + 0.3, i + 6.5);
 
       final entity = addMesh(cylinderMesh, pos)..color = arrayColor[i];
-      final rb = physicsSystem.addCylinder(0.5, 0.5, M3RigidBodyDesc.dynamic()..position = pos);
+      final rb = physicsSystem.addCylinder(
+        radius: 0.5,
+        halfHeight: 0.5,
+        desc: M3RigidBodyDesc.dynamic()..position = pos,
+      );
       physicsSystem.attachEntity(entity, rb);
     }
 

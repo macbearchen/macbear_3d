@@ -5,10 +5,10 @@ part of '../geom.dart';
 /// Vertices are ordered from top to bottom, counter-clockwise by each row.
 /// Set [topRadius] to 0 for a cone shape.
 class M3CylinderGeom extends M3Geom {
-  M3CylinderGeom(
-    double topRadius,
-    double bottomRadius,
-    double height, {
+  M3CylinderGeom({
+    required double topRadius,
+    required double bottomRadius,
+    required double height,
     int radiusSegments = M3Geom.radialSegments,
     int heightSegments = 1,
     double creaseAngle = 40.0,

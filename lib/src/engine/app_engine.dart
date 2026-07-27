@@ -369,6 +369,7 @@ class M3AppEngine with ChangeNotifier {
       renderEngine.renderShadowMap(scene);
 
       // prepare render queue
+      renderEngine.stats.reset();
       renderEngine.mainContext.prepareRenderQueue(scene, scene.camera);
 
       // capture reflection probe (environment map)

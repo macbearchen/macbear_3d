@@ -1,4 +1,4 @@
-part of '../geom.dart';
+import 'package:vector_math/vector_math.dart';
 
 class M3Contour {
   final List<M3ContourInfo> infos = [];

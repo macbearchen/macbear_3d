@@ -41,35 +41,57 @@ class M3PhysicsSystem {
     _accumulator = 0.0;
   }
 
-  M3RigidBody addBox(double hx, double hy, double hz, M3RigidBodyDesc? desc) {
+  /// add box rigid body
+  M3RigidBody addBox(double hx, double hy, double hz, {M3RigidBodyDesc? desc}) {
     final body = _engine.createRigidBody(desc ?? M3RigidBodyDesc.dynamic());
     _engine.createCollider(body, M3ColliderDesc.cuboid(hx, hy, hz));
     return body;
   }
 
-  M3RigidBody addSphere(double radius, M3RigidBodyDesc? desc) {
+  /// add sphere rigid body
+  M3RigidBody addSphere(double radius, {M3RigidBodyDesc? desc}) {
     final body = _engine.createRigidBody(desc ?? M3RigidBodyDesc.dynamic());
     _engine.createCollider(body, M3ColliderDesc.ball(radius));
     return body;
   }
 
-  M3RigidBody addCylinder(double radius, double halfHeight, M3RigidBodyDesc? desc) {
+  /// add cylinder rigid body
+  M3RigidBody addCylinder({required double radius, required double halfHeight, M3RigidBodyDesc? desc}) {
     final body = _engine.createRigidBody(desc ?? M3RigidBodyDesc.dynamic());
-    _engine.createCollider(body, M3ColliderDesc.cylinder(radius, halfHeight));
+    _engine.createCollider(body, M3ColliderDesc.cylinder(radius: radius, halfHeight: halfHeight));
     return body;
   }
 
-  M3RigidBody addCapsule(double radius, double halfHeight, M3RigidBodyDesc? desc) {
+  /// Adds a capsule-shaped rigid body.
+  ///
+  /// [axis] specifies the capsule's long axis in this package's
+  /// Z-up coordinate system. Defaults to [M3Axis.z] (upright).
+  M3RigidBody addCapsule({
+    required double radius,
+    required double halfHeight,
+    M3RigidBodyDesc? desc,
+    M3Axis axis = M3Axis.z,
+  }) {
     final body = _engine.createRigidBody(desc ?? M3RigidBodyDesc.dynamic());
-    _engine.createCollider(body, M3ColliderDesc.capsule(radius, halfHeight));
+    M3ColliderDesc colliderDesc;
+    if (axis == M3Axis.x) {
+      colliderDesc = M3ColliderDesc.capsuleX(radius: radius, halfHeight: halfHeight);
+    } else if (axis == M3Axis.y) {
+      colliderDesc = M3ColliderDesc.capsuleY(radius: radius, halfHeight: halfHeight);
+    } else {
+      colliderDesc = M3ColliderDesc.capsuleZ(radius: radius, halfHeight: halfHeight);
+    }
+    _engine.createCollider(body, colliderDesc);
     return body;
   }
 
+  /// attach entity to physics body
   void attachEntity(M3Entity entity, M3RigidBody body) {
     entity.rigidBody = body;
     _bodyToEntity[body.handle] = entity;
   }
 
+  /// detach entity from physics body
   void detachEntity(M3Entity entity) {
     final body = entity.rigidBody;
     if (body != null) {

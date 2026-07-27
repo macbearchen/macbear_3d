@@ -4,7 +4,7 @@ part of 'scene.dart';
 class SampleScene extends M3Scene {
   final _geomCube = M3Resources.unitCube;
   final _geomSphere = M3Resources.unitSphere;
-  final _geomCylinder = M3CylinderGeom(0.5, 0.5, 1.0, axis: M3Axis.y);
+  final _geomCylinder = M3CylinderGeom(topRadius: 0.5, bottomRadius: 0.5, height: 1.0, axis: M3Axis.y);
   final _geomPlane = M3PlaneGeom(20.0, 20.0, widthSegments: 50, heightSegments: 50, uvScale: Vector2(10.0, 10.0));
 
   // constructor
@@ -33,9 +33,6 @@ class SampleScene extends M3Scene {
     );
     M3Texture texGrid2 = M3Texture.createCheckerboard(size: 6);
     M3Texture texGrid = M3Texture.createCheckerboard(size: 3);
-
-    // create physics ground rigid body, 4 fences
-    physicsSystem.addBox(10, 10, 2, M3RigidBodyDesc.fixed()..position = Vector3(0, 0, -2));
 
     // ground plane model
     final posGround = Vector3.zero();
@@ -76,21 +73,17 @@ class SampleScene extends M3Scene {
             case 0:
               mesh = M3Mesh(_geomSphere);
               mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
-              rb = physicsSystem.addSphere(0.5, M3RigidBodyDesc.dynamic()..position = pos);
               break;
             case 1:
               mesh = M3Mesh(_geomCube);
               mesh.subMeshes[0].mtr.diffuseTexture = texGrid;
-              rb = physicsSystem.addBox(0.5, 0.5, 0.5, M3RigidBodyDesc.dynamic()..position = pos);
               break;
             default:
               mesh = M3Mesh(_geomCylinder);
               mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
-              rb = physicsSystem.addCylinder(0.5, 0.5, M3RigidBodyDesc.dynamic()..position = pos);
               break;
           }
           M3Entity entity = addMesh(mesh, pos)..color = meshColor;
-          physicsSystem.attachEntity(entity, rb);
         }
       }
     }

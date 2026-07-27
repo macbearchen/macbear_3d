@@ -55,7 +55,7 @@ class TerrainScene_06 extends DemoScene {
 
     final geomBox = M3BoxGeom(2, 3, 6);
     final geomSphere = M3SphereGeom(2.5);
-    final geomCylinder = M3CylinderGeom(1.5, 1.5, 8, heightSegments: 2);
+    final geomCylinder = M3CylinderGeom(topRadius: 0.5, bottomRadius: 1.5, height: 6, heightSegments: 2);
     final geomTorus = M3TorusGeom(2, 0.6);
 
     for (int i = 0; i <= 10; i++) {

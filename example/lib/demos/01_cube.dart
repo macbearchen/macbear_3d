@@ -4,12 +4,16 @@ import '../main_all.dart';
 
 // ignore: camel_case_types
 class CubeScene_01 extends DemoScene {
+  late M3LineGeom _line;
+
   @override
   Future<void> load() async {
     if (isLoaded) return;
     await super.load();
 
     camera.setEuler(-pi / 9, -pi / 4, 0, distance: 24);
+
+    _line = M3LineGeom(Vector3(0, 0, 0), Vector3(1, 1, 1));
 
     // 01: box geometry
     for (int i = 0; i < 10; i++) {
@@ -43,6 +47,19 @@ class CubeScene_01 extends DemoScene {
   }
 
   @override
+  void drawHelper(M3HelperType helperType) {
+    super.drawHelper(helperType);
+
+    // draw line
+    M3Material mtr = M3Material();
+
+    final prog = M3Resources.programSimple!;
+    prog.setMatrices(camera, Matrix4.identity());
+    prog.setMaterial(mtr, Colors.red);
+    _line.drawLine(prog, Vector3(0, 0, 3), Vector3(-5, 5, 1));
+  }
+
+  @override
   fm.Widget buildUI(fm.BuildContext context) {
     const String info =
         '''
@@ -55,7 +72,7 @@ Click buttons to test examples.
   3. Primitives scene
   4. Obj teapot scene
   5. Animated scene: Gltf, BVH
-  6. Terrain scene
+  6. Terrain and Water scene
   7. Physics scene
   8. Text 3D scene
   9. PBR Test scene''';

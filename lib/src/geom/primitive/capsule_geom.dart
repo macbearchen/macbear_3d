@@ -4,9 +4,9 @@ part of '../geom.dart';
 ///
 /// Vertices are ordered from top to bottom, counter-clockwise by each row.
 class M3CapsuleGeom extends M3Geom {
-  M3CapsuleGeom(
-    double radius,
-    double height, {
+  M3CapsuleGeom({
+    required double radius,
+    required double height,
     int radiusSegments = M3Geom.radialSegments,
     int heightSegments = 1,
     int capSegments = 8,
