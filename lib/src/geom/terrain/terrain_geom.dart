@@ -1,6 +1,15 @@
-part of 'geom.dart';
+part of '../geom.dart';
 
-/// Procedural terrain geometry using Perlin noise.
+/// Procedural terrain geometry.
+///
+/// Constructors:
+/// - Default: Perlin noise-based procedural terrain.
+/// - [fromHeightField]: build from a pre-sampled [M3HeightField].
+/// - [fromHeightmap] / [fromHeightmapAsset]: convenience wrappers that
+///   create a [M3HeightField] then delegate to [fromHeightField].
+///
+/// For large terrains, prefer [M3TiledTerrain.build] / [M3TiledTerrain.fromHeightField]
+/// which produce a shared-VBO tiled mesh suitable for per-tile frustum culling.
 class M3TerrainGeom extends M3Geom {
   M3TerrainGeom(
     double width,
@@ -129,11 +138,64 @@ class M3TerrainGeom extends M3Geom {
     localBounding.sphere.radius = Vector3(hx, hy, maxHeight).length;
   }
 
-  /// Create a terrain geometry from an [img.Image] heightmap.
-  /// Works for both 8-bit and 16-bit source images — sampling is
-  /// normalized against `image.maxChannelValue`, so bit depth is
-  /// handled transparently.
-  static Future<M3TerrainGeom> fromHeightmapImage(
+  /// Private constructor used by [M3TiledTerrain.build] / [M3TiledTerrain.buildFromHeightField].
+  ///
+  /// Holds pre-created GPU buffers without owning CPU-side vertex data.
+  /// This "host" geom's only purpose is to keep the shared VBO alive.
+  M3TerrainGeom._hostOnly({
+    required int vertexCount,
+    required Buffer vertexBuffer,
+    required Buffer normalBuffer,
+    required Buffer uvBuffer,
+    required M3Bounding bounding,
+  }) {
+    _vertexCount = vertexCount;
+    _vertexBuffer = vertexBuffer;
+    _normalBuffer = normalBuffer;
+    _uvBuffer = uvBuffer;
+    localBounding = bounding;
+    name = 'TerrainHost';
+  }
+
+  // -------------------------------------------------------------------------
+  // fromHeightField / fromHeightmap / fromHeightmapAsset
+  // -------------------------------------------------------------------------
+
+  /// Create terrain geometry from a pre-built [M3HeightField].
+  ///
+  /// The height field's [M3HeightField.widthSegments] and
+  /// [M3HeightField.heightSegments] drive the mesh grid resolution.
+  /// Heights are read directly from [M3HeightField.data] (already scaled by
+  /// the field's own [M3HeightField.heightScale]).
+  static M3TerrainGeom fromHeightField(
+    M3HeightField hf,
+    double width,
+    double height, {
+    double maxHeight = 5.0,
+    Vector2? uvScale,
+  }) {
+    final geom = M3TerrainGeom._internal(
+      width,
+      height,
+      (ratioX, ratioY, px, py) {
+        final int j = (ratioX * hf.widthSegments).round().clamp(0, hf.widthSegments);
+        final int i = (ratioY * hf.heightSegments).round().clamp(0, hf.heightSegments);
+        return hf.data[i * (hf.widthSegments + 1) + j] * hf.heightScale;
+      },
+      widthSegments: hf.widthSegments,
+      heightSegments: hf.heightSegments,
+      maxHeight: maxHeight,
+      uvScale: uvScale,
+    );
+    geom.name = "TerrainFromHeightField";
+    return geom;
+  }
+
+  /// Create terrain geometry from an [img.Image] heightmap.
+  ///
+  /// Internally builds a [M3HeightField.fromHeightmap] then calls
+  /// [fromHeightField]. Works for both 8-bit and 16-bit source images.
+  static M3TerrainGeom fromHeightmap(
     img.Image image,
     double width,
     double height, {
@@ -141,23 +203,21 @@ class M3TerrainGeom extends M3Geom {
     int heightSegments = 64,
     double maxHeight = 5.0,
     Vector2? uvScale,
-  }) async {
-    final geom = M3TerrainGeom._internal(
+  }) {
+    final hf = M3HeightField.fromHeightmap(
+      image,
       width,
       height,
-      (ratioX, ratioY, px, py) {
-        return _sampleHeight(image, ratioX, ratioY, maxHeight);
-      },
       widthSegments: widthSegments,
       heightSegments: heightSegments,
       maxHeight: maxHeight,
-      uvScale: uvScale,
     );
+    final geom = fromHeightField(hf, width, height, maxHeight: maxHeight, uvScale: uvScale);
     geom.name = "TerrainFromHeightmap";
     return geom;
   }
 
-  /// Create a terrain geometry from an asset path to a heightmap image.
+  /// Create terrain geometry from an asset path to a heightmap image.
   static Future<M3TerrainGeom> fromHeightmapAsset(
     String assetPath,
     double width,
@@ -168,14 +228,11 @@ class M3TerrainGeom extends M3Geom {
     Vector2? uvScale,
   }) async {
     final buffer = await M3ResourceManager.loadBuffer(assetPath);
-    final u8list = buffer.asUint8List();
-
-    final decoded = img.decodeImage(u8list);
+    final decoded = img.decodeImage(buffer.asUint8List());
     if (decoded == null) {
       throw Exception("Failed to decode heightmap image: $assetPath");
     }
-
-    return fromHeightmapImage(
+    return fromHeightmap(
       decoded,
       width,
       height,
@@ -184,37 +241,5 @@ class M3TerrainGeom extends M3Geom {
       maxHeight: maxHeight,
       uvScale: uvScale,
     );
-  }
-
-  static double _sampleHeight(img.Image image, double u, double v, double maxHeight) {
-    final imgW = image.width;
-    final imgH = image.height;
-    // Bilinear interpolation for smooth height sample
-    double px = u * (imgW - 1);
-    double py = v * (imgH - 1);
-    int x0 = px.floor().clamp(0, imgW - 1);
-    int x1 = (x0 + 1).clamp(0, imgW - 1);
-    int y0 = py.floor().clamp(0, imgH - 1);
-    int y1 = (y0 + 1).clamp(0, imgH - 1);
-
-    double tx = px - x0;
-    double ty = py - y0;
-
-    double h00 = _getPixelHeight(image, x0, y0);
-    double h10 = _getPixelHeight(image, x1, y0);
-    double h01 = _getPixelHeight(image, x0, y1);
-    double h11 = _getPixelHeight(image, x1, y1);
-
-    double h0 = h00 * (1.0 - tx) + h10 * tx;
-    double h1 = h01 * (1.0 - tx) + h11 * tx;
-
-    return (h0 * (1.0 - ty) + h1 * ty) * maxHeight;
-  }
-
-  static double _getPixelHeight(img.Image image, int x, int y) {
-    final pixel = image.getPixel(x, y);
-    // Average RGB for grayscale elevation value, normalized by maxChannelValue
-    // (works for both 8-bit and 16-bit sources automatically)
-    return (pixel.r + pixel.g + pixel.b) / (3 * image.maxChannelValue);
   }
 }

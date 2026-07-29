@@ -30,7 +30,7 @@ class DemoScene extends M3Scene {
     final cosSec = cos(sec * 0.3);
     final sinSec = sin(sec * 0.3);
 
-    pointLights[0].position.setValues(7 * cosSec, 7 * sinSec, 1.5);
+    pointLights[0].position.setValues(5 * cosSec, 5 * sinSec, 1.2);
     pointLights[1].position.setValues(3 * -sinSec, 3 * -cosSec, 0.7);
     pointLights[2].position.x = 8 * sinSec;
     pointLights[3].position.y = 8 * sinSec;

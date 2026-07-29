@@ -258,6 +258,12 @@ class M3PlaneGeom extends M3Geom {
     }
 
     final cellSize = Vector2(width / widthSegments, height / heightSegments);
-    return M3HeightField(data, cellSize, 1.0);
+    return M3HeightField(
+      data: data,
+      cellSize: cellSize,
+      heightScale: 1.0,
+      widthSegments: widthSegments,
+      heightSegments: heightSegments,
+    );
   }
 }

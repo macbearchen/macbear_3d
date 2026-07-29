@@ -1,11 +1,14 @@
 // ignore_for_file: file_names
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 import '../main_all.dart' hide Colors;
 
 // ignore: camel_case_types
 class TerrainScene_06 extends DemoScene {
+  M3TiledTerrain? _tiledTerrain;
   M3Entity? _terrainEntity;
   bool _useHeightmap = true;
+  bool _useTiled = true;
   double _waterHeight = 0.0;
 
   double get _minWaterHeight => -8.0;
@@ -106,47 +109,94 @@ class TerrainScene_06 extends DemoScene {
 
     if (_terrainEntity != null) {
       entities.remove(_terrainEntity);
-      for (final subMesh in _terrainEntity!.mesh.subMeshes) {
-        subMesh.geom.dispose();
+      if (_tiledTerrain != null) {
+        _tiledTerrain!.dispose();
+        _tiledTerrain = null;
+      } else {
+        for (final subMesh in _terrainEntity!.mesh.subMeshes) {
+          subMesh.geom.dispose();
+        }
       }
       _terrainEntity = null;
     }
 
-    final terrainMtr = M3Material();
-    terrainMtr.setMatte();
+    final terrainMtr = M3Material()..setMatte();
+    M3Mesh terrainMesh;
 
-    M3TerrainGeom terrainGeom;
+    final terrainSegments = 1024;
+    final tileSegments = 32;
 
     if (_useHeightmap) {
-      // https://www.motionforgepictures.com/height-maps/
-      terrainGeom = await M3TerrainGeom.fromHeightmapAsset(
-        'assets/example/Height16.png',
-        200.0,
-        200.0,
-        widthSegments: 500,
-        heightSegments: 500,
-        maxHeight: 400.0,
-      );
+      final buffer = await M3ResourceManager.loadBuffer('assets/example/Height16.png');
+      final image = img.decodeImage(buffer.asUint8List());
+      if (image == null) throw Exception('Failed to decode heightmap');
       final texTerrain = await M3Texture.loadTexture('example/HeightDiffuse.jpg');
-      // final texTerrain = await M3Texture.loadTexture('example/Height16.png');
-      // terrainMtr.diffuse = Vector4(0.8, 0.4, 0.4, 1.0); // Terracotta color
       terrainMtr.diffuseTexture = texTerrain;
+
+      if (_useTiled) {
+        // Mode 1: Tiled + Heightmap
+        final hf = M3HeightField.fromHeightmap(
+          image,
+          200.0,
+          200.0,
+          widthSegments: terrainSegments,
+          heightSegments: terrainSegments,
+          maxHeight: 400.0,
+        );
+        _tiledTerrain = M3TiledTerrain.fromHeightField(
+          hf,
+          200.0,
+          200.0,
+          tileWidthSegments: tileSegments,
+          tileHeightSegments: tileSegments,
+          maxHeight: 400.0,
+          material: terrainMtr,
+        );
+        terrainMesh = _tiledTerrain!.mesh;
+      } else {
+        // Mode 2: Single Mesh + Heightmap
+        final terrainGeom = M3TerrainGeom.fromHeightmap(
+          image,
+          200.0,
+          200.0,
+          widthSegments: terrainSegments,
+          heightSegments: terrainSegments,
+          maxHeight: 400.0,
+        );
+        terrainMesh = M3Mesh(terrainGeom, material: terrainMtr);
+      }
     } else {
-      // Procedural noise
-      terrainGeom = M3TerrainGeom(
-        200.0,
-        200.0,
-        widthSegments: 400,
-        heightSegments: 400,
-        maxHeight: 16.0,
-        noiseScale: 0.08,
-      );
       terrainMtr.diffuse = Vector4(0.4, 0.6, 0.3, 1.0); // Grass green
+
+      if (_useTiled) {
+        // Mode 3: Tiled + Procedural Noise
+        _tiledTerrain = M3TiledTerrain.build(
+          200.0,
+          200.0,
+          widthSegments: 512,
+          heightSegments: 512,
+          tileWidthSegments: tileSegments,
+          tileHeightSegments: tileSegments,
+          maxHeight: 16.0,
+          noiseScale: 0.08,
+          material: terrainMtr,
+        );
+        terrainMesh = _tiledTerrain!.mesh;
+      } else {
+        // Mode 4: Single Mesh + Procedural Noise
+        final terrainGeom = M3TerrainGeom(
+          200.0,
+          200.0,
+          widthSegments: 512,
+          heightSegments: 512,
+          maxHeight: 16.0,
+          noiseScale: 0.08,
+        );
+        terrainMesh = M3Mesh(terrainGeom, material: terrainMtr);
+      }
     }
 
-    final terrainMesh = M3Mesh(terrainGeom, material: terrainMtr);
     _terrainEntity = addMesh(terrainMesh, Vector3(0, 0, -13));
-
     M3AppEngine.instance.resume();
   }
 
@@ -187,19 +237,36 @@ class TerrainScene_06 extends DemoScene {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.lightGreen, foregroundColor: Colors.black),
-              onPressed: () async {
-                _useHeightmap = !_useHeightmap;
-                await _setupTerrain();
-                _waterHeight = _waterHeight.clamp(_minWaterHeight, _maxWaterHeight);
-                water?.setSurfacePlane(constant: -_waterHeight);
-                M3AppEngine.instance.refresh();
-              },
-              child: Text(
-                _useHeightmap ? "Switch to Noise" : "Switch to Heightmap",
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.lightGreen, foregroundColor: Colors.black),
+                  onPressed: () async {
+                    _useHeightmap = !_useHeightmap;
+                    await _setupTerrain();
+                    _waterHeight = _waterHeight.clamp(_minWaterHeight, _maxWaterHeight);
+                    water?.setSurfacePlane(constant: -_waterHeight);
+                    M3AppEngine.instance.refresh();
+                  },
+                  child: Text(
+                    _useHeightmap ? "Heightmap" : "Noise",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.cyan, foregroundColor: Colors.black),
+                  onPressed: () async {
+                    _useTiled = !_useTiled;
+                    await _setupTerrain();
+                    _waterHeight = _waterHeight.clamp(_minWaterHeight, _maxWaterHeight);
+                    water?.setSurfacePlane(constant: -_waterHeight);
+                    M3AppEngine.instance.refresh();
+                  },
+                  child: Text(_useTiled ? "Tiled" : "Single", style: const TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
             ),
             const SizedBox(height: 6),
             Text(

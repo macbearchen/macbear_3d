@@ -41,7 +41,7 @@ class SkyboxScene_02 extends DemoScene {
     );
 
     // Apply mirror shader to ground
-    const posZ = -3.0;
+    const posZ = -2.0;
     renderEngine.planarReflection.clipPlane.setFromComponents(0, 0, 1, -posZ);
     // renderEngine.planarReflection.setRenderScale(0.3);
 
