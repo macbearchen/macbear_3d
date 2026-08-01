@@ -66,8 +66,6 @@ class SampleScene extends M3Scene {
 
           final meshColor = colors[k % colors.length];
           M3Mesh mesh;
-          M3RigidBody rb;
-
           // visual entity, rigid body
           switch (k % 3) {
             case 0:
@@ -83,7 +81,8 @@ class SampleScene extends M3Scene {
               mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
               break;
           }
-          M3Entity entity = addMesh(mesh, pos)..color = meshColor;
+          M3Entity entity = addMesh(mesh, pos);
+          entity.color = meshColor;
         }
       }
     }

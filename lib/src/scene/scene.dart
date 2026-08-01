@@ -202,6 +202,7 @@ abstract class M3Scene {
       }
 
       if (showSubMesh) {
+        // ignore: unused_local_variable
         final meshMatrix = entity.worldMatrix * entity.mesh.initMatrix;
         for (final sub in entity.mesh.subMeshes) {
           // culling

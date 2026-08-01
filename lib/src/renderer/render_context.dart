@@ -188,7 +188,6 @@ class M3RenderContext {
       prog.applyFog(_scene.fog); // fog supported
     }
 
-    final stats = M3AppEngine.instance.renderEngine.stats;
     // override material to apply entity color and reflection
     final mtrOverride = M3Material();
     final colorOverride = Vector4.all(1.0);
