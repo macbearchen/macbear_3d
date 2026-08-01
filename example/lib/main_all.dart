@@ -23,12 +23,10 @@ import 'demos/08_text_3d.dart';
 import 'demos/09_pbr_test.dart';
 import 'demos/11_bvh.dart';
 import 'demos/12_video_texture.dart';
-import 'rapier_physics_engine.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // M3Package.name = null; // remove it when release
   M3AppEngine.instance.onDidInit = onDidInit;
   M3AppEngine.backgroundColor = Vector3(0.1, 0.2, 0.6);
 

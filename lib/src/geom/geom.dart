@@ -7,7 +7,6 @@ import 'package:image/image.dart' as img;
 import '../m3_internal.dart';
 import '../gltf/gltf_parser.dart';
 
-import 'primitive/height_field.dart';
 import 'text/contour.dart';
 import 'text/ear_clipping.dart';
 

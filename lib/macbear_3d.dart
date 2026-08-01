@@ -8,7 +8,7 @@ export 'src/engine/render_options.dart';
 export 'src/engine/resource_manager.dart';
 export 'src/engine/resources.dart';
 export 'src/geom/geom.dart';
-export 'src/geom/primitive/height_field.dart';
+export 'src/geom/terrain/height_field.dart';
 export 'src/geom/text/ttf_parser.dart';
 export 'src/input/touch.dart';
 export 'src/mesh/mesh.dart';

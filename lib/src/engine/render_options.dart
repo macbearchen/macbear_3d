@@ -1,9 +1,11 @@
+// dart format off
 enum M3HelperType {
   none,
   entity,
   subMesh,
   both,
 }
+// dart format on
 
 /// Rendering options for the engine (wireframe, helpers, shadows, FPS display).
 class M3RenderOptions {
@@ -134,7 +136,9 @@ class M3RenderStats {
   int vertices = 0;
   int triangles = 0;
   int entities = 0;
-  int culling = 0;
+  int totalEntities = 0;
+  int submeshes = 0;
+  int totalSubmeshes = 0;
   int reflection = 0;
 
   void reset() {
@@ -142,7 +146,9 @@ class M3RenderStats {
     vertices = 0;
     triangles = 0;
     entities = 0;
-    culling = 0;
+    totalEntities = 0;
+    submeshes = 0;
+    totalSubmeshes = 0;
     reflection = 0;
   }
 
@@ -150,7 +156,8 @@ class M3RenderStats {
   String toString() {
     return '''
 frame${frames.toString().padLeft(6)}
-mesh:$entities/$culling
+ecs:$entities/$totalEntities
+sub:$submeshes/$totalSubmeshes
 reflect:$reflection
  tri:$triangles
 vert:$vertices''';

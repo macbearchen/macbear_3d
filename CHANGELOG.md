@@ -1,5 +1,19 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
+## 0.9.4
+#### 2026-08-01
+* Add:
+  * **Tiled Terrain System**: Introduced `M3TerrainTileGeom` and `M3TiledTerrain` for chunked/tiled terrain rendering and management.
+  * **Heightfield & Line Geometry**: Added `M3HeightField.fromHeightmap` constructor and `M3LineGeom` for custom 3D line primitives.
+  * **Render Statistics Update**: Updated `M3RenderStats` structure by replacing `culls` with `submeshes` to accurately track total rendered submesh count.
+
+* Optimize / Refactor:
+  * **M3View Unmount & Remount**: Decoupled view lifecycle from engine singleton via `unmount()` and `remount()` methods, enabling safe view transitions without tearing down ANGLE/GL context.
+  * **Geometry Parameters**: Improved constructor parameter ergonomics for `M3CylinderGeom` and `M3CapsuleGeom`.
+  * **Submesh World Bounding**: Added `subMeshes.worldBounding` calculation.
+  * **Terrain System Organization**: Refactored `M3TerrainGeom.fromHeightmapImage` using `package:image` and moved heightfield/terrain components to `lib/src/geom/terrain/`.
+  * **Android KGP Compatibility**: Fixed Kotlin Gradle Plugin build issues for modern Flutter/Android project configurations.
+
 ## 0.9.3
 #### 2026-07-15
 * Add:

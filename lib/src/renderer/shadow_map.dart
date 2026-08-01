@@ -31,10 +31,6 @@ class M3ShadowMap {
     final gl = renderEngine.gl;
     final prog = M3Resources.programSimple!;
 
-    final stats = renderEngine.stats;
-    final bool wasStatsEnabled = stats.enabled;
-    stats.enabled = false;
-
     _framebuffer.bind();
     // set shadow GL state
     gl.frontFace(WebGL.CCW);
@@ -87,7 +83,6 @@ class M3ShadowMap {
 
     // recover to default FBO
     renderEngine.bindDefaultFramebuffer();
-    stats.enabled = wasStatsEnabled;
   }
 
   /// Draw shadow depth map for debugging

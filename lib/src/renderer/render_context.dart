@@ -40,12 +40,18 @@ class M3RenderContext {
 
     // 1. Collect phase: Cull and categorize into queues
     for (final entity in scene.entities) {
+      // statistics: total entities
+      if (stats.enabled) {
+        stats.totalEntities++;
+        stats.totalSubmeshes += entity.mesh.subMeshes.length;
+      }
+
       // culling
       if (!viewer.isVisible(entity.worldBounding)) {
-        if (stats.enabled) stats.culling++;
         continue;
       }
 
+      // statistics: visible entities
       if (stats.enabled) stats.entities++;
 
       final meshMatrix = entity.worldMatrix * entity.mesh.initMatrix;
@@ -53,8 +59,14 @@ class M3RenderContext {
       for (final sub in entity.mesh.subMeshes) {
         // submesh culling check (skipped for single-submesh meshes)
         if (subMeshCount > 1 && !viewer.isVisible(sub.worldBounding)) {
-          if (stats.enabled) stats.culling++;
           continue;
+        }
+
+        // statistics: visible sub-meshes, vertices, triangles
+        if (stats.enabled) {
+          stats.submeshes++;
+          stats.vertices += sub.geom.vertexCount;
+          stats.triangles += sub.geom.getTriangleCount();
         }
 
         // skip planar reflection surface
@@ -217,12 +229,6 @@ class M3RenderContext {
         prog.setEnvironmentMap(currentCubemap);
       }
       sub.geom.draw(prog, fillMode: fillMode);
-
-      // statistics
-      if (stats.enabled) {
-        stats.vertices += sub.geom.vertexCount;
-        stats.triangles += sub.geom.getTriangleCount(fillMode: fillMode);
-      }
     }
   }
 }

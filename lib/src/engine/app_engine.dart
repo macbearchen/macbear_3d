@@ -6,6 +6,27 @@ import 'package:flutter/scheduler.dart';
 import '../m3_internal.dart' hide Colors;
 import '../input/keyboard.dart';
 
+// #region DO NOT MODIFY --- Copyright
+// ============================================================
+// Macbear 3D — Copyright Splash Widget
+// DO NOT MODIFY, REMOVE, OR SHORTEN THE DISPLAY DURATION
+// ------------------------------------------------------------
+// This widget displays engine attribution during startup.
+// Modifying, hiding, or bypassing this notice violates the
+// license terms of Macbear 3D. See LICENSE for details.
+// ------------------------------------------------------------
+// Macbear 3D Engine — All Rights Reserved © 2026 MacBear Chen
+// ============================================================
+Widget _buildCopyrightWidget() {
+  return Container(
+    color: Colors.grey,
+    child: const Center(
+      child: Text('Macbear 3D', style: TextStyle(color: Colors.white, fontSize: 20)),
+    ),
+  );
+}
+// #endregion
+
 /// The main application engine singleton that manages the Flutter-ANGLE context.
 ///
 /// Provides initialization, update loop, rendering, input handling, and scene management.
@@ -145,7 +166,7 @@ class M3AppEngine with ChangeNotifier {
       t.dispose();
       ticker = null;
     }
-    debugPrint("--- M3AppEngine.unmount: view detached, engine kept warm ---");
+    M3Log.s('AppEngine', 'unmount: view detached, engine kept warm');
   }
 
   /// Re-attaches the render loop after an [M3View] has (re)mounted.
@@ -235,20 +256,18 @@ class M3AppEngine with ChangeNotifier {
 
   double _getTime() => DateTime.now().millisecondsSinceEpoch / 1000.0;
 
-  Widget getAppWidget() {
-    M3Log.s('AppEngine', 'getAppWidget');
+  Widget buildAppWidget() {
+    M3Log.s('AppEngine', 'buildAppWidget');
     if (!_didInit) {
-      // --- Macbear 3D ---
-      // *** Copyright information, please do not delete
-      // *** 版權所有, 請勿任意修改
-      // *** 저작권은 보호되며, 허가 없이 수정할 수 없습니다.
       // #region DO NOT MODIFY --- Copyright
-      return Container(
-        color: Colors.grey,
-        child: Center(
-          child: Text('Macbear 3D', style: TextStyle(color: Colors.white, fontSize: 20)),
-        ),
-      );
+      // ============================================================
+      // Macbear 3D — Copyright Notice
+      // DO NOT MODIFY OR REMOVE THIS BLOCK
+      // ------------------------------------------------------------
+      // 版權所有,請勿任意修改或刪除
+      // 저작권은 보호되며, 허가 없이 수정할 수 없습니다.
+      // ============================================================
+      return _buildCopyrightWidget();
       // #endregion
     }
 
@@ -405,8 +424,10 @@ class M3AppEngine with ChangeNotifier {
       renderEngine.renderShadowMap(scene);
 
       // prepare render queue
+      renderEngine.stats.enabled = true;
       renderEngine.stats.reset();
       renderEngine.mainContext.prepareRenderQueue(scene, scene.camera);
+      renderEngine.stats.enabled = false;
 
       // capture reflection probe (environment map)
       if (renderEngine.mainContext.needsReflectionProbePass()) {

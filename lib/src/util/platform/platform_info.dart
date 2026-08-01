@@ -70,18 +70,28 @@ class PlatformInfo {
     WebGL.MAX_FRAGMENT_UNIFORM_VECTORS: "MAX_FRAGMENT_UNIFORM_VECTORS",
     WebGL.MAX_SAMPLES: "MAX_SAMPLES",
     WebGL.MAX_COMBINED_TEXTURE_IMAGE_UNITS: "MAX_COMBINED_TEXTURE_IMAGE_UNITS",
-    WebGL.SCISSOR_BOX: "SCISSOR_BOX",
-    WebGL.VIEWPORT: "VIEWPORT",
     WebGL.MAX_TEXTURE_MAX_ANISOTROPY_EXT: "MAX_TEXTURE_MAX_ANISOTROPY_EXT",
+    // WebGL.SCISSOR_BOX: "SCISSOR_BOX",
+    // WebGL.VIEWPORT: "VIEWPORT",
     WebGL.MAX_UNIFORM_BUFFER_BINDINGS: "MAX_UNIFORM_BUFFER_BINDINGS",
+    WebGL.MAX_VERTEX_UNIFORM_BLOCKS: "MAX_VERTEX_UNIFORM_BLOCKS",
+    WebGL.MAX_UNIFORM_BLOCK_SIZE: "MAX_UNIFORM_BLOCK_SIZE",
   };
 
   static void checkGLExtensions() {
-    final gl = M3AppEngine.instance.renderEngine.gl;
-
     _glParamNames.forEach((key, name) {
-      final val = gl.getParameter(key);
-      M3Log.s('GL Info', '$name = $val');
+      if (kIsWeb) {
+        final gl = M3AppEngine.instance.renderEngine.gl;
+        final val = gl.getParameter(key);
+        M3Log.s('Capability', '$name = $val');
+      } else {
+        int count = 1;
+        if (key == WebGL.SCISSOR_BOX || key == WebGL.VIEWPORT) {
+          count = 4;
+        }
+        final val = getGLCapability(key, count: count);
+        M3Log.s('Capability', '$name = $val');
+      }
     });
 
     getGLExtensions();

@@ -1,5 +1,19 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
+## 0.9.4
+#### 2026-08-01
+* 新增功能 (Add):
+  * **瓦片地形系統 (Tiled Terrain)**：新增 `M3TerrainTileGeom` 與 `M3TiledTerrain` 支援分區瓦片地形渲染與管理。
+  * **高度場與線條幾何**：新增 `M3HeightField.fromHeightmap` 建構式與自訂線條繪製類別 `M3LineGeom`。
+  * **渲染統計數據更新**：更新 `M3RenderStats` 結構，移除 `culls` 欄位並新增 `submeshes` 欄位以精確追蹤繪製的子網格數量。
+
+* 優化與重構 (Optimize / Refactor):
+  * **M3View 卸載與重新掛載 (Unmount/Remount)**：解耦視圖與引擎單例生命週期，新增 `unmount()` 與 `remount()` 方法，支援視圖安全切換而不破壞 ANGLE/GL 上下文。
+  * **幾何形狀建構式優化**：改進 `M3CylinderGeom` 與 `M3CapsuleGeom` 的建構式參數配置。
+  * **子網格世界包圍盒**：新增 `subMeshes.worldBounding` 世界坐標包圍盒計算。
+  * **地形系統重組**：使用 `package:image` 重構高度圖載入機制，將地形幾何相關檔案重組至 `lib/src/geom/terrain/`。
+  * **Android KGP 修復**：修復 Android 建構時 Kotlin Gradle Plugin (KGP) 的相容性警告。
+
 ## 0.9.3
 #### 2026-07-15
 * 新增功能 (Add):

@@ -210,7 +210,7 @@ class M3RenderEngine {
     // Render Statistics
     Matrix4 matStats = Matrix4.identity();
     if (options.debug.showStats) {
-      matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 100, 80, 0));
+      matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 110, 60, 0));
       matStats.scaleByVector3(Vector3.all(0.45));
       // Render Stats
       M3Resources.text2D.drawText(stats.toString(), matStats, color: Vector4(1, 1, 1, 1));

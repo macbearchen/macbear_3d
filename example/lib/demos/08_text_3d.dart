@@ -13,7 +13,7 @@ class Text3DScene_08 extends DemoScene {
     if (isLoaded) return;
     await super.load();
 
-    camera.setEuler(pi / 6, -pi / 6, 0, distance: 9);
+    camera.setEuler(pi / 9, -pi / 6, 0, distance: 11);
 
     // Lighting (ambient not supported directly on scene, handled by light setup or shaders)
     // light.color = Vector4(1, 1, 1, 1);
@@ -22,20 +22,26 @@ class Text3DScene_08 extends DemoScene {
     // NotoSansMonoCJKtc-VF.ttf,
     // https://github.com/googlefonts/noto-cjk/raw/main/Sans/Variable/OTF/NotoSansCJKtc-VF.otf
     // final fontPath = 'https://github.com/googlefonts/noto-cjk/raw/main/Sans/Variable/OTF/NotoSansCJKtc-VF.otf';
-    final isLocalFont = true;
-    final fontPath = 'https://github.com/googlefonts/noto-cjk/raw/main/Sans/Variable/TTF/NotoSansCJKtc-VF.ttf';
+    final isLocalFont = true; // (M3Package.name == null);
+    // final fontPath = 'https://github.com/googlefonts/noto-cjk/raw/main/Sans/Variable/TTF/NotoSansCJKtc-VF.ttf';
+    final serverPath = 'https://github.com/googlefonts/noto-cjk/raw/main/Sans/Variable/TTF/Subset/NotoSansTC-VF.ttf';
     var localPath = 'assets/fonts/RobotoMono/RobotoMono-Regular.ttf';
     if (M3Package.name != null) {
       localPath = 'packages/${M3Package.name}/assets/fonts/RobotoMono/RobotoMono-Regular.ttf';
     }
-    // final fontPath = 'assets/NotoSansMonoCJKtc-VF.ttf';
+    localPath = 'assets/notofonts/NotoSansTC-VF.ttf';
+
+    final fontPath = isLocalFont ? localPath : serverPath; // ignore: dead_code
+    final text = isLocalFont ? "OpenGL ES3 麥克熊" : "麥克熊"; // ignore: dead_code
+
+    M3Log.i('font', fontPath);
     M3ResourceManager resManager = M3AppEngine.instance.resourceManager;
-    _font = await resManager.loadFont(isLocalFont ? localPath : fontPath); // ignore: dead_code
-    final text = isLocalFont ? "OpenGL ES3" : "麥克熊"; // ignore: dead_code
+
+    _font = await resManager.loadFont(fontPath);
     _textController.text = text;
     // Create Text Geometry
-    final textGeom = M3TextGeom(text, _font!, size: 1.2, depth: 0.2, curveSubdivisions: 3, creaseAngle: 40);
-    final textGeom2 = M3TextGeom('Macbear 3D', _font!, size: 1.6, depth: 0.4, curveSubdivisions: 3, creaseAngle: 40);
+    final textGeom = M3TextGeom(text, _font!, size: 1.2, depth: 0.3, curveSubdivisions: 3, creaseAngle: 40);
+    final textGeom2 = M3TextGeom('Macbear 3D', _font!, size: 1.6, depth: 0.5, curveSubdivisions: 3, creaseAngle: 40);
 
     // Create Material
     final mtr = M3Material();
@@ -46,11 +52,11 @@ class Text3DScene_08 extends DemoScene {
     mtr2.diffuse = Vector4(0.8, 1.0, 0.1, 1.0); // yellow
     // 08-1: text geometry
     final mesh = M3Mesh(textGeom, material: mtr);
-    _textEntity = addMesh(mesh, Vector3(-4, 0, 1.5)); // OpenGL ES
+    _textEntity = addMesh(mesh, Vector3(-6, 0, 1.5)); // OpenGL ES
     _textEntity!.rotation.setEuler(0, pi * 0.45, 0);
 
     final mesh2 = M3Mesh(textGeom2, material: mtr2);
-    final entity2 = addMesh(mesh2, Vector3(-3, -3, 0)); // Macbear 3D
+    final entity2 = addMesh(mesh2, Vector3(-3, -3, 0.3)); // Macbear 3D
     entity2.rotation.setEuler(0, 0, pi / 5);
 
     M3Texture texGround = M3Texture.createCheckerboard(
@@ -59,7 +65,7 @@ class Text3DScene_08 extends DemoScene {
       darkColor: Vector4(.5, 0.8, .3, 1),
     );
     // 08-2: plane geometry
-    final groundZ = -1.0;
+    final groundZ = -0.3;
     final plane = addMesh(
       M3Mesh(M3PlaneGeom(20, 20, widthSegments: 20, heightSegments: 20, uvScale: Vector2.all(5.0))),
       Vector3(0, 0, groundZ),
@@ -109,7 +115,7 @@ class Text3DScene_08 extends DemoScene {
     return SafeArea(
       bottom: false,
       child: Container(
-        width: 200,
+        width: 220,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.black87,

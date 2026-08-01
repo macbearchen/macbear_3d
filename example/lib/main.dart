@@ -6,7 +6,6 @@ import 'package:vector_math/vector_math.dart';
 import 'package:macbear_3d/macbear_3d.dart';
 
 void main() {
-  // M3Package.name = null; // remove it when release
   M3AppEngine.instance.onDidInit = onDidInit;
 
   runApp(const MyApp());

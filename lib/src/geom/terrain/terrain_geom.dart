@@ -138,26 +138,7 @@ class M3TerrainGeom extends M3Geom {
     localBounding.sphere.radius = Vector3(hx, hy, maxHeight).length;
   }
 
-  /// Private constructor used by [M3TiledTerrain.build] / [M3TiledTerrain.buildFromHeightField].
-  ///
-  /// Holds pre-created GPU buffers without owning CPU-side vertex data.
-  /// This "host" geom's only purpose is to keep the shared VBO alive.
-  M3TerrainGeom._hostOnly({
-    required int vertexCount,
-    required Buffer vertexBuffer,
-    required Buffer normalBuffer,
-    required Buffer uvBuffer,
-    required M3Bounding bounding,
-  }) {
-    _vertexCount = vertexCount;
-    _vertexBuffer = vertexBuffer;
-    _normalBuffer = normalBuffer;
-    _uvBuffer = uvBuffer;
-    localBounding = bounding;
-    name = 'TerrainHost';
-  }
-
-  // -------------------------------------------------------------------------
+// -------------------------------------------------------------------------
   // fromHeightField / fromHeightmap / fromHeightmapAsset
   // -------------------------------------------------------------------------
 

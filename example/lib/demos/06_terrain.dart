@@ -22,7 +22,7 @@ class TerrainScene_06 extends DemoScene {
     renderEngine.options.shader.fog = true;
     fog.planeHeight = 6.0;
 
-    camera.setEuler(-pi / 3, -pi / 9, 0, distance: 40);
+    camera.setEuler(pi / 4, -pi / 9, 0, distance: 40);
     M3Log.i('TerrainScene', 'Camera: $camera');
     // 2. Add Skybox
     skybox = M3Skybox(M3Texture.createDefaultIBLCube());
@@ -64,7 +64,7 @@ class TerrainScene_06 extends DemoScene {
     for (int i = 0; i <= 10; i++) {
       final double posX = i * 10 - 50;
       final double posY = 5;
-      final double posZ = posX * 0.15;
+      final double posZ = posX * 0.15 + 5;
       final rot = i * pi / 15;
       // 06-2: sphere geometry
       final meshSphere = M3Mesh(geomSphere);
@@ -123,8 +123,10 @@ class TerrainScene_06 extends DemoScene {
     final terrainMtr = M3Material()..setMatte();
     M3Mesh terrainMesh;
 
-    final terrainSegments = 1024;
+    final terrainSegments = 512;
+    final terrainSize = 512.0;
     final tileSegments = 32;
+    final maxHeight = 1024.0;
 
     if (_useHeightmap) {
       final buffer = await M3ResourceManager.loadBuffer('assets/example/Height16.png');
@@ -133,36 +135,30 @@ class TerrainScene_06 extends DemoScene {
       final texTerrain = await M3Texture.loadTexture('example/HeightDiffuse.jpg');
       terrainMtr.diffuseTexture = texTerrain;
 
+      final hf = M3HeightField.fromHeightmap(
+        image,
+        terrainSize,
+        terrainSize,
+        widthSegments: terrainSegments,
+        heightSegments: terrainSegments,
+        maxHeight: maxHeight,
+      );
       if (_useTiled) {
         // Mode 1: Tiled + Heightmap
-        final hf = M3HeightField.fromHeightmap(
-          image,
-          200.0,
-          200.0,
-          widthSegments: terrainSegments,
-          heightSegments: terrainSegments,
-          maxHeight: 400.0,
-        );
+
         _tiledTerrain = M3TiledTerrain.fromHeightField(
           hf,
-          200.0,
-          200.0,
+          terrainSize,
+          terrainSize,
           tileWidthSegments: tileSegments,
           tileHeightSegments: tileSegments,
-          maxHeight: 400.0,
+          maxHeight: maxHeight,
           material: terrainMtr,
         );
         terrainMesh = _tiledTerrain!.mesh;
       } else {
         // Mode 2: Single Mesh + Heightmap
-        final terrainGeom = M3TerrainGeom.fromHeightmap(
-          image,
-          200.0,
-          200.0,
-          widthSegments: terrainSegments,
-          heightSegments: terrainSegments,
-          maxHeight: 400.0,
-        );
+        final terrainGeom = M3TerrainGeom.fromHeightField(hf, terrainSize, terrainSize, maxHeight: maxHeight);
         terrainMesh = M3Mesh(terrainGeom, material: terrainMtr);
       }
     } else {
@@ -171,10 +167,10 @@ class TerrainScene_06 extends DemoScene {
       if (_useTiled) {
         // Mode 3: Tiled + Procedural Noise
         _tiledTerrain = M3TiledTerrain.build(
-          200.0,
-          200.0,
-          widthSegments: 512,
-          heightSegments: 512,
+          terrainSize,
+          terrainSize,
+          widthSegments: terrainSegments,
+          heightSegments: terrainSegments,
           tileWidthSegments: tileSegments,
           tileHeightSegments: tileSegments,
           maxHeight: 16.0,
@@ -185,10 +181,10 @@ class TerrainScene_06 extends DemoScene {
       } else {
         // Mode 4: Single Mesh + Procedural Noise
         final terrainGeom = M3TerrainGeom(
-          200.0,
-          200.0,
-          widthSegments: 512,
-          heightSegments: 512,
+          terrainSize,
+          terrainSize,
+          widthSegments: terrainSegments,
+          heightSegments: terrainSegments,
           maxHeight: 16.0,
           noiseScale: 0.08,
         );
@@ -196,7 +192,8 @@ class TerrainScene_06 extends DemoScene {
       }
     }
 
-    _terrainEntity = addMesh(terrainMesh, Vector3(0, 0, -13));
+    double posZ = _useHeightmap ? -21 : -9;
+    _terrainEntity = addMesh(terrainMesh, Vector3(0, 0, posZ));
     M3AppEngine.instance.resume();
   }
 

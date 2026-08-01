@@ -4,8 +4,8 @@ part of '../geom.dart';
 // M3TerrainTileGeom
 // ---------------------------------------------------------------------------
 
-/// A terrain tile whose vertex/normal/UV buffers are **shared** with a parent
-/// [M3TerrainGeom] (the "host"). Only the index buffers are owned per-tile.
+/// A terrain tile whose vertex/normal/UV buffers (VBO) are owned **per-tile**.
+/// The index buffers (IBO for faces and edges) are **shared** across all tiles.
 ///
 /// Never construct this directly; use [M3TiledTerrain.build] or
 /// [M3TiledTerrain.fromHeightField].
@@ -23,33 +23,27 @@ class M3TerrainTileGeom extends M3Geom {
     required Buffer vertexBuffer,
     required Buffer normalBuffer,
     required Buffer uvBuffer,
+    required _M3Indices sharedFaceIndices,
+    required _M3Indices sharedEdgeIndices,
   }) {
     _vertexCount = vertexCount;
     _vertexBuffer = vertexBuffer;
     _normalBuffer = normalBuffer;
     _uvBuffer = uvBuffer;
+    _faceIndices.add(sharedFaceIndices);
+    _edgeIndices.add(sharedEdgeIndices);
     name = 'TerrainTile_${tileRow}_$tileCol';
   }
 
-  /// Releases only this tile's **own** index buffers.
+  /// Releases this tile's **own** VBO buffers.
   ///
-  /// The shared VBO buffers are owned by the host [M3TerrainGeom]; they must
-  /// not be deleted here. Call [M3TiledTerrain.dispose] to handle full teardown
-  /// in the correct order.
+  /// The shared IBO index buffers are owned by [M3TiledTerrain]; they are not
+  /// disposed here. Call [M3TiledTerrain.dispose] to handle full teardown.
   @override
   void dispose() {
-    for (final s in _faceIndices) {
-      s.dispose();
-    }
-    for (final s in _edgeIndices) {
-      s.dispose();
-    }
     _faceIndices.clear();
     _edgeIndices.clear();
-    // Null out VBO refs without deleting — host owns them
-    _vertexBuffer = null;
-    _normalBuffer = null;
-    _uvBuffer = null;
+    super.dispose();
   }
 }
 
@@ -60,13 +54,11 @@ class M3TerrainTileGeom extends M3Geom {
 /// Result of [M3TiledTerrain.build] / [M3TiledTerrain.fromHeightField].
 ///
 /// Contains the renderable [mesh] (one [M3SubMesh] per tile) and the internal
-/// host geometry that owns the shared GPU VBO buffers.
+/// shared IBO index buffers shared across all tiles.
 ///
 /// Always call [dispose] instead of disposing sub-meshes manually, to ensure
-/// the shared VBO is released after all tile index buffers.
+/// the shared IBO is released after all tile VBO buffers.
 class M3TiledTerrain {
-  final M3TerrainGeom _hostGeom;
-
   /// The renderable mesh. Contains [tilesX] × [tilesY] sub-meshes.
   final M3Mesh mesh;
 
@@ -76,17 +68,27 @@ class M3TiledTerrain {
   /// Tile rows (Y axis).
   final int tilesY;
 
+  final _M3Indices _sharedFaceIndices;
+  final _M3Indices _sharedEdgeIndices;
+
   /// Total tile count = [tilesX] × [tilesY].
   int get tileCount => tilesX * tilesY;
 
-  M3TiledTerrain._(this._hostGeom, this.mesh, this.tilesX, this.tilesY);
+  M3TiledTerrain._(
+    this.mesh,
+    this.tilesX,
+    this.tilesY,
+    this._sharedFaceIndices,
+    this._sharedEdgeIndices,
+  );
 
-  /// Releases all tile index buffers then the shared VBO.
+  /// Releases all tile VBO buffers then the shared IBO buffers.
   void dispose() {
     for (final sub in mesh.subMeshes) {
-      sub.geom.dispose(); // tile: own indices only
+      sub.geom.dispose(); // tile: own VBOs only
     }
-    _hostGeom.dispose(); // host: shared VBOs
+    _sharedFaceIndices.dispose(); // shared IBO
+    _sharedEdgeIndices.dispose();
     mesh.subMeshes.clear();
   }
 
@@ -94,7 +96,8 @@ class M3TiledTerrain {
   // Factory constructors
   // -------------------------------------------------------------------------
 
-  /// Builds a tiled terrain using Perlin noise where all tiles share one VBO.
+  /// Builds a tiled terrain using Perlin noise where each tile has its own VBO
+  /// and shares a single IBO.
   ///
   /// The terrain is divided into [tilesX] × [tilesY] tiles where:
   /// - `tilesX = widthSegments / tileWidthSegments`
@@ -103,12 +106,12 @@ class M3TiledTerrain {
   /// Both [widthSegments] and [heightSegments] must be exactly divisible by
   /// their respective tile segment counts.
   ///
-  /// Example — 1024×1024 terrain, 64×64 tiles → 256 tiles:
+  /// Example — 1024×1024 terrain, 32×32 tiles:
   /// ```dart
   /// final terrain = M3TiledTerrain.build(
   ///   200.0, 200.0,
   ///   widthSegments: 1024, heightSegments: 1024,
-  ///   tileWidthSegments: 64, tileHeightSegments: 64,
+  ///   tileWidthSegments: 32, tileHeightSegments: 32,
   ///   maxHeight: 16.0, noiseScale: 0.08,
   ///   material: terrainMtr,
   /// );
@@ -155,7 +158,7 @@ class M3TiledTerrain {
   ///     widthSegments: 1024, heightSegments: 1024, maxHeight: 400.0);
   /// final terrain = M3TiledTerrain.fromHeightField(
   ///   hf, 200.0, 200.0,
-  ///   tileWidthSegments: 64, tileHeightSegments: 64,
+  ///   tileWidthSegments: 32, tileHeightSegments: 32,
   ///   material: terrainMtr,
   /// );
   /// ```
@@ -213,6 +216,12 @@ class M3TiledTerrain {
       'heightSegments ($heightSegments) must be divisible by tileHeightSegments ($tileHeightSegments)',
     );
 
+    final tileVertCount = (tileWidthSegments + 1) * (tileHeightSegments + 1);
+    assert(
+      tileVertCount <= 65536,
+      'Tile vertex count ($tileVertCount) exceeds 65,536 limit for uint16 index buffers.',
+    );
+
     final tilesX = widthSegments ~/ tileWidthSegments;
     final tilesY = heightSegments ~/ tileHeightSegments;
     final int numVert = (widthSegments + 1) * (heightSegments + 1);
@@ -220,7 +229,7 @@ class M3TiledTerrain {
     uvScale ??= Vector2(1, 1);
     final hx = width * 0.5, hy = height * 0.5;
 
-    // 1. Generate all vertices on CPU ----------------------------------------
+    // 1. Generate all global vertices on CPU ---------------------------------
     final vertices = Vector3List(numVert);
     final normals = Vector3List(numVert);
     final uvs = Vector2List(numVert);
@@ -239,7 +248,7 @@ class M3TiledTerrain {
       }
     }
 
-    // 2. Calculate normals ---------------------------------------------------
+    // 2. Calculate normals for the entire terrain ---------------------------
     for (int i = 0; i <= heightSegments; i++) {
       for (int j = 0; j <= widthSegments; j++) {
         final int idx = i * (widthSegments + 1) + j;
@@ -260,177 +269,147 @@ class M3TiledTerrain {
       }
     }
 
-    // 3. Compute global bounding + exact per-tile bounding from CPU vertices --
-    final globalBounding = M3Bounding();
-    {
-      final v0 = Vector3.zero();
-      vertices.load(0, v0);
-      globalBounding.aabb.min.setFrom(v0);
-      globalBounding.aabb.max.setFrom(v0);
-      final v = Vector3.zero();
-      for (int i = 1; i < numVert; i++) {
-        vertices.load(i, v);
-        globalBounding.aabb.hullPoint(v);
-      }
-      globalBounding.aabb.copyCenter(globalBounding.sphere.center);
-      globalBounding.sphere.radius = Vector3(hx, hy, maxHeight).length;
-    }
-
-    final List<M3Bounding> tileBoundings = [];
-    for (int tr = 0; tr < tilesY; tr++) {
-      for (int tc = 0; tc < tilesX; tc++) {
-        final tb = M3Bounding();
-        final int r0 = tr * tileHeightSegments;
-        final int r1 = (tr + 1) * tileHeightSegments;
-        final int c0 = tc * tileWidthSegments;
-        final int c1 = (tc + 1) * tileWidthSegments;
-
-        final v0 = Vector3.zero();
-        vertices.load(r0 * (widthSegments + 1) + c0, v0);
-        tb.aabb.min.setFrom(v0);
-        tb.aabb.max.setFrom(v0);
-
-        final v = Vector3.zero();
-        for (int i = r0; i <= r1; i++) {
-          for (int j = c0; j <= c1; j++) {
-            vertices.load(i * (widthSegments + 1) + j, v);
-            tb.aabb.hullPoint(v);
-          }
-        }
-        tb.aabb.copyCenter(tb.sphere.center);
-        tb.sphere.radius = tb.aabb.min.distanceTo(tb.aabb.max) * 0.5;
-        tileBoundings.add(tb);
-      }
-    }
-
-    // 4. Upload shared VBO to GPU -------------------------------------------
-    final gl = M3AppEngine.instance.renderEngine.gl;
-
-    final vertexBuffer = gl.createBuffer();
-    gl.bindBuffer(WebGL.ARRAY_BUFFER, vertexBuffer);
-    gl.bufferData(WebGL.ARRAY_BUFFER, toF32List(vertices.buffer), WebGL.STATIC_DRAW);
-
-    final normalBuffer = gl.createBuffer();
-    gl.bindBuffer(WebGL.ARRAY_BUFFER, normalBuffer);
-    gl.bufferData(WebGL.ARRAY_BUFFER, toF32List(normals.buffer), WebGL.STATIC_DRAW);
-
-    final uvBuffer = gl.createBuffer();
-    gl.bindBuffer(WebGL.ARRAY_BUFFER, uvBuffer);
-    gl.bufferData(WebGL.ARRAY_BUFFER, toF32List(uvs.buffer), WebGL.STATIC_DRAW);
-
-    // 5. Create host geom (holds VBO, no indices, won't render) -------------
-    final hostGeom = M3TerrainGeom._hostOnly(
-      vertexCount: numVert,
-      vertexBuffer: vertexBuffer,
-      normalBuffer: normalBuffer,
-      uvBuffer: uvBuffer,
-      bounding: globalBounding,
+    // 3. Build single shared IBO (Uint16List) for all tiles ------------------
+    final sharedFaceIndices = _M3Indices(
+      WebGL.TRIANGLE_STRIP,
+      _buildSharedTileStripIndices(tileWidthSegments, tileHeightSegments),
+    );
+    final sharedEdgeIndices = _M3Indices(
+      WebGL.LINES,
+      _buildSharedTileWireIndices(tileWidthSegments, tileHeightSegments),
     );
 
-    // 6. Create tile geoms + mesh -------------------------------------------
+    // 4. Create tile geoms + VBO per tile -----------------------------------
+    final gl = M3AppEngine.instance.renderEngine.gl;
     final mesh = M3Mesh(null);
     mesh.name = 'TiledTerrain_${tilesX}x$tilesY';
     final mtr = material ?? M3Material();
 
+    final vTemp = Vector3.zero();
+    final nTemp = Vector3.zero();
+    final uvTemp = Vector2.zero();
+
     for (int tr = 0; tr < tilesY; tr++) {
       for (int tc = 0; tc < tilesX; tc++) {
+        final tileVertices = Vector3List(tileVertCount);
+        final tileNormals = Vector3List(tileVertCount);
+        final tileUVs = Vector2List(tileVertCount);
+
+        final int r0 = tr * tileHeightSegments;
+        final int c0 = tc * tileWidthSegments;
+
+        int localIdx = 0;
+        for (int i = 0; i <= tileHeightSegments; i++) {
+          final int globalRow = r0 + i;
+          final int globalRowOffset = globalRow * (widthSegments + 1);
+          for (int j = 0; j <= tileWidthSegments; j++) {
+            final int globalIdx = globalRowOffset + c0 + j;
+            vertices.load(globalIdx, vTemp);
+            normals.load(globalIdx, nTemp);
+            uvs.load(globalIdx, uvTemp);
+
+            tileVertices[localIdx] = vTemp;
+            tileNormals[localIdx] = nTemp;
+            tileUVs[localIdx] = uvTemp;
+            localIdx++;
+          }
+        }
+
+        // Bounding for tile
+        final tb = M3Bounding();
+        tileVertices.load(0, vTemp);
+        tb.aabb.min.setFrom(vTemp);
+        tb.aabb.max.setFrom(vTemp);
+        for (int k = 1; k < tileVertCount; k++) {
+          tileVertices.load(k, vTemp);
+          tb.aabb.hullPoint(vTemp);
+        }
+        tb.aabb.copyCenter(tb.sphere.center);
+        tb.sphere.radius = tb.aabb.min.distanceTo(tb.aabb.max) * 0.5;
+
+        // Create per-tile VBO buffers
+        final vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(WebGL.ARRAY_BUFFER, vertexBuffer);
+        gl.bufferData(WebGL.ARRAY_BUFFER, toF32List(tileVertices.buffer), WebGL.STATIC_DRAW);
+
+        final normalBuffer = gl.createBuffer();
+        gl.bindBuffer(WebGL.ARRAY_BUFFER, normalBuffer);
+        gl.bufferData(WebGL.ARRAY_BUFFER, toF32List(tileNormals.buffer), WebGL.STATIC_DRAW);
+
+        final uvBuffer = gl.createBuffer();
+        gl.bindBuffer(WebGL.ARRAY_BUFFER, uvBuffer);
+        gl.bufferData(WebGL.ARRAY_BUFFER, toF32List(tileUVs.buffer), WebGL.STATIC_DRAW);
+
         final tile = M3TerrainTileGeom._(
           tileRow: tr,
           tileCol: tc,
-          vertexCount: numVert,
+          vertexCount: tileVertCount,
           vertexBuffer: vertexBuffer,
           normalBuffer: normalBuffer,
           uvBuffer: uvBuffer,
+          sharedFaceIndices: sharedFaceIndices,
+          sharedEdgeIndices: sharedEdgeIndices,
         );
-        tile.localBounding = tileBoundings[tr * tilesX + tc];
-
-        // Face indices (triangle strip for this tile, into global vertex space)
-        tile._faceIndices.add(
-          _M3Indices(
-            WebGL.TRIANGLE_STRIP,
-            _buildTileStripIndices(tr, tc, tileWidthSegments, tileHeightSegments, widthSegments),
-          ),
-        );
-
-        // Wireframe indices
-        tile._edgeIndices.add(
-          _M3Indices(WebGL.LINES, _buildTileWireIndices(tr, tc, tileWidthSegments, tileHeightSegments, widthSegments)),
-        );
+        tile.localBounding = tb;
 
         mesh.subMeshes.add(M3SubMesh(tile, material: mtr));
       }
     }
 
-    return M3TiledTerrain._(hostGeom, mesh, tilesX, tilesY);
+    return M3TiledTerrain._(mesh, tilesX, tilesY, sharedFaceIndices, sharedEdgeIndices);
   }
 
-  /// Builds triangle-strip indices for a single tile referencing global vertex indices.
+  /// Builds triangle-strip indices for a single tile of size [tileWidthSegs] × [tileHeightSegs].
   ///
-  /// Uses degenerate triangles to join tile rows within a single draw call.
-  /// Always returns [Uint32List] since total vertex count exceeds 65 535 for
-  /// large terrains.
-  static Uint32List _buildTileStripIndices(
-    int tileRow,
-    int tileCol,
+  /// Uses tile-local vertex indices (0 to (tileWidthSegs + 1) * (tileHeightSegs + 1) - 1).
+  /// Returns [Uint16List] since vertex count per tile fits in uint16.
+  static Uint16List _buildSharedTileStripIndices(
     int tileWidthSegs,
     int tileHeightSegs,
-    int fullWidthSegs,
   ) {
-    final int rowStride = fullWidthSegs + 1;
-    final int rowStart = tileRow * tileHeightSegs;
-    final int colStart = tileCol * tileWidthSegs;
-
-    // (tileWidthSegs+1)*2 per strip row + 2 degenerate joins between rows
+    final int rowStride = tileWidthSegs + 1;
     final int numIndex = (tileWidthSegs + 1) * 2 * tileHeightSegs + 2 * (tileHeightSegs - 1);
-    final indices = Uint32List(numIndex);
+    final indices = Uint16List(numIndex);
     int idx = 0;
 
     for (int i = 0; i < tileHeightSegs; i++) {
       if (i > 0) {
         indices[idx] = indices[idx - 1]; // degenerate: repeat last
-        indices[idx + 1] = (rowStart + i) * rowStride + colStart; // repeat first of next row
+        indices[idx + 1] = i * rowStride; // repeat first of next row
         idx += 2;
       }
       for (int j = 0; j <= tileWidthSegs; j++) {
-        indices[idx++] = (rowStart + i) * rowStride + (colStart + j);
-        indices[idx++] = (rowStart + i + 1) * rowStride + (colStart + j);
+        indices[idx++] = i * rowStride + j;
+        indices[idx++] = (i + 1) * rowStride + j;
       }
     }
     return indices;
   }
 
-  /// Builds wireframe (GL_LINES) indices for a single tile.
+  /// Builds wireframe (GL_LINES) indices for a single tile of size [tileWidthSegs] × [tileHeightSegs].
   ///
-  /// Generates horizontal edges (along X) and vertical edges (along Y).
-  static Uint32List _buildTileWireIndices(
-    int tileRow,
-    int tileCol,
+  /// Uses tile-local vertex indices.
+  static Uint16List _buildSharedTileWireIndices(
     int tileWidthSegs,
     int tileHeightSegs,
-    int fullWidthSegs,
   ) {
-    final int rowStride = fullWidthSegs + 1;
-    final int rowStart = tileRow * tileHeightSegs;
-    final int colStart = tileCol * tileWidthSegs;
-
-    // horizontal: (tileHeightSegs+1) rows × tileWidthSegs segments
-    // vertical:   tileHeightSegs rows × (tileWidthSegs+1) columns
+    final int rowStride = tileWidthSegs + 1;
     final int numWire = (tileWidthSegs * (tileHeightSegs + 1) + (tileWidthSegs + 1) * tileHeightSegs) * 2;
-    final lines = Uint32List(numWire);
+    final lines = Uint16List(numWire);
     int idx = 0;
 
     // Horizontal edges
     for (int i = 0; i <= tileHeightSegs; i++) {
       for (int j = 0; j < tileWidthSegs; j++) {
-        lines[idx++] = (rowStart + i) * rowStride + (colStart + j);
-        lines[idx++] = (rowStart + i) * rowStride + (colStart + j + 1);
+        lines[idx++] = i * rowStride + j;
+        lines[idx++] = i * rowStride + (j + 1);
       }
     }
     // Vertical edges
     for (int i = 0; i < tileHeightSegs; i++) {
       for (int j = 0; j <= tileWidthSegs; j++) {
-        lines[idx++] = (rowStart + i) * rowStride + (colStart + j);
-        lines[idx++] = (rowStart + i + 1) * rowStride + (colStart + j);
+        lines[idx++] = i * rowStride + j;
+        lines[idx++] = (i + 1) * rowStride + j;
       }
     }
     return lines;

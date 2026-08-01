@@ -49,8 +49,7 @@ class _M3ViewState extends State<M3View> with SingleTickerProviderStateMixin, Wi
     setState(() {
       engine.remount();
       engine.resume();
-      M3Log.i('M3View', 'setState after initApp');
-      debugPrint("=== setState after initApp ===");
+      M3Log.s('M3View', 'setState after initAppEngine');
     });
   }
 
@@ -104,7 +103,7 @@ class _M3ViewState extends State<M3View> with SingleTickerProviderStateMixin, Wi
   @override
   Widget build(BuildContext context) {
     // call buildAppWidget once for init app
-    final appWidget = M3AppEngine.instance.getAppWidget();
+    final appWidget = M3AppEngine.instance.buildAppWidget();
     return appWidget;
   }
 }

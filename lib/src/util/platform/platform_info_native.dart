@@ -29,6 +29,16 @@ void initPlatformImpl() {
   }
 }
 
+Int32List getGLCapability(int pname, {int count = 1}) {
+  final Pointer<Int32> resultPtr = calloc<Int32>(count);
+  try {
+    _glGetIntegerv(pname, resultPtr);
+    return Int32List.fromList(resultPtr.asTypedList(count));
+  } finally {
+    calloc.free(resultPtr);
+  }
+}
+
 void getGLExtensions() {
   final gl = M3AppEngine.instance.renderEngine.gl;
   if (!kIsWeb) {
@@ -40,6 +50,9 @@ void getGLExtensions() {
   }
 }
 
+// ------------------------------
+// EGL function signatures
+// ------------------------------
 typedef EglGetCurrentDisplayC = Pointer<Void> Function();
 typedef EglGetCurrentDisplayDart = Pointer<Void> Function();
 
@@ -154,9 +167,15 @@ DynamicLibrary? _loadEGLLib() {
   return null;
 }
 
-// 定義 C 函式的簽名
+// ------------------------------
+// OpenGL function signatures
+// ------------------------------
 typedef GLGetStringC = Pointer<Uint8> Function(Uint32 name);
 typedef GLGetStringDart = Pointer<Uint8> Function(int name);
+
+typedef GLGetIntegervC = Void Function(Uint32 name, Pointer<Int32> data);
+typedef GLGetIntegervDart = void Function(int pname, Pointer<Int32> data);
+late GLGetIntegervDart _glGetIntegerv;
 
 String safeGetString(Pointer<Uint8> ptr) {
   if (ptr.address == 0) return "Unknown";
@@ -173,6 +192,7 @@ GraphicsInfo getGpuInfo() {
     return const GraphicsInfo(vendor: "None", renderer: "None", version: "None", shadingVersion: "None");
   }
   final GLGetStringDart glGetString = glesLib.lookup<NativeFunction<GLGetStringC>>('glGetString').asFunction();
+  _glGetIntegerv = glesLib.lookup<NativeFunction<GLGetIntegervC>>('glGetIntegerv').asFunction<GLGetIntegervDart>();
 
   Pointer<Uint8> vendorPtr = glGetString(WebGL.VENDOR);
   Pointer<Uint8> rendererPtr = glGetString(WebGL.RENDERER);
@@ -186,6 +206,6 @@ GraphicsInfo getGpuInfo() {
   String glslVer = safeGetString(shaderPtr);
   GraphicsInfo ret = GraphicsInfo(vendor: vendor, renderer: renderer, version: version, shadingVersion: glslVer);
 
-  glesLib.close();
+  // glesLib.close();
   return ret;
 }

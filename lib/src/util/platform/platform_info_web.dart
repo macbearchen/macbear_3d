@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+import 'dart:js_interop';
+
 import 'package:web/web.dart' as web;
 import '../log.dart';
 import 'platform_info.dart';
@@ -23,6 +26,38 @@ web.WebGLRenderingContext? getWebGL() {
   gl ??= canvas.getContext('webgl') as web.WebGLRenderingContext?;
 
   return gl;
+}
+
+Int32List getGLCapability(int param, {int count = 1}) {
+  final gl = getWebGL();
+  if (gl == null) return Int32List.fromList([-1]);
+
+  final JSAny? val = gl.getParameter(param);
+
+  if (val == null) {
+    M3Log.e('WebGL', 'getParameter(0x${param.toRadixString(16)}) returned null');
+    return Int32List.fromList([-1]);
+  }
+
+  // 陣列型查詢(例如 GL_VIEWPORT、GL_MAX_VIEWPORT_DIMS)回傳 Int32Array
+  if (val.isA<JSInt32Array>()) {
+    return (val as JSInt32Array).toDart;
+  }
+
+  // 單一數值型查詢(大多數 MAX_XXX)回傳 JS number
+  if (val.isA<JSNumber>()) {
+    final intVal = (val as JSNumber).toDartInt;
+    return Int32List.fromList([intVal]);
+  }
+
+  // boolean 型查詢(某些 pname 回傳 bool,例如 GL_DEPTH_WRITEMASK)
+  if (val.isA<JSBoolean>()) {
+    final boolVal = (val as JSBoolean).toDart;
+    return Int32List.fromList([boolVal ? 1 : 0]);
+  }
+
+  M3Log.e('WebGL', 'Unexpected getParameter type for 0x${param.toRadixString(16)}: $val');
+  return Int32List.fromList([-1]);
 }
 
 void getGLExtensions() {

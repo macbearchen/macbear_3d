@@ -25,7 +25,7 @@ class PbrTestScene_09 extends DemoScene {
 
         final mesh = M3Mesh(sphereGeom);
         mesh.subMeshes[0].mtr
-          ..diffuse = Vector4(0.5, 1.0, 0.5, 1.0)
+          ..diffuse = Vector4(0.6, 1.0, 0.6, 1.0)
           ..reflection = metallic
           ..metallic = metallic
           ..roughness = max(roughness, 0.05); // Avoid zero roughness for GGX

@@ -14,7 +14,7 @@ class M3PlanarReflection {
 
   final Plane clipPlane = Plane.components(0, 0, 1, 0);
   final M3Camera _camera = M3Camera(); // reflection camera to render reflection
-  final double farClipRatio = 0.5;
+  final double farClipRatio = 2.0 / 3.0;
 
   bool enable = true;
   bool visible = true;
