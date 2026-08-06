@@ -9,6 +9,7 @@ import '../gltf/gltf_parser.dart';
 
 import 'text/contour.dart';
 import 'text/ear_clipping.dart';
+import 'terrain/terrain_lod.dart';
 
 // part for geom
 part 'debug/debug_axis_geom.dart';
@@ -25,6 +26,7 @@ part 'primitive/sphere_geom.dart';
 part 'primitive/torus_geom.dart';
 part 'terrain/tiled_terrain.dart';
 part 'terrain/terrain_geom.dart';
+part 'terrain/terrain_tile_geom.dart';
 part 'text/text_geom.dart';
 part 'gltf_geom.dart';
 part 'obj_geom.dart';

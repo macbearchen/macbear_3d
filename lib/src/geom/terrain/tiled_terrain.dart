@@ -1,53 +1,6 @@
 part of '../geom.dart';
 
 // ---------------------------------------------------------------------------
-// M3TerrainTileGeom
-// ---------------------------------------------------------------------------
-
-/// A terrain tile whose vertex/normal/UV buffers (VBO) are owned **per-tile**.
-/// The index buffers (IBO for faces and edges) are **shared** across all tiles.
-///
-/// Never construct this directly; use [M3TiledTerrain.build] or
-/// [M3TiledTerrain.fromHeightField].
-class M3TerrainTileGeom extends M3Geom {
-  /// Grid row of this tile (Y axis, 0 = top).
-  final int tileRow;
-
-  /// Grid column of this tile (X axis, 0 = left).
-  final int tileCol;
-
-  M3TerrainTileGeom._({
-    required this.tileRow,
-    required this.tileCol,
-    required int vertexCount,
-    required Buffer vertexBuffer,
-    required Buffer normalBuffer,
-    required Buffer uvBuffer,
-    required _M3Indices sharedFaceIndices,
-    required _M3Indices sharedEdgeIndices,
-  }) {
-    _vertexCount = vertexCount;
-    _vertexBuffer = vertexBuffer;
-    _normalBuffer = normalBuffer;
-    _uvBuffer = uvBuffer;
-    _faceIndices.add(sharedFaceIndices);
-    _edgeIndices.add(sharedEdgeIndices);
-    name = 'TerrainTile_${tileRow}_$tileCol';
-  }
-
-  /// Releases this tile's **own** VBO buffers.
-  ///
-  /// The shared IBO index buffers are owned by [M3TiledTerrain]; they are not
-  /// disposed here. Call [M3TiledTerrain.dispose] to handle full teardown.
-  @override
-  void dispose() {
-    _faceIndices.clear();
-    _edgeIndices.clear();
-    super.dispose();
-  }
-}
-
-// ---------------------------------------------------------------------------
 // M3TiledTerrain
 // ---------------------------------------------------------------------------
 
@@ -68,28 +21,105 @@ class M3TiledTerrain {
   /// Tile rows (Y axis).
   final int tilesY;
 
-  final _M3Indices _sharedFaceIndices;
-  final _M3Indices _sharedEdgeIndices;
+  /// Whether LOD (Level of Detail) calculations and updates are enabled.
+  /// When disabled, all tiles reset to LOD 0 (full detail).
+  bool enableLod = true;
+
+  final Map<int, _M3Indices> _sharedFaceIndices;
+  final Map<int, _M3Indices> _sharedEdgeIndices;
 
   /// Total tile count = [tilesX] × [tilesY].
   int get tileCount => tilesX * tilesY;
 
-  M3TiledTerrain._(
-    this.mesh,
-    this.tilesX,
-    this.tilesY,
-    this._sharedFaceIndices,
-    this._sharedEdgeIndices,
-  );
+  M3TiledTerrain._(this.mesh, this.tilesX, this.tilesY, this._sharedFaceIndices, this._sharedEdgeIndices);
 
   /// Releases all tile VBO buffers then the shared IBO buffers.
   void dispose() {
     for (final sub in mesh.subMeshes) {
       sub.geom.dispose(); // tile: own VBOs only
     }
-    _sharedFaceIndices.dispose(); // shared IBO
-    _sharedEdgeIndices.dispose();
+    for (final indices in _sharedFaceIndices.values) {
+      indices.dispose();
+    }
+    for (final indices in _sharedEdgeIndices.values) {
+      indices.dispose();
+    }
     mesh.subMeshes.clear();
+  }
+
+  /// Helper to fetch tile geom by 2D grid position [row, col].
+  M3TerrainTileGeom _getTileGeom(int row, int col) {
+    final index = row * tilesX + col;
+    return mesh.subMeshes[index].geom as M3TerrainTileGeom;
+  }
+
+  /// Call once per frame. Updates tile LOD levels and boundary seam stitching.
+  void updateLod(Vector3 eyePosition, {Matrix4? worldMatrix}) {
+    if (!enableLod) {
+      for (final sub in mesh.subMeshes) {
+        final tile = sub.geom as M3TerrainTileGeom;
+        tile.setLodAndStitch(0, 0);
+      }
+      return;
+    }
+    final Vector3 localEye = Vector3.copy(eyePosition);
+    if (worldMatrix != null) {
+      final invMat = Matrix4.copy(worldMatrix)..invert();
+      invMat.transform3(localEye);
+    }
+
+    // 1. Resolve raw LOD level for each tile
+    for (final sub in mesh.subMeshes) {
+      final tile = sub.geom as M3TerrainTileGeom;
+      final distanceSquared = tile.distanceSquaredTo(localEye);
+      final resolvedLod = M3TerrainLodResolver.resolveLod(currentLod: tile.lodLevel, distanceSquared: distanceSquared);
+      if (resolvedLod != tile.lodLevel) {
+        tile.lodLevel = resolvedLod;
+      }
+    }
+
+    // 2. Resolve 4-bit neighbor stitch mask for each tile (N, E, S, W)
+    // Stitching responsibility belongs to the LOWER-precision side:
+    // a direction edge needs stitching when selfLod > neighborLod
+    // (self has fewer segments = lower precision than the neighbor).
+    // LOD0 is always the highest-precision level — it never stitches.
+    for (int r = 0; r < tilesY; r++) {
+      for (int c = 0; c < tilesX; c++) {
+        final tile = _getTileGeom(r, c);
+        final selfLod = tile.lodLevel;
+
+        // LOD0 is the highest precision — never needs to stitch.
+        if (selfLod == 0) {
+          tile.setLodAndStitch(0, 0);
+          continue;
+        }
+
+        int mask = 0;
+
+        // North neighbor (r - 1)
+        if (r > 0) {
+          final nLod = _getTileGeom(r - 1, c).lodLevel;
+          if (nLod < selfLod) mask |= M3TerrainStitchBuilder.maskNorth;
+        }
+        // East neighbor (c + 1)
+        if (c < tilesX - 1) {
+          final eLod = _getTileGeom(r, c + 1).lodLevel;
+          if (eLod < selfLod) mask |= M3TerrainStitchBuilder.maskEast;
+        }
+        // South neighbor (r + 1)
+        if (r < tilesY - 1) {
+          final sLod = _getTileGeom(r + 1, c).lodLevel;
+          if (sLod < selfLod) mask |= M3TerrainStitchBuilder.maskSouth;
+        }
+        // West neighbor (c - 1)
+        if (c > 0) {
+          final wLod = _getTileGeom(r, c - 1).lodLevel;
+          if (wLod < selfLod) mask |= M3TerrainStitchBuilder.maskWest;
+        }
+
+        tile.setLodAndStitch(selfLod, mask);
+      }
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -215,12 +245,13 @@ class M3TiledTerrain {
       heightSegments % tileHeightSegments == 0,
       'heightSegments ($heightSegments) must be divisible by tileHeightSegments ($tileHeightSegments)',
     );
+    assert(
+      tileWidthSegments == 32 && tileHeightSegments == 32,
+      'Tile segment size must be 32x32 to support 4 LOD levels (32x32 down to 4x4).',
+    );
 
     final tileVertCount = (tileWidthSegments + 1) * (tileHeightSegments + 1);
-    assert(
-      tileVertCount <= 65536,
-      'Tile vertex count ($tileVertCount) exceeds 65,536 limit for uint16 index buffers.',
-    );
+    assert(tileVertCount <= 65536, 'Tile vertex count ($tileVertCount) exceeds 65,536 limit for uint16 index buffers.');
 
     final tilesX = widthSegments ~/ tileWidthSegments;
     final tilesY = heightSegments ~/ tileHeightSegments;
@@ -269,21 +300,28 @@ class M3TiledTerrain {
       }
     }
 
-    // 3. Build single shared IBO (Uint16List) for all tiles ------------------
-    final sharedFaceIndices = _M3Indices(
-      WebGL.TRIANGLE_STRIP,
-      _buildSharedTileStripIndices(tileWidthSegments, tileHeightSegments),
-    );
-    final sharedEdgeIndices = _M3Indices(
-      WebGL.LINES,
-      _buildSharedTileWireIndices(tileWidthSegments, tileHeightSegments),
-    );
+    // 3. Build shared LOD IBOs (Uint16List) for all tiles ------------------
+    // Key: (lod << 4) | stitchMask (0..15)
+    // LOD0 never stitches (it is always the highest-precision level),
+    // so only mask=0 is needed for LOD0. LOD1..3 need all 16 mask variants.
+    final sharedFaceIndices = <int, _M3Indices>{};
+    final sharedEdgeIndices = <int, _M3Indices>{};
+
+    for (int lod = 0; lod < M3TerrainLodConfig.lodCount; lod++) {
+      final maxMask = (lod == 0) ? 1 : 16; // LOD0: only mask 0; LOD1-3: all 16
+      for (int mask = 0; mask < maxMask; mask++) {
+        final key = (lod << 4) | mask;
+        final faceIndices = M3TerrainStitchBuilder.buildStitchedFaceIndices(lod, mask);
+        final wireIndices = M3TerrainStitchBuilder.buildStitchedWireIndices(lod, mask);
+
+        sharedFaceIndices[key] = _M3Indices(WebGL.TRIANGLES, faceIndices);
+        sharedEdgeIndices[key] = _M3Indices(WebGL.LINES, wireIndices);
+      }
+    }
 
     // 4. Create tile geoms + VBO per tile -----------------------------------
-    final gl = M3AppEngine.instance.renderEngine.gl;
     final mesh = M3Mesh(null);
     mesh.name = 'TiledTerrain_${tilesX}x$tilesY';
-    final mtr = material ?? M3Material();
 
     final vTemp = Vector3.zero();
     final nTemp = Vector3.zero();
@@ -328,6 +366,8 @@ class M3TiledTerrain {
         tb.sphere.radius = tb.aabb.min.distanceTo(tb.aabb.max) * 0.5;
 
         // Create per-tile VBO buffers
+        final gl = M3AppEngine.instance.renderEngine.gl;
+
         final vertexBuffer = gl.createBuffer();
         gl.bindBuffer(WebGL.ARRAY_BUFFER, vertexBuffer);
         gl.bufferData(WebGL.ARRAY_BUFFER, toF32List(tileVertices.buffer), WebGL.STATIC_DRAW);
@@ -347,12 +387,12 @@ class M3TiledTerrain {
           vertexBuffer: vertexBuffer,
           normalBuffer: normalBuffer,
           uvBuffer: uvBuffer,
-          sharedFaceIndices: sharedFaceIndices,
-          sharedEdgeIndices: sharedEdgeIndices,
+          lodFaceIndices: sharedFaceIndices,
+          lodEdgeIndices: sharedEdgeIndices,
         );
         tile.localBounding = tb;
 
-        mesh.subMeshes.add(M3SubMesh(tile, material: mtr));
+        mesh.subMeshes.add(M3SubMesh(tile, material: material ?? M3Material()));
       }
     }
 
@@ -362,25 +402,30 @@ class M3TiledTerrain {
   /// Builds triangle-strip indices for a single tile of size [tileWidthSegs] × [tileHeightSegs].
   ///
   /// Uses tile-local vertex indices (0 to (tileWidthSegs + 1) * (tileHeightSegs + 1) - 1).
+  /// [step] specifies the vertex stride for downsampled LODs (1 for LOD0 32x32, 2 for LOD1 16x16, up to 32 for LOD5 1x1).
   /// Returns [Uint16List] since vertex count per tile fits in uint16.
-  static Uint16List _buildSharedTileStripIndices(
-    int tileWidthSegs,
-    int tileHeightSegs,
-  ) {
+  static Uint16List buildSharedTileStripIndices(int tileWidthSegs, int tileHeightSegs, {int step = 1}) {
     final int rowStride = tileWidthSegs + 1;
-    final int numIndex = (tileWidthSegs + 1) * 2 * tileHeightSegs + 2 * (tileHeightSegs - 1);
+    final int rows = tileHeightSegs ~/ step;
+    final int cols = tileWidthSegs ~/ step;
+
+    final int numIndex = (cols + 1) * 2 * rows + 2 * (rows - 1);
     final indices = Uint16List(numIndex);
     int idx = 0;
 
-    for (int i = 0; i < tileHeightSegs; i++) {
-      if (i > 0) {
+    for (int r = 0; r < rows; r++) {
+      final int i = r * step;
+      final int nextI = (r + 1) * step;
+
+      if (r > 0) {
         indices[idx] = indices[idx - 1]; // degenerate: repeat last
         indices[idx + 1] = i * rowStride; // repeat first of next row
         idx += 2;
       }
-      for (int j = 0; j <= tileWidthSegs; j++) {
+      for (int c = 0; c <= cols; c++) {
+        final int j = c * step;
         indices[idx++] = i * rowStride + j;
-        indices[idx++] = (i + 1) * rowStride + j;
+        indices[idx++] = nextI * rowStride + j;
       }
     }
     return indices;
@@ -389,27 +434,32 @@ class M3TiledTerrain {
   /// Builds wireframe (GL_LINES) indices for a single tile of size [tileWidthSegs] × [tileHeightSegs].
   ///
   /// Uses tile-local vertex indices.
-  static Uint16List _buildSharedTileWireIndices(
-    int tileWidthSegs,
-    int tileHeightSegs,
-  ) {
+  /// [step] specifies the vertex stride for downsampled LODs.
+  static Uint16List buildSharedTileWireIndices(int tileWidthSegs, int tileHeightSegs, {int step = 1}) {
     final int rowStride = tileWidthSegs + 1;
-    final int numWire = (tileWidthSegs * (tileHeightSegs + 1) + (tileWidthSegs + 1) * tileHeightSegs) * 2;
+    final int rows = tileHeightSegs ~/ step;
+    final int cols = tileWidthSegs ~/ step;
+
+    final int numWire = (cols * (rows + 1) + (cols + 1) * rows) * 2;
     final lines = Uint16List(numWire);
     int idx = 0;
 
     // Horizontal edges
-    for (int i = 0; i <= tileHeightSegs; i++) {
-      for (int j = 0; j < tileWidthSegs; j++) {
+    for (int r = 0; r <= rows; r++) {
+      final int i = r * step;
+      for (int c = 0; c < cols; c++) {
+        final int j = c * step;
         lines[idx++] = i * rowStride + j;
-        lines[idx++] = i * rowStride + (j + 1);
+        lines[idx++] = i * rowStride + (j + step);
       }
     }
     // Vertical edges
-    for (int i = 0; i < tileHeightSegs; i++) {
-      for (int j = 0; j <= tileWidthSegs; j++) {
+    for (int r = 0; r < rows; r++) {
+      final int i = r * step;
+      for (int c = 0; c <= cols; c++) {
+        final int j = c * step;
         lines[idx++] = i * rowStride + j;
-        lines[idx++] = (i + 1) * rowStride + j;
+        lines[idx++] = (i + step) * rowStride + j;
       }
     }
     return lines;

@@ -9,6 +9,7 @@ export 'src/engine/resource_manager.dart';
 export 'src/engine/resources.dart';
 export 'src/geom/geom.dart';
 export 'src/geom/terrain/height_field.dart';
+export 'src/geom/terrain/terrain_lod.dart';
 export 'src/geom/text/ttf_parser.dart';
 export 'src/input/touch.dart';
 export 'src/mesh/mesh.dart';
