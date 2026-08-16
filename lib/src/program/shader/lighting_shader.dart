@@ -12,6 +12,7 @@ mixin M3LightingShader {
   late UniformLocation uniformLightDirection; // light direction "uLightDir" (per object-space)
 
   M3PointLightManager pointLightManager = M3PointLightManager();
+  M3SpotLightManager spotLightManager = M3SpotLightManager();
 
   // scene lights:
   M3DirectionalLight? _dirLight; // directional light
@@ -23,8 +24,9 @@ mixin M3LightingShader {
 
     uniformLightDirection = gl.getUniformLocation(prog, "uLightDir");
 
-    // light manager
+    // light managers
     pointLightManager.initLocation(prog);
+    spotLightManager.initLocation(prog);
   }
 
   /// directional light: scene only support one directional light.
@@ -35,6 +37,11 @@ mixin M3LightingShader {
   /// point light: scene support multiple point lights.
   void attachPointLights(List<M3PointLight> pointLights) {
     pointLightManager.attachPointLights(pointLights);
+  }
+
+  /// spot light: scene support multiple spot lights.
+  void attachSpotLights(List<M3SpotLight> spotLights) {
+    spotLightManager.attachSpotLights(spotLights);
   }
 
   /// set light uniforms.
@@ -51,5 +58,9 @@ mixin M3LightingShader {
 
     // point lights
     pointLightManager.setLightUniforms(matInv);
+
+    // spot lights
+    spotLightManager.setLightUniforms(matInv);
   }
 }
+

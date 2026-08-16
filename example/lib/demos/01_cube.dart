@@ -18,8 +18,12 @@ class CubeScene_01 extends DemoScene {
     // 01: box geometry
     for (int i = 0; i < 10; i++) {
       for (int j = 0; j < 10; j++) {
-        final box = addMesh(M3Mesh(M3BoxGeom(1.0, 1.0, 1.0)), Vector3(i * 2, j * 2, 0));
-        // box.scale.setValues(1, 1, 1);
+        for (int k = 0; k < 1; k++) {
+          final pos = Vector3(i * 2 - 10, j * 2 - 10, k * 2);
+          final box = addMesh(M3Mesh(M3BoxGeom(1.0, 1.0, 1.0)), pos);
+          // final ball = addMesh(M3Mesh(M3Resources.unitSphere), Vector3(i * 2, j * 2, k * 2));
+          // box.scale.setValues(1, 1, 1);
+        }
       }
     }
 
@@ -36,7 +40,7 @@ class CubeScene_01 extends DemoScene {
     );
     // ground plane
     final mtrGround = M3Material()
-      ..diffuseTexture = texTest
+      // ..diffuseTexture = texTest
       ..setMatte();
     final groundMesh = M3Mesh(
       M3PlaneGeom(100, 100, widthSegments: 4, heightSegments: 4, uvScale: Vector2.all(10.0)),
@@ -72,7 +76,7 @@ Click buttons to test examples.
   3. Primitives scene
   4. Obj teapot scene
   5. Animated scene: Gltf, BVH
-  6. Terrain and Water scene
+  6. Terrain LOD and Water scene
   7. Physics scene
   8. Text 3D scene
   9. PBR Test scene''';

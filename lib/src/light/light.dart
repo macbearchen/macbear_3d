@@ -113,3 +113,55 @@ class M3PointLightManager {
     }
   }
 }
+
+/// Spotlight manager — packs up to 8 spotlights into uSpotLights[8] (1 mat4 each).
+class M3SpotLightManager {
+  RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
+
+  static const int _maxSpotLights = 8;
+
+  final Float32List _spotMats = Float32List(_maxSpotLights * 16);
+  int _spotCount = 0;
+  int get spotCount => _spotCount;
+
+  late UniformLocation _uniformSpotLights;
+  late UniformLocation _uniformSpotLightCount;
+
+  List<M3SpotLight> _spotLights = [];
+
+  M3SpotLightManager();
+
+  void initLocation(Program program) {
+    _uniformSpotLights = gl.getUniformLocation(program, 'uSpotLights');
+    _uniformSpotLightCount = gl.getUniformLocation(program, 'uSpotLightCount');
+  }
+
+  void attachSpotLights(List<M3SpotLight> spotLights) {
+    _spotLights = spotLights;
+  }
+
+  /// Upload spotlight uniforms for the current frame.
+  ///
+  /// [mMatrixInv] — inverse model matrix (world → object space), same convention
+  /// as [M3PointLightManager.setLightUniforms].
+  void setLightUniforms(Matrix4 mMatrixInv) {
+    final active = _spotLights.take(_maxSpotLights).toList();
+    _spotCount = active.length;
+
+    _spotMats.fillRange(0, _spotMats.length, 0.0);
+
+    for (int i = 0; i < _spotCount; i++) {
+      final packed = active[i].packBuffer(mMatrixInv); // 16 floats
+      final offset = i * 16;
+      _spotMats.setRange(offset, offset + 16, packed);
+    }
+
+    if (M3Program.isLocationValid(_uniformSpotLights)) {
+      gl.uniformMatrix4fv(_uniformSpotLights, false, _spotMats);
+    }
+
+    if (M3Program.isLocationValid(_uniformSpotLightCount)) {
+      gl.uniform1i(_uniformSpotLightCount, _spotCount);
+    }
+  }
+}

@@ -340,6 +340,17 @@ class _MainPageState extends State<MainPage> {
           },
           child: const Icon(Icons.lightbulb_circle),
         ),
+        const SizedBox(width: 4),
+        FloatingActionButton(
+          heroTag: 'spot_lights',
+          backgroundColor: shaderOptions.spotLights ? Colors.amber : null,
+          onPressed: () {
+            setState(() {
+              shaderOptions.spotLights = !shaderOptions.spotLights;
+            });
+          },
+          child: const Icon(Icons.highlight),
+        ),
       ],
     );
   }

@@ -19,7 +19,8 @@ part 'shader/water_shader.dart';
 /// Manages uniform locations, vertex attributes, and matrix transformations.
 ///
 /// command:
-///   dart run build_runner build --delete-conflicting-outputs
+///   dart run build_runner clean
+///   dart run build_runner build
 
 // ── Texture Unit for Mesh ───────────────────────────────
 // Slot  0 : Diffuse / baseColor map

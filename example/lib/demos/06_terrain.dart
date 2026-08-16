@@ -36,12 +36,15 @@ class TerrainScene_06 extends DemoScene {
     await _setupTerrain();
 
     // 4. Add Water
-    // await addWater();
+    await addWater();
 
     // 5. Add Mesh List
-    // _initMeshList();
+    _initMeshList();
 
-    addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 0));
+    for (int i = 0; i <= 10; i++) {
+      final axisMesh = M3Resources.axisGizmoMesh.clone();
+      addMesh(axisMesh, Vector3(0, 100.0 * i, 10));
+    }
   }
 
   Future<void> addWater() async {
@@ -132,7 +135,7 @@ class TerrainScene_06 extends DemoScene {
     final terrainSegments = 512;
     final terrainSize = 512.0;
     final tileSegments = 32;
-    final maxHeight = 2.0; //1024.0;
+    final maxHeight = 1024.0;
 
     if (_useHeightmap) {
       final buffer = await M3ResourceManager.loadBuffer('assets/example/Height16.png');
@@ -205,7 +208,6 @@ class TerrainScene_06 extends DemoScene {
     }
 
     double posZ = _useHeightmap ? -21 : -9;
-    posZ = 0;
     _terrainEntity = addMesh(terrainMesh, Vector3(0, 0, posZ));
     M3AppEngine.instance.resume();
   }

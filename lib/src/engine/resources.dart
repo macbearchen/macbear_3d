@@ -225,8 +225,15 @@ class M3Resources {
       // add pixel lighting shader to vertex/fragment shader for final result
       strVert = "#define ENABLE_PIXEL_LIGHTING \n$strVert";
       strFrag = "#define ENABLE_PIXEL_LIGHTING \n$strFrag";
-      if (options.pointLights) {
-        strFrag = "#define ENABLE_POINT_LIGHTS \n$strFrag \n$LightFS_glsl";
+      if (options.pointLights || options.spotLights) {
+        // LightFS_glsl is appended once; defines select which code is active
+        if (options.pointLights) {
+          strFrag = "#define ENABLE_POINT_LIGHTS \n$strFrag";
+        }
+        if (options.spotLights) {
+          strFrag = "#define ENABLE_SPOT_LIGHTS \n$strFrag";
+        }
+        strFrag = "$strFrag \n$LightFS_glsl";
       }
       strFrag = strFrag + PixelFS_glsl;
     }
@@ -271,8 +278,14 @@ class M3Resources {
     // if (bSpecularLight) {
     //   fsWater = "#define ENABLE_WATER_SPECULAR \n$fsWater";
     // }
-    if (options.pointLights) {
-      fsWater = "#define ENABLE_POINT_LIGHTS \n$fsWater \n$LightFS_glsl";
+    if (options.pointLights || options.spotLights) {
+      if (options.pointLights) {
+        fsWater = "#define ENABLE_POINT_LIGHTS \n$fsWater";
+      }
+      if (options.spotLights) {
+        fsWater = "#define ENABLE_SPOT_LIGHTS \n$fsWater";
+      }
+      fsWater = "$fsWater \n$LightFS_glsl";
     }
     if (options.fog) {
       vsWater = "#define ENABLE_FOG \n$vsWater";

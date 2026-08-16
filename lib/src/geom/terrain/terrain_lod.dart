@@ -195,7 +195,7 @@ class M3TerrainStitchBuilder {
     if (rInnerStart == 0) {
       return Uint16List.fromList(indices);
     }
-    indices.clear(); // debug to hide inner
+    // indices.clear(); // debug to hide inner
 
     // -------------------------------------------------------------------------
     // 2. North edge strip (r = 0, c in [1..gridSegs-2])
@@ -280,7 +280,7 @@ class M3TerrainStitchBuilder {
         indices.addAll([vI1, vE1, vM]);
       }
     }
-    indices.clear(); // debug to hide edges
+    // indices.clear(); // debug to hide edges
 
     // -------------------------------------------------------------------------
     // 6. Corners — Exclusively handles the 2×2 vertex block at each corner per diagram
@@ -372,11 +372,12 @@ class M3TerrainStitchBuilder {
         indices.addAll([mW, c11, c01]);
         indices.addAll([mW, c10, c11]);
       } else {
-        // 2-stitch
-        indices.addAll([c10, mS, mW]);
-        indices.addAll([mW, mS, c01]);
-        indices.addAll([mW, c00, c01]);
-        indices.addAll([mS, c01, c11]);
+        // 2-stitch: mirror of NW (vertically reflected → winding reversed)
+        // NW: [c00,mW,mN], [mN,mW,c11], [mN,c11,c01], [mW,c10,c11]
+        indices.addAll([mS, mW, c10]); // outer triangle
+        indices.addAll([c01, mW, mS]); // center
+        indices.addAll([c11, c01, mS]); // S arm
+        indices.addAll([c01, c00, mW]); // W arm
       }
     }
 
@@ -404,11 +405,12 @@ class M3TerrainStitchBuilder {
         indices.addAll([c01, c00, mE]);
         indices.addAll([c10, c11, mE]);
       } else {
-        // 2-stitch
-        indices.addAll([c11, mE, mS]);
-        indices.addAll([mE, mS, c00]);
-        indices.addAll([mE, c01, c00]);
-        indices.addAll([mS, c00, c10]);
+        // 2-stitch: mirror of NE (vertically reflected → winding reversed)
+        // NE: [c01,mN,mE], [mN,c10,mE], [mN,c00,c10], [mE,c10,c11]
+        indices.addAll([mE, mS, c11]); // outer triangle
+        indices.addAll([mE, c00, mS]); // center
+        indices.addAll([c00, c10, mS]); // S arm
+        indices.addAll([c01, c00, mE]); // E arm
       }
     }
 

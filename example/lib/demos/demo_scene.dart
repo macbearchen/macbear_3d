@@ -15,6 +15,8 @@ class DemoScene extends M3Scene {
     initPointLights(7);
     pointLights[0].intensity = 2.5;
     pointLights[0].range = 9;
+
+    initSpotLights(4);
   }
 
   @override
@@ -35,6 +37,11 @@ class DemoScene extends M3Scene {
     pointLights[2].position.x = 8 * sinSec;
     pointLights[3].position.y = 8 * sinSec;
     pointLights[4].position.y = 8 * cosSec;
+
+    final cosSec2 = cos(sec * 0.6);
+    final sinSec2 = sin(sec * 0.6);
+    spotLights[0].direction.x = cosSec2 * 0.5;
+    spotLights[1].direction.y = sinSec2 * 0.5;
   }
 
   // create nvlobby cubemap

@@ -82,6 +82,7 @@ class M3RenderContext {
         // Collects a sub-mesh into the appropriate queue based on its material.
         final item = M3RenderItem(entity: entity, subMesh: sub, worldMatrix: worldMat, depth: depth);
         item.pointLights = scene.pointLights;
+        item.spotLights = scene.spotLights;
 
         // 1-1. Collect for unlit / opacity / transparency
         if (sub.mtr.diffuseTexture is M3ExternalTexture) {

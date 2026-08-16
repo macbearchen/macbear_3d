@@ -66,6 +66,7 @@ class M3ReflectionProbe {
     final prog = M3Resources.programTexture!;
     prog.attachDirectionalLight(scene.dirLight);
     prog.attachPointLights(scene.pointLights);
+    prog.attachSpotLights(scene.spotLights);
 
     for (int i = 0; i < 6; i++) {
       // Bind FBO, then attach texture face
