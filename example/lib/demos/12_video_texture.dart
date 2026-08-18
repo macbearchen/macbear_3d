@@ -1,5 +1,5 @@
 // ignore_for_file: unused_local_variable, file_names
-import 'package:flutter/material.dart' as fm;
+import 'package:material_ui/material_ui.dart' as fm;
 import 'package:video_player/video_player.dart';
 import '../main_all.dart';
 

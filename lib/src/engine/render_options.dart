@@ -37,6 +37,7 @@ class M3ShaderOptions {
   int _pcf = 1; // shadow PCF: 0:none, 1:default(4-tap), 2:3x3, 3:5x5
   bool _fog = false;
   bool _pointLights = true; // point lights
+  bool _spotLights = true; // spot lights
 
   bool isDirty = false;
 
@@ -49,6 +50,19 @@ class M3ShaderOptions {
 
     // pointLights 開啟時，自動強制 perPixel
     if (_pointLights) {
+      if (!_perPixel) perPixel = true;
+    }
+  }
+
+  // --- spotLights ---
+  bool get spotLights => _spotLights;
+  set spotLights(bool v) {
+    if (_spotLights == v) return;
+    _spotLights = v;
+    isDirty = true;
+
+    // spotLights 開啟時，自動強制 perPixel
+    if (_spotLights) {
       if (!_perPixel) perPixel = true;
     }
   }
@@ -68,11 +82,12 @@ class M3ShaderOptions {
     _perPixel = v;
     isDirty = true;
 
-    // perPixel 關閉時，cartoon, pbr, pointLights 一定要關
+    // perPixel 關閉時，cartoon, pbr, pointLights, spotLights 一定要關
     if (!_perPixel) {
       if (_cartoon) _cartoon = false;
       if (pbr) pbr = false; // 這也會自動連動關閉 ibl
       if (_pointLights) _pointLights = false;
+      if (_spotLights) _spotLights = false;
     }
   }
 

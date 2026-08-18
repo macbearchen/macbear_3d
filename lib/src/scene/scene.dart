@@ -25,6 +25,7 @@ abstract class M3Scene {
   // lights
   final dirLight = M3DirectionalLight();
   final List<M3PointLight> pointLights = [];
+  final List<M3SpotLight> spotLights = [];
 
   // camera
   final M3Camera _camera = M3Camera();
@@ -88,6 +89,23 @@ abstract class M3Scene {
         ..color = colors[i % 6];
 
       pointLights.add(pointLight);
+    }
+  }
+
+  void initSpotLights(int num) {
+    num = min(4, num);
+    final positions = [Vector3(3, 4, 5), Vector3(-3, 4, 5), Vector3(3, -4, 5), Vector3(-10, -10, 0.2)];
+    final dirs = [Vector3(0, 0, -1), Vector3(0.2, -0.2, -1), Vector3(-0.2, 0.2, -1), Vector3(1, 0, 0)];
+    final colors = [Vector3(1.0, 0.0, 0.0), Vector3(0.0, 1.0, 0.0), Vector3(0.0, 0.0, 1.0), Vector3(1.0, 1.0, 0.0)];
+
+    for (var i = 0; i < num; i++) {
+      final spotLight = M3SpotLight();
+      spotLight.position = positions[i];
+      spotLight.color = colors[i];
+      spotLight.intensity = 8.0;
+      spotLight.direction = dirs[i];
+      spotLight.range = 12;
+      spotLights.add(spotLight);
     }
   }
 
@@ -244,7 +262,16 @@ abstract class M3Scene {
     for (final light in pointLights) {
       Vector4 c = Vector4(light.color.x, light.color.y, light.color.z, 1);
       progSimple.setMaterial(mtr, c);
+      if (drawBulb) {
+        light.drawBulb(progSimple, camera);
+      } else {
+        light.drawHelper(progSimple, camera);
+      }
+    }
 
+    for (final light in spotLights) {
+      Vector4 c = Vector4(light.color.x, light.color.y, light.color.z, 1);
+      progSimple.setMaterial(mtr, c);
       if (drawBulb) {
         light.drawBulb(progSimple, camera);
       } else {

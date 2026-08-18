@@ -66,4 +66,62 @@ lowp vec3 CalculateLighting(vec3 fragPos, vec3 N) {
     return result;
 }
 
+// -------------------------------------------------------
+// Spot lights
+// -------------------------------------------------------
+#ifdef ENABLE_SPOT_LIGHTS
+
+// Packing: 1 mat4 per spotlight (4 vec4)
+//   m[0] xyz: object-space position,  w: range²
+//   m[1] rgb: color,                  a: intensity
+//   m[2] xyz: object-space direction, w: 0
+//   m[3] x:   cos(innerAngle),        y: cos(outerAngle)
+uniform mediump mat4 uSpotLights[8];
+uniform mediump int  uSpotLightCount;
+
+// Smooth cone falloff: 0 outside outerAngle, 1 inside innerAngle
+// cosTheta = dot(-fragToLight_unit, spotDir_unit)
+float calcConeAttenuation(float cosTheta, float cosInner, float cosOuter) {
+    float t = clamp((cosTheta - cosOuter) / max(cosInner - cosOuter, 0.0001), 0.0, 1.0);
+    return t * t; // quadratic for smooth edge
+}
+
+vec3 calcSpotLight(int i, vec3 fragPos, vec3 N) {
+    mat4 m = uSpotLights[i];
+    vec4 posRangeSq = m[0]; // xyz: position, w: range²
+    vec4 colorInt   = m[1]; // rgb: color, a: intensity
+    vec4 dir4       = m[2]; // xyz: spotlight direction (object space, pre-normalised)
+    vec4 coneAngles = m[3]; // x: cos(inner), y: cos(outer)
+
+    vec3 lightPos  = posRangeSq.xyz;
+    float radiusSq = posRangeSq.w;
+
+    vec3 L = lightPos - fragPos;
+    L *= uInvObjScale;
+    float distSq = dot(L, L);
+    vec3 Lnorm = L * inversesqrt(max(distSq, 0.0001));
+
+    // distance attenuation (same UE4 windowed-inverse-square as point light)
+    float atten = calcAttenuation(distSq, radiusSq);
+
+    // cone attenuation
+    float cosTheta = dot(-Lnorm, dir4.xyz); // dir4.xyz already normalised on CPU
+    float spot = calcConeAttenuation(cosTheta, coneAngles.x, coneAngles.y);
+
+    float NdotL = max(dot(N, Lnorm), 0.0);
+
+    return colorInt.rgb * colorInt.a * atten * spot * NdotL;
+}
+
+// Spot lights lighting in object space
+lowp vec3 CalculateSpotLighting(vec3 fragPos, vec3 N) {
+    vec3 result = vec3(0.0);
+    for (int i = 0; i < uSpotLightCount; i++) {
+        result += calcSpotLight(i, fragPos, N);
+    }
+    return result;
+}
+
+#endif // ENABLE_SPOT_LIGHTS
+
 """;

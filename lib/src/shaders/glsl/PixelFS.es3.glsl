@@ -19,6 +19,11 @@ mediump vec3 safe_normalize(mediump vec3 v) {
 lowp vec3 CalculateLighting(vec3 fragPos, vec3 N);
 #endif // ENABLE_POINT_LIGHTS
 
+#ifdef ENABLE_SPOT_LIGHTS
+// spot lights
+lowp vec3 CalculateSpotLighting(vec3 fragPos, vec3 N);
+#endif // ENABLE_SPOT_LIGHTS
+
 // View direction from surface to eye. Used by both Lit (for H = V+L) and Unlit (for IBL) paths.
 mediump vec3 ComputeViewDir() {
     mediump vec3 ObjToEye = uEyePos - ObjectspaceV;
@@ -184,6 +189,10 @@ lowp vec4 ShadeLit(in lowp vec4 texDiffuse)
     resultColor += CalculateLighting(ObjectspaceV, ObjectspaceN) * diffuse.rgb;
 #endif
 
+#ifdef ENABLE_SPOT_LIGHTS
+    resultColor += CalculateSpotLighting(ObjectspaceV, ObjectspaceN) * diffuse.rgb;
+#endif
+
 	return vec4(resultColor, diffuse.a);
 }
 
@@ -216,6 +225,10 @@ lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse)
 
 #ifdef ENABLE_POINT_LIGHTS
     resultColor += CalculateLighting(ObjectspaceV, ObjectspaceN) * diffuse.rgb;
+#endif
+
+#ifdef ENABLE_SPOT_LIGHTS
+    resultColor += CalculateSpotLighting(ObjectspaceV, ObjectspaceN) * diffuse.rgb;
 #endif
 
 	return vec4(resultColor, diffuse.a);

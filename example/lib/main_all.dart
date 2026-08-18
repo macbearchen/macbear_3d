@@ -1,6 +1,6 @@
 // ignore_for_file: unused_import, unused_local_variable
 import 'dart:math';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:vector_math/vector_math.dart' hide Colors;
 
 // Macbear3D engine
@@ -340,6 +340,17 @@ class _MainPageState extends State<MainPage> {
           },
           child: const Icon(Icons.lightbulb_circle),
         ),
+        const SizedBox(width: 4),
+        FloatingActionButton(
+          heroTag: 'spot_lights',
+          backgroundColor: shaderOptions.spotLights ? Colors.amber : null,
+          onPressed: () {
+            setState(() {
+              shaderOptions.spotLights = !shaderOptions.spotLights;
+            });
+          },
+          child: const Icon(Icons.highlight),
+        ),
       ],
     );
   }
@@ -425,6 +436,9 @@ class _MainPageState extends State<MainPage> {
     final scene = M3AppEngine.instance.activeScene;
     if (scene == null) return const SizedBox.shrink();
 
+    final far = scene.camera.farClip;
+    final fogStartPct = far > 0 ? (scene.fog.start / far * 100.0).clamp(10.0, 95.0) : 10.0;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       mainAxisSize: MainAxisSize.min,
@@ -438,7 +452,7 @@ class _MainPageState extends State<MainPage> {
               children: [
                 const Text("fog: ", style: TextStyle(color: Colors.white70, fontSize: 12)),
                 Text(
-                  scene.fog.start.toStringAsFixed(1),
+                  "${fogStartPct.toStringAsFixed(0)}%",
                   style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(
@@ -450,15 +464,17 @@ class _MainPageState extends State<MainPage> {
                       overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
                     ),
                     child: Slider(
-                      value: scene.fog.start,
+                      value: fogStartPct,
                       min: 10.0,
-                      max: 96.0,
+                      max: 95.0,
                       activeColor: Colors.lime,
                       inactiveColor: Colors.white24,
                       onChanged: (val) {
                         setState(() {
-                          scene.fog.start = val;
-                          scene.fog.depth = max(min(100.0 - scene.fog.start, 25), 5);
+                          final far = scene.camera.farClip;
+                          final depthPct = min(100.0 - val, 25.0);
+                          scene.fog.start = far * (val / 100.0);
+                          scene.fog.depth = far * (depthPct / 100.0);
                         });
                       },
                     ),

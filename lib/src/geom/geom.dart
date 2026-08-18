@@ -25,6 +25,7 @@ part 'primitive/sphere_geom.dart';
 part 'primitive/torus_geom.dart';
 part 'terrain/tiled_terrain.dart';
 part 'terrain/terrain_geom.dart';
+part 'terrain/terrain_tile_geom.dart';
 part 'text/text_geom.dart';
 part 'gltf_geom.dart';
 part 'obj_geom.dart';

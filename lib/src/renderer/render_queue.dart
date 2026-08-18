@@ -9,6 +9,7 @@ class M3RenderItem {
   late Matrix4 worldMatrixInv;
   final double depth;
   List<M3PointLight> pointLights = [];
+  List<M3SpotLight> spotLights = [];
 
   M3RenderItem({required this.entity, required this.subMesh, required this.worldMatrix, required this.depth}) {
     worldMatrixInv = Matrix4.inverted(worldMatrix);

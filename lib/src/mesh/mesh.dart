@@ -54,7 +54,7 @@ class M3Skin {
   /// apply the model's world transform (via the MVP matrix).
   ///
   /// Transformation flow for a vertex:
-  /// Vertex (Mesh Local) -> [IBM] -> Joint Bind Space -> [Joint World] -> World Space -> [Mesh World Inv] -> Mesh Local (deformed)
+  /// `Vertex (Mesh Local) -> [IBM] -> Joint Bind Space -> [Joint World] -> World Space -> [Mesh World Inv] -> Mesh Local (deformed)`
   void update(Matrix4? meshWorldMatrix) {
     if (jointNodes == null) return;
 
@@ -239,7 +239,7 @@ class M3Mesh {
   }
 
   /// Creates a deep copy of this mesh instance suitable for independent animation.
-  /// Heavy resources like [geom] and [mtr] are shared, while [skin], [animator],
+  /// Heavy resources like [geom] and materials are shared, while [skin], [animator],
   /// and skeletal [nodes] are duplicated.
   M3Mesh clone() {
     final Map<GltfNode, GltfNode> nodeCloneMap = {};

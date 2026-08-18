@@ -24,6 +24,21 @@ class M3Node {
     markDirty();
   }
 
+  /// Forward vector in world space (-Z axis of worldMatrix).
+  Vector3 get forward {
+    final rot = worldMatrix.getRotation();
+    return -rot.getColumn(2).normalized();
+  }
+
+  /// Orient node to look at a target position.
+  void lookAt(Vector3 target, [Vector3? up]) {
+    final fwd = (target - position).normalized();
+    final worldUp = up ?? (fwd.dot(Vector3(0, 1, 0)).abs() > 0.99 ? Vector3(0, 0, 1) : Vector3(0, 1, 0));
+    final mat = makeViewMatrix(position, target, worldUp);
+    final rotMat = mat.getRotation()..transpose(); // invert rotation
+    rotation = Quaternion.fromRotation(rotMat);
+  }
+
   Vector3 get scale => _transform.scale;
   set scale(Vector3 v) {
     _transform.scale.setFrom(v);

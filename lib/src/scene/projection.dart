@@ -33,15 +33,21 @@ class M3Projection {
   }
 
   // set viewport and projection matrix
-  void setViewport(int x, int y, int w, int h, {double fovy = 50.0, double near = 1.0, double far = 100.0}) {
+  void setViewport(int x, int y, int w, int h, {double? fovy, double? near, double? far}) {
     viewportX = x;
     viewportY = y;
     viewportW = w;
     viewportH = h;
 
-    degreeFovY = fovy;
-    nearClip = near;
-    farClip = far;
+    if (fovy != null) {
+      degreeFovY = fovy;
+    }
+    if (near != null) {
+      nearClip = near;
+    }
+    if (far != null) {
+      farClip = far;
+    }
     refreshProjectionMatrix();
   }
 

@@ -82,7 +82,7 @@ class M3Camera extends M3Projection {
 
   /// Set viewport and update frustum matrix.
   @override
-  void setViewport(int x, int y, int w, int h, {double fovy = 50.0, double near = 1.0, double far = 100.0}) {
+  void setViewport(int x, int y, int w, int h, {double? fovy, double? near, double? far}) {
     super.setViewport(x, y, w, h, fovy: fovy, near: near, far: far);
     updateSplitDistances();
   }

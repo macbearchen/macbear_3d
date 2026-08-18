@@ -136,6 +136,7 @@ class M3RenderEngine {
 
       prog.attachDirectionalLight(scene.dirLight);
       prog.attachPointLights(scene.pointLights);
+      prog.attachSpotLights(scene.spotLights);
 
       // main context render pass
       mainContext.render(prog);

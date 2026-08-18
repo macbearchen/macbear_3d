@@ -139,6 +139,7 @@ class M3PlanarReflection {
 
     prog.attachDirectionalLight(scene.dirLight);
     prog.attachPointLights(scene.pointLights);
+    prog.attachSpotLights(scene.spotLights);
 
     // (1/2) prepare render queue: exclude this plane
     _context.prepareRenderQueue(scene, _camera, excludeReflection: this);

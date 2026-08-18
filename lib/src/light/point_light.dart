@@ -8,7 +8,8 @@ class M3PointLight extends M3Light {
   // 封裝函數：直接回傳一個 Float32List
   Float32List packBuffer(Matrix4 mMatrixInv) {
     // world space -> object space
-    Vector4 localPos = Vector4(position.x, position.y, position.z, 1.0);
+    final worldPos = worldMatrix.getTranslation();
+    Vector4 localPos = Vector4(worldPos.x, worldPos.y, worldPos.z, 1.0);
     localPos = mMatrixInv * localPos;
 
     // 預分配 8 個 float (32 bytes)，剛好填滿兩個 vec4
@@ -34,7 +35,7 @@ class M3PointLight extends M3Light {
   @override
   void drawHelper(M3Program prog, M3Camera viewer) {
     Matrix4 targetMatrix = Matrix4.identity();
-    targetMatrix.setTranslation(position);
+    targetMatrix.setTranslation(worldMatrix.getTranslation());
     targetMatrix.scaleByVector3(Vector3.all(range));
     prog.setMatrices(viewer, targetMatrix);
     M3Resources.debugPointLight.draw(prog, fillMode: .wireframe);
