@@ -1,5 +1,14 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
+## 0.10.0
+#### 2026-08-18
+* Add:
+  * **Spotlight Support**: Added `M3SpotLight` with cone angles (inner/outer cutoffs), directional falloff attenuation, and GLSL shader integration (`LightFS.es3.glsl`).
+  * **Terrain LOD & Stitching**: Implemented Level of Detail (LOD) support for terrain tiles (Level 32x32 -> 16x16 -> 8x8 -> 4x4) with edge stitching to prevent gaps between adjacent resolution tiles.
+
+* Optimize / Refactor:
+  * **Flutter Upgrade**: Upgraded Flutter compatibility to 3.47.0.
+
 ## 0.9.4
 #### 2026-08-01
 * Add:

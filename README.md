@@ -31,13 +31,13 @@ Preview the `main_all.dart` example live in your browser!
 ### 🎨 Rendering & Visuals
 - **Model Loaders**: Native support for **glTF/GLB**, **OBJ**, and **BVH** formats.
 - **Skeletal Animation**: Full support for skinned meshes and bone-based animations (including `M3OctahedralGeom` for bone visualization).
-- **Advanced Lighting**: Dynamic lighting supporting **1 directional light and 8 point lights**, **Cascaded Shadow Mapping (CSM)**, **PCF (Percentage Closer Filtering)** for smooth shadows, **PBR (Physically Based Rendering)** and **IBL (Image-Based Lighting)**. Improved `RenderPipeline` with enhanced support for opaque and transparency materials.
+- **Advanced Lighting**: Dynamic lighting supporting **1 directional light, 8 point lights, and spotlight**, **Cascaded Shadow Mapping (CSM)**, **PCF (Percentage Closer Filtering)** for smooth shadows, **PBR (Physically Based Rendering)** and **IBL (Image-Based Lighting)**. Improved `RenderPipeline` with enhanced support for opaque and transparency materials.
 - **Modular Shaders**: Refactored shader system with clean `.glsl` source files and dedicated, type-safe Dart shader program wrappers (`M3FogShader`, `M3LightingShader`, `M3ShadowShader`, `M3WaterShader`) for easy uniform binding and encapsulation.
 - **Skybox & Environment**: Support for skybox environment backgrounds and reflection mapping via cubemaps.
 - **Planar Reflections**: Added support for planar reflections with `M3PlanarReflection` and Mirror shaders for high-quality reflective surfaces.
 - **Dynamic Reflection Probe**: Added `M3ReflectionProbe` for real-time cubemap capture and dynamic reflections.
 - **Water Effect**: Real-time water rendering with `M3Water` — dual-layer animated normal-map flow (supporting procedural water normal map generation at runtime via `M3Texture.createWaterNormalMap`), planar reflection & refraction, configurable wave distortion, and fog-depth underwater tinting.
-- **Terrain System**: Generate procedural terrain utilizing Perlin Noise.
+- **Terrain System**: Generate procedural terrain utilizing Perlin Noise. Supports Level of Detail (LOD 32x32 -> 16x16 -> 8x8 -> 4x4) with stitching and chunked/tiled terrain rendering (`M3TiledTerrain`, `M3TerrainTileGeom`).
 - **Fog Effect**: Introduced **M3Fog** supporting depth-based scene fog with camera-facing depth attenuation, custom color settings, and optional custom clip planes (e.g., for underwater depth tinting).
 - **RenderContext**: `M3RenderContext` bundles per-frame GPU state (viewport, matrices, lights, shadow map, reflection/water targets) for clean multi-pass rendering.
 - **Flexible Geometries**: Added `M3Axis` support for Torus, Capsule, Cylinder, and Plane for custom orientation.
@@ -75,7 +75,7 @@ Add `macbear_3d` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  macbear_3d: ^0.9.4
+  macbear_3d: ^0.10.0
 ```
 
 ## Usage
