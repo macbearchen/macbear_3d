@@ -32,8 +32,8 @@ dependencies:
   video_player: ^2.14.0
   plugin_platform_interface: ^2.0.2
 
-  material_ui: any
-  build: any
+  material_ui: ^1.0.0
+  build: ^4.0.10
 dev_dependencies:
   flutter_test:
     sdk: flutter
