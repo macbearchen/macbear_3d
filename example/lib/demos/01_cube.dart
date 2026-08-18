@@ -1,5 +1,5 @@
 // ignore_for_file: file_names
-import 'package:flutter/material.dart' as fm;
+import 'package:material_ui/material_ui.dart' as fm;
 import '../main_all.dart';
 
 // ignore: camel_case_types
@@ -40,7 +40,7 @@ class CubeScene_01 extends DemoScene {
     );
     // ground plane
     final mtrGround = M3Material()
-      // ..diffuseTexture = texTest
+      ..diffuseTexture = texTest
       ..setMatte();
     final groundMesh = M3Mesh(
       M3PlaneGeom(100, 100, widthSegments: 4, heightSegments: 4, uvScale: Vector2.all(10.0)),

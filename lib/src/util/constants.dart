@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' hide Matrix4;
+import 'package:material_ui/material_ui.dart' hide Matrix4;
 
 // Macbear3D engine
 import '../m3_internal.dart' hide Colors;

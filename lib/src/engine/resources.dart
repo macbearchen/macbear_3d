@@ -51,10 +51,11 @@ class M3Resources {
   // Geometries: debug
   // ------------------------------
   static final debugAxis = M3DebugAxisGeom(size: 0.5);
+  static final debugDot = M3OctahedralGeom(0.25);
+  static final debugFrustum = M3BoxGeom(2.0, 2.0, 2.0);
   static final debugPointLight = M3SphereGeom(1.0, widthSegments: 8, heightSegments: 4);
   static final debugSphere = M3DebugSphereGeom(radius: 1.0);
-  static final debugFrustum = M3BoxGeom(2.0, 2.0, 2.0);
-  static final debugDot = M3OctahedralGeom(0.25);
+  static final debugSpotLight = M3CylinderGeom(topRadius: 0.6, bottomRadius: 0.0, radiusSegments: 10, height: 1.0);
   static final debugView = M3PlaneGeom(1.8, 1.8, widthSegments: 6, heightSegments: 4);
 
   // ------------------------------
@@ -140,10 +141,11 @@ class M3Resources {
 
     // Geometries
     debugAxis;
+    debugDot;
+    debugFrustum;
     debugPointLight;
     debugSphere;
-    debugFrustum;
-    debugDot;
+    debugSpotLight;
     debugView;
 
     unitCube;
@@ -314,10 +316,11 @@ class M3Resources {
 
     // Geometries
     debugAxis.dispose();
+    debugDot.dispose();
+    debugFrustum.dispose();
     debugPointLight.dispose();
     debugSphere.dispose();
-    debugFrustum.dispose();
-    debugDot.dispose();
+    debugSpotLight.dispose();
     debugView.dispose();
 
     unitCube.dispose();

@@ -24,7 +24,7 @@ class M3TerrainLodConfig {
 
   /// Segment count per tile for each LOD level (32, 16, 8, 4).
   /// Generated from [baseSegmentCount] with a geometric /2 progression:
-  /// segmentCounts[i] = baseSegmentCount >> i
+  /// `segmentCounts[i] = baseSegmentCount >> i`
   static final List<int> segmentCounts = List.generate(lodCount, (i) {
     final count = baseSegmentCount >> i;
     assert(
@@ -37,9 +37,9 @@ class M3TerrainLodConfig {
 
   /// Trigger distance (meters) for each LOD level, index 0 = highest detail.
   /// Generated from [baseDistance] with a geometric x2 progression:
-  /// distances[i] = baseDistance * 2^i
-  /// distance < distances[0] -> LOD 0 (baseSegmentCount segments)
-  /// distances[0] <= distance < distances[1] -> LOD 1 (baseSegmentCount/2 segments)
+  /// `distances[i] = baseDistance * 2^i`
+  /// `distance < distances[0]` -> LOD 0 (baseSegmentCount segments)
+  /// `distances[0] <= distance < distances[1]` -> LOD 1 (baseSegmentCount/2 segments)
   /// ...
   static final List<double> distances = List.generate(lodCount, (i) => baseDistance * (1 << i));
 

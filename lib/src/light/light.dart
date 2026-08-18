@@ -8,15 +8,18 @@ part 'spot_light.dart';
 
 /// A directional or positional light source for scene illumination.
 ///
-/// Extends [M3Camera] for shadow map rendering. Provides ambient and diffuse color blending.
-abstract class M3Light {
+/// Extends [M3Node] for scene-graph hierarchy and world matrix evaluation.
+abstract class M3Light extends M3Node {
   static Vector3 ambient = Vector3(0.2, 0.2, 0.2);
-  Vector3 position = Vector3(0, 0, 6);
   Vector3 color = Colors.white.rgb - ambient;
 
   // shadow map
   bool castShadow = true;
   M3ShadowMap? shadowMap;
+
+  M3Light() {
+    position = Vector3(0, 0, 6);
+  }
 
   /// set shadow map
   void setShadowMap(M3ShadowMap? sm) {
@@ -34,10 +37,10 @@ abstract class M3Light {
 
   void drawHelper(M3Program prog, M3Camera viewer) {
     Matrix4 targetMatrix = Matrix4.identity();
-    targetMatrix.setTranslation(position);
+    targetMatrix.setTranslation(worldMatrix.getTranslation());
     targetMatrix.scaleByVector3(Vector3.all(0.1));
     prog.setMatrices(viewer, targetMatrix);
-    M3Resources.debugPointLight.draw(prog);
+    M3Resources.debugPointLight.draw(prog, fillMode: .wireframe);
   }
 }
 
@@ -114,7 +117,7 @@ class M3PointLightManager {
   }
 }
 
-/// Spotlight manager — packs up to 8 spotlights into uSpotLights[8] (1 mat4 each).
+/// Spotlight manager — packs up to 8 spotlights into `uSpotLights[8]` (1 mat4 each).
 class M3SpotLightManager {
   RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
 
