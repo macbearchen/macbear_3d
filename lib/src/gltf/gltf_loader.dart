@@ -2,7 +2,6 @@ import 'dart:convert';
 
 // Macbear3D engine
 import '../m3_internal.dart';
-import 'gltf_parser.dart';
 
 /// Loader for glTF and GLB 3D model files from assets or binary data.
 ///

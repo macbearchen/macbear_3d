@@ -1,6 +1,5 @@
 // Macbear3D engine
 import '../m3_internal.dart';
-import 'shadow_map.dart';
 
 /// The WebGL rendering engine that manages shaders, framebuffers, and scene rendering.
 ///
@@ -14,9 +13,26 @@ class M3RenderEngine {
   final List<M3ReflectionProbe> probes = [];
 
   // shadow map
-  M3ShadowMap? _shadowMap;
-  M3ShadowMap? get shadowMap => _shadowMap;
-  bool get isShadowEnabled => options.shadows && _shadowMap != null;
+  M3ShadowMap? _directionalShadowMap;
+  M3ShadowMap? get directionalShadowMap => _directionalShadowMap;
+  set directionalShadowMap(M3ShadowMap? map) {
+    if (_directionalShadowMap == map) return;
+    _directionalShadowMap?.dispose();
+    _directionalShadowMap = map;
+
+    final scene = M3AppEngine.instance.activeScene;
+    scene?.dirLight.setShadowMap(map);
+  }
+
+  M3ShadowMap? _spotLightShadowMap;
+  M3ShadowMap? get spotLightShadowMap => _spotLightShadowMap;
+  set spotLightShadowMap(M3ShadowMap? map) {
+    if (_spotLightShadowMap == map) return;
+    _spotLightShadowMap?.dispose();
+    _spotLightShadowMap = map;
+  }
+
+  bool get isShadowEnabled => options.shadows && _directionalShadowMap != null;
 
   /// main context (scene render)
   final M3RenderContext mainContext = M3RenderContext();
@@ -35,6 +51,20 @@ class M3RenderEngine {
 
   void init() {
     planarReflection = M3PlanarReflection();
+    // shadowmap: directional, spotlight
+    initShadowMap(enableShadow: options.shadows);
+  }
+
+  void initShadowMap({
+    bool enableShadow = true,
+    int width = 2048,
+    int height = 4096,
+    int smWidth = 512,
+    int smHeight = 512,
+  }) {
+    options.shadows = enableShadow;
+    directionalShadowMap = enableShadow ? M3ShadowMap(width, height) : null;
+    spotLightShadowMap = enableShadow ? M3ShadowMap(smWidth, smHeight) : null;
   }
 
   void cleanProbes() {
@@ -45,14 +75,9 @@ class M3RenderEngine {
   }
 
   void dispose() {
-    _shadowMap?.dispose();
+    _directionalShadowMap?.dispose();
     planarReflection.dispose();
     cleanProbes();
-  }
-
-  /// Create shadow map, call only after WebGL context created
-  void createShadowMap({int width = 1024, int height = 1024}) {
-    _shadowMap ??= M3ShadowMap(width, height);
   }
 
   /// Bind default framebuffer
@@ -180,7 +205,7 @@ class M3RenderEngine {
     // 2D helper
     if (options.debug.showMaps) {
       if (!options.debug.wireframe && options.shadows) {
-        final sm = shadowMap;
+        final sm = directionalShadowMap;
         if (sm != null) {
           final width = 200 / sm.mapH * sm.mapW;
           sm.debugDrawDepth(5, engine.appHeight - 210, width, 200);
@@ -222,7 +247,7 @@ class M3RenderEngine {
         final shadowText =
             '''
 shadow:${options.shadows ? 'Y' : 'N'}
-$shadowMap
+$directionalShadowMap
 csm=${scene.camera.csmCount}''';
         matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 150, 0));
         // Shadow Info

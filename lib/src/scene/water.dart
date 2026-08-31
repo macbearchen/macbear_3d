@@ -22,6 +22,7 @@ class M3Water extends M3Entity {
   late M3Scene scene;
   // camera view state relative to water surface
   M3WaterCameraState cameraState = .aboveWater;
+  bool visible = true;
 
   static M3Mesh createWaterSurface({
     double width = 400,
@@ -148,6 +149,8 @@ class M3Water extends M3Entity {
 
   /// capture reflection / refraction fbos
   void captureWater() {
+    if (!visible) return;
+
     Vector3 n = surfacePlane.normal.clone();
     double d = surfacePlane.constant;
 
@@ -177,6 +180,8 @@ class M3Water extends M3Entity {
 
   /// render water surface
   void render({M3FillMode fillMode = .solid}) {
+    if (!visible) return;
+
     final viewer = scene.camera;
     if (fillMode == .solid) {
       RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
@@ -249,6 +254,8 @@ class M3Water extends M3Entity {
   }
 
   void debugDraw() {
+    if (!visible) return;
+
     final passes = {reflectionPass, refractionPass};
 
     const ratio = 0.4;

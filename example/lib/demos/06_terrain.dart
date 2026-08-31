@@ -311,102 +311,128 @@ class TerrainScene_06 extends DemoScene {
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  "Water Height: ${_waterHeight.toStringAsFixed(1)}",
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                const SizedBox(height: 4),
-                SizedBox(
-                  width: 200,
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 4,
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-                    ),
-                    child: Slider(
-                      value: _waterHeight.clamp(_minWaterHeight, _maxWaterHeight),
-                      min: _minWaterHeight,
-                      max: _maxWaterHeight,
-                      activeColor: Colors.lightGreen,
-                      inactiveColor: Colors.white24,
-                      onChanged: (value) {
-                        _waterHeight = value;
-                        water?.setSurfacePlane(constant: -_waterHeight);
-                        M3AppEngine.instance.refresh();
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  "Wave Distortion: ${(water?.waveDistortion ?? 3.0).toStringAsFixed(1)}",
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                const SizedBox(height: 4),
-                SizedBox(
-                  width: 200,
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 4,
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-                    ),
-                    child: Slider(
-                      value: (water?.waveDistortion ?? 3.0).clamp(0.0, 20.0),
-                      min: 0.0,
-                      max: 20.0,
-                      activeColor: Colors.lightGreen,
-                      inactiveColor: Colors.white24,
-                      onChanged: (value) {
-                        if (water != null) {
-                          water!.waveDistortion = value;
-                          M3AppEngine.instance.refresh();
-                        }
-                      },
-                    ),
-                  ),
-                ),
                 SizedBox(
                   width: 200,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        "Reflection",
+                        "Water",
                         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                       ),
                       Switch(
-                        value: water?.reflectionEnabled ?? false,
+                        value: water?.visible ?? true,
                         activeThumbColor: Colors.lightGreen,
                         onChanged: (value) {
-                          water?.reflectionEnabled = value;
-                          M3AppEngine.instance.refresh();
+                          if (water != null) {
+                            water!.visible = value;
+                            setUIState(() {});
+                            M3AppEngine.instance.refresh();
+                          }
                         },
                       ),
                     ],
                   ),
                 ),
-                SizedBox(
-                  width: 200,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Refraction",
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                if (water?.visible ?? true) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    "Water Height: ${_waterHeight.toStringAsFixed(1)}",
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: 200,
+                    child: SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        trackHeight: 4,
+                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
                       ),
-                      Switch(
-                        value: water?.refractionEnabled ?? false,
-                        activeThumbColor: Colors.lightGreen,
+                      child: Slider(
+                        value: _waterHeight.clamp(_minWaterHeight, _maxWaterHeight),
+                        min: _minWaterHeight,
+                        max: _maxWaterHeight,
+                        activeColor: Colors.lightGreen,
+                        inactiveColor: Colors.white24,
                         onChanged: (value) {
-                          water?.refractionEnabled = value;
+                          _waterHeight = value;
+                          water?.setSurfacePlane(constant: -_waterHeight);
                           M3AppEngine.instance.refresh();
                         },
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "Wave Distortion: ${(water?.waveDistortion ?? 3.0).toStringAsFixed(1)}",
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: 200,
+                    child: SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        trackHeight: 4,
+                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+                      ),
+                      child: Slider(
+                        value: (water?.waveDistortion ?? 3.0).clamp(0.0, 20.0),
+                        min: 0.0,
+                        max: 20.0,
+                        activeColor: Colors.lightGreen,
+                        inactiveColor: Colors.white24,
+                        onChanged: (value) {
+                          if (water != null) {
+                            water!.waveDistortion = value;
+                            M3AppEngine.instance.refresh();
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 200,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Reflection",
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        Switch(
+                          value: water?.reflectionEnabled ?? false,
+                          activeThumbColor: Colors.lightGreen,
+                          onChanged: (value) {
+                            water?.reflectionEnabled = value;
+                            M3AppEngine.instance.refresh();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    width: 200,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Refraction",
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        Switch(
+                          value: water?.refractionEnabled ?? false,
+                          activeThumbColor: Colors.lightGreen,
+                          onChanged: (value) {
+                            water?.refractionEnabled = value;
+                            M3AppEngine.instance.refresh();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

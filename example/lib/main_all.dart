@@ -7,7 +7,7 @@ import 'package:vector_math/vector_math.dart' hide Colors;
 import 'package:macbear_3d/macbear_3d.dart';
 export 'package:macbear_3d/src/m3_internal.dart';
 // physics engine
-export 'rapier_physics_engine.dart';
+export 'rapier/rapier_physics_engine.dart';
 import 'demos/demo_scene.dart';
 export 'demos/demo_scene.dart';
 
@@ -44,7 +44,6 @@ Future<void> main() async {
 Future<void> onDidInit() async {
   M3Log.h('example/main_all.dart', 'onDidInit');
   final appEngine = M3AppEngine.instance;
-  appEngine.renderEngine.createShadowMap(width: 2048, height: 4096);
 
   final scene00 = StarterScene_00();
   final scene06 = TerrainScene_06();
@@ -329,28 +328,6 @@ class _MainPageState extends State<MainPage> {
           },
           child: const Text('IBL'),
         ),
-        const SizedBox(width: 4),
-        FloatingActionButton(
-          heroTag: 'point_lights',
-          backgroundColor: shaderOptions.pointLights ? Colors.amber : null,
-          onPressed: () {
-            setState(() {
-              shaderOptions.pointLights = !shaderOptions.pointLights;
-            });
-          },
-          child: const Icon(Icons.lightbulb_circle),
-        ),
-        const SizedBox(width: 4),
-        FloatingActionButton(
-          heroTag: 'spot_lights',
-          backgroundColor: shaderOptions.spotLights ? Colors.amber : null,
-          onPressed: () {
-            setState(() {
-              shaderOptions.spotLights = !shaderOptions.spotLights;
-            });
-          },
-          child: const Icon(Icons.highlight),
-        ),
       ],
     );
   }
@@ -493,6 +470,28 @@ class _MainPageState extends State<MainPage> {
             });
           },
           child: Icon(shaderOptions.fog ? Icons.cloud : Icons.cloud_queue),
+        ),
+        const SizedBox(width: 4),
+        FloatingActionButton(
+          heroTag: 'point_lights',
+          backgroundColor: shaderOptions.pointLights ? Colors.amber : null,
+          onPressed: () {
+            setState(() {
+              shaderOptions.pointLights = !shaderOptions.pointLights;
+            });
+          },
+          child: const Icon(Icons.lightbulb_circle),
+        ),
+        const SizedBox(width: 4),
+        FloatingActionButton(
+          heroTag: 'spot_lights',
+          backgroundColor: shaderOptions.spotLights ? Colors.amber : null,
+          onPressed: () {
+            setState(() {
+              shaderOptions.spotLights = !shaderOptions.spotLights;
+            });
+          },
+          child: const Icon(Icons.highlight),
         ),
       ],
     );

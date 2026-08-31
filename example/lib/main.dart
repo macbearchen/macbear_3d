@@ -14,7 +14,7 @@ void main() {
 Future<void> onDidInit() async {
   M3Log.h('example/main.dart', 'onDidInit');
   final appEngine = M3AppEngine.instance;
-  appEngine.renderEngine.createShadowMap(width: 1024, height: 1024);
+  appEngine.renderEngine.directionalShadowMap = M3ShadowMap(1024, 1024);
   M3AppEngine.backgroundColor = Vector3(0.1, 0.6, 0.3);
 
   await appEngine.setScene(MyScene());
@@ -53,7 +53,7 @@ class MyScene extends M3Scene {
     final plane = addMesh(meshGrid, Vector3(0, 0, -1)).color = Colors.skyBlue;
 
     // String strTex = 'astc/test_12x12.astc';
-    String strTex = 'astc/test_4x4.astc';
+    String strTex = 'example/test_8x8.astc';
     // String strTex = 'data_test/land.pvr';
 
     M3Texture texGrid = await M3Texture.loadTexture(strTex);

@@ -1,6 +1,5 @@
 // Macbear3D engine
 import '../m3_internal.dart';
-import '../gltf/gltf_parser.dart';
 
 /// Alpha blending modes for materials.
 enum M3AlphaMode {

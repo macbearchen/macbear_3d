@@ -102,19 +102,19 @@ class M3RapierPhysicsEngine implements M3PhysicsEngine {
         rapierDesc = rapier.ColliderDesc.ball(desc.radius);
         break;
       case M3ColliderShapeType.cylinder:
-        rapierDesc = rapier.ColliderDesc.cylinder(desc.halfHeight, desc.radius);
+        rapierDesc = rapier.ColliderDesc.cylinder(halfHeight: desc.halfHeight, radius: desc.radius);
         break;
       case M3ColliderShapeType.cone:
-        rapierDesc = rapier.ColliderDesc.cone(desc.halfHeight, desc.radius);
+        rapierDesc = rapier.ColliderDesc.cone(halfHeight: desc.halfHeight, radius: desc.radius);
         break;
       case M3ColliderShapeType.capsuleX:
-        rapierDesc = rapier.ColliderDesc.capsule(desc.halfHeight, desc.radius);
+        rapierDesc = rapier.ColliderDesc.capsuleX(halfHeight: desc.halfHeight, radius: desc.radius);
         break;
       case M3ColliderShapeType.capsuleY:
-        rapierDesc = rapier.ColliderDesc.capsule(desc.halfHeight, desc.radius);
+        rapierDesc = rapier.ColliderDesc.capsuleY(halfHeight: desc.halfHeight, radius: desc.radius);
         break;
       case M3ColliderShapeType.capsuleZ:
-        rapierDesc = rapier.ColliderDesc.capsule(desc.halfHeight, desc.radius);
+        rapierDesc = rapier.ColliderDesc.capsuleZ(halfHeight: desc.halfHeight, radius: desc.radius);
         break;
       case M3ColliderShapeType.heightfield:
         throw UnimplementedError('Heightfield collider not supported in M3RapierPhysicsEngine yet');

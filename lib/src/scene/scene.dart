@@ -54,7 +54,7 @@ abstract class M3Scene {
     lightViewer.target = Vector3(1, 1, 3);
     lightViewer.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 50);
     lightViewer.setEuler(pi / 5, -pi / 3, 0, distance: 25); // rotate light
-    dirLight.setShadowMap(renderEngine.shadowMap);
+    dirLight.setShadowMap(renderEngine.directionalShadowMap);
 
     initPointLights(0);
   }
@@ -122,7 +122,7 @@ abstract class M3Scene {
     _isLoaded = true;
 
     await physicsSystem.init();
-    M3Log.i('M3Scene', '<<< Physics System>>> \n${physicsSystem.info}\n');
+    M3Log.i('M3Scene', '<<< Physics System >>>\n${physicsSystem.info}\n');
   }
 
   M3Entity addMesh(M3Mesh mesh, Vector3 position) {

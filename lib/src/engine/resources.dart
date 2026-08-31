@@ -55,7 +55,7 @@ class M3Resources {
   static final debugFrustum = M3BoxGeom(2.0, 2.0, 2.0);
   static final debugPointLight = M3SphereGeom(1.0, widthSegments: 8, heightSegments: 4);
   static final debugSphere = M3DebugSphereGeom(radius: 1.0);
-  static final debugSpotLight = M3CylinderGeom(topRadius: 0.6, bottomRadius: 0.0, radiusSegments: 10, height: 1.0);
+  static final debugSpotLight = M3CylinderGeom(topRadius: 0.0, bottomRadius: 0.6, radiusSegments: 10, height: 1.0);
   static final debugView = M3PlaneGeom(1.8, 1.8, widthSegments: 6, heightSegments: 4);
 
   // ------------------------------

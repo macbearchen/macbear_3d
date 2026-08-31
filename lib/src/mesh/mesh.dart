@@ -2,8 +2,6 @@ import 'dart:convert';
 
 // Macbear3D engine
 import '../m3_internal.dart';
-import '../gltf/gltf_loader.dart';
-import '../gltf/gltf_parser.dart';
 import 'obj_loader.dart';
 import 'animator.dart';
 

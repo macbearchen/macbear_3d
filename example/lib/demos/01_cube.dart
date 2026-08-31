@@ -4,7 +4,7 @@ import '../main_all.dart';
 
 // ignore: camel_case_types
 class CubeScene_01 extends DemoScene {
-  late M3LineGeom _line;
+  final M3LineGeom _line = M3LineGeom(Vector3(0, 0, 0), Vector3(1, 1, 1));
 
   @override
   Future<void> load() async {
@@ -13,13 +13,12 @@ class CubeScene_01 extends DemoScene {
 
     camera.setEuler(-pi / 9, -pi / 4, 0, distance: 24);
 
-    _line = M3LineGeom(Vector3(0, 0, 0), Vector3(1, 1, 1));
-
+    final num = 12;
     // 01: box geometry
-    for (int i = 0; i < 10; i++) {
-      for (int j = 0; j < 10; j++) {
+    for (int i = 0; i < num; i++) {
+      for (int j = 0; j < num; j++) {
         for (int k = 0; k < 1; k++) {
-          final pos = Vector3(i * 2 - 10, j * 2 - 10, k * 2);
+          final pos = Vector3(i * 2.0 - num, j * 2.0 - num, k * 2);
           final box = addMesh(M3Mesh(M3BoxGeom(1.0, 1.0, 1.0)), pos);
           // final ball = addMesh(M3Mesh(M3Resources.unitSphere), Vector3(i * 2, j * 2, k * 2));
           // box.scale.setValues(1, 1, 1);

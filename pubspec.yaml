@@ -27,7 +27,7 @@ dependencies:
   flutter_angle: ^0.4.2
   http: ^1.6.0
   image: ^4.9.1
-  vector_math: ^2.2.0
+  vector_math: ^2.4.2
   web: ^1.1.1
   video_player: ^2.14.0
   plugin_platform_interface: ^2.0.2

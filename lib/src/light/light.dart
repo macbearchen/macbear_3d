@@ -1,6 +1,5 @@
 // Macbear3D engine
 import '../m3_internal.dart';
-import '../renderer/shadow_map.dart';
 
 part 'directional_light.dart';
 part 'point_light.dart';

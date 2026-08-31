@@ -5,7 +5,6 @@ import 'package:image/image.dart' as img;
 
 // Macbear3D engine
 import '../m3_internal.dart';
-import '../gltf/gltf_parser.dart';
 
 import 'text/contour.dart';
 import 'text/ear_clipping.dart';

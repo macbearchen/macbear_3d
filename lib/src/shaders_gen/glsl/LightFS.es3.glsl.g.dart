@@ -3,6 +3,19 @@
 const String LightFS_glsl = r"""
 #version 300 es
 
+// UE4 windowed inverse-square attenuation (Karis 2013)
+// +1.0 避免光源近距離過曝/firefly，rangeFade 讓光照在 radius 邊界平滑歸零
+float calcAttenuation(float distSq, float radiusSq) {
+    float ratio = distSq / radiusSq;
+    float rangeFade = clamp(1.0 - ratio * ratio, 0.0, 1.0);
+    return (rangeFade * rangeFade) / (distSq + 1.0);
+}
+
+// -------------------------------------------------------
+// Point lights
+// -------------------------------------------------------
+#ifdef ENABLE_POINT_LIGHTS
+
 // uPointLights[0]：light0, light1
 // light0: col0: positionRange(xyz:pos,w:range), col1: colorIntensity(rgb:color,a:intensity)
 // light1: col2: positionRange(xyz:pos,w:range), col3: colorIntensity(rgb:color,a:intensity)
@@ -11,16 +24,7 @@ const String LightFS_glsl = r"""
 // uPointLights[2]：light4, light5
 // uPointLights[3]：light6, light7
 uniform mediump mat4 uPointLights[4];
-
 uniform mediump ivec2 uPointLightCounts; // x=lightCount, y=shadowCastingCount
-
-// UE4 windowed inverse-square attenuation (Karis 2013)
-// +1.0 避免光源近距離過曝/firefly，rangeFade 讓光照在 radius 邊界平滑歸零
-float calcAttenuation(float distSq, float radiusSq) {
-    float ratio = distSq / radiusSq;
-    float rangeFade = clamp(1.0 - ratio * ratio, 0.0, 1.0);
-    return (rangeFade * rangeFade) / (distSq + 1.0);
-}
 
 vec3 calcPointLight(int i, vec3 fragPos, vec3 N, bool castShadow) {
     int matIndex = i / 2;      // 哪個 mat4
@@ -65,6 +69,7 @@ lowp vec3 CalculateLighting(vec3 fragPos, vec3 N) {
     }
     return result;
 }
+#endif // ENABLE_POINT_LIGHTS
 
 // -------------------------------------------------------
 // Spot lights

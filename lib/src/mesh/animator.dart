@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:vector_math/vector_math.dart';
-import '../gltf/gltf_parser.dart';
+import '../gltf/gltf_document.dart';
 
 /// Handles skeletal animation playback and keyframe interpolation.
 class M3Animator {
