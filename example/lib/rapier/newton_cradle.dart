@@ -18,7 +18,7 @@ class NewtonCradleScene extends BaseScene {
     if (isLoaded) return;
     await super.load();
 
-    // addCradle();
+    addCradle();
   }
 
   void addCradle({int count = 5, double length = 4.0}) {

@@ -79,6 +79,25 @@ class BaseScene extends M3Scene {
     return rb;
   }
 
+  void addWalls(double halfWallWidth) {
+    // add geometry
+    final hs = halfWallWidth; // half size
+    // addMesh(M3Mesh(M3BoxGeom(hs * 2, hs * 2, 2.0)), Vector3(0, 0, 0))..color = Colors.green;
+
+    // Create a static floor at y = 0
+    final halfWall = 30.0;
+    // world.addBox(x: 0, y: 0, z: 0, hx: hs, hy: hs, hz: 1, type: RigidBodyType.fixed);
+    // X
+    world.addBox(hx: 1, hy: halfWall, hz: halfWall, desc: RigidBodyDesc.fixed()..position = Vector3(-hs - 1, 0, 0));
+    world.addBox(hx: 1, hy: halfWall, hz: halfWall, desc: RigidBodyDesc.fixed()..position = Vector3(hs + 1, 0, 0));
+    // Y
+    world.addBox(hx: halfWall, hy: 1, hz: halfWall, desc: RigidBodyDesc.fixed()..position = Vector3(0, -hs - 1, 0));
+    world.addBox(hx: halfWall, hy: 1, hz: halfWall, desc: RigidBodyDesc.fixed()..position = Vector3(0, hs + 1, 0));
+    // Z
+    // world.addBox(x: 0, y: 0, z: -hs - 1, hx: halfWall, hy: halfWall, hz: 1, type: RigidBodyType.fixed);
+    // world.addBox(x: 0, y: 0, z: hs + 1, hx: halfWall, hy: halfWall, hz: 1, type: RigidBodyType.fixed);
+  }
+
   void addRope(int numSegments, Vector3 startPos) {
     final List<RigidBody> rbRopes = [];
     final ropeMesh = M3Mesh(M3BoxGeom(1, 0.4, 0.4));
@@ -88,7 +107,7 @@ class BaseScene extends M3Scene {
       final ropePos = Vector3(i.toDouble(), 0, 0) + startPos;
       // Use thin segments along X axis
       final rope = addMesh(ropeMesh, ropePos)..color = Colors.lightCoral;
-      final rbRope = physicsSystem.addBox(0.5, 0.1, 0.1, desc: M3RigidBodyDesc.dynamic()..position = ropePos);
+      final rbRope = physicsSystem.addBox(0.5, 0.2, 0.2, desc: M3RigidBodyDesc.dynamic()..position = ropePos);
       physicsSystem.attachEntity(rope, rbRope);
 
       if (rbRope is M3RapierRigidBody) {

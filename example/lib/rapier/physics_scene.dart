@@ -66,7 +66,7 @@ class PhysicsScene extends BaseScene {
     }
 
     // walls, falling, fan, lift, rope
-    addWalls();
+    addWalls(6);
     // addGridFall();
     // addFalling();
     addFan(Vector3(0, -12, 4));
@@ -78,25 +78,6 @@ class PhysicsScene extends BaseScene {
 
     // axis gizmo
     addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 0));
-  }
-
-  void addWalls() {
-    // add geometry
-    final hs = 6.0; // half size
-    // addMesh(M3Mesh(M3BoxGeom(hs * 2, hs * 2, 2.0)), Vector3(0, 0, 0))..color = Colors.green;
-
-    // Create a static floor at y = 0
-    final halfWall = 30.0;
-    // world.addBox(x: 0, y: 0, z: 0, hx: hs, hy: hs, hz: 1, type: RigidBodyType.fixed);
-    // X
-    world.addBox(hx: 1, hy: halfWall, hz: halfWall, desc: RigidBodyDesc.fixed()..position = Vector3(-hs - 1, 0, 0));
-    world.addBox(hx: 1, hy: halfWall, hz: halfWall, desc: RigidBodyDesc.fixed()..position = Vector3(hs + 1, 0, 0));
-    // Y
-    world.addBox(hx: halfWall, hy: 1, hz: halfWall, desc: RigidBodyDesc.fixed()..position = Vector3(0, -hs - 1, 0));
-    world.addBox(hx: halfWall, hy: 1, hz: halfWall, desc: RigidBodyDesc.fixed()..position = Vector3(0, hs + 1, 0));
-    // Z
-    // world.addBox(x: 0, y: 0, z: -hs - 1, hx: halfWall, hy: halfWall, hz: 1, type: RigidBodyType.fixed);
-    // world.addBox(x: 0, y: 0, z: hs + 1, hx: halfWall, hy: halfWall, hz: 1, type: RigidBodyType.fixed);
   }
 
   void swapYZ(Vector3 v) {

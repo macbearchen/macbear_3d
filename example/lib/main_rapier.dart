@@ -12,7 +12,6 @@ import 'rapier/scene_query_scene.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  M3Package.name = null; // remove it when release
 
   M3AppEngine.instance.onDidInit = onDidInit;
 
@@ -23,8 +22,8 @@ Future<void> onDidInit() async {
   M3Log.i('main.dart', 'onDidInit');
   final appEngine = M3AppEngine.instance;
 
-  // final testScene = BaseScene.createPhysicsScene((physicsSystem) => PhysicsScene(physics: physicsSystem));
-  final testScene = BaseScene.createPhysicsScene((physicsSystem) => NewtonCradleScene(physics: physicsSystem));
+  final testScene = BaseScene.createPhysicsScene((physicsSystem) => PhysicsScene(physics: physicsSystem));
+  // final testScene = BaseScene.createPhysicsScene((physicsSystem) => NewtonCradleScene(physics: physicsSystem));
   // final testScene = BaseScene();
   await appEngine.setScene(testScene);
 }

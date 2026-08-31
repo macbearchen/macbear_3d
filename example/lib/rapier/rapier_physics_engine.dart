@@ -23,7 +23,8 @@ class M3RapierPhysicsEngine implements M3PhysicsEngine {
 
   @override
   void dispose() {
-    world.destroy();
+    _initialized = false;
+    world.dispose();
   }
 
   @override
@@ -63,7 +64,7 @@ class M3RapierPhysicsEngine implements M3PhysicsEngine {
   }
 
   @override
-  String get info => 'rapier physics (v${world.version})';
+  String get info => '${rapier.RapierPhysics.version} (core:${world.version})';
 
   rapier.RigidBodyDesc _mapRigidBodyDesc(M3RigidBodyDesc desc) {
     rapier.RigidBodyDesc rapierDesc;
