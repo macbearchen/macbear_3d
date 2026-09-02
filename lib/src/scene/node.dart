@@ -31,10 +31,8 @@ class M3Node {
   }
 
   /// Orient node to look at a target position.
-  void lookAt(Vector3 target, [Vector3? up]) {
-    final fwd = (target - position).normalized();
-    final worldUp = up ?? (fwd.dot(Vector3(0, 1, 0)).abs() > 0.99 ? Vector3(0, 0, 1) : Vector3(0, 1, 0));
-    final mat = makeViewMatrix(position, target, worldUp);
+  void lookAt(Vector3 target, Vector3 up) {
+    final mat = makeViewMatrix(position, target, up);
     final rotMat = mat.getRotation()..transpose(); // invert rotation
     rotation = Quaternion.fromRotation(rotMat);
   }

@@ -27,17 +27,20 @@ import 'demos/12_video_texture.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  M3AppEngine.instance.onDidInit = onDidInit;
-  M3AppEngine.backgroundColor = Vector3(0.1, 0.2, 0.6);
-
-  final shaderOptions = M3AppEngine.instance.renderEngine.options.shader;
-  final debugOptions = M3AppEngine.instance.renderEngine.options.debug;
+  final renderOptions = M3AppEngine.instance.renderEngine.options;
+  final shaderOptions = renderOptions.shader;
+  final debugOptions = renderOptions.debug;
   // debugOptions.showLight = true;
   // debugOptions.showCamera = true;
+  renderOptions.dprScale = 0.0;
   shaderOptions.pcf = 2;
   shaderOptions.perPixel = true;
   shaderOptions.pbr = true;
   shaderOptions.ibl = true;
+
+  M3AppEngine.instance.onDidInit = onDidInit;
+  M3AppEngine.backgroundColor = Vector3(0.1, 0.2, 0.6);
+
   runApp(MainApp());
 }
 
@@ -138,11 +141,11 @@ class _MainPageState extends State<MainPage> {
     shadowMode = mode;
     switch (shadowMode) {
       case 0: // no shadow
-        renderEngine.options.shadows = false;
+        renderEngine.options.useShadow = false;
         scene.camera.csmCount = 0;
         break;
       case 1: // shadowmap
-        renderEngine.options.shadows = true;
+        renderEngine.options.useShadow = true;
         scene.camera.csmCount = 0;
         final halfView = 12;
         final lightViewer = scene.dirLight.lightViewer;
@@ -152,7 +155,7 @@ class _MainPageState extends State<MainPage> {
         lightViewer.refreshProjectionMatrix();
         break;
       case 2: // cascade shadow map
-        renderEngine.options.shadows = true;
+        renderEngine.options.useShadow = true;
         scene.camera.csmCount = 4;
         break;
     }

@@ -17,6 +17,7 @@ class DemoScene extends M3Scene {
     pointLights[0].range = 9;
 
     initSpotLights(4);
+    spotLights[0].setShadowMap(renderEngine.spotLightShadowMap);
   }
 
   @override
@@ -32,17 +33,38 @@ class DemoScene extends M3Scene {
     final cosSec = cos(sec * 0.3);
     final sinSec = sin(sec * 0.3);
 
-    pointLights[0].position = Vector3(5 * cosSec, 5 * sinSec, 1.2);
-    pointLights[1].position = Vector3(3 * -sinSec, 3 * -cosSec, 0.7);
-    pointLights[2].position = Vector3(8 * sinSec, 8 * sinSec, 1.2);
-    pointLights[3].position = Vector3(0, 8 * sinSec, 1.2);
-    pointLights[4].position = Vector3(0, 8 * cosSec, 1.2);
+    final pointCount = pointLights.length;
+
+    if (pointCount > 0) {
+      pointLights[0].position = Vector3(5 * cosSec, 5 * sinSec, 1.2);
+    }
+    if (pointCount > 1) {
+      pointLights[1].position = Vector3(3 * -sinSec, 3 * -cosSec, 0.7);
+    }
+    if (pointCount > 2) {
+      pointLights[2].position = Vector3(8 * sinSec, 8 * sinSec, 1.2);
+    }
+    if (pointCount > 3) {
+      pointLights[3].position = Vector3(0, 8 * sinSec, 1.2);
+    }
+    if (pointCount > 4) {
+      pointLights[4].position = Vector3(0, 8 * cosSec, 1.2);
+    }
 
     final cosSec2 = cos(sec * 0.6);
     final sinSec2 = sin(sec * 0.6);
-    spotLights[0].direction = Vector3(cosSec2 * 0.5, 0, -1);
-    spotLights[1].direction = Vector3(0.2, sinSec2 * 0.5, -1);
-    spotLights[3].direction = Vector3(sinSec2, cosSec2, 0);
+
+    final spotCount = spotLights.length;
+
+    if (spotCount > 0) {
+      spotLights[0].direction = Vector3(cosSec2 * 0.5, 0, -1);
+    }
+    if (spotCount > 1) {
+      spotLights[1].direction = Vector3(0.2, sinSec2 * 0.5, -1);
+    }
+    if (spotCount > 3) {
+      spotLights[3].direction = Vector3(sinSec2, cosSec2, 0);
+    }
   }
 
   // create nvlobby cubemap

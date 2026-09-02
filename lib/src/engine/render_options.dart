@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 // dart format off
 enum M3HelperType {
   none,
@@ -13,7 +15,11 @@ class M3RenderOptions {
   M3DebugOptions debug = M3DebugOptions();
   // shader options
   M3ShaderOptions shader = M3ShaderOptions();
-  bool shadows = true;
+  bool useShadow = true;
+  double dprScale = 1.0; // (0 ~ 1): 0 mean dpr = 1.0, 1 mean dpr = deviceDpr, in the middle is 0.5
+  double getDpr(double deviceDpr) {
+    return lerpDouble(1.0, deviceDpr, dprScale.clamp(0.0, 1.0))!;
+  }
 }
 
 class M3DebugOptions {

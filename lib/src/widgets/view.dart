@@ -27,15 +27,15 @@ class _M3ViewState extends State<M3View> with SingleTickerProviderStateMixin, Wi
   Future<void> initAppEngine() async {
     // wait for context ready
     if (!context.mounted) return;
-    final dpr = MediaQuery.of(context).devicePixelRatio;
 
+    final engine = M3AppEngine.instance;
     final size = await _getValidSize(context);
     final screenW = size.width.toInt();
     final screenH = size.height.toInt();
+    final dpr = engine.renderEngine.options.getDpr(MediaQuery.of(context).devicePixelRatio);
     M3Log.i('M3View', 'initState addPostFrameCallback ($mounted) ($screenW x $screenH) dpr: $dpr');
 
     // ticker to update and render (owned by this view; released via unmount())
-    final engine = M3AppEngine.instance;
     engine.ticker = createTicker(engine.updateRender);
 
     // init AppEngine (skipped internally when the engine is already initialised,
@@ -87,11 +87,11 @@ class _M3ViewState extends State<M3View> with SingleTickerProviderStateMixin, Wi
     _debounceTimer?.cancel(); // Clear existing timer
     _debounceTimer = Timer(const Duration(milliseconds: 300), () async {
       final mq = MediaQuery.of(context);
-      final screenWidth = mq.size.width.toInt();
-      final screenHeight = mq.size.height.toInt();
-      final dpr = mq.devicePixelRatio;
+      final screenW = mq.size.width.toInt();
+      final screenH = mq.size.height.toInt();
+      final dpr = engine.renderEngine.options.getDpr(mq.devicePixelRatio);
       // context resize after delay
-      await engine.onResize(screenWidth, screenHeight, dpr);
+      await engine.onResize(screenW, screenH, dpr);
 
       setState(() {
         engine.resume();

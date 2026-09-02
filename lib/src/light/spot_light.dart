@@ -21,6 +21,7 @@ class M3SpotLight extends M3PointLight {
 
   /// World-space pointing direction derived from -Z axis of [worldMatrix].
   Vector3 get direction => forward;
+  M3Camera lightViewer = M3Camera();
 
   /// Sets light orientation to point toward [dir].
   set direction(Vector3 dir) {
@@ -30,7 +31,11 @@ class M3SpotLight extends M3PointLight {
   /// Orient the spotlight along [dir].
   void setDirection(Vector3 dir, [Vector3? up]) {
     final fwd = dir.normalized();
-    lookAt(position + fwd, up);
+    final target = position + fwd;
+    final worldUp = up ?? (fwd.dot(Vector3(0, 1, 0)).abs() > 0.99 ? Vector3(0, 0, 1) : Vector3(0, 1, 0));
+
+    lookAt(target, worldUp);
+    lightViewer.setLookat(position, target, worldUp);
   }
 
   /// Pack into a single mat4 (16 floats) for the shader.

@@ -108,7 +108,7 @@ class M3AppEngine with ChangeNotifier {
 
     // init render engine
     renderEngine.gl = _sourceTexture.getContext();
-    M3Log.i('AppEngine', 'ANGLE context ready');
+    M3Log.i('AppEngine', 'ANGLE context ready: $width x $height @ $dpr');
     appWidth = width;
     appHeight = height;
     devicePixelRatio = dpr;

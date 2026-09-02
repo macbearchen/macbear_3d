@@ -26,7 +26,7 @@ class M3ShadowMap {
   }
 
   /// Render depth map from light's perspective
-  void renderDepth(M3Scene scene, M3DirectionalLight light) {
+  void renderDepth(M3Scene scene, M3Light light) {
     final renderEngine = M3AppEngine.instance.renderEngine;
     final gl = renderEngine.gl;
     final prog = M3Resources.programSimple!;
@@ -47,29 +47,40 @@ class M3ShadowMap {
 
     gl.clear(WebGL.DEPTH_BUFFER_BIT);
 
-    // prepare CSM
-    light.updateShadowCascades(scene.cameras[0]);
-    final lightViewer = light.lightViewer;
+    M3Camera? lightViewer;
 
-    // check if use cascaded shadow map
-    if (light.cascades.isNotEmpty) {
-      // cascaded shadow mapping
-      final backupMatrix = lightViewer.projectionMatrix;
-      for (final cascade in light.cascades) {
-        // viewport for the cascaded-shadow
-        final int y = (cascade.atlasBiasV * mapH).toInt();
-        final int height = (cascade.atlasScaleV * mapH).toInt();
-        gl.viewport(0, y, mapW, height);
-        lightViewer.projectionMatrix = cascade.projectionMatrix;
-        // frustum matrix for culling
+    // prepare CSM
+    if (light is M3DirectionalLight) {
+      light.updateShadowCascades(scene.cameras[0]);
+      lightViewer = light.lightViewer;
+
+      // check if use cascaded shadow map
+      if (light.cascades.isNotEmpty) {
+        // cascaded shadow mapping
+        final backupMatrix = lightViewer.projectionMatrix;
+        for (final cascade in light.cascades) {
+          // viewport for the cascaded-shadow
+          final int y = (cascade.atlasBiasV * mapH).toInt();
+          final int height = (cascade.atlasScaleV * mapH).toInt();
+          gl.viewport(0, y, mapW, height);
+          lightViewer.projectionMatrix = cascade.projectionMatrix;
+          // frustum matrix for culling
+          lightViewer.updateFrustum();
+          // shadowmap render scene only opaque
+          _context.prepareRenderQueue(scene, lightViewer, bOnlyOpaque: true);
+          _context.render(prog);
+        }
+        lightViewer.projectionMatrix = backupMatrix;
         lightViewer.updateFrustum();
-        // shadowmap render scene only opaque
-        _context.prepareRenderQueue(scene, lightViewer, bOnlyOpaque: true);
-        _context.render(prog);
+        lightViewer = null;
       }
-      lightViewer.projectionMatrix = backupMatrix;
-      lightViewer.updateFrustum();
-    } else {
+    } else if (light is M3SpotLight) {
+      // spot light has shadow map too
+      lightViewer = light.lightViewer;
+    }
+
+    // for spot light and directional light without shadow cascade
+    if (lightViewer != null) {
       lightViewer.updateFrustum();
       // shadowmap render scene only opaque
       _context.prepareRenderQueue(scene, lightViewer, bOnlyOpaque: true);

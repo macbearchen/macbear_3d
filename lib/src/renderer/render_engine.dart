@@ -32,7 +32,7 @@ class M3RenderEngine {
     _spotLightShadowMap = map;
   }
 
-  bool get isShadowEnabled => options.shadows && _directionalShadowMap != null;
+  bool get isShadowEnabled => options.useShadow && _directionalShadowMap != null;
 
   /// main context (scene render)
   final M3RenderContext mainContext = M3RenderContext();
@@ -52,7 +52,7 @@ class M3RenderEngine {
   void init() {
     planarReflection = M3PlanarReflection();
     // shadowmap: directional, spotlight
-    initShadowMap(enableShadow: options.shadows);
+    initShadowMap(enableShadow: options.useShadow);
   }
 
   void initShadowMap({
@@ -62,7 +62,7 @@ class M3RenderEngine {
     int smWidth = 512,
     int smHeight = 512,
   }) {
-    options.shadows = enableShadow;
+    options.useShadow = enableShadow;
     directionalShadowMap = enableShadow ? M3ShadowMap(width, height) : null;
     spotLightShadowMap = enableShadow ? M3ShadowMap(smWidth, smHeight) : null;
   }
@@ -91,7 +91,7 @@ class M3RenderEngine {
 
   /// resize rendering engine when application size changed
   void resize(int width, int height, double dpr) {
-    M3Log.i('M3RenderEngine', 'App resize ($width x $height) dpr: $dpr');
+    M3Log.h('M3RenderEngine', 'App resize ($width x $height) dpr: $dpr');
 
     final pixelW = (width * dpr).toInt();
     final pixelH = (height * dpr).toInt();
@@ -113,11 +113,14 @@ class M3RenderEngine {
 
   /// Render shadow map
   void renderShadowMap(M3Scene scene) {
-    if (options.debug.wireframe || !options.shadows) return;
+    if (options.debug.wireframe || !options.useShadow) return;
     // directional light (ex: sun, moon)
     scene.dirLight.shadowMap?.renderDepth(scene, scene.dirLight);
 
-    // point light
+    // spot light
+    for (final light in scene.spotLights) {
+      light.shadowMap?.renderDepth(scene, light);
+    }
   }
 
   /// get program shader for scene rendering
@@ -204,18 +207,26 @@ class M3RenderEngine {
 
     // 2D helper
     if (options.debug.showMaps) {
-      if (!options.debug.wireframe && options.shadows) {
+      double x = 5;
+      if (!options.debug.wireframe && options.useShadow) {
         final sm = directionalShadowMap;
         if (sm != null) {
           final width = 200 / sm.mapH * sm.mapW;
-          sm.debugDrawDepth(5, engine.appHeight - 210, width, 200);
+          sm.debugDrawDepth(x, engine.appHeight - 210, width, 200);
+          x += width + 5;
+        }
+
+        final sm2 = spotLightShadowMap;
+        if (sm2 != null) {
+          final width = 100 / sm2.mapH * sm2.mapW;
+          sm2.debugDrawDepth(x, engine.appHeight - 210, width, 100);
+          x += width + 5;
         }
       }
       // show planar reflection
       if (mainContext.needsPlanarReflectionPass()) {
         final engine = M3AppEngine.instance;
         final ratio = 0.33;
-        final x = 110.0;
         final y = engine.appHeight - 210.0;
         final w = planarReflection.width * ratio;
         final h = planarReflection.height * ratio;
@@ -246,7 +257,7 @@ class M3RenderEngine {
 
         final shadowText =
             '''
-shadow:${options.shadows ? 'Y' : 'N'}
+shadow:${options.useShadow ? 'Y' : 'N'}
 $directionalShadowMap
 csm=${scene.camera.csmCount}''';
         matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 150, 0));

@@ -54,7 +54,7 @@ class SkyboxScene_02 extends DemoScene {
       uvScale: Vector2.all(10.0),
       onVertex: (x, y) {
         double rad = pi / 5;
-        return (cos(x * rad) + sin(y * rad)) * 1.2;
+        return (cos(x * rad) + sin(y * rad)) * 0.6;
       },
     );
 
@@ -93,12 +93,16 @@ class SkyboxScene_02 extends DemoScene {
   @override
   Widget? buildUI(BuildContext context) {
     if (_gpuInfo == null) return null;
+    final appEngine = M3AppEngine.instance;
+    String appResolution = 'AppSize: ${appEngine.appWidth}x${appEngine.appHeight} @${appEngine.devicePixelRatio}';
+    String gpuString = '$appResolution \n${_gpuInfo!.toString()}';
+
     return SafeArea(
       bottom: false,
       child: Container(
         padding: const EdgeInsets.all(8),
         color: Colors.black54,
-        child: Text(_gpuInfo.toString(), style: const TextStyle(color: Colors.yellow, fontSize: 12)),
+        child: Text(gpuString, style: const TextStyle(color: Colors.yellow, fontSize: 12)),
       ),
     );
   }

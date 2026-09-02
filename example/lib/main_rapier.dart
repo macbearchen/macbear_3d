@@ -78,9 +78,9 @@ class _MyAppState extends State<MyApp> {
                 final scene = M3AppEngine.instance.activeScene!;
                 shadowMode = (shadowMode + 1) % 3;
                 if (shadowMode == 0) {
-                  renderOptions.shadows = false;
+                  renderOptions.useShadow = false;
                 } else if (shadowMode == 1) {
-                  renderOptions.shadows = true;
+                  renderOptions.useShadow = true;
                   scene.camera.csmCount = 0;
                   final halfView = 8;
                   final lightViewer = scene.dirLight.lightViewer;
@@ -89,7 +89,7 @@ class _MyAppState extends State<MyApp> {
                   lightViewer.setEuler(pi / 5, -pi / 3, 0, distance: 30); // rotate light
                   lightViewer.refreshProjectionMatrix();
                 } else {
-                  renderOptions.shadows = true;
+                  renderOptions.useShadow = true;
                   scene.camera.csmCount = 4;
                 }
               },

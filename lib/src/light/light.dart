@@ -13,7 +13,7 @@ abstract class M3Light extends M3Node {
   Vector3 color = Colors.white.rgb - ambient;
 
   // shadow map
-  bool castShadow = true;
+  bool castShadow = false;
   M3ShadowMap? shadowMap;
 
   M3Light() {
@@ -47,14 +47,14 @@ abstract class M3Light extends M3Node {
 class M3PointLightManager {
   RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
 
-  static const int _maxLights = 8;
+  static const int _maxPointLights = 8;
   static const int _maxShadow = 3;
   static const int _matCount = 4; // 8 點光源, 每 mat4 兩盞點光源
 
-  final Float32List _lightMats = Float32List(_matCount * 16);
+  final Float32List _pointMats = Float32List(_matCount * 16);
   final Int32List _counts = Int32List.fromList([0, 0]);
-  int get lightCount => _counts[0];
-  int get shadowCount => _counts[1];
+  int get pointCount => _counts[0];
+  int get shadowFlag => _counts[1];
 
   late UniformLocation _uniformPointLights;
   late UniformLocation _uniformPointLightCounts;
@@ -83,7 +83,7 @@ class M3PointLightManager {
       return 0;
     });
 
-    final active = sorted.take(_maxLights).toList();
+    final active = sorted.take(_maxPointLights).toList();
 
     int shadowCount = 0;
     for (final l in active) {
@@ -95,19 +95,19 @@ class M3PointLightManager {
     _counts[0] = active.length;
     _counts[1] = shadowCount;
 
-    _lightMats.fillRange(0, _lightMats.length, 0.0);
+    _pointMats.fillRange(0, _pointMats.length, 0.0);
 
-    for (int i = 0; i < lightCount && i < _maxLights; i++) {
+    for (int i = 0; i < pointCount && i < _maxPointLights; i++) {
       final packed = active[i].packBuffer(mMatrixInv);
       final matIndex = i ~/ 2;
       final localIndex = i % 2;
       final offset = matIndex * 16 + localIndex * 8;
 
-      _lightMats.setRange(offset, offset + 8, packed);
+      _pointMats.setRange(offset, offset + 8, packed);
     }
 
     if (M3Program.isLocationValid(_uniformPointLights)) {
-      gl.uniformMatrix4fv(_uniformPointLights, false, _lightMats);
+      gl.uniformMatrix4fv(_uniformPointLights, false, _pointMats);
     }
 
     if (M3Program.isLocationValid(_uniformPointLightCounts)) {
@@ -123,11 +123,12 @@ class M3SpotLightManager {
   static const int _maxSpotLights = 8;
 
   final Float32List _spotMats = Float32List(_maxSpotLights * 16);
-  int _spotCount = 0;
-  int get spotCount => _spotCount;
+  final Int32List _counts = Int32List.fromList([0, 0]);
+  int get spotCount => _counts[0];
+  int get shadowFlag => _counts[1];
 
   late UniformLocation _uniformSpotLights;
-  late UniformLocation _uniformSpotLightCount;
+  late UniformLocation _uniformSpotLightCounts;
 
   List<M3SpotLight> _spotLights = [];
 
@@ -135,7 +136,7 @@ class M3SpotLightManager {
 
   void initLocation(Program program) {
     _uniformSpotLights = gl.getUniformLocation(program, 'uSpotLights');
-    _uniformSpotLightCount = gl.getUniformLocation(program, 'uSpotLightCount');
+    _uniformSpotLightCounts = gl.getUniformLocation(program, 'uSpotLightCounts');
   }
 
   void attachSpotLights(List<M3SpotLight> spotLights) {
@@ -148,11 +149,12 @@ class M3SpotLightManager {
   /// as [M3PointLightManager.setLightUniforms].
   void setLightUniforms(Matrix4 mMatrixInv) {
     final active = _spotLights.take(_maxSpotLights).toList();
-    _spotCount = active.length;
+    _counts[0] = active.length;
+    _counts[1] = shadowFlag;
 
     _spotMats.fillRange(0, _spotMats.length, 0.0);
 
-    for (int i = 0; i < _spotCount; i++) {
+    for (int i = 0; i < spotCount && i < _maxSpotLights; i++) {
       final packed = active[i].packBuffer(mMatrixInv); // 16 floats
       final offset = i * 16;
       _spotMats.setRange(offset, offset + 16, packed);
@@ -162,8 +164,8 @@ class M3SpotLightManager {
       gl.uniformMatrix4fv(_uniformSpotLights, false, _spotMats);
     }
 
-    if (M3Program.isLocationValid(_uniformSpotLightCount)) {
-      gl.uniform1i(_uniformSpotLightCount, _spotCount);
+    if (M3Program.isLocationValid(_uniformSpotLightCounts)) {
+      gl.uniform2iv(_uniformSpotLightCounts, _counts);
     }
   }
 }
