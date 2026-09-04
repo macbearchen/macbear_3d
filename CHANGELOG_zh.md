@@ -1,12 +1,16 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
 ## 0.10.0
-#### 2026-08-18
+#### 2026-09-04
 * 新增功能 (Add):
-  * **聚光燈支援 (Spotlight)**：新增 `M3SpotLight`，支援錐體角度（內外切角範圍）、方向性衰減計算以及與 GLSL 著色器集成（`LightFS.es3.glsl`）。
+  * **聚光燈與聚光燈陰影貼圖 (Spotlight & Spot Shadow Mapping)**：新增 `M3SpotLight`，支援錐體角度（內外切角範圍）、方向性衰減計算，以及具備共用 PCF 濾波的聚光燈陰影貼圖 (`LightFS.es3.glsl`, `ShadowFS.es3.glsl`, `ShadowVS.es3.glsl`)。
   * **地形 LOD 與邊界縫合**：實作地形瓦片細節層級 (LOD 32x32 -> 16x16 -> 8x8 -> 4x4) 支援，並提供邊界縫合處理以防止相鄰不同解析度瓦片之間的裂縫。
+  * **Rapier 物理整合與範例場景**：新增完整的 Rapier 物理引擎展示場景，包含 `PhysicsScene`、`DoublePendulumScene`、`NewtonCradleScene`、`CompoundScene` 與 `SceneQueryScene`。
 
 * 優化與重構 (Optimize / Refactor):
+  * **glTF 解析器模組化重構**：將 glTF 解析器架構重組為 `M3GltfDocument`、`M3GltfNode`、`M3GltfMesh`、`M3GltfMaterial` 與 `M3GltfAnimation`。
+  * **物理引擎架構重構**：重構 Rapier 物理場景結構並將圍牆生成機制整合至 `BaseScene`。
+  * **點光源與聚光燈優化**：優化點光源與聚光燈的著色器運算與 Uniform 傳遞效能。
   * **Flutter 升級**：升級相容至 Flutter 3.47.0。
 
 ## 0.9.4

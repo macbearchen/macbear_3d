@@ -1,12 +1,16 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
 ## 0.10.0
-#### 2026-08-18
+#### 2026-09-04
 * Add:
-  * **Spotlight Support**: Added `M3SpotLight` with cone angles (inner/outer cutoffs), directional falloff attenuation, and GLSL shader integration (`LightFS.es3.glsl`).
+  * **Spotlight & Spot Shadow Mapping**: Added `M3SpotLight` with cone angles (inner/outer cutoffs), directional falloff attenuation, and spot light shadow mapping with shared PCF filtering (`LightFS.es3.glsl`, `ShadowFS.es3.glsl`, `ShadowVS.es3.glsl`).
   * **Terrain LOD & Stitching**: Implemented Level of Detail (LOD) support for terrain tiles (Level 32x32 -> 16x16 -> 8x8 -> 4x4) with edge stitching to prevent gaps between adjacent resolution tiles.
+  * **Rapier Physics Integration & Demo Scenes**: Added comprehensive Rapier physics demonstrations including `PhysicsScene`, `DoublePendulumScene`, `NewtonCradleScene`, `CompoundScene`, and `SceneQueryScene`.
 
 * Optimize / Refactor:
+  * **glTF Parser Refactoring**: Modularized glTF loading architecture into `M3GltfDocument`, `M3GltfNode`, `M3GltfMesh`, `M3GltfMaterial`, and `M3GltfAnimation`.
+  * **Physics Engine Architecture**: Refactored Rapier physics scenes and wall setup into `BaseScene`.
+  * **Point & Spot Light Optimization**: Optimized lighting shaders and uniform buffer structures for point and spot lights.
   * **Flutter Upgrade**: Upgraded Flutter compatibility to 3.47.0.
 
 ## 0.9.4

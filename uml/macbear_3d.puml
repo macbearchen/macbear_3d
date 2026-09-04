@@ -32,11 +32,13 @@ class "macbear_3d::src::mesh::mesh.dart::M3SubMesh" {
   +M3Geom geom
   +Matrix4 localMatrix
   +int? nodeIndex
+  +M3Bounding worldBounding
 }
 
 "macbear_3d::src::mesh::mesh.dart::M3SubMesh" o-- "macbear_3d::src::texture::material.dart::M3Material"
 "macbear_3d::src::mesh::mesh.dart::M3SubMesh" o-- "macbear_3d::src::geom::geom.dart::M3Geom"
 "macbear_3d::src::mesh::mesh.dart::M3SubMesh" o-- "vector_math::vector_math.dart::Matrix4"
+"macbear_3d::src::mesh::mesh.dart::M3SubMesh" o-- "macbear_3d::src::geom::geom.dart::M3Bounding"
 
 class "macbear_3d::src::mesh::mesh.dart::M3Skin" {
   +List<Matrix4> boneMatrices
@@ -190,6 +192,7 @@ class "macbear_3d::src::renderer::render_queue.dart::M3RenderItem" {
   +Matrix4 worldMatrixInv
   +double depth
   +List<M3PointLight> pointLights
+  +List<M3SpotLight> spotLights
   +int opaqueSortKey
 }
 
@@ -226,17 +229,19 @@ class "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" {
   +RenderingContext gl
   +M3PlanarReflection planarReflection
   +List<M3ReflectionProbe> probes
-  -M3ShadowMap? _shadowMap
+  -M3ShadowMap? _directionalShadowMap
+  -M3ShadowMap? _spotLightShadowMap
   +M3RenderContext mainContext
   -M3Projection _projection2D
   +M3RenderOptions options
   +M3RenderStats stats
-  +M3ShadowMap? shadowMap
+  +M3ShadowMap? directionalShadowMap
+  +M3ShadowMap? spotLightShadowMap
   +bool isShadowEnabled
   +void init()
+  +void initShadowMap()
   +void cleanProbes()
   +void dispose()
-  +void createShadowMap()
   +void bindDefaultFramebuffer()
   +void resize()
   +void renderShadowMap()
@@ -521,28 +526,7 @@ class "macbear_3d::src::input::touch.dart::M3CameraOrbitController" {
 "macbear_3d::src::input::touch.dart::M3CameraOrbitController" o-- "macbear_3d::src::scene::camera.dart::M3Camera"
 "macbear_3d::src::input::touch.dart::M3InputController" <|-- "macbear_3d::src::input::touch.dart::M3CameraOrbitController"
 
-class "macbear_3d::src::gltf::gltf_loader.dart::M3GltfLoader" {
-  {static} +dynamic load()
-  {static} +dynamic loadFromBytes()
-  {static} -bool _isGlb()
-  {static} -dynamic _parseGlb()
-  {static} -dynamic _parseGltf()
-}
-
-class "macbear_3d::src::gltf::gltf_accessor.dart::GltfAccessor" {
-  {static} +int BYTE
-  {static} +int UNSIGNED_BYTE
-  {static} +int SHORT
-  {static} +int UNSIGNED_SHORT
-  {static} +int UNSIGNED_INT
-  {static} +int FLOAT
-  {static} +Float32List getFloatList()
-  {static} +Uint16List getUint16List()
-  {static} +Uint32List getUint32List()
-  {static} -int _getComponentCount()
-}
-
-class "macbear_3d::src::gltf::gltf_parser.dart::GltfDocument" {
+class "macbear_3d::src::gltf::gltf_document.dart::GltfDocument" {
   +String name
   +Map<String, dynamic> json
   +Uint8List? embeddedBin
@@ -565,37 +549,30 @@ class "macbear_3d::src::gltf::gltf_parser.dart::GltfDocument" {
   +Uint8List getBufferViewData()
 }
 
-"macbear_3d::src::gltf::gltf_parser.dart::GltfDocument" o-- "dart::typed_data::Uint8List"
+"macbear_3d::src::gltf::gltf_document.dart::GltfDocument" o-- "dart::typed_data::Uint8List"
 
-class "macbear_3d::src::gltf::gltf_parser.dart::GltfImage" {
-  +String? uri
-  +int? bufferView
-  +String? mimeType
-  +String? name
-  {static} +GltfImage parse()
+class "macbear_3d::src::gltf::gltf_loader.dart::M3GltfLoader" {
+  {static} +dynamic load()
+  {static} +dynamic loadFromBytes()
+  {static} -bool _isGlb()
+  {static} -dynamic _parseGlb()
+  {static} -dynamic _parseGltf()
 }
 
-class "macbear_3d::src::gltf::gltf_parser.dart::GltfTexture" {
-  +int? sampler
-  +int? source
-  +String? name
-  {static} +GltfTexture parse()
+class "macbear_3d::src::gltf::gltf_accessor.dart::GltfAccessor" {
+  {static} +int BYTE
+  {static} +int UNSIGNED_BYTE
+  {static} +int SHORT
+  {static} +int UNSIGNED_SHORT
+  {static} +int UNSIGNED_INT
+  {static} +int FLOAT
+  {static} +Float32List getFloatList()
+  {static} +Uint16List getUint16List()
+  {static} +Uint32List getUint32List()
+  {static} -int _getComponentCount()
 }
 
-class "macbear_3d::src::gltf::gltf_parser.dart::GltfMaterial" {
-  +String name
-  +Vector4 baseColorFactor
-  +int? baseColorTextureIndex
-  +double metallicFactor
-  +double roughnessFactor
-  +String alphaMode
-  +double alphaCutoff
-  {static} +GltfMaterial parse()
-}
-
-"macbear_3d::src::gltf::gltf_parser.dart::GltfMaterial" o-- "vector_math::vector_math.dart::Vector4"
-
-class "macbear_3d::src::gltf::gltf_parser.dart::GltfSkin" {
+class "macbear_3d::src::gltf::model::gltf_mesh.dart::GltfSkin" {
   +GltfDocument document
   +String name
   +int? inverseBindMatricesAccessor
@@ -604,9 +581,9 @@ class "macbear_3d::src::gltf::gltf_parser.dart::GltfSkin" {
   +Float32List? getInverseBindMatrices()
 }
 
-"macbear_3d::src::gltf::gltf_parser.dart::GltfSkin" o-- "macbear_3d::src::gltf::gltf_parser.dart::GltfDocument"
+"macbear_3d::src::gltf::model::gltf_mesh.dart::GltfSkin" o-- "macbear_3d::src::gltf::gltf_document.dart::GltfDocument"
 
-class "macbear_3d::src::gltf::gltf_parser.dart::GltfMesh" {
+class "macbear_3d::src::gltf::model::gltf_mesh.dart::GltfMesh" {
   +GltfDocument document
   +int index
   +String name
@@ -614,9 +591,9 @@ class "macbear_3d::src::gltf::gltf_parser.dart::GltfMesh" {
   {static} +GltfMesh parse()
 }
 
-"macbear_3d::src::gltf::gltf_parser.dart::GltfMesh" o-- "macbear_3d::src::gltf::gltf_parser.dart::GltfDocument"
+"macbear_3d::src::gltf::model::gltf_mesh.dart::GltfMesh" o-- "macbear_3d::src::gltf::gltf_document.dart::GltfDocument"
 
-class "macbear_3d::src::gltf::gltf_parser.dart::GltfPrimitive" {
+class "macbear_3d::src::gltf::model::gltf_mesh.dart::GltfPrimitive" {
   +GltfDocument document
   +int? positionAccessor
   +int? normalAccessor
@@ -637,9 +614,69 @@ class "macbear_3d::src::gltf::gltf_parser.dart::GltfPrimitive" {
   +List<int>? getIndices()
 }
 
-"macbear_3d::src::gltf::gltf_parser.dart::GltfPrimitive" o-- "macbear_3d::src::gltf::gltf_parser.dart::GltfDocument"
+"macbear_3d::src::gltf::model::gltf_mesh.dart::GltfPrimitive" o-- "macbear_3d::src::gltf::gltf_document.dart::GltfDocument"
 
-class "macbear_3d::src::gltf::gltf_parser.dart::GltfNode" {
+class "macbear_3d::src::gltf::model::gltf_material.dart::GltfImage" {
+  +String? uri
+  +int? bufferView
+  +String? mimeType
+  +String? name
+  {static} +GltfImage parse()
+}
+
+class "macbear_3d::src::gltf::model::gltf_material.dart::GltfTexture" {
+  +int? sampler
+  +int? source
+  +String? name
+  {static} +GltfTexture parse()
+}
+
+class "macbear_3d::src::gltf::model::gltf_material.dart::GltfMaterial" {
+  +String name
+  +Vector4 baseColorFactor
+  +int? baseColorTextureIndex
+  +double metallicFactor
+  +double roughnessFactor
+  +String alphaMode
+  +double alphaCutoff
+  {static} +GltfMaterial parse()
+}
+
+"macbear_3d::src::gltf::model::gltf_material.dart::GltfMaterial" o-- "vector_math::vector_math.dart::Vector4"
+
+class "macbear_3d::src::gltf::model::gltf_animation.dart::GltfAnimation" {
+  +GltfDocument document
+  +String name
+  +List<GltfAnimationChannel> channels
+  +List<GltfAnimationSampler> samplers
+  {static} +GltfAnimation parse()
+}
+
+"macbear_3d::src::gltf::model::gltf_animation.dart::GltfAnimation" o-- "macbear_3d::src::gltf::gltf_document.dart::GltfDocument"
+
+class "macbear_3d::src::gltf::model::gltf_animation.dart::GltfAnimationChannel" {
+  +GltfDocument document
+  +int samplerIndex
+  +int? targetNodeIndex
+  +String targetPath
+  {static} +GltfAnimationChannel parse()
+}
+
+"macbear_3d::src::gltf::model::gltf_animation.dart::GltfAnimationChannel" o-- "macbear_3d::src::gltf::gltf_document.dart::GltfDocument"
+
+class "macbear_3d::src::gltf::model::gltf_animation.dart::GltfAnimationSampler" {
+  +GltfDocument document
+  +int inputAccessor
+  +int outputAccessor
+  +String interpolation
+  {static} +GltfAnimationSampler parse()
+  +Float32List getInputs()
+  +Float32List getOutputs()
+}
+
+"macbear_3d::src::gltf::model::gltf_animation.dart::GltfAnimationSampler" o-- "macbear_3d::src::gltf::gltf_document.dart::GltfDocument"
+
+class "macbear_3d::src::gltf::model::gltf_node.dart::GltfNode" {
   +GltfDocument document
   +String name
   +int? meshIndex
@@ -656,51 +693,10 @@ class "macbear_3d::src::gltf::gltf_parser.dart::GltfNode" {
   +GltfNode clone()
 }
 
-"macbear_3d::src::gltf::gltf_parser.dart::GltfNode" o-- "macbear_3d::src::gltf::gltf_parser.dart::GltfDocument"
-"macbear_3d::src::gltf::gltf_parser.dart::GltfNode" o-- "vector_math::vector_math.dart::Vector3"
-"macbear_3d::src::gltf::gltf_parser.dart::GltfNode" o-- "vector_math::vector_math.dart::Quaternion"
-"macbear_3d::src::gltf::gltf_parser.dart::GltfNode" o-- "vector_math::vector_math.dart::Matrix4"
-
-class "macbear_3d::src::gltf::gltf_parser.dart::GltfAnimation" {
-  +GltfDocument document
-  +String name
-  +List<GltfAnimationChannel> channels
-  +List<GltfAnimationSampler> samplers
-  {static} +GltfAnimation parse()
-}
-
-"macbear_3d::src::gltf::gltf_parser.dart::GltfAnimation" o-- "macbear_3d::src::gltf::gltf_parser.dart::GltfDocument"
-
-class "macbear_3d::src::gltf::gltf_parser.dart::GltfAnimationChannel" {
-  +GltfDocument document
-  +int samplerIndex
-  +int? targetNodeIndex
-  +String targetPath
-  {static} +GltfAnimationChannel parse()
-}
-
-"macbear_3d::src::gltf::gltf_parser.dart::GltfAnimationChannel" o-- "macbear_3d::src::gltf::gltf_parser.dart::GltfDocument"
-
-class "macbear_3d::src::gltf::gltf_parser.dart::GltfAnimationSampler" {
-  +GltfDocument document
-  +int inputAccessor
-  +int outputAccessor
-  +String interpolation
-  {static} +GltfAnimationSampler parse()
-  +Float32List getInputs()
-  +Float32List getOutputs()
-}
-
-"macbear_3d::src::gltf::gltf_parser.dart::GltfAnimationSampler" o-- "macbear_3d::src::gltf::gltf_parser.dart::GltfDocument"
-
-class "macbear_3d::src::geom::primitive::height_field.dart::M3HeightField" {
-  +Float32List data
-  +Vector2 cellSize
-  +double heightScale
-}
-
-"macbear_3d::src::geom::primitive::height_field.dart::M3HeightField" o-- "dart::typed_data::Float32List"
-"macbear_3d::src::geom::primitive::height_field.dart::M3HeightField" o-- "vector_math::vector_math.dart::Vector2"
+"macbear_3d::src::gltf::model::gltf_node.dart::GltfNode" o-- "macbear_3d::src::gltf::gltf_document.dart::GltfDocument"
+"macbear_3d::src::gltf::model::gltf_node.dart::GltfNode" o-- "vector_math::vector_math.dart::Vector3"
+"macbear_3d::src::gltf::model::gltf_node.dart::GltfNode" o-- "vector_math::vector_math.dart::Quaternion"
+"macbear_3d::src::gltf::model::gltf_node.dart::GltfNode" o-- "vector_math::vector_math.dart::Matrix4"
 
 class "macbear_3d::src::geom::geom.dart::_M3Indices" {
   -int _primitiveType
@@ -803,6 +799,13 @@ class "macbear_3d::src::geom::geom.dart::M3EllipsoidGeom" {
 
 "macbear_3d::src::geom::geom.dart::M3Geom" <|-- "macbear_3d::src::geom::geom.dart::M3EllipsoidGeom"
 
+class "macbear_3d::src::geom::geom.dart::M3LineGeom" {
+  +void setLine()
+  +void drawLine()
+}
+
+"macbear_3d::src::geom::geom.dart::M3Geom" <|-- "macbear_3d::src::geom::geom.dart::M3LineGeom"
+
 class "macbear_3d::src::geom::geom.dart::M3OctahedralGeom" {
 }
 
@@ -835,48 +838,60 @@ class "macbear_3d::src::geom::geom.dart::M3SphereGeom" {
 
 "macbear_3d::src::geom::geom.dart::M3Geom" <|-- "macbear_3d::src::geom::geom.dart::M3SphereGeom"
 
-class "macbear_3d::src::geom::geom.dart::M3TerrainGeom" {
-  {static} +dynamic fromHeightmapImage()
-  {static} +dynamic fromHeightmapAsset()
-  {static} -bool _is16BitPng()
-  {static} +dynamic from16BitPngBytes()
-  {static} -double _sampleHeight16Bit()
-  {static} -double _getPixelHeight16Bit()
-  {static} -double _sampleHeight()
-  {static} -double _getPixelHeight()
-}
-
-"macbear_3d::src::geom::geom.dart::M3Geom" <|-- "macbear_3d::src::geom::geom.dart::M3TerrainGeom"
-
 class "macbear_3d::src::geom::geom.dart::M3TorusGeom" {
 }
 
 "macbear_3d::src::geom::geom.dart::M3Geom" <|-- "macbear_3d::src::geom::geom.dart::M3TorusGeom"
 
+class "macbear_3d::src::geom::geom.dart::M3TiledTerrain" {
+  +M3Mesh mesh
+  +int tilesX
+  +int tilesY
+  +bool enableLod
+  -Map<int, _M3Indices> _sharedFaceIndices
+  -Map<int, _M3Indices> _sharedEdgeIndices
+  +int tileCount
+  +void dispose()
+  -M3TerrainTileGeom _getTileGeom()
+  +void updateLod()
+  {static} +M3TiledTerrain build()
+  {static} +M3TiledTerrain fromHeightField()
+  {static} -M3TiledTerrain _buildImpl()
+  {static} +Uint16List buildSharedTileStripIndices()
+  {static} +Uint16List buildSharedTileWireIndices()
+}
+
+"macbear_3d::src::geom::geom.dart::M3TiledTerrain" o-- "macbear_3d::src::mesh::mesh.dart::M3Mesh"
+
+class "macbear_3d::src::geom::geom.dart::M3TerrainGeom" {
+  {static} +M3TerrainGeom fromHeightField()
+  {static} +M3TerrainGeom fromHeightmap()
+  {static} +dynamic fromHeightmapAsset()
+}
+
+"macbear_3d::src::geom::geom.dart::M3Geom" <|-- "macbear_3d::src::geom::geom.dart::M3TerrainGeom"
+
+class "macbear_3d::src::geom::geom.dart::M3TerrainTileGeom" {
+  +int tileRow
+  +int tileCol
+  -int _lodLevel
+  -int _stitchMask
+  -Map<int, _M3Indices> _lodFaceIndices
+  -Map<int, _M3Indices> _lodEdgeIndices
+  +int lodLevel
+  +int stitchMask
+  +void setLodAndStitch()
+  +double distanceSquaredTo()
+  +void draw()
+  +void dispose()
+}
+
+"macbear_3d::src::geom::geom.dart::M3Geom" <|-- "macbear_3d::src::geom::geom.dart::M3TerrainTileGeom"
+
 class "macbear_3d::src::geom::geom.dart::M3TextGeom" {
 }
 
 "macbear_3d::src::geom::geom.dart::M3Geom" <|-- "macbear_3d::src::geom::geom.dart::M3TextGeom"
-
-class "macbear_3d::src::geom::geom.dart::M3Contour" {
-  +List<M3ContourInfo> infos
-  +List<List<Vector2>> normalizedOuters
-  +List<List<Vector2>> normalizedHoles
-  +List<int> outerOrigIndices
-  +List<int> holeOrigIndices
-  {static} -double _getSignedArea()
-  {static} -bool _isPointInPolygon()
-  {static} -bool _isContourInside()
-}
-
-class "macbear_3d::src::geom::geom.dart::M3ContourInfo" {
-  +List<Vector2> points
-  +double area
-  +int index
-  +M3ContourInfo? parent
-}
-
-"macbear_3d::src::geom::geom.dart::M3ContourInfo" o-- "macbear_3d::src::geom::geom.dart::M3ContourInfo"
 
 class "macbear_3d::src::geom::geom.dart::M3GltfGeom" {
   {static} -int _glMode()
@@ -888,6 +903,44 @@ class "macbear_3d::src::geom::geom.dart::M3ObjGeom" {
 }
 
 "macbear_3d::src::geom::geom.dart::M3Geom" <|-- "macbear_3d::src::geom::geom.dart::M3ObjGeom"
+
+class "macbear_3d::src::geom::terrain::terrain_lod.dart::M3TerrainLodConfig" {
+  {static} +int lodCount
+  {static} +double baseDistance
+  {static} +int baseSegmentCount
+  {static} +List<int> segmentCounts
+  {static} +List<double> distances
+  {static} +double hysteresisRatio
+  {static} +List<double> distancesSquared
+  {static} +int segmentCountForLod()
+}
+
+class "macbear_3d::src::geom::terrain::terrain_lod.dart::M3TerrainLodResolver" {
+  {static} +int calculateDesiredLod()
+  {static} +int resolveLod()
+}
+
+class "macbear_3d::src::geom::terrain::terrain_lod.dart::M3TerrainStitchBuilder" {
+  {static} +int maskNorth
+  {static} +int maskEast
+  {static} +int maskSouth
+  {static} +int maskWest
+  {static} +Uint16List buildStitchedFaceIndices()
+  {static} +Uint16List buildStitchedWireIndices()
+}
+
+class "macbear_3d::src::geom::terrain::height_field.dart::M3HeightField" {
+  +Float32List data
+  +Vector2 cellSize
+  +double heightScale
+  +int widthSegments
+  +int heightSegments
+  {static} -double _sampleHeight()
+  {static} -double _getPixelHeight()
+}
+
+"macbear_3d::src::geom::terrain::height_field.dart::M3HeightField" o-- "dart::typed_data::Float32List"
+"macbear_3d::src::geom::terrain::height_field.dart::M3HeightField" o-- "vector_math::vector_math.dart::Vector2"
 
 class "macbear_3d::src::geom::text::ttf_parser.dart::M3TrueTypeParser" {
   -ByteData _data
@@ -945,6 +998,26 @@ class "macbear_3d::src::geom::text::ear_clipping.dart::M3EarClipping" {
   {static} -bool _isPointInTriangle()
   {static} -void _eliminateHoles()
 }
+
+class "macbear_3d::src::geom::text::contour.dart::M3Contour" {
+  +List<M3ContourInfo> infos
+  +List<List<Vector2>> normalizedOuters
+  +List<List<Vector2>> normalizedHoles
+  +List<int> outerOrigIndices
+  +List<int> holeOrigIndices
+  {static} -double _getSignedArea()
+  {static} -bool _isPointInPolygon()
+  {static} -bool _isContourInside()
+}
+
+class "macbear_3d::src::geom::text::contour.dart::M3ContourInfo" {
+  +List<Vector2> points
+  +double area
+  +int index
+  +M3ContourInfo? parent
+}
+
+"macbear_3d::src::geom::text::contour.dart::M3ContourInfo" o-- "macbear_3d::src::geom::text::contour.dart::M3ContourInfo"
 
 class "macbear_3d::src::program::program.dart::M3Program" {
   +M3ReflectionType reflectionType
@@ -1090,22 +1163,25 @@ abstract class "macbear_3d::src::program::program.dart::M3LightingShader" {
   +UniformLocation uniformSpecular
   +UniformLocation uniformLightDirection
   +M3PointLightManager pointLightManager
+  +M3SpotLightManager spotLightManager
   -M3DirectionalLight? _dirLight
   +void initLightingLocation()
   +void attachDirectionalLight()
   +void attachPointLights()
+  +void attachSpotLights()
   +void setLightUniforms()
 }
 
 "macbear_3d::src::program::program.dart::M3LightingShader" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 "macbear_3d::src::program::program.dart::M3LightingShader" o-- "flutter_angle::shared::classes.dart::UniformLocation"
 "macbear_3d::src::program::program.dart::M3LightingShader" o-- "macbear_3d::src::light::light.dart::M3PointLightManager"
+"macbear_3d::src::program::program.dart::M3LightingShader" o-- "macbear_3d::src::light::light.dart::M3SpotLightManager"
 "macbear_3d::src::program::program.dart::M3LightingShader" o-- "macbear_3d::src::light::light.dart::M3DirectionalLight"
 
 abstract class "macbear_3d::src::program::program.dart::M3ShadowShader" {
   +RenderingContext gl
   +UniformLocation uniformSamplerShadowmap
-  +UniformLocation uniformShadowmapSize
+  +UniformLocation uniformShadowmapTexelSize
   +UniformLocation uniformNormalBias
   +void initShadowLocation()
   -void _applyShadow()
@@ -1301,7 +1377,6 @@ class "macbear_3d::src::texture::external_texture.dart::M3ExternalTexture" {
 
 abstract class "macbear_3d::src::light::light.dart::M3Light" {
   {static} +Vector3 ambient
-  +Vector3 position
   +Vector3 color
   +bool castShadow
   +M3ShadowMap? shadowMap
@@ -1313,19 +1388,20 @@ abstract class "macbear_3d::src::light::light.dart::M3Light" {
 
 "macbear_3d::src::light::light.dart::M3Light" o-- "vector_math::vector_math.dart::Vector3"
 "macbear_3d::src::light::light.dart::M3Light" o-- "macbear_3d::src::renderer::shadow_map.dart::M3ShadowMap"
+"macbear_3d::src::scene::node.dart::M3Node" <|-- "macbear_3d::src::light::light.dart::M3Light"
 
 class "macbear_3d::src::light::light.dart::M3PointLightManager" {
   +RenderingContext gl
-  {static} -int _maxLights
+  {static} -int _maxPointLights
   {static} -int _maxShadow
   {static} -int _matCount
-  -Float32List _lightMats
+  -Float32List _pointMats
   -Int32List _counts
   -UniformLocation _uniformPointLights
   -UniformLocation _uniformPointLightCounts
   -List<M3PointLight> _pointLights
-  +int lightCount
-  +int shadowCount
+  +int pointCount
+  +int shadowFlag
   +void initLocation()
   +void attachPointLights()
   +void setLightUniforms()
@@ -1335,6 +1411,29 @@ class "macbear_3d::src::light::light.dart::M3PointLightManager" {
 "macbear_3d::src::light::light.dart::M3PointLightManager" o-- "dart::typed_data::Float32List"
 "macbear_3d::src::light::light.dart::M3PointLightManager" o-- "dart::typed_data::Int32List"
 "macbear_3d::src::light::light.dart::M3PointLightManager" o-- "flutter_angle::shared::classes.dart::UniformLocation"
+
+class "macbear_3d::src::light::light.dart::M3SpotLightManager" {
+  +RenderingContext gl
+  {static} -int _maxSpotLights
+  -Float32List _spotMats
+  -Int32List _counts
+  -UniformLocation _uniformSpotLights
+  -UniformLocation _uniformSpotLightCounts
+  -UniformLocation _uniformSamplerSpotShadowmap
+  -UniformLocation _uniformSpotShadowmapTexelSize
+  -UniformLocation _uniformMatrixSpotShadowmap
+  -List<M3SpotLight> _spotLights
+  +int spotCount
+  +int shadowFlag
+  +void initLocation()
+  +void attachSpotLights()
+  +void setLightUniforms()
+}
+
+"macbear_3d::src::light::light.dart::M3SpotLightManager" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
+"macbear_3d::src::light::light.dart::M3SpotLightManager" o-- "dart::typed_data::Float32List"
+"macbear_3d::src::light::light.dart::M3SpotLightManager" o-- "dart::typed_data::Int32List"
+"macbear_3d::src::light::light.dart::M3SpotLightManager" o-- "flutter_angle::shared::classes.dart::UniformLocation"
 
 class "macbear_3d::src::light::light.dart::M3ShadowCascade" {
   +Matrix4 projectionMatrix
@@ -1372,8 +1471,21 @@ class "macbear_3d::src::light::light.dart::M3PointLight" {
 "macbear_3d::src::light::light.dart::M3Light" <|-- "macbear_3d::src::light::light.dart::M3PointLight"
 
 class "macbear_3d::src::light::light.dart::M3SpotLight" {
+  +double innerAngle
+  +double outerAngle
+  +double shadowNormalBias
+  +M3Camera lightViewer
+  +Vector3 direction
+  +void setDirection()
+  +void updateLightViewer()
+  +void setShadowMap()
+  +Float32List packBuffer()
+  +void drawBulb()
+  +void drawHelper()
 }
 
+"macbear_3d::src::light::light.dart::M3SpotLight" o-- "macbear_3d::src::scene::camera.dart::M3Camera"
+"macbear_3d::src::light::light.dart::M3SpotLight" o-- "vector_math::vector_math.dart::Vector3"
 "macbear_3d::src::light::light.dart::M3PointLight" <|-- "macbear_3d::src::light::light.dart::M3SpotLight"
 
 class "macbear_3d::src::physics::physics_system.dart::M3PhysicsSystem" {
@@ -1470,7 +1582,9 @@ class "macbear_3d::src::physics::physics_engine.dart::M3ColliderShapeType" {
   {static} +M3ColliderShapeType ball
   {static} +M3ColliderShapeType cylinder
   {static} +M3ColliderShapeType cone
-  {static} +M3ColliderShapeType capsule
+  {static} +M3ColliderShapeType capsuleX
+  {static} +M3ColliderShapeType capsuleY
+  {static} +M3ColliderShapeType capsuleZ
   {static} +M3ColliderShapeType heightfield
 }
 
@@ -1536,11 +1650,13 @@ class "macbear_3d::src::scene::node.dart::M3Node" {
   -Matrix4 _worldMatrix
   +Vector3 position
   +Quaternion rotation
+  +Vector3 forward
   +Vector3 scale
   +M3Node? parent
   +bool isDirty
   +Matrix4 worldMatrix
   +void setEuler()
+  +void lookAt()
   +void markDirty()
   -void _rebuild()
 }
@@ -1566,6 +1682,7 @@ class "macbear_3d::src::scene::water.dart::M3Water" {
   +double reflectionDepthBias
   +M3Scene scene
   +M3WaterCameraState cameraState
+  +bool visible
   +M3PlanarReflection reflectionPass
   +M3PlanarReflection refractionPass
   +double startFog
@@ -1616,6 +1733,7 @@ abstract class "macbear_3d::src::scene::scene.dart::M3Scene" {
   +M3PhysicsSystem physicsSystem
   +M3DirectionalLight dirLight
   +List<M3PointLight> pointLights
+  +List<M3SpotLight> spotLights
   -M3Camera _camera
   +List<M3Camera> cameras
   +List<M3Entity> entities
@@ -1630,6 +1748,7 @@ abstract class "macbear_3d::src::scene::scene.dart::M3Scene" {
   +bool isLoaded
   +double totalTime
   +void initPointLights()
+  +void initSpotLights()
   +void dispose()
   +dynamic load()
   +M3Entity addMesh()
@@ -1809,7 +1928,7 @@ class "macbear_3d::src::engine::app_engine.dart::M3AppEngine" {
   +M3KeyboardManager keyboard
   +M3ResourceManager resourceManager
   -Stopwatch _stopwatch
-  +Ticker ticker
+  +Ticker? ticker
   -Duration _lastElapsed
   +double timeScale
   -bool _updating
@@ -1828,13 +1947,15 @@ class "macbear_3d::src::engine::app_engine.dart::M3AppEngine" {
   +double fps
   +dynamic initApp()
   +void initKeyboard()
+  +void unmount()
+  +void remount()
   +void dispose()
   +dynamic setScene()
   +void refresh()
   +void pause()
   +void resume()
   -double _getTime()
-  +Widget getAppWidget()
+  +Widget buildAppWidget()
   +dynamic onResize()
   +dynamic updateRender()
   -void _update()
@@ -1865,10 +1986,11 @@ class "macbear_3d::src::engine::resources.dart::M3Resources" {
   {static} -M3Mesh? _frustumMesh
   {static} +M3Camera? debugCamera
   {static} +M3DebugAxisGeom debugAxis
+  {static} +M3OctahedralGeom debugDot
+  {static} +M3BoxGeom debugFrustum
   {static} +M3SphereGeom debugPointLight
   {static} +M3DebugSphereGeom debugSphere
-  {static} +M3BoxGeom debugFrustum
-  {static} +M3OctahedralGeom debugDot
+  {static} +M3CylinderGeom debugSpotLight
   {static} +M3PlaneGeom debugView
   {static} +M3BoxGeom unitCube
   {static} +M3CylinderGeom unitCylinder
@@ -1909,12 +2031,12 @@ class "macbear_3d::src::engine::resources.dart::M3Resources" {
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::mesh::mesh.dart::M3Mesh"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::scene::camera.dart::M3Camera"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::geom::geom.dart::M3DebugAxisGeom"
+"macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::geom::geom.dart::M3OctahedralGeom"
+"macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::geom::geom.dart::M3BoxGeom"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::geom::geom.dart::M3SphereGeom"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::geom::geom.dart::M3DebugSphereGeom"
-"macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::geom::geom.dart::M3BoxGeom"
-"macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::geom::geom.dart::M3OctahedralGeom"
-"macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::geom::geom.dart::M3PlaneGeom"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::geom::geom.dart::M3CylinderGeom"
+"macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::geom::geom.dart::M3PlaneGeom"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::2d::shape_2d.dart::M3Shape2D"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::2d::text_2d.dart::M3Text2D"
 "macbear_3d::src::engine::resources.dart::M3Resources" o-- "macbear_3d::src::2d::shape_2d.dart::M3Rectangle2D"
@@ -1943,7 +2065,9 @@ class "macbear_3d::src::engine::resource_manager.dart::M3ResourceManager" {
 class "macbear_3d::src::engine::render_options.dart::M3RenderOptions" {
   +M3DebugOptions debug
   +M3ShaderOptions shader
-  +bool shadows
+  +bool useShadow
+  +double dprScale
+  +double getDpr()
 }
 
 "macbear_3d::src::engine::render_options.dart::M3RenderOptions" o-- "macbear_3d::src::engine::render_options.dart::M3DebugOptions"
@@ -1951,7 +2075,7 @@ class "macbear_3d::src::engine::render_options.dart::M3RenderOptions" {
 
 class "macbear_3d::src::engine::render_options.dart::M3DebugOptions" {
   +bool wireframe
-  +bool showHelpers
+  +M3HelperType showHelpers
   +bool showCamera
   +bool showLight
   +bool showMaps
@@ -1960,6 +2084,8 @@ class "macbear_3d::src::engine::render_options.dart::M3DebugOptions" {
   +bool lightBulb
 }
 
+"macbear_3d::src::engine::render_options.dart::M3DebugOptions" o-- "macbear_3d::src::engine::render_options.dart::M3HelperType"
+
 class "macbear_3d::src::engine::render_options.dart::M3ShaderOptions" {
   -bool _perPixel
   -bool _cartoon
@@ -1967,7 +2093,11 @@ class "macbear_3d::src::engine::render_options.dart::M3ShaderOptions" {
   -bool _ibl
   -int _pcf
   -bool _fog
+  -bool _pointLights
+  -bool _spotLights
   +bool isDirty
+  +bool pointLights
+  +bool spotLights
   +bool fog
   +bool perPixel
   +bool cartoon
@@ -1982,11 +2112,25 @@ class "macbear_3d::src::engine::render_options.dart::M3RenderStats" {
   +int vertices
   +int triangles
   +int entities
-  +int culling
+  +int totalEntities
+  +int submeshes
+  +int totalSubmeshes
   +int reflection
   +void reset()
   +String toString()
 }
+
+class "macbear_3d::src::engine::render_options.dart::M3HelperType" {
+  +int index
+  {static} +List<M3HelperType> values
+  {static} +M3HelperType none
+  {static} +M3HelperType entity
+  {static} +M3HelperType subMesh
+  {static} +M3HelperType both
+}
+
+"macbear_3d::src::engine::render_options.dart::M3HelperType" o-- "macbear_3d::src::engine::render_options.dart::M3HelperType"
+"dart::core::Enum" <|-- "macbear_3d::src::engine::render_options.dart::M3HelperType"
 
 class "macbear_3d::src::2d::sprite_2d.dart::M3Sprite2D" {
   -M3Rectangle2D _rect

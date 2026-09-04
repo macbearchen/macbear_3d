@@ -32,7 +32,7 @@
 ### 🎨 渲染與視覺
 - **模型加載**: 原生支援 **glTF/GLB**、**OBJ** 與 **BVH (骨架動畫)** 格式。
 - **骨架動畫**: 完整支援皮膚網格 (Skinned Mesh) 與基於骨骼的動畫系統 (包含 `M3OctahedralGeom` 骨骼視覺化)。
-- **進階光照**: 支援 **1 盞方向光、8 盞點光源與聚光燈 (1 directional light, 8 point lights, and spotlight)**、動態光照、**級聯陰影貼圖 (CSM)**、**PCF (百分比漸進過濾)** 以實現平滑陰影、**PBR (實體渲染)** 與 **IBL (環境光照)**。優化 `RenderPipeline` 並增強對不透明與透明材質的支援。
+- **進階光照與陰影**: 支援 **1 盞方向光、8 盞點光源與聚光燈 (1 directional light, 8 point lights, and spotlights)**、動態光照、**級聯陰影貼圖 (CSM)**、**聚光燈陰影貼圖 (Spot Shadow Mapping)**、**PCF (百分比漸進過濾)** 以實現平滑陰影、**PBR (實體渲染)** 與 **IBL (環境光照)**。優化 `RenderPipeline` 並增強對不透明與透明材質的支援。
 - **模組化著色器 (Modular Shaders)**: 重構著色器系統，使用乾淨的 `.glsl` 原始碼檔案以及專屬、型別安全的 Dart 著色器程式封裝（`M3FogShader`、`M3LightingShader`、`M3ShadowShader`、`M3WaterShader`），提供更方便的 uniform 變數綁定與封裝。
 - **天空盒與反射**: 支援天空盒背景以及透過 Cubemap 實現反射貼圖。
 - **平面反射**: 加入 `M3PlanarReflection` 與專屬 Mirror Shader 以實現高品質平面反射效果。

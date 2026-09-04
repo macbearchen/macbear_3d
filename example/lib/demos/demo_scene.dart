@@ -39,7 +39,7 @@ class DemoScene extends M3Scene {
     final pointCount = pointLights.length;
 
     if (pointCount > 0) {
-      pointLights[0].position = Vector3(5 * cosSec, 5 * sinSec, 1.2);
+      pointLights[0].position = Vector3(5 * cosSec, 5 * sinSec, 0.75);
     }
     if (pointCount > 1) {
       pointLights[1].position = Vector3(3 * -sinSec, 3 * -cosSec, 0.7);
