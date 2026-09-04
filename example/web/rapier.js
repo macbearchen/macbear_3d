@@ -1,10 +1,22 @@
 let rapier_exports;
+let vec3_buffer_ptr = 0;
+let quat_buffer_ptr = 0;
+let query_ray_buffer_ptr = 0;
+let query_shape_buffer_ptr = 0;
+let query_proj_buffer_ptr = 0;
+let query_desc_buffer_ptr = 0;
+let query_list_buffer_ptr = 0;
 
 // ==========================================
 // Initialization & Version
 // ==========================================
 
 window.rapier_init = async function () {
+    if (rapier_exports) {
+        // Already initialized — skip re-loading WASM to avoid replacing the live
+        // module instance (which would cause "unreachable" errors from stale handles).
+        return;
+    }
     const response = await fetch('rapier_ffi.wasm');
     const buffer = await response.arrayBuffer();
     const { instance } = await WebAssembly.instantiate(buffer, {});
@@ -42,14 +54,21 @@ window.rapier_world_set_timestep = (world, dt) => rapier_exports.rapier_world_se
 window.rapier_rigid_body_create = (world, x, y, z, type) =>
     rapier_exports.rapier_rigid_body_create(world, x, y, z, type);
 
-window.rapier_rigid_body_get_position_x = (world, body) => rapier_exports.rapier_rigid_body_get_position_x(world, body);
-window.rapier_rigid_body_get_position_y = (world, body) => rapier_exports.rapier_rigid_body_get_position_y(world, body);
-window.rapier_rigid_body_get_position_z = (world, body) => rapier_exports.rapier_rigid_body_get_position_z(world, body);
+window.rapier_rigid_body_get_position = (world, body) => {
+    if (vec3_buffer_ptr === 0) {
+        vec3_buffer_ptr = rapier_exports.rapier_malloc(12);
+    }
+    rapier_exports.rapier_rigid_body_get_position(vec3_buffer_ptr, world, body);
+    return vec3_buffer_ptr;
+};
 
-window.rapier_rigid_body_get_rotation_x = (world, body) => rapier_exports.rapier_rigid_body_get_rotation_x(world, body);
-window.rapier_rigid_body_get_rotation_y = (world, body) => rapier_exports.rapier_rigid_body_get_rotation_y(world, body);
-window.rapier_rigid_body_get_rotation_z = (world, body) => rapier_exports.rapier_rigid_body_get_rotation_z(world, body);
-window.rapier_rigid_body_get_rotation_w = (world, body) => rapier_exports.rapier_rigid_body_get_rotation_w(world, body);
+window.rapier_rigid_body_get_rotation = (world, body) => {
+    if (quat_buffer_ptr === 0) {
+        quat_buffer_ptr = rapier_exports.rapier_malloc(16);
+    }
+    rapier_exports.rapier_rigid_body_get_rotation(quat_buffer_ptr, world, body);
+    return quat_buffer_ptr;
+};
 
 window.rapier_rigid_body_set_position = (world, body, x, y, z) =>
     rapier_exports.rapier_rigid_body_set_position(world, body, x, y, z);
@@ -115,14 +134,21 @@ window.rapier_collider_create_heightfield = (world, body, heights, nrows, ncols,
     return handle;
 };
 
-window.rapier_collider_get_position_x = (world, handle) => rapier_exports.rapier_collider_get_position_x(world, handle);
-window.rapier_collider_get_position_y = (world, handle) => rapier_exports.rapier_collider_get_position_y(world, handle);
-window.rapier_collider_get_position_z = (world, handle) => rapier_exports.rapier_collider_get_position_z(world, handle);
+window.rapier_collider_get_position = (world, handle) => {
+    if (vec3_buffer_ptr === 0) {
+        vec3_buffer_ptr = rapier_exports.rapier_malloc(12);
+    }
+    rapier_exports.rapier_collider_get_position(vec3_buffer_ptr, world, handle);
+    return vec3_buffer_ptr;
+};
 
-window.rapier_collider_get_rotation_x = (world, handle) => rapier_exports.rapier_collider_get_rotation_x(world, handle);
-window.rapier_collider_get_rotation_y = (world, handle) => rapier_exports.rapier_collider_get_rotation_y(world, handle);
-window.rapier_collider_get_rotation_z = (world, handle) => rapier_exports.rapier_collider_get_rotation_z(world, handle);
-window.rapier_collider_get_rotation_w = (world, handle) => rapier_exports.rapier_collider_get_rotation_w(world, handle);
+window.rapier_collider_get_rotation = (world, handle) => {
+    if (quat_buffer_ptr === 0) {
+        quat_buffer_ptr = rapier_exports.rapier_malloc(16);
+    }
+    rapier_exports.rapier_collider_get_rotation(quat_buffer_ptr, world, handle);
+    return quat_buffer_ptr;
+};
 
 window.rapier_collider_get_friction = (world, handle) => rapier_exports.rapier_collider_get_friction(world, handle);
 window.rapier_collider_get_restitution = (world, handle) => rapier_exports.rapier_collider_get_restitution(world, handle);
@@ -179,6 +205,196 @@ window.rapier_joint_configure_prismatic_motor = (world, joint, targetPos, target
     rapier_exports.rapier_joint_configure_prismatic_motor(world, joint, targetPos, targetVel, stiffness, damping);
 
 window.rapier_joint_remove = (world, handle) => rapier_exports.rapier_joint_remove(world, handle);
+
+// ==========================================
+// Kinematic Character Controller
+// ==========================================
+
+window.rapier_character_controller_create = (offset) =>
+    rapier_exports.rapier_character_controller_create(offset);
+
+window.rapier_character_controller_destroy = (ctrl) =>
+    rapier_exports.rapier_character_controller_destroy(ctrl);
+
+window.rapier_character_controller_set_up = (ctrl, x, y, z) =>
+    rapier_exports.rapier_character_controller_set_up(ctrl, x, y, z);
+
+window.rapier_character_controller_set_max_slope = (ctrl, angleRadians) =>
+    rapier_exports.rapier_character_controller_set_max_slope(ctrl, angleRadians);
+
+window.rapier_character_controller_set_min_slope = (ctrl, angleRadians) =>
+    rapier_exports.rapier_character_controller_set_min_slope(ctrl, angleRadians);
+
+window.rapier_character_controller_set_snap_to_ground = (ctrl, distance, enabled) =>
+    rapier_exports.rapier_character_controller_set_snap_to_ground(ctrl, distance, enabled);
+
+window.rapier_character_controller_set_autostep = (ctrl, maxHeight, minWidth, includeDynamicBodies) =>
+    rapier_exports.rapier_character_controller_set_autostep(ctrl, maxHeight, minWidth, includeDynamicBodies);
+
+window.rapier_character_controller_move = (world, ctrl, colliderHandle, dx, dy, dz, dt) => {
+    if (vec3_buffer_ptr === 0) {
+        vec3_buffer_ptr = rapier_exports.rapier_malloc(12);
+    }
+    rapier_exports.rapier_character_controller_move(vec3_buffer_ptr, world, ctrl, colliderHandle, dx, dy, dz, dt);
+    return vec3_buffer_ptr;
+};
+
+window.rapier_character_controller_is_grounded = (ctrl) =>
+    rapier_exports.rapier_character_controller_is_grounded(ctrl) !== 0;
+
+window.rapier_character_controller_is_on_wall = (ctrl) =>
+    rapier_exports.rapier_character_controller_is_on_wall(ctrl) !== 0;
+
+window.rapier_character_controller_is_on_ceiling = (ctrl) =>
+    rapier_exports.rapier_character_controller_is_on_ceiling(ctrl) !== 0;
+
+window.rapier_vec3_get_x = (ptr) => {
+    const view = new DataView(rapier_exports.memory.buffer);
+    return view.getFloat32(ptr, true);
+};
+
+window.rapier_vec3_get_y = (ptr) => {
+    const view = new DataView(rapier_exports.memory.buffer);
+    return view.getFloat32(ptr + 4, true);
+};
+
+window.rapier_vec3_get_z = (ptr) => {
+    const view = new DataView(rapier_exports.memory.buffer);
+    return view.getFloat32(ptr + 8, true);
+};
+
+window.rapier_quat_get_x = (ptr) => {
+    const view = new DataView(rapier_exports.memory.buffer);
+    return view.getFloat32(ptr, true);
+};
+
+window.rapier_quat_get_y = (ptr) => {
+    const view = new DataView(rapier_exports.memory.buffer);
+    return view.getFloat32(ptr + 4, true);
+};
+
+window.rapier_quat_get_z = (ptr) => {
+    const view = new DataView(rapier_exports.memory.buffer);
+    return view.getFloat32(ptr + 8, true);
+};
+
+window.rapier_quat_get_w = (ptr) => {
+    const view = new DataView(rapier_exports.memory.buffer);
+    return view.getFloat32(ptr + 12, true);
+};
+
+window.rapier_world_cast_ray = (world, ox, oy, oz, dx, dy, dz, max_toi, solid, exclude_collider, exclude_rigid_body) => {
+    if (query_ray_buffer_ptr === 0) {
+        query_ray_buffer_ptr = rapier_exports.rapier_malloc(40);
+    }
+    rapier_exports.rapier_world_cast_ray(query_ray_buffer_ptr, world, ox, oy, oz, dx, dy, dz, max_toi, solid ? 1 : 0, exclude_collider, exclude_rigid_body);
+    return query_ray_buffer_ptr;
+};
+
+window.rapier_world_cast_ray_and_get_normal = (world, ox, oy, oz, dx, dy, dz, max_toi, solid, exclude_collider, exclude_rigid_body) => {
+    if (query_ray_buffer_ptr === 0) {
+        query_ray_buffer_ptr = rapier_exports.rapier_malloc(40);
+    }
+    rapier_exports.rapier_world_cast_ray_and_get_normal(query_ray_buffer_ptr, world, ox, oy, oz, dx, dy, dz, max_toi, solid ? 1 : 0, exclude_collider, exclude_rigid_body);
+    return query_ray_buffer_ptr;
+};
+
+window.rapier_world_cast_shape = (world, px, py, pz, rx, ry, rz, rw, vx, vy, vz, shapeType, hx, hy, hz, radius, halfHeight, friction, restitution, density, locX, locY, locZ, rotX, rotY, rotZ, rotW, isSensor, maxToi, stopAtPenetration, excludeCollider, excludeRigidBody) => {
+    if (query_shape_buffer_ptr === 0) {
+        query_shape_buffer_ptr = rapier_exports.rapier_malloc(40);
+    }
+    if (query_desc_buffer_ptr === 0) {
+        query_desc_buffer_ptr = rapier_exports.rapier_malloc(72);
+    }
+    const view = new DataView(rapier_exports.memory.buffer);
+    view.setUint32(query_desc_buffer_ptr, shapeType, true);
+    view.setFloat32(query_desc_buffer_ptr + 4, hx, true);
+    view.setFloat32(query_desc_buffer_ptr + 8, hy, true);
+    view.setFloat32(query_desc_buffer_ptr + 12, hz, true);
+    view.setFloat32(query_desc_buffer_ptr + 16, radius, true);
+    view.setFloat32(query_desc_buffer_ptr + 20, halfHeight, true);
+    view.setFloat32(query_desc_buffer_ptr + 24, friction, true);
+    view.setFloat32(query_desc_buffer_ptr + 28, restitution, true);
+    view.setFloat32(query_desc_buffer_ptr + 32, density, true);
+    view.setFloat32(query_desc_buffer_ptr + 36, locX, true);
+    view.setFloat32(query_desc_buffer_ptr + 40, locY, true);
+    view.setFloat32(query_desc_buffer_ptr + 44, locZ, true);
+    view.setFloat32(query_desc_buffer_ptr + 48, rotX, true);
+    view.setFloat32(query_desc_buffer_ptr + 52, rotY, true);
+    view.setFloat32(query_desc_buffer_ptr + 56, rotZ, true);
+    view.setFloat32(query_desc_buffer_ptr + 60, rotW, true);
+    view.setUint8(query_desc_buffer_ptr + 64, isSensor ? 1 : 0);
+
+    rapier_exports.rapier_world_cast_shape(query_shape_buffer_ptr, world, px, py, pz, rx, ry, rz, rw, vx, vy, vz, query_desc_buffer_ptr, maxToi, stopAtPenetration ? 1 : 0, excludeCollider, excludeRigidBody);
+    return query_shape_buffer_ptr;
+};
+
+window.rapier_world_project_point = (world, px, py, pz, solid, excludeCollider, excludeRigidBody) => {
+    if (query_proj_buffer_ptr === 0) {
+        query_proj_buffer_ptr = rapier_exports.rapier_malloc(24);
+    }
+    rapier_exports.rapier_world_project_point(query_proj_buffer_ptr, world, px, py, pz, solid ? 1 : 0, excludeCollider, excludeRigidBody);
+    return query_proj_buffer_ptr;
+};
+
+window.rapier_world_intersections_with_point = (world, px, py, pz, excludeCollider, excludeRigidBody) => {
+    if (query_list_buffer_ptr === 0) {
+        query_list_buffer_ptr = rapier_exports.rapier_malloc(512);
+    }
+    const count = rapier_exports.rapier_world_intersections_with_point(world, px, py, pz, excludeCollider, excludeRigidBody, query_list_buffer_ptr, 128);
+    const view = new DataView(rapier_exports.memory.buffer);
+    const result = [];
+    for (let i = 0; i < count && i < 128; i++) {
+        result.push(view.getUint32(query_list_buffer_ptr + i * 4, true));
+    }
+    return result;
+};
+
+window.rapier_world_intersection_with_shape = (world, px, py, pz, rx, ry, rz, rw, shapeType, hx, hy, hz, radius, halfHeight, friction, restitution, density, locX, locY, locZ, rotX, rotY, rotZ, rotW, isSensor, excludeCollider, excludeRigidBody) => {
+    if (query_desc_buffer_ptr === 0) {
+        query_desc_buffer_ptr = rapier_exports.rapier_malloc(72);
+    }
+    const view = new DataView(rapier_exports.memory.buffer);
+    view.setUint32(query_desc_buffer_ptr, shapeType, true);
+    view.setFloat32(query_desc_buffer_ptr + 4, hx, true);
+    view.setFloat32(query_desc_buffer_ptr + 8, hy, true);
+    view.setFloat32(query_desc_buffer_ptr + 12, hz, true);
+    view.setFloat32(query_desc_buffer_ptr + 16, radius, true);
+    view.setFloat32(query_desc_buffer_ptr + 20, halfHeight, true);
+    view.setFloat32(query_desc_buffer_ptr + 24, friction, true);
+    view.setFloat32(query_desc_buffer_ptr + 28, restitution, true);
+    view.setFloat32(query_desc_buffer_ptr + 32, density, true);
+    view.setFloat32(query_desc_buffer_ptr + 36, locX, true);
+    view.setFloat32(query_desc_buffer_ptr + 40, locY, true);
+    view.setFloat32(query_desc_buffer_ptr + 44, locZ, true);
+    view.setFloat32(query_desc_buffer_ptr + 48, rotX, true);
+    view.setFloat32(query_desc_buffer_ptr + 52, rotY, true);
+    view.setFloat32(query_desc_buffer_ptr + 56, rotZ, true);
+    view.setFloat32(query_desc_buffer_ptr + 60, rotW, true);
+    view.setUint8(query_desc_buffer_ptr + 64, isSensor ? 1 : 0);
+
+    return rapier_exports.rapier_world_intersection_with_shape(world, px, py, pz, rx, ry, rz, rw, query_desc_buffer_ptr, excludeCollider, excludeRigidBody);
+};
+
+window.rapier_ray_get_collider = (ptr) => new DataView(rapier_exports.memory.buffer).getUint32(ptr, true);
+window.rapier_ray_get_rigid_body = (ptr) => new DataView(rapier_exports.memory.buffer).getUint32(ptr + 4, true);
+window.rapier_ray_get_toi = (ptr) => new DataView(rapier_exports.memory.buffer).getFloat32(ptr + 8, true);
+window.rapier_ray_get_point_x = (ptr) => new DataView(rapier_exports.memory.buffer).getFloat32(ptr + 12, true);
+window.rapier_ray_get_point_y = (ptr) => new DataView(rapier_exports.memory.buffer).getFloat32(ptr + 16, true);
+window.rapier_ray_get_point_z = (ptr) => new DataView(rapier_exports.memory.buffer).getFloat32(ptr + 20, true);
+window.rapier_ray_get_normal_x = (ptr) => new DataView(rapier_exports.memory.buffer).getFloat32(ptr + 24, true);
+window.rapier_ray_get_normal_y = (ptr) => new DataView(rapier_exports.memory.buffer).getFloat32(ptr + 28, true);
+window.rapier_ray_get_normal_z = (ptr) => new DataView(rapier_exports.memory.buffer).getFloat32(ptr + 32, true);
+window.rapier_ray_get_hit = (ptr) => new DataView(rapier_exports.memory.buffer).getUint8(ptr + 36) !== 0;
+
+window.rapier_proj_get_collider = (ptr) => new DataView(rapier_exports.memory.buffer).getUint32(ptr, true);
+window.rapier_proj_get_rigid_body = (ptr) => new DataView(rapier_exports.memory.buffer).getUint32(ptr + 4, true);
+window.rapier_proj_get_point_x = (ptr) => new DataView(rapier_exports.memory.buffer).getFloat32(ptr + 8, true);
+window.rapier_proj_get_point_y = (ptr) => new DataView(rapier_exports.memory.buffer).getFloat32(ptr + 12, true);
+window.rapier_proj_get_point_z = (ptr) => new DataView(rapier_exports.memory.buffer).getFloat32(ptr + 16, true);
+window.rapier_proj_get_is_inside = (ptr) => new DataView(rapier_exports.memory.buffer).getUint8(ptr + 20) !== 0;
+window.rapier_proj_get_hit = (ptr) => new DataView(rapier_exports.memory.buffer).getUint8(ptr + 21) !== 0;
+
 
 // ==========================================
 // Memory Management
