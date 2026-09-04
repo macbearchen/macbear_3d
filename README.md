@@ -12,7 +12,8 @@
 
 <p align="center">
   <img width="400" src="img/scene08.png" />
-  <img width="480" src="img/scene_all.gif" />
+  <img width="400" src="img/scene_all.gif" />
+  <img width="400" src="img/scene05_gltf.gif" />
 </p>
 
 ### 🌐 [Live Web Demo](https://macbearchen.github.io/macbear_3d/)
