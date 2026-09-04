@@ -18,6 +18,9 @@ class DemoScene extends M3Scene {
 
     initSpotLights(4);
     spotLights[0].setShadowMap(renderEngine.spotLightShadowMap);
+    spotLights[0].outerAngle = 60.0;
+    spotLights[1].outerAngle = 50.0;
+    spotLights[2].outerAngle = 45.0;
   }
 
   @override

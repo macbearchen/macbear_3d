@@ -60,7 +60,7 @@ mixin M3LightingShader {
     pointLightManager.setLightUniforms(matInv);
 
     // spot lights
-    spotLightManager.setLightUniforms(matInv);
+    spotLightManager.setLightUniforms(matInv, mMatrix);
   }
 }
 

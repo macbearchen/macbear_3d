@@ -2,7 +2,7 @@
 // Shadow vert-shader ES3 //////////
 // must insert before vertex shader
 
-#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
+#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM) || defined(ENABLE_SPOT_SHADOW)
 uniform highp float NormalBias;
 
 #ifdef ENABLE_SHADOW_MAP
@@ -14,6 +14,11 @@ out highp vec4 LightcoordShadowmap;
 uniform mat4 MatrixCSM[4];
 out highp vec4 LightcoordCSM[4];
 #endif // ENABLE_SHADOW_CSM
+
+#ifdef ENABLE_SPOT_SHADOW
+uniform mat4 MatrixSpotShadowmap;
+out highp vec4 LightcoordSpotShadowmap;
+#endif // ENABLE_SPOT_SHADOW
 
 void ComputeShadowPosition(in highp vec3 objVert, in mediump vec3 objNormal)
 {
@@ -29,6 +34,10 @@ void ComputeShadowPosition(in highp vec3 objVert, in mediump vec3 objNormal)
     LightcoordCSM[2] = MatrixCSM[2] * biasedVert;
     LightcoordCSM[3] = MatrixCSM[3] * biasedVert;
 #endif // ENABLE_SHADOW_CSM
+
+#ifdef ENABLE_SPOT_SHADOW
+    LightcoordSpotShadowmap = MatrixSpotShadowmap * biasedVert;
+#endif // ENABLE_SPOT_SHADOW
 }
 
-#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
+#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM or ENABLE_SPOT_SHADOW

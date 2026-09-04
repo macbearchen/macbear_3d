@@ -75,7 +75,12 @@ class M3ShadowMap {
         lightViewer = null;
       }
     } else if (light is M3SpotLight) {
-      // spot light has shadow map too
+      // viewport for shadowmap atlas — each slot is a square tile (mapW x mapW)
+      // y offset increases per spotlight: slot[i].y = i * mapW
+      final int y = 0; // slot index 0 (first spotlight)
+      final int height = mapW; // square tile, not full atlas height
+      gl.viewport(0, y, mapW, height);
+      light.updateLightViewer();
       lightViewer = light.lightViewer;
     }
 

@@ -9,27 +9,29 @@ const String ShadowFS_glsl = r"""
 // Shadow with PCF
 // -------------------------
 uniform highp sampler2DShadow SamplerShadowmap; // GL_TEXTURE3
-uniform highp vec2 ShadowmapSize;               // shadowmap resolution
+uniform highp vec2 ShadowmapTexelSize;           // 1.0 / shadowmap resolution (pre-computed on CPU)
 uniform highp float NormalBias;                 // normal bias (for shadow acne)
 
-// compute shadow with PCF
-lowp float ComputeShadowPCF(in highp vec4 lightCoord)
+// Shared PCF kernel — parameterized so both directional and spot shadows can reuse it.
+// uv:   projected texture coordinates (already in [0,1])
+// refZ: reference depth with depth bias already applied
+lowp float ComputeShadowPCF(
+    in highp sampler2DShadow sampler,
+    in highp vec2 texelSize,
+    in highp vec2 uv,
+    in highp float refZ)
 {
     lowp float factorLit = 0.0;
-    highp float refZ = lightCoord.z - 0.0005; // apply bias
 
 ////////// PCF //////////
 #ifdef ENABLE_PCF
-    highp vec2 texelSize = vec2(1.0) / ShadowmapSize;
     lowp vec4 factor;	// shadow factor by hardware-PCF
-    factor.x = texture(SamplerShadowmap, vec3(lightCoord.st + vec2( 1.0,  0.5) * texelSize, refZ));
-    factor.y = texture(SamplerShadowmap, vec3(lightCoord.st + vec2(-1.0, -0.5) * texelSize, refZ));
-    factor.z = texture(SamplerShadowmap, vec3(lightCoord.st + vec2(-0.5,  1.0) * texelSize, refZ));
-    factor.w = texture(SamplerShadowmap, vec3(lightCoord.st + vec2( 0.5, -1.0) * texelSize, refZ));
-    
+    factor.x = texture(sampler, vec3(uv + vec2( 1.0,  0.5) * texelSize, refZ));
+    factor.y = texture(sampler, vec3(uv + vec2(-1.0, -0.5) * texelSize, refZ));
+    factor.z = texture(sampler, vec3(uv + vec2(-0.5,  1.0) * texelSize, refZ));
+    factor.w = texture(sampler, vec3(uv + vec2( 0.5, -1.0) * texelSize, refZ));
     factorLit = dot(factor, vec4(1.0)) / 4.0;
 #elif defined(ENABLE_PCF_3x3) || defined(ENABLE_PCF_5x5)
-    highp vec2 texelSize = vec2(1.0) / ShadowmapSize;
     #if defined(ENABLE_PCF_5x5)
         const float range = 2.0;
         const float samples = 25.0;
@@ -37,18 +39,18 @@ lowp float ComputeShadowPCF(in highp vec4 lightCoord)
         const float range = 1.0;
         const float samples = 9.0;
     #endif
-
     for (float y = -range; y <= range; y += 1.0) {
         for (float x = -range; x <= range; x += 1.0) {
-            factorLit += texture(SamplerShadowmap, vec3(lightCoord.st + vec2(x, y) * texelSize, refZ));
+            factorLit += texture(sampler, vec3(uv + vec2(x, y) * texelSize, refZ));
         }
     }
     factorLit /= samples;
 #else // no PCF
-    factorLit = texture(SamplerShadowmap, vec3(lightCoord.st, refZ));
+    factorLit = texture(sampler, vec3(uv, refZ));
 #endif // ENABLE_PCF
     return factorLit;
 }
+
 // -------------------------
 // Shadow Map or CSM
 // -------------------------
@@ -80,7 +82,7 @@ lowp float ComputeShadowLitFactor()
 	if (lightCoord.s < 0.0 || lightCoord.t < 0.0 || lightCoord.s > 1.0 || lightCoord.t > 1.0) {
 		return 1.0; // lit area
 	} else {
-		return ComputeShadowPCF(lightCoord); // shadow area with PCF
+		return ComputeShadowPCF(SamplerShadowmap, ShadowmapTexelSize, lightCoord.st, lightCoord.z - 0.0005);
 	}
 }
 

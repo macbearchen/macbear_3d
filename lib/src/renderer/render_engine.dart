@@ -30,6 +30,11 @@ class M3RenderEngine {
     if (_spotLightShadowMap == map) return;
     _spotLightShadowMap?.dispose();
     _spotLightShadowMap = map;
+
+    final scene = M3AppEngine.instance.activeScene;
+    if (scene != null && scene.spotLights.isNotEmpty) {
+      scene.spotLights[0].setShadowMap(map);
+    }
   }
 
   bool get isShadowEnabled => options.useShadow && _directionalShadowMap != null;
@@ -59,8 +64,8 @@ class M3RenderEngine {
     bool enableShadow = true,
     int width = 2048,
     int height = 4096,
-    int smWidth = 512,
-    int smHeight = 512,
+    int smWidth = 256,
+    int smHeight = 256,
   }) {
     options.useShadow = enableShadow;
     directionalShadowMap = enableShadow ? M3ShadowMap(width, height) : null;

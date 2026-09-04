@@ -263,9 +263,19 @@ class M3Resources {
     strVert = ShadowVS_glsl + strVert; // shadow vertex shader
     strFrag = strShadowFS + strFrag; // shadow fragment shader
 
+    // ENABLE_SPOT_SHADOW must be prepended AFTER ShadowVS_glsl so the define
+    // appears before ShadowVS_glsl in the final string (preprocessor reads top-down)
+    final bool useShadow = M3AppEngine.instance.renderEngine.options.useShadow;
+    if (options.spotLights && useShadow) {
+      strVert = "#define ENABLE_SPOT_SHADOW \n$strVert";
+      strFrag = "#define ENABLE_SPOT_SHADOW \n$strFrag";
+    }
+
     // shadow map program
     String vsShadow = "#define ENABLE_SHADOW_MAP \n$strVert";
     String fsShadow = "#define ENABLE_SHADOW_MAP \n$strFrag";
+
+    M3Log.i('setLightingProgram', 'prepare shadowmap');
     programShadowmap = M3ProgramShadowmap(vsShadow, fsShadow);
 
     // shadow CSM program

@@ -13,15 +13,18 @@ class CubeScene_01 extends DemoScene {
 
     camera.setEuler(-pi / 9, -pi / 4, 0, distance: 24);
 
-    final num = 12;
+    final num = 5;
     // 01: box geometry
     for (int i = 0; i < num; i++) {
       for (int j = 0; j < num; j++) {
-        for (int k = 0; k < 1; k++) {
-          final pos = Vector3(i * 2.0 - num, j * 2.0 - num, k * 2);
-          final box = addMesh(M3Mesh(M3BoxGeom(1.0, 1.0, 1.0)), pos);
-          // final ball = addMesh(M3Mesh(M3Resources.unitSphere), Vector3(i * 2, j * 2, k * 2));
-          // box.scale.setValues(1, 1, 1);
+        for (int k = 0; k < 2; k++) {
+          final pos = Vector3(i * 2.0 - num, j * 2.0 - num, k * 1.2);
+          final sz = 1.0;
+          if (k % 2 == 0) {
+            final box = addMesh(M3Mesh(M3BoxGeom(sz, sz, sz)), pos);
+          } else {
+            final ball = addMesh(M3Mesh(M3Resources.unitSphere), pos);
+          }
         }
       }
     }
@@ -39,7 +42,7 @@ class CubeScene_01 extends DemoScene {
     );
     // ground plane
     final mtrGround = M3Material()
-      ..diffuseTexture = texTest
+      // ..diffuseTexture = texTest
       ..setMatte();
     final groundMesh = M3Mesh(
       M3PlaneGeom(100, 100, widthSegments: 4, heightSegments: 4, uvScale: Vector2.all(10.0)),

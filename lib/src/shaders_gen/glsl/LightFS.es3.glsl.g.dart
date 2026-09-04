@@ -97,6 +97,24 @@ lowp vec3 CalculateLighting(vec3 fragPos, vec3 N) {
 uniform mediump mat4 uSpotLights[8];
 uniform mediump ivec2 uSpotLightCounts; // x=lightCount, y=shadowCastingBitwise
 
+#ifdef ENABLE_SPOT_SHADOW
+uniform highp sampler2DShadow SamplerSpotShadowmap; // GL_TEXTURE4
+uniform highp vec2 SpotShadowmapTexelSize;           // 1.0 / spot shadowmap resolution (pre-computed on CPU)
+in highp vec4 LightcoordSpotShadowmap;
+
+// Spot shadow: perspective divide + bounds check, then shared PCF kernel
+lowp float ComputeSpotShadow(in highp vec4 lightCoord) {
+    if (lightCoord.w <= 0.0) {
+        return 1.0;
+    }
+    vec3 proj = lightCoord.xyz / lightCoord.w;
+    if (proj.x < 0.0 || proj.x > 1.0 || proj.y < 0.0 || proj.y > 1.0 || proj.z < 0.0 || proj.z > 1.0) {
+        return 1.0;
+    }
+    return ComputeShadowPCF(SamplerSpotShadowmap, SpotShadowmapTexelSize, proj.xy, proj.z - 0.0005);
+}
+#endif // ENABLE_SPOT_SHADOW
+
 // Smooth cone falloff: 0 outside outerAngle, 1 inside innerAngle
 // cosTheta = dot(-fragToLight_unit, spotDir_unit)
 float calcConeAttenuation(float cosTheta, float cosInner, float cosOuter) {
@@ -104,7 +122,7 @@ float calcConeAttenuation(float cosTheta, float cosInner, float cosOuter) {
     return t * t; // quadratic for smooth edge
 }
 
-vec3 calcSpotLight(int i, vec3 fragPos, vec3 N) {
+vec3 calcSpotLight(int i, vec3 fragPos, vec3 N, bool castShadow) {
     mat4 m = uSpotLights[i];
     vec4 posRangeSq = m[0]; // xyz: position, w: range²
     float radiusSq  = posRangeSq.w;
@@ -140,7 +158,15 @@ vec3 calcSpotLight(int i, vec3 fragPos, vec3 N) {
     float atten = calcAttenuation(distSq, radiusSq);
     float spot  = calcConeAttenuation(cosTheta, coneAngles.x, coneAngles.y);
 
-    return colorInt.rgb * (colorInt.a * atten * spot * NdotL);
+    vec3 radiance = colorInt.rgb * (colorInt.a * atten * spot * NdotL);
+
+#ifdef ENABLE_SPOT_SHADOW
+    if (castShadow) {
+        radiance *= ComputeSpotShadow(LightcoordSpotShadowmap);
+    }
+#endif
+
+    return radiance;
 }
 
 // Spot lights lighting in object space
@@ -149,9 +175,11 @@ lowp vec3 CalculateSpotLighting(vec3 fragPos, vec3 N) {
     if (lightCount == 0) return vec3(0.0);
 
     vec3 result = vec3(0.0);
+    int shadowBitmask = uSpotLightCounts.y;
     for (int i = 0; i < 8; i++) {
         if (i >= lightCount) break;
-        result += calcSpotLight(i, fragPos, N);
+        bool castShadow = ((shadowBitmask & (1 << i)) != 0);
+        result += calcSpotLight(i, fragPos, N, castShadow);
     }
     return result;
 }

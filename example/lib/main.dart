@@ -50,7 +50,7 @@ class MyScene extends M3Scene {
     addMesh(M3Mesh(M3BoxGeom(1.0, 1.0, 1.0)), Vector3(0, 0, 2.5)).color = Colors.blue;
     addMesh(M3Mesh(M3SphereGeom(0.5)), Vector3(0, 0, 0)).color = Colors.red;
     addMesh(M3Mesh(M3TorusGeom(1, 0.2)), Vector3(0, 0, 0)).color = Colors.green;
-    final plane = addMesh(meshGrid, Vector3(0, 0, -1)).color = Colors.skyBlue;
+    addMesh(meshGrid, Vector3(0, 0, -1));
 
     // String strTex = 'astc/test_12x12.astc';
     String strTex = 'example/test_8x8.astc';

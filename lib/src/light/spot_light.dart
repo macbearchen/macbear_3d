@@ -19,9 +19,15 @@ class M3SpotLight extends M3PointLight {
   /// Outer cone half-angle in degrees (zero brightness beyond this).
   double outerAngle = 30.0;
 
+  double shadowNormalBias = 0.02;
+
   /// World-space pointing direction derived from -Z axis of [worldMatrix].
   Vector3 get direction => forward;
   M3Camera lightViewer = M3Camera();
+
+  M3SpotLight() {
+    updateLightViewer();
+  }
 
   /// Sets light orientation to point toward [dir].
   set direction(Vector3 dir) {
@@ -35,7 +41,24 @@ class M3SpotLight extends M3PointLight {
     final worldUp = up ?? (fwd.dot(Vector3(0, 1, 0)).abs() > 0.99 ? Vector3(0, 0, 1) : Vector3(0, 1, 0));
 
     lookAt(target, worldUp);
-    lightViewer.setLookat(position, target, worldUp);
+    updateLightViewer(target, worldUp);
+  }
+
+  /// Updates spotlight viewer projection and view matrices.
+  void updateLightViewer([Vector3? target, Vector3? worldUp]) {
+    final worldPos = worldMatrix.getTranslation();
+    final fwd = direction.normalized();
+    final spotTarget = target ?? (worldPos + fwd);
+    final up = worldUp ?? (fwd.dot(Vector3(0, 1, 0)).abs() > 0.99 ? Vector3(0, 0, 1) : Vector3(0, 1, 0));
+
+    lightViewer.setLookat(worldPos, spotTarget, up);
+    lightViewer.setViewport(-1, -1, 2, 2, fovy: outerAngle * 2.0, near: 0.05, far: range);
+  }
+
+  @override
+  void setShadowMap(M3ShadowMap? sm) {
+    super.setShadowMap(sm);
+    updateLightViewer();
   }
 
   /// Pack into a single mat4 (16 floats) for the shader.
@@ -97,27 +120,10 @@ class M3SpotLight extends M3PointLight {
 
   @override
   void drawHelper(M3Program prog, M3Camera viewer) {
-    final worldPos = worldMatrix.getTranslation();
-    final worldDir = direction;
-
-    // Build a view matrix from the spotlight's eye/direction.
-    // The spotlight looks toward `direction`; choose a stable up vector.
-    final Vector3 fwd = worldDir;
-    final Vector3 worldUp = fwd.dot(Vector3(0, 1, 0)).abs() > 0.99
-        ? Vector3(1, 0, 0) // fallback when fwd ≈ ±Y
-        : Vector3(0, 1, 0);
-    final Vector3 spotTarget = worldPos + fwd;
-    final Matrix4 spotView = makeViewMatrix(worldPos, spotTarget, worldUp);
-
-    // Build a perspective projection that matches the cone:
-    //   fovY  = outerAngle * 2  (full cone aperture)
-    //   aspect = 1.0            (symmetric cone)
-    //   near  = small offset, far = range
-    final M3Projection spotProj = M3Projection();
-    spotProj.setViewport(-1, -1, 2, 2, fovy: outerAngle * 2.0, near: 0.05, far: range);
-
-    // Frustum model matrix: inverse of (projection × view), same as M3Camera.drawHelper
-    final Matrix4 frustumMatrix = Matrix4.inverted(spotProj.projectionMatrix * spotView);
+    // Reuse lightViewer which already holds the correct view + projection
+    // (kept up-to-date by updateLightViewer / setDirection / setShadowMap).
+    // Frustum model matrix: inverse of (projection × view), same as M3Camera.drawHelper.
+    final Matrix4 frustumMatrix = Matrix4.inverted(lightViewer.projectionMatrix * lightViewer.viewMatrix);
     prog.setMatrices(viewer, frustumMatrix);
     M3Resources.debugFrustum.draw(prog, fillMode: .wireframe);
   }

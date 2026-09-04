@@ -94,9 +94,9 @@ abstract class M3Scene {
 
   void initSpotLights(int num) {
     num = min(4, num);
-    final positions = [Vector3(3, 4, 5), Vector3(-3, 4, 5), Vector3(3, -4, 5), Vector3(-10, -10, 0.2)];
+    final positions = [Vector3(2, 1, 3), Vector3(-3, 2, 3), Vector3(3, -2, 3), Vector3(-10, -10, 0.2)];
     final dirs = [Vector3(0, 0, -1), Vector3(0.2, -0.2, -1), Vector3(-0.2, 0.2, -1), Vector3(1, 0, 0)];
-    final colors = [Vector3(1.0, 0.0, 0.0), Vector3(0.0, 1.0, 0.0), Vector3(0.0, 0.0, 1.0), Vector3(1.0, 1.0, 0.0)];
+    final colors = [Vector3(1.0, 0.3, 1.0), Vector3(0.3, 1.0, 1.0), Vector3(0.3, 0.2, 1.0), Vector3(1.0, 1.0, 0.0)];
 
     for (var i = 0; i < num; i++) {
       final spotLight = M3SpotLight();

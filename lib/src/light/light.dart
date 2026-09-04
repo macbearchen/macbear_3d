@@ -130,6 +130,11 @@ class M3SpotLightManager {
   late UniformLocation _uniformSpotLights;
   late UniformLocation _uniformSpotLightCounts;
 
+  // Spot shadow uniforms
+  late UniformLocation _uniformSamplerSpotShadowmap;
+  late UniformLocation _uniformSpotShadowmapTexelSize;
+  late UniformLocation _uniformMatrixSpotShadowmap;
+
   List<M3SpotLight> _spotLights = [];
 
   M3SpotLightManager();
@@ -137,6 +142,14 @@ class M3SpotLightManager {
   void initLocation(Program program) {
     _uniformSpotLights = gl.getUniformLocation(program, 'uSpotLights');
     _uniformSpotLightCounts = gl.getUniformLocation(program, 'uSpotLightCounts');
+
+    _uniformSamplerSpotShadowmap = gl.getUniformLocation(program, 'SamplerSpotShadowmap');
+    _uniformSpotShadowmapTexelSize = gl.getUniformLocation(program, 'SpotShadowmapTexelSize');
+    _uniformMatrixSpotShadowmap = gl.getUniformLocation(program, 'MatrixSpotShadowmap');
+
+    if (M3Program.isLocationValid(_uniformSamplerSpotShadowmap)) {
+      gl.uniform1i(_uniformSamplerSpotShadowmap, 4); // GL_TEXTURE4
+    }
   }
 
   void attachSpotLights(List<M3SpotLight> spotLights) {
@@ -147,10 +160,17 @@ class M3SpotLightManager {
   ///
   /// [mMatrixInv] — inverse model matrix (world → object space), same convention
   /// as [M3PointLightManager.setLightUniforms].
-  void setLightUniforms(Matrix4 mMatrixInv) {
+  void setLightUniforms(Matrix4 mMatrixInv, [Matrix4? mMatrix]) {
     final active = _spotLights.take(_maxSpotLights).toList();
     _counts[0] = active.length;
-    _counts[1] = shadowFlag;
+
+    int shadowBitmask = 0;
+    for (int i = 0; i < active.length; i++) {
+      if (active[i].castShadow && active[i].shadowMap != null) {
+        shadowBitmask |= (1 << i);
+      }
+    }
+    _counts[1] = shadowBitmask;
 
     _spotMats.fillRange(0, _spotMats.length, 0.0);
 
@@ -166,6 +186,31 @@ class M3SpotLightManager {
 
     if (M3Program.isLocationValid(_uniformSpotLightCounts)) {
       gl.uniform2iv(_uniformSpotLightCounts, _counts);
+    }
+
+    // Apply shadow map for the first spotlight if it casts shadow
+    if (active.isNotEmpty && active[0].castShadow && active[0].shadowMap != null) {
+      final firstSpot = active[0];
+      final sm = firstSpot.shadowMap!;
+
+      if (M3Program.isLocationValid(_uniformSamplerSpotShadowmap)) {
+        gl.activeTexture(WebGL.TEXTURE4);
+        sm.depthTex.bind();
+        gl.uniform1i(_uniformSamplerSpotShadowmap, 4);
+        gl.activeTexture(WebGL.TEXTURE0);
+      }
+
+      if (M3Program.isLocationValid(_uniformSpotShadowmapTexelSize)) {
+        gl.uniform2f(_uniformSpotShadowmapTexelSize, 1.0 / sm.mapW, 1.0 / sm.mapH);
+      }
+
+      if (M3Program.isLocationValid(_uniformMatrixSpotShadowmap)) {
+        final matModel = mMatrix ?? Matrix4.inverted(mMatrixInv);
+        final viewer = firstSpot.lightViewer;
+        final Matrix4 lightMatrix = viewer.projectionMatrix * viewer.viewMatrix * matModel;
+        final Matrix4 shadowMatrix = M3Constants.biasMatrix * lightMatrix;
+        gl.uniformMatrix4fv(_uniformMatrixSpotShadowmap, false, shadowMatrix.storage);
+      }
     }
   }
 }

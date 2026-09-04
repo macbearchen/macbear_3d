@@ -26,13 +26,15 @@ part 'shader/water_shader.dart';
 // Slot  0 : Diffuse / baseColor map
 // Slot  1 : Normal map
 // Slot  2 : Cubemap (environment / skybox)
-// Slot  3 : Shadow map
+// Slot  3 : Directional Shadow map
+// Slot  4 : Spot Light Shadow map
 // ────────────────────────────────────────────────────────
 // ── Texture Unit for Water ──────────────────────────────
 // Slot  0 : Water Reflection map
 // Slot  1 : Water Normalmap
 // Slot  2 : Water Refraction map
-// Slot  3 : Shadow map
+// Slot  3 : Directional Shadow map
+// Slot  4 : Spot Light Shadow map
 // ────────────────────────────────────────────────────────
 
 /// reflection type for render

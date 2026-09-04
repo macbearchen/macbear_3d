@@ -74,9 +74,9 @@ void main(void)
     DestinationColor = vec4(ColorAmbient + ColorDiffuse.rgb * df, ColorDiffuse.a);
 #endif // ENABLE_PIXEL_LIGHTING
     
-#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
+#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM) || defined(ENABLE_SPOT_SHADOW)
     ComputeShadowPosition(objVert.xyz, objNormal);
-#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
+#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM or ENABLE_SPOT_SHADOW
     
 #ifdef ENABLE_FOG
     eyeToObj *= uInvObjScale;
