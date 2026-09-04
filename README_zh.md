@@ -5,6 +5,7 @@
 [![pub package](https://img.shields.io/pub/v/macbear_3d.svg)](https://pub.dev/packages/macbear_3d)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Platform](https://img.shields.io/badge/platform-ios%20%7C%20android%20%7C%20macos%20%7C%20windows%20%7C%20web-blue)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Buy%20me%20a%20coffee-ff5e5b?logo=kofi&logoColor=white)](https://ko-fi.com/macbearchen)
 
 **Macbear 3D** 是一個專為 Flutter 打造的輕量級、高性能 3D 渲染引擎，由 **Google ANGLE (OpenGL ES 3.0)** 驅動。它提供簡單且強大的 API，讓開發者能夠輕鬆創建驚艷的 3D 體驗、遊戲與視覺化應用。
 
@@ -58,7 +59,7 @@
 
 ```yaml
 dependencies:
-  macbear_3d: ^0.10.0
+  macbear_3d: ^0.10.1
 ```
 
 ## 快速上手
@@ -132,6 +133,12 @@ This motion capture data is licensed by mocapdata.com, Eyes, JAPAN Co. Ltd. unde
 To view a copy of this license, contact mocapdata.com, Eyes, JAPAN Co. Ltd. or visit http://creativecommons.org/licenses/by/2.1/jp/ .
 http://mocapdata.com/
 (C) Copyright Eyes, JAPAN Co. Ltd. 2008-2009.
+
+## 贊助與支持 (Sponsor & Support)
+
+如果您覺得 Macbear 3D 對您有所幫助，或是想支持後續開發，歡迎請我喝杯咖啡：
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/macbearchen)
 
 ## 開源協議
 

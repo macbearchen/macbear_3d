@@ -1,5 +1,12 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
+## 0.10.1
+#### 2026-09-05
+* Documentation & Dependencies:
+  * **Sponsorship**: Added Ko-fi sponsorship link and badges.
+  * **Dependencies**: Updated `material_ui` to `^1.1.1` and `build` to `^4.0.11`.
+  * **Docs & Assets**: Updated documentation and demonstration screenshots.
+
 ## 0.10.0
 #### 2026-09-04
 * Add:
