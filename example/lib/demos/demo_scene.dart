@@ -21,6 +21,7 @@ class DemoScene extends M3Scene {
     spotLights[0].outerAngle = 60.0;
     spotLights[1].outerAngle = 50.0;
     spotLights[2].outerAngle = 45.0;
+    spotLights[3].outerAngle = 45.0;
   }
 
   @override

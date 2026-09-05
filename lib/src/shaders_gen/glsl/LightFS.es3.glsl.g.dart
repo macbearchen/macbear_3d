@@ -122,7 +122,7 @@ float calcConeAttenuation(float cosTheta, float cosInner, float cosOuter) {
     return t * t; // quadratic for smooth edge
 }
 
-vec3 calcSpotLight(int i, vec3 fragPos, vec3 N, bool castShadow) {
+vec3 calcSpotLight(int i, vec3 fragPos, vec3 N) {
     mat4 m = uSpotLights[i];
     vec4 posRangeSq = m[0]; // xyz: position, w: range²
     float radiusSq  = posRangeSq.w;
@@ -160,12 +160,6 @@ vec3 calcSpotLight(int i, vec3 fragPos, vec3 N, bool castShadow) {
 
     vec3 radiance = colorInt.rgb * (colorInt.a * atten * spot * NdotL);
 
-#ifdef ENABLE_SPOT_SHADOW
-    if (castShadow) {
-        radiance *= ComputeSpotShadow(LightcoordSpotShadowmap);
-    }
-#endif
-
     return radiance;
 }
 
@@ -178,8 +172,17 @@ lowp vec3 CalculateSpotLighting(vec3 fragPos, vec3 N) {
     int shadowBitmask = uSpotLightCounts.y;
     for (int i = 0; i < 8; i++) {
         if (i >= lightCount) break;
+        vec3 radiance = calcSpotLight(i, fragPos, N);
+        if (radiance == vec3(0.0)) {
+            continue;
+        }
+#ifdef ENABLE_SPOT_SHADOW
         bool castShadow = ((shadowBitmask & (1 << i)) != 0);
-        result += calcSpotLight(i, fragPos, N, castShadow);
+        if (castShadow) {
+            radiance *= ComputeSpotShadow(LightcoordSpotShadowmap);
+        }
+#endif
+        result += radiance;
     }
     return result;
 }
