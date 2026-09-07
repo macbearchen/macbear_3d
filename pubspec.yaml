@@ -27,17 +27,17 @@ dependencies:
   flutter_angle: ^0.4.2
   http: ^1.6.0
   image: ^4.9.1
+  material_ui: ^1.1.1
   vector_math: ^2.4.2
   web: ^1.1.1
   video_player: ^2.14.0
   plugin_platform_interface: ^2.0.2
 
-  material_ui: ^1.1.1
-  build: ^4.0.11
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  build: ^4.0.11
   build_runner: ^2.10.4
 
 # For information on the generic Dart part of this file, see the
