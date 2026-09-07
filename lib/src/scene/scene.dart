@@ -93,11 +93,39 @@ abstract class M3Scene {
   }
 
   void initSpotLights(int num) {
-    num = min(4, num);
-    final positions = [Vector3(2, 1, 3), Vector3(-3, 2, 3), Vector3(3, -2, 3), Vector3(-10, -10, 0.2)];
-    final dirs = [Vector3(0, 0, -1), Vector3(0.2, -0.2, -1), Vector3(-0.2, 0.2, -1), Vector3(1, 0, 0)];
-    final colors = [Vector3(1.0, 0.3, 1.0), Vector3(0.3, 1.0, 1.0), Vector3(0.3, 0.2, 1.0), Vector3(1.0, 1.0, 0.0)];
+    num = min(8, num);
+    final positions = [
+      Vector3(2, 1, 3),
+      Vector3(-3, 2, 3),
+      Vector3(3, -2, 3),
+      Vector3(-10, -10, 0.2),
+      Vector3(-2, -1, 3),
+      Vector3(1, 3, 3),
+      Vector3(-1, -3, 3),
+      Vector3(0, 0, 4),
+    ];
+    final dirs = [
+      Vector3(0, 0, -1),
+      Vector3(0.2, -0.2, -1),
+      Vector3(-0.2, 0.2, -1),
+      Vector3(1, 0, 0),
+      Vector3(0.1, 0.1, -1),
+      Vector3(-0.1, -0.2, -1),
+      Vector3(0.2, 0.1, -1),
+      Vector3(0, 0, -1),
+    ];
+    final colors = [
+      Vector3(1.0, 0.3, 1.0),
+      Vector3(0.3, 1.0, 1.0),
+      Vector3(0.3, 0.2, 1.0),
+      Vector3(1.0, 1.0, 0.0),
+      Vector3(1.0, 0.5, 0.2),
+      Vector3(0.2, 1.0, 0.5),
+      Vector3(0.8, 0.2, 0.8),
+      Vector3(1.0, 1.0, 1.0),
+    ];
 
+    final sm = M3AppEngine.instance.renderEngine.spotLightShadowMap;
     for (var i = 0; i < num; i++) {
       final spotLight = M3SpotLight();
       spotLight.position = positions[i];
@@ -105,6 +133,7 @@ abstract class M3Scene {
       spotLight.intensity = 8.0;
       spotLight.direction = dirs[i];
       spotLight.range = 12;
+      spotLight.setShadowMap(sm);
       spotLights.add(spotLight);
     }
   }

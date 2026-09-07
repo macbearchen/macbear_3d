@@ -39,37 +39,26 @@ class ObjTeapotScene_04 extends DemoScene {
 
     // 04-3: plane geometry
     // Apply mirror shader to ground
-    const sizeH = 4.0;
-    final geomPlane = M3PlaneGeom(sizeH * 3, sizeH, widthSegments: 6, heightSegments: 2, uvScale: Vector2(9.0, 3.0));
-    final meshPlane = M3Mesh(geomPlane);
+    final planeMesh = M3TiledPlaneMesh(tilesX: 5, tilesY: 1, tileWidth: 2, tileHeight: 12);
     M3Texture texGround = M3Texture.createCheckerboard(
       size: 2,
       lightColor: Vector4(0.65, 0.45, 0.25, 1),
       darkColor: Vector4(0.36, 0.22, 0.12, 1),
     );
 
-    final subA = M3SubMesh(geomPlane);
-    final subB = M3SubMesh(geomPlane);
-    meshPlane.subMeshes.add(subA);
-    meshPlane.subMeshes.add(subB);
-
-    const offsetScale = 1.0;
-    subA.localMatrix.setTranslation(Vector3(0, -sizeH * offsetScale, 0));
-    subB.localMatrix.setTranslation(Vector3(0, sizeH * offsetScale, 0));
-
-    const roughnessArray = <double>[0.3, 0.0, 0.5];
-    for (int i = 0; i < meshPlane.subMeshes.length; i++) {
-      meshPlane.subMeshes[i].mtr
+    for (int i = 0; i < planeMesh.subMeshes.length; i++) {
+      double roughness = i / (planeMesh.subMeshes.length - 1);
+      planeMesh.subMeshes[i].mtr
         ..reflection = 0.5
         ..metallic = 0.5
-        ..roughness = roughnessArray[i]
-        ..diffuse = Vector4(0.6, 1.0, roughnessArray[i] + 0.3, 1)
+        ..roughness = roughness
+        ..diffuse = Vector4(0.8, 1.0, 0.7, 1)
         // ..texDiffuse = texGround
         ..planarReflection = renderEngine.planarReflection;
     }
     renderEngine.planarReflection.setRenderScale(1.0);
 
-    _plane = addMesh(meshPlane, Vector3(0, 0, 0));
+    _plane = addMesh(planeMesh, Vector3(0, 0, 0));
     _plane.rotation.setEuler(pi / 12, 0, 0);
 
     // 04-4: orbit around

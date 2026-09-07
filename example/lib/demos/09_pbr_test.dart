@@ -14,9 +14,9 @@ class PbrTestScene_09 extends DemoScene {
 
     final sphereGeom = M3Resources.unitSphere;
 
-    int rows = 8;
-    int cols = 8;
-    double spacing = 3;
+    int rows = 6;
+    int cols = 6;
+    double spacing = 3.5;
 
     for (int i = 0; i < rows; i++) {
       double metallic = i / (rows - 1);
@@ -35,20 +35,25 @@ class PbrTestScene_09 extends DemoScene {
 
         final ball = addMesh(mesh, Vector3(x, y, 0));
         ball.rotation.setEuler(i * pi / 10, j * pi / 20, 0);
-        ball.scale = Vector3.all((i + 5) * 0.2);
+        ball.scale = Vector3.all((i + 40) * 0.05);
       }
     }
 
     final groundZ = -2.0;
     // Add a ground plane
-    final geomPlane = M3PlaneGeom(30, 30);
-    final plane = addMesh(M3Mesh(geomPlane), Vector3(0, 0, groundZ));
-    plane.mesh.subMeshes[0].mtr
-      ..diffuse = Vector4(0.2, 0.9, 0.7, 1.0)
-      ..reflection = 0.3
-      ..metallic = 0.3
-      ..roughness = 0.0
-      ..planarReflection = renderEngine.planarReflection;
+    // final planeMesh = M3Mesh(M3PlaneGeom(30, 30));
+    final planeMesh = M3TiledPlaneMesh(tilesX: 5, tilesY: 5, tileWidth: 5, tileHeight: 5);
+    final plane = addMesh(planeMesh, Vector3(0, 0, groundZ));
+    int i = 0;
+    for (M3SubMesh sub in plane.mesh.subMeshes) {
+      sub.mtr
+        ..diffuse = Vector4(0.6, 0.9, 0.7, 1.0)
+        ..reflection = 0.3
+        ..metallic = 0.3
+        ..roughness = 0.0
+        ..planarReflection = (i % 2 == 0) ? null : renderEngine.planarReflection;
+      i++;
+    }
 
     // axis gizmo
     addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 2));

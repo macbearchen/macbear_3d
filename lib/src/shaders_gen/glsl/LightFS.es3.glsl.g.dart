@@ -100,15 +100,25 @@ uniform mediump ivec2 uSpotLightCounts; // x=lightCount, y=shadowCastingBitwise
 #ifdef ENABLE_SPOT_SHADOW
 uniform highp sampler2DShadow SamplerSpotShadowmap; // GL_TEXTURE4
 uniform highp vec2 SpotShadowmapTexelSize;           // 1.0 / spot shadowmap resolution (pre-computed on CPU)
-in highp vec4 LightcoordSpotShadowmap;
+uniform highp mat4 uMatrixSpotShadowAtlas[8];         // Bias * Projection * View * Model for each spotlight slot
+uniform highp float SpotShadowNormalBias;            // normal bias for spotlight shadow acne
 
-// Spot shadow: perspective divide + bounds check, then shared PCF kernel
-lowp float ComputeSpotShadow(in highp vec4 lightCoord) {
+// Spot shadow with atlas: project biased fragment position using spotlight i's shadow matrix
+lowp float ComputeSpotShadow(int i, vec3 fragPos, vec3 N) {
+    vec4 biasedPos = vec4(fragPos + N * SpotShadowNormalBias, 1.0);
+    highp vec4 lightCoord = uMatrixSpotShadowAtlas[i] * biasedPos;
+
     if (lightCoord.w <= 0.0) {
         return 1.0;
     }
     vec3 proj = lightCoord.xyz / lightCoord.w;
-    if (proj.x < 0.0 || proj.x > 1.0 || proj.y < 0.0 || proj.y > 1.0 || proj.z < 0.0 || proj.z > 1.0) {
+
+    // Viewport bounds in atlas:
+    // X in [0, 1], Y in [slotMinY, slotMaxY] where slot is i out of 8 (slot / 8.0 to (slot + 1) / 8.0)
+    float slotMinY = float(i) * 0.125; // i / 8.0
+    float slotMaxY = slotMinY + 0.125;
+
+    if (proj.x < 0.0 || proj.x > 1.0 || proj.y < slotMinY || proj.y > slotMaxY || proj.z < 0.0 || proj.z > 1.0) {
         return 1.0;
     }
     return ComputeShadowPCF(SamplerSpotShadowmap, SpotShadowmapTexelSize, proj.xy, proj.z - 0.0005);
@@ -179,7 +189,7 @@ lowp vec3 CalculateSpotLighting(vec3 fragPos, vec3 N) {
 #ifdef ENABLE_SPOT_SHADOW
         bool castShadow = ((shadowBitmask & (1 << i)) != 0);
         if (castShadow) {
-            radiance *= ComputeSpotShadow(LightcoordSpotShadowmap);
+            radiance *= ComputeSpotShadow(i, fragPos, N);
         }
 #endif
         result += radiance;

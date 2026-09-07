@@ -28,7 +28,14 @@ class PhysicsScene_07 extends DemoScene {
     // 07-1: physics static ground
     physicsSystem.addBox(5, 5, 2, desc: M3RigidBodyDesc.fixed()..position = Vector3(0, 0, -2));
 
-    List<Vector3> arrayPos = [Vector3(0, 0, 0), Vector3(3, 0, 0), Vector3(0, 3, 0), Vector3(.5, .6, 3)];
+    List<Vector3> arrayPos = [
+      Vector3(0, 0, 0),
+      Vector3(2, 0, 0),
+      Vector3(0, 2, 0),
+      Vector3(-2, 0, 0),
+      Vector3(0, -2, 0),
+      Vector3(.5, .6, 3),
+    ];
     List<Vector4> arrayColor = [Colors.yellow, Colors.red, Colors.green, Colors.blue];
 
     // 07-2: physics rigid box
@@ -37,7 +44,7 @@ class PhysicsScene_07 extends DemoScene {
       pos.z += 1.5; // drop from sky
 
       // visual entity
-      final entity = addMesh(cubeMesh, pos)..color = arrayColor[i];
+      final entity = addMesh(cubeMesh, pos)..color = arrayColor[i % 4];
       final rb = physicsSystem.addBox(0.5, 0.5, 0.5, desc: M3RigidBodyDesc.dynamic()..position = pos);
       physicsSystem.attachEntity(entity, rb);
     }
@@ -47,7 +54,7 @@ class PhysicsScene_07 extends DemoScene {
       // drop from sky
       final pos = arrayPos[i].clone() + Vector3(0.3, 0.6, 3.0);
 
-      final entity = addMesh(ballMesh, pos)..color = arrayColor[i];
+      final entity = addMesh(ballMesh, pos)..color = arrayColor[i % 4];
       final rb = physicsSystem.addSphere(0.5, desc: M3RigidBodyDesc.dynamic()..position = pos);
       physicsSystem.attachEntity(entity, rb);
     }
@@ -55,9 +62,9 @@ class PhysicsScene_07 extends DemoScene {
     // 07-4: physics rigid cylinder
     for (int i = 0; i < arrayPos.length; i++) {
       // drop from sky
-      final pos = Vector3(i - 0.2, i + 0.3, i + 6.5);
+      final pos = Vector3(-2 + i * 0.4, -2 + i * 0.2, i * 2 + 3);
 
-      final entity = addMesh(cylinderMesh, pos)..color = arrayColor[i];
+      final entity = addMesh(cylinderMesh, pos)..color = arrayColor[i % 4];
       final rb = physicsSystem.addCylinder(
         radius: 0.5,
         halfHeight: 0.5,

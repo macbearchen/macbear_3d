@@ -16,6 +16,7 @@ export 'src/gltf/gltf_loader.dart';
 export 'src/input/touch.dart';
 export 'src/mesh/mesh.dart';
 export 'src/mesh/mesh_factory.dart';
+export 'src/mesh/tiled_plane_mesh.dart';
 export 'src/physics/no_physics_engine.dart';
 export 'src/physics/physics_engine.dart';
 export 'src/physics/physics_system.dart';

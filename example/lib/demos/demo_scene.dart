@@ -67,7 +67,7 @@ class DemoScene extends M3Scene {
       spotLights[1].direction = Vector3(0.2, sinSec2 * 0.5, -1);
     }
     if (spotCount > 3) {
-      spotLights[3].direction = Vector3(sinSec2, cosSec2, 0);
+      spotLights[3].direction = Vector3(sinSec2, cosSec2, -0.5);
     }
   }
 

@@ -75,11 +75,11 @@ class M3ShadowMap {
         lightViewer = null;
       }
     } else if (light is M3SpotLight) {
-      // viewport for shadowmap atlas — each slot is a square tile (mapW x mapW)
-      // y offset increases per spotlight: slot[i].y = i * mapW
-      final int y = 0; // slot index 0 (first spotlight)
-      final int height = mapW; // square tile, not full atlas height
-      gl.viewport(0, y, mapW, height);
+      final slotIndex = scene.spotLights.indexOf(light);
+      final int slot = (slotIndex >= 0 && slotIndex < 8) ? slotIndex : 0;
+      final int tileSize = mapH ~/ 8;
+      final int y = slot * tileSize;
+      gl.viewport(0, y, mapW, tileSize);
       light.updateLightViewer();
       lightViewer = light.lightViewer;
     }
@@ -88,6 +88,61 @@ class M3ShadowMap {
     if (lightViewer != null) {
       lightViewer.updateFrustum();
       // shadowmap render scene only opaque
+      _context.prepareRenderQueue(scene, lightViewer, bOnlyOpaque: true);
+      _context.render(prog);
+    }
+
+    // recover to default GL state
+    gl.polygonOffset(0, 0);
+    gl.disable(WebGL.POLYGON_OFFSET_FILL);
+    gl.enable(WebGL.BLEND);
+
+    // recover to default FBO
+    renderEngine.bindDefaultFramebuffer();
+  }
+
+  /// Render depth map for multiple spotlights into atlas
+  void renderSpotDepths(M3Scene scene, List<M3SpotLight> lights) {
+    final active = lights.take(8).toList();
+    bool hasActiveCasting = false;
+    for (final l in active) {
+      if (l.castShadow) {
+        hasActiveCasting = true;
+        break;
+      }
+    }
+    if (!hasActiveCasting) return;
+
+    final renderEngine = M3AppEngine.instance.renderEngine;
+    final gl = renderEngine.gl;
+    final prog = M3Resources.programSimple!;
+
+    _framebuffer.bind();
+    // set shadow GL state
+    gl.frontFace(WebGL.CCW);
+    gl.enable(WebGL.CULL_FACE);
+    gl.enable(WebGL.DEPTH_TEST);
+    gl.depthMask(true);
+    gl.depthFunc(WebGL.LEQUAL);
+
+    gl.disable(WebGL.BLEND);
+    gl.enable(WebGL.POLYGON_OFFSET_FILL);
+    gl.polygonOffset(1.1, 4.0);
+
+    gl.clear(WebGL.DEPTH_BUFFER_BIT);
+
+    final int tileSize = mapH ~/ 8;
+
+    for (int i = 0; i < active.length; i++) {
+      final light = active[i];
+      if (!light.castShadow) continue;
+
+      final int y = i * tileSize;
+      gl.viewport(0, y, mapW, tileSize);
+      light.updateLightViewer();
+      final lightViewer = light.lightViewer;
+      lightViewer.updateFrustum();
+
       _context.prepareRenderQueue(scene, lightViewer, bOnlyOpaque: true);
       _context.render(prog);
     }

@@ -32,8 +32,10 @@ class M3RenderEngine {
     _spotLightShadowMap = map;
 
     final scene = M3AppEngine.instance.activeScene;
-    if (scene != null && scene.spotLights.isNotEmpty) {
-      scene.spotLights[0].setShadowMap(map);
+    if (scene != null) {
+      for (final spot in scene.spotLights) {
+        spot.setShadowMap(map);
+      }
     }
   }
 
@@ -65,11 +67,12 @@ class M3RenderEngine {
     int width = 2048,
     int height = 4096,
     int smWidth = 256,
-    int smHeight = 256,
+    int? smHeight,
   }) {
     options.useShadow = enableShadow;
     directionalShadowMap = enableShadow ? M3ShadowMap(width, height) : null;
-    spotLightShadowMap = enableShadow ? M3ShadowMap(smWidth, smHeight) : null;
+    final spotHeight = smHeight ?? (smWidth * 8);
+    spotLightShadowMap = enableShadow ? M3ShadowMap(smWidth, spotHeight) : null;
   }
 
   void cleanProbes() {
@@ -81,6 +84,7 @@ class M3RenderEngine {
 
   void dispose() {
     _directionalShadowMap?.dispose();
+    _spotLightShadowMap?.dispose();
     planarReflection.dispose();
     cleanProbes();
   }
@@ -122,10 +126,8 @@ class M3RenderEngine {
     // directional light (ex: sun, moon)
     scene.dirLight.shadowMap?.renderDepth(scene, scene.dirLight);
 
-    // spot light
-    for (final light in scene.spotLights) {
-      light.shadowMap?.renderDepth(scene, light);
-    }
+    // spot lights (render all into atlas)
+    spotLightShadowMap?.renderSpotDepths(scene, scene.spotLights);
   }
 
   /// get program shader for scene rendering
@@ -223,8 +225,8 @@ class M3RenderEngine {
 
         final sm2 = spotLightShadowMap;
         if (sm2 != null) {
-          final width = 100 / sm2.mapH * sm2.mapW;
-          sm2.debugDrawDepth(x, engine.appHeight - 210, width, 100);
+          final width = 200 / sm2.mapH * sm2.mapW;
+          sm2.debugDrawDepth(x, engine.appHeight - 210, width, 200);
           x += width + 5;
         }
       }

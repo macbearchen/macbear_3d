@@ -116,6 +116,9 @@ class M3Package {
   }
 
   static String asset(String path) {
+    if (name == null) {
+      return path;
+    }
     return 'packages/$name/$path';
   }
 }

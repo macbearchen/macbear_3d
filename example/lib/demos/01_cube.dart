@@ -13,17 +13,19 @@ class CubeScene_01 extends DemoScene {
 
     camera.setEuler(-pi / 9, -pi / 4, 0, distance: 24);
 
-    final num = 5;
+    final num = 9;
+    final spacingX = 2.5;
+    final spacingY = 2.5;
     // 01: box geometry
     for (int i = 0; i < num; i++) {
       for (int j = 0; j < num; j++) {
         for (int k = 0; k < 2; k++) {
-          final pos = Vector3(i * 2.0 - num, j * 2.0 - num, k * 1.2);
+          final pos = Vector3((i - num * 0.5) * spacingX, (j - num * 0.5) * spacingY, k * 1.2);
           final sz = 1.0;
           if (k % 2 == 0) {
-            final box = addMesh(M3Mesh(M3BoxGeom(sz, sz, sz)), pos);
+            addMesh(M3Mesh(M3BoxGeom(sz, sz, sz)), pos);
           } else {
-            final ball = addMesh(M3Mesh(M3Resources.unitSphere), pos);
+            addMesh(M3Mesh(M3Resources.unitSphere), pos);
           }
         }
       }
@@ -44,10 +46,9 @@ class CubeScene_01 extends DemoScene {
     final mtrGround = M3Material()
       // ..diffuseTexture = texTest
       ..setMatte();
-    final groundMesh = M3Mesh(
-      M3PlaneGeom(100, 100, widthSegments: 4, heightSegments: 4, uvScale: Vector2.all(10.0)),
-      material: mtrGround,
-    );
+
+    // final groundMesh = M3Mesh(M3PlaneGeom(100, 100, widthSegments: 4, heightSegments: 4), material: mtrGround);
+    final groundMesh = M3TiledPlaneMesh(tilesX: 10, tilesY: 10, tileWidth: 5, tileHeight: 5);
     final entity = addMesh(groundMesh, Vector3(0, 0, -1));
     // entity.color = Vector4(1, 0.6, 0, 1);
   }

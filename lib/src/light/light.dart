@@ -133,7 +133,10 @@ class M3SpotLightManager {
   // Spot shadow uniforms
   late UniformLocation _uniformSamplerSpotShadowmap;
   late UniformLocation _uniformSpotShadowmapTexelSize;
-  late UniformLocation _uniformMatrixSpotShadowmap;
+  late UniformLocation _uniformMatrixSpotShadowAtlas;
+  late UniformLocation _uniformSpotShadowNormalBias;
+
+  final Float32List _spotShadowMats = Float32List(_maxSpotLights * 16);
 
   List<M3SpotLight> _spotLights = [];
 
@@ -145,7 +148,8 @@ class M3SpotLightManager {
 
     _uniformSamplerSpotShadowmap = gl.getUniformLocation(program, 'SamplerSpotShadowmap');
     _uniformSpotShadowmapTexelSize = gl.getUniformLocation(program, 'SpotShadowmapTexelSize');
-    _uniformMatrixSpotShadowmap = gl.getUniformLocation(program, 'MatrixSpotShadowmap');
+    _uniformMatrixSpotShadowAtlas = gl.getUniformLocation(program, 'uMatrixSpotShadowAtlas');
+    _uniformSpotShadowNormalBias = gl.getUniformLocation(program, 'SpotShadowNormalBias');
 
     if (M3Program.isLocationValid(_uniformSamplerSpotShadowmap)) {
       gl.uniform1i(_uniformSamplerSpotShadowmap, 4); // GL_TEXTURE4
@@ -165,9 +169,14 @@ class M3SpotLightManager {
     _counts[0] = active.length;
 
     int shadowBitmask = 0;
+    M3ShadowMap? shadowMap;
+    double normalBias = 0.02;
+
     for (int i = 0; i < active.length; i++) {
       if (active[i].castShadow && active[i].shadowMap != null) {
         shadowBitmask |= (1 << i);
+        shadowMap ??= active[i].shadowMap;
+        normalBias = active[i].shadowNormalBias;
       }
     }
     _counts[1] = shadowBitmask;
@@ -188,10 +197,9 @@ class M3SpotLightManager {
       gl.uniform2iv(_uniformSpotLightCounts, _counts);
     }
 
-    // Apply shadow map for the first spotlight if it casts shadow
-    if (active.isNotEmpty && active[0].castShadow && active[0].shadowMap != null) {
-      final firstSpot = active[0];
-      final sm = firstSpot.shadowMap!;
+    // Apply shadow map atlas if any spotlight casts shadow
+    if (shadowMap != null && shadowBitmask != 0) {
+      final sm = shadowMap;
 
       if (M3Program.isLocationValid(_uniformSamplerSpotShadowmap)) {
         gl.activeTexture(WebGL.TEXTURE4);
@@ -204,12 +212,36 @@ class M3SpotLightManager {
         gl.uniform2f(_uniformSpotShadowmapTexelSize, 1.0 / sm.mapW, 1.0 / sm.mapH);
       }
 
-      if (M3Program.isLocationValid(_uniformMatrixSpotShadowmap)) {
+      if (M3Program.isLocationValid(_uniformSpotShadowNormalBias)) {
+        gl.uniform1f(_uniformSpotShadowNormalBias, normalBias);
+      }
+
+      if (M3Program.isLocationValid(_uniformMatrixSpotShadowAtlas)) {
         final matModel = mMatrix ?? Matrix4.inverted(mMatrixInv);
-        final viewer = firstSpot.lightViewer;
-        final Matrix4 lightMatrix = viewer.projectionMatrix * viewer.viewMatrix * matModel;
-        final Matrix4 shadowMatrix = M3Constants.biasMatrix * lightMatrix;
-        gl.uniformMatrix4fv(_uniformMatrixSpotShadowmap, false, shadowMatrix.storage);
+        _spotShadowMats.fillRange(0, _spotShadowMats.length, 0.0);
+
+        // Atlas has 8 vertical slots: slot i occupies Y [i/8, (i+1)/8]
+        const double scaleY = 0.5 / _maxSpotLights; // 0.5 / 8 = 0.0625
+
+        for (int i = 0; i < active.length; i++) {
+          if ((shadowBitmask & (1 << i)) == 0) continue;
+
+          final spot = active[i];
+          final viewer = spot.lightViewer;
+          final Matrix4 lightMatrix = viewer.projectionMatrix * viewer.viewMatrix * matModel;
+
+          // Build atlas bias matrix for slot i
+          final Matrix4 biasMatrix = Matrix4.copy(M3Constants.biasMatrix);
+          final double biasY = (0.5 + i) / _maxSpotLights;
+          biasMatrix.setEntry(1, 1, scaleY);
+          biasMatrix.setEntry(1, 3, biasY);
+
+          final Matrix4 shadowMatrix = biasMatrix * lightMatrix;
+          final int offset = i * 16;
+          _spotShadowMats.setRange(offset, offset + 16, shadowMatrix.storage);
+        }
+
+        gl.uniformMatrix4fv(_uniformMatrixSpotShadowAtlas, false, _spotShadowMats);
       }
     }
   }

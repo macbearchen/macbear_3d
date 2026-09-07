@@ -25,8 +25,8 @@ class PrimitivesScene_03 extends DemoScene {
     final plane = addMesh(M3Mesh(M3PlaneGeom(20, 20, uvScale: Vector2.all(5.0))), Vector3(0, 0, -1));
     M3Texture texGround = M3Texture.createCheckerboard(
       size: 2,
-      lightColor: Vector4(.7, 1, .5, 1),
-      darkColor: Vector4(.5, 0.8, .3, 1),
+      lightColor: Vector4(.7, 1, .7, 1),
+      darkColor: Vector4(.6, 0.8, .7, 1),
     );
     plane.mesh.subMeshes[0].mtr.diffuseTexture = texGround;
 
@@ -55,9 +55,9 @@ class PrimitivesScene_03 extends DemoScene {
     // 03-4: torus geometry
     final torus = addMesh(M3Mesh(M3TorusGeom(0.5, 0.2)), Vector3(-2, 0, 0));
     torus.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
-    final torusY = addMesh(M3Mesh(M3TorusGeom(0.5, 0.2, axis: M3Axis.y)), Vector3(-2, 0, 2));
+    final torusY = addMesh(M3Mesh(M3TorusGeom(0.5, 0.2, axis: M3Axis.y)), Vector3(-3.5, 0, 0));
     torusY.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
-    final torusX = addMesh(M3Mesh(M3TorusGeom(0.5, 0.2, axis: M3Axis.x)), Vector3(-2, 0, 4));
+    final torusX = addMesh(M3Mesh(M3TorusGeom(0.5, 0.2, axis: M3Axis.x)), Vector3(-5, 0, 0));
     torusX.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
 
     // 03-5: pyramid geometry
@@ -73,11 +73,11 @@ class PrimitivesScene_03 extends DemoScene {
     ellipsoid.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
 
     // 03-7: capsule geometry
-    final capsule = addMesh(M3Mesh(M3CapsuleGeom(radius: 0.3, height: 1)), Vector3(-2, 2, 0));
+    final capsule = addMesh(M3Mesh(M3CapsuleGeom(radius: 0.3, height: 1)), Vector3(-2, 2.5, 0));
     capsule.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
-    final capsuleY = addMesh(M3Mesh(M3CapsuleGeom(radius: 0.3, height: 1, axis: M3Axis.y)), Vector3(-2, 2, 1.5));
+    final capsuleY = addMesh(M3Mesh(M3CapsuleGeom(radius: 0.3, height: 1, axis: M3Axis.y)), Vector3(-2, 2.5, 1.5));
     capsuleY.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
-    final capsuleX = addMesh(M3Mesh(M3CapsuleGeom(radius: 0.3, height: 1, axis: M3Axis.x)), Vector3(-2, 2, 2.5));
+    final capsuleX = addMesh(M3Mesh(M3CapsuleGeom(radius: 0.3, height: 1, axis: M3Axis.x)), Vector3(-2, 2.5, 2.5));
     capsuleX.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
 
     // 03-8: octahedral geometry
