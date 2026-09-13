@@ -59,7 +59,7 @@ class ObjTeapotScene_04 extends DemoScene {
     renderEngine.planarReflection.setRenderScale(1.0);
 
     _plane = addMesh(planeMesh, Vector3(0, 0, 0));
-    _plane.rotation.setEuler(pi / 12, 0, 0);
+    // _plane.rotation.setEuler(pi / 12, 0, 0);
 
     // 04-4: orbit around
     final meshCube = createCompoundMesh();
@@ -108,8 +108,8 @@ class ObjTeapotScene_04 extends DemoScene {
     double orbitAngle = sec * pi / 6;
 
     // mirrored plane
-    Quaternion rotPlane = Quaternion.euler(0, 0, -orbitAngle / 10.0);
-    rotPlane *= Quaternion.euler(pi / 10, 0, 0);
+    Quaternion rotPlane = Quaternion.euler(0, 0, -orbitAngle / 5.0);
+    rotPlane *= Quaternion.euler(pi / 30, 0, 0);
     _plane.rotation = rotPlane;
     _plane.position = Vector3(0, 0, -1.0);
     final normalZ = _plane.worldMatrix.getRotation() * Vector3(0, 0, 1);

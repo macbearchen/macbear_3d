@@ -7,12 +7,12 @@ mixin M3ShadowShader {
   // texture sampler for shadowmap
   late UniformLocation uniformSamplerShadowmap;
   late UniformLocation uniformShadowmapTexelSize;
-  late UniformLocation uniformNormalBias;
+  late UniformLocation uniformShadowNormalBias;
 
   void initShadowLocation(Program prog) {
     uniformSamplerShadowmap = gl.getUniformLocation(prog, "SamplerShadowmap");
     uniformShadowmapTexelSize = gl.getUniformLocation(prog, "ShadowmapTexelSize");
-    uniformNormalBias = gl.getUniformLocation(prog, "NormalBias");
+    uniformShadowNormalBias = gl.getUniformLocation(prog, "ShadowNormalBias");
 
     if (M3Program.isLocationValid(uniformSamplerShadowmap)) {
       gl.uniform1i(uniformSamplerShadowmap, 3);
@@ -42,8 +42,8 @@ mixin M3ShadowShader {
     }
 
     // shadowmap normal bias
-    if (M3Program.isLocationValid(uniformNormalBias)) {
-      gl.uniform1f(uniformNormalBias, light.shadowNormalBias);
+    if (M3Program.isLocationValid(uniformShadowNormalBias)) {
+      gl.uniform1f(uniformShadowNormalBias, light.shadowNormalBias);
     }
   }
 }

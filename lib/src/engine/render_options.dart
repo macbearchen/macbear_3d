@@ -148,6 +148,15 @@ class M3ShaderOptions {
     _pcf = v;
     isDirty = true;
   }
+
+  // --- csmOnFS ---
+  bool _csmOnFS = false; // true: ENABLE_SHADOW_CSM_FS, false: ENABLE_SHADOW_CSM_VS
+  bool get csmOnFS => _csmOnFS;
+  set csmOnFS(bool v) {
+    if (_csmOnFS == v) return;
+    _csmOnFS = v;
+    isDirty = true;
+  }
 }
 
 /// Rendering statistics

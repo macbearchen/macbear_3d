@@ -3,6 +3,8 @@
 const String LightFS_glsl = r"""
 #version 300 es
 
+lowp float ComputeShadowPCF(highp sampler2DShadow sampler, highp vec2 texelSize, highp vec2 uv, highp float refZ);
+
 // UE4 windowed inverse-square attenuation (Karis 2013)
 // +1.0 避免光源近距離過曝/firefly，rangeFade 讓光照在 radius 邊界平滑歸零
 float calcAttenuation(float distSq, float radiusSq) {
@@ -99,9 +101,9 @@ uniform mediump ivec2 uSpotLightCounts; // x=lightCount, y=shadowCastingBitwise
 
 #ifdef ENABLE_SPOT_SHADOW
 uniform highp sampler2DShadow SamplerSpotShadowmap; // GL_TEXTURE4
-uniform highp vec2 SpotShadowmapTexelSize;           // 1.0 / spot shadowmap resolution (pre-computed on CPU)
-uniform highp mat4 uMatrixSpotShadowAtlas[8];         // Bias * Projection * View * Model for each spotlight slot
-uniform highp float SpotShadowNormalBias;            // normal bias for spotlight shadow acne
+uniform highp vec2 SpotShadowmapTexelSize;          // 1.0 / spot shadowmap resolution (pre-computed on CPU)
+uniform highp mat4 uMatrixSpotShadowAtlas[8];       // Bias * Projection * View * Model for each spotlight slot
+uniform highp float SpotShadowNormalBias;           // normal bias for spotlight shadow acne
 
 // Spot shadow with atlas: project biased fragment position using spotlight i's shadow matrix
 lowp float ComputeSpotShadow(int i, vec3 fragPos, vec3 N) {

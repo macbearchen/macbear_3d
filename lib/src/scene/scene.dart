@@ -86,7 +86,7 @@ abstract class M3Scene {
     for (int i = 0; i < count; i++) {
       final pointLight = M3PointLight()
         ..position = positions[i]
-        ..color = colors[i % 6];
+        ..color = colors[i % 8];
 
       pointLights.add(pointLight);
     }
@@ -95,14 +95,14 @@ abstract class M3Scene {
   void initSpotLights(int num) {
     num = min(8, num);
     final positions = [
-      Vector3(2, 1, 3),
-      Vector3(-3, 2, 3),
-      Vector3(3, -2, 3),
-      Vector3(-10, -10, 0.2),
-      Vector3(-2, -1, 3),
-      Vector3(1, 3, 3),
-      Vector3(-1, -3, 3),
-      Vector3(0, 0, 4),
+      Vector3(-6, 3, 4),
+      Vector3(-2, 3, 4),
+      Vector3(2, 3, 4),
+      Vector3(6, -7, 0.3),
+      Vector3(-5, -2, 4),
+      Vector3(-2, -2, 4),
+      Vector3(1, -2, 4),
+      Vector3(4, -2, 4),
     ];
     final dirs = [
       Vector3(0, 0, -1),
@@ -132,7 +132,7 @@ abstract class M3Scene {
       spotLight.color = colors[i];
       spotLight.intensity = 8.0;
       spotLight.direction = dirs[i];
-      spotLight.range = 12;
+      spotLight.range = 16;
       spotLight.setShadowMap(sm);
       spotLights.add(spotLight);
     }

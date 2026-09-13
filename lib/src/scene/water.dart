@@ -169,13 +169,21 @@ class M3Water extends M3Entity {
         break;
     }
 
-    // capture reflection
+    final options = M3AppEngine.instance.renderEngine.options;
+    final backupShadow = options.useShadow;
+    // --- capture reflection ---
+    options.useShadow = false; // disable shadow state
     reflectionPass.clipPlane.setFromComponents(n.x, n.y, n.z, d);
     reflectionPass.captureReflection(scene);
+    options.useShadow = backupShadow; // restore shadow state
 
-    // capture refraction
+    // --- capture refraction ---
+    if (options.debug.showCamera) {
+      options.useShadow = false; // disable shadow state
+    }
     refractionPass.clipPlane.setFromComponents(n.x, n.y, n.z, d);
     refractionPass.captureRefraction(scene);
+    options.useShadow = backupShadow; // restore shadow state
   }
 
   /// render water surface
@@ -257,23 +265,23 @@ class M3Water extends M3Entity {
     if (!visible) return;
 
     final passes = {reflectionPass, refractionPass};
-
+    final engine = M3AppEngine.instance;
     const ratio = 0.4;
     double x = 8;
-    double y = 8;
+    final y = engine.appHeight - 210.0;
     double w = 0;
     double h = 0;
     for (final pass in passes) {
       if (pass.enable && pass.visible) {
         w = pass.width * ratio;
         h = pass.height * ratio;
-        pass.debugDrawReflection(x, y, w, h);
+        pass.debugDrawReflection(x, y - h - 2, w, h);
         x += w + 2;
       }
     }
 
     // water normal map
-    normalMap.debugDraw(x, y, ratio, ratio);
+    // normalMap.debugDraw(x, y, ratio, ratio);
   }
 
   void dispose() {

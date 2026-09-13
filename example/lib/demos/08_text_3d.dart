@@ -52,12 +52,16 @@ class Text3DScene_08 extends DemoScene {
     mtr2.diffuse = Vector4(0.8, 1.0, 0.1, 1.0); // yellow
     // 08-1: text geometry
     final mesh = M3Mesh(textGeom, material: mtr);
-    _textEntity = addMesh(mesh, Vector3(-6, 0, 1.5)); // OpenGL ES
+    _textEntity = addMesh(mesh, Vector3(-6, 0, 2)); // OpenGL ES
     _textEntity!.rotation.setEuler(0, pi * 0.45, 0);
 
-    final mesh2 = M3Mesh(textGeom2, material: mtr2);
-    final entity2 = addMesh(mesh2, Vector3(-3, -3, 0.3)); // Macbear 3D
+    final mesh2 = M3Mesh(textGeom2);
+    final entity2 = addMesh(mesh2, Vector3(-4, -1, 1.2)); // Macbear 3D
     entity2.rotation.setEuler(0, 0, pi / 5);
+
+    final mesh3 = M3Mesh(textGeom2, material: mtr2);
+    final entity3 = addMesh(mesh3, Vector3(-3, -3, 0.3)); // Macbear 3D
+    entity3.rotation.setEuler(0, 0, pi / 5);
 
     M3Texture texGround = M3Texture.createCheckerboard(
       size: 2,

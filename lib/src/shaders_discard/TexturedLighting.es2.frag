@@ -39,16 +39,16 @@ uniform lowp vec3 FogColor;
 varying highp vec4 LightcoordShadowmap;	// light-space coordinate-system
 #endif // ENABLE_SHADOW_MAP
 
-#ifdef ENABLE_SHADOW_CSM
+#ifdef ENABLE_SHADOW_CSM_VS
 varying highp vec4 LightcoordCSM[4];	// light-space coordinate-system
 uniform highp vec4 DepthCSM;			// depth clip-plane
-#endif // ENABLE_SHADOW_CSM
+#endif // ENABLE_SHADOW_CSM_VS
 
-#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
+#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS)
 uniform highp sampler2D SamplerShadowmap;	// GL_TEXTURE1
-uniform highp vec2 ShadowmapSize;		// shadowmap resolution
-uniform highp float NormalBias;			// normal bias (for shadow acne)
-#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
+uniform highp vec2 ShadowmapSize;			// shadowmap resolution
+uniform highp float ShadowNormalBias;		// normal bias (for shadow acne)
+#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS
 
 
 void main(void)
@@ -60,8 +60,8 @@ void main(void)
 #endif // ENABLE_ALPHA_TEST
 	
 	////////// shadow map //////////
-#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
-	#ifdef ENABLE_SHADOW_CSM
+#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS)
+	#ifdef ENABLE_SHADOW_CSM_VS
 		highp vec4 LightcoordShadowmap = LightcoordCSM[3];
 		if (gl_FragCoord.z < DepthCSM.x) {
 			LightcoordShadowmap = LightcoordCSM[0];
@@ -78,7 +78,7 @@ void main(void)
 
 		// gl_FragColor = vec4(vec3(gl_FragCoord.z), 1.0); // debug CSM
 		// return;
-	#endif // ENABLE_SHADOW_CSM
+	#endif // ENABLE_SHADOW_CSM_VS
 	
 	if (LightcoordShadowmap.s < 0.0 || LightcoordShadowmap.t < 0.0 || LightcoordShadowmap.s > 1.0 || LightcoordShadowmap.t > 1.0) {
 		texResult = ShadeLit(texResult);					// lit-area
@@ -115,7 +115,7 @@ void main(void)
 
 #else
     texResult = ShadeLit(texResult);
-#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
+#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS
 
 #ifdef ENABLE_FOG
 	// Perform depth test and clamp the values

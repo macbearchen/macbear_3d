@@ -52,6 +52,41 @@ class M3HeightField {
   }
 
   // ---------------------------------------------------------------------------
+  // Public sampling
+  // ---------------------------------------------------------------------------
+
+  /// Returns the interpolated height at world-space [x], [y] (terrain centered
+  /// at origin). Returns 0 if the coordinate is outside the terrain bounds.
+  double heightAt(double x, double y) {
+    final double totalWidth = cellSize.x * widthSegments;
+    final double totalHeight = cellSize.y * heightSegments;
+
+    // Convert world XY → [0, widthSegments] / [0, heightSegments]
+    final double u = (x + totalWidth * 0.5) / cellSize.x;
+    final double v = (y + totalHeight * 0.5) / cellSize.y;
+
+    if (u < 0 || u > widthSegments || v < 0 || v > heightSegments) return 0.0;
+
+    final int x0 = u.floor().clamp(0, widthSegments - 1);
+    final int x1 = (x0 + 1).clamp(0, widthSegments);
+    final int y0 = v.floor().clamp(0, heightSegments - 1);
+    final int y1 = (y0 + 1).clamp(0, heightSegments);
+
+    final double tx = u - x0;
+    final double ty = v - y0;
+
+    final double h00 = data[y0 * (widthSegments + 1) + x0];
+    final double h10 = data[y0 * (widthSegments + 1) + x1];
+    final double h01 = data[y1 * (widthSegments + 1) + x0];
+    final double h11 = data[y1 * (widthSegments + 1) + x1];
+
+    final double h0 = h00 * (1.0 - tx) + h10 * tx;
+    final double h1 = h01 * (1.0 - tx) + h11 * tx;
+
+    return (h0 * (1.0 - ty) + h1 * ty) * heightScale;
+  }
+
+  // ---------------------------------------------------------------------------
   // Helpers (mirror of M3TerrainGeom sampling logic)
   // ---------------------------------------------------------------------------
 

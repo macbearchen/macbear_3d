@@ -43,14 +43,14 @@ uniform mat4 MatrixShadowmap;
 varying highp vec4 LightcoordShadowmap;	// light-space coordinate-system
 #endif // ENABLE_SHADOW_MAP
 
-#ifdef ENABLE_SHADOW_CSM
+#ifdef ENABLE_SHADOW_CSM_VS
 // light-space matrix for shadowmap in texture-space
 uniform mat4 MatrixCSM[4];
 varying highp vec4 LightcoordCSM[4];	// light-space coordinate-system
-#endif // ENABLE_SHADOW_CSM
+#endif // ENABLE_SHADOW_CSM_VS
 
-#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
-uniform highp float NormalBias;			// normal bias (for shadow acne)
+#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS)
+uniform highp float ShadowNormalBias;	// normal bias (for shadow acne)
 #endif
 
 #ifdef ENABLE_FOG
@@ -100,18 +100,18 @@ void main(void)
 	
 	
 #ifdef ENABLE_SHADOW_MAP
-	vec3 biasedVertMap = objVert.xyz + objNormal * NormalBias;
+	vec3 biasedVertMap = objVert.xyz + objNormal * ShadowNormalBias;
 	LightcoordShadowmap = MatrixShadowmap * vec4(biasedVertMap, 1.0);
 #endif // ENABLE_SHADOW_MAP
 	
-#ifdef ENABLE_SHADOW_CSM
+#ifdef ENABLE_SHADOW_CSM_VS
 	// cascaded shadowmap
-	vec3 biasedVertCSM = objVert.xyz + objNormal * NormalBias;
+	vec3 biasedVertCSM = objVert.xyz + objNormal * ShadowNormalBias;
 	LightcoordCSM[0] = MatrixCSM[0] * vec4(biasedVertCSM, 1.0);
 	LightcoordCSM[1] = MatrixCSM[1] * vec4(biasedVertCSM, 1.0);
 	LightcoordCSM[2] = MatrixCSM[2] * vec4(biasedVertCSM, 1.0);
 	LightcoordCSM[3] = MatrixCSM[3] * vec4(biasedVertCSM, 1.0);
-#endif // ENABLE_SHADOW_CSM
+#endif // ENABLE_SHADOW_CSM_VS
 
 #ifdef ENABLE_FOG
 	// for fog density

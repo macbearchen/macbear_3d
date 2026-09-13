@@ -1,6 +1,19 @@
 @startuml
 set namespaceSeparator ::
 
+class "macbear_3d::src::mesh::tiled_plane_mesh.dart::M3TiledPlaneMesh" {
+  +int tilesX
+  +int tilesY
+  +double tileWidth
+  +double tileHeight
+  +double totalWidth
+  +double totalHeight
+  +M3SubMesh? getTileSubMesh()
+  +int tyIndex()
+}
+
+"macbear_3d::src::mesh::mesh.dart::M3Mesh" <|-- "macbear_3d::src::mesh::tiled_plane_mesh.dart::M3TiledPlaneMesh"
+
 class "macbear_3d::src::mesh::animator.dart::M3Animator" {
   +List<GltfAnimation> animations
   +Map<int, GltfNode> nodes
@@ -218,6 +231,7 @@ class "macbear_3d::src::renderer::shadow_map.dart::M3ShadowMap" {
   +String toString()
   +void dispose()
   +void renderDepth()
+  +void renderSpotDepths()
   +void debugDrawDepth()
 }
 
@@ -935,6 +949,7 @@ class "macbear_3d::src::geom::terrain::height_field.dart::M3HeightField" {
   +double heightScale
   +int widthSegments
   +int heightSegments
+  +double heightAt()
   {static} -double _sampleHeight()
   {static} -double _getPixelHeight()
 }
@@ -1182,7 +1197,7 @@ abstract class "macbear_3d::src::program::program.dart::M3ShadowShader" {
   +RenderingContext gl
   +UniformLocation uniformSamplerShadowmap
   +UniformLocation uniformShadowmapTexelSize
-  +UniformLocation uniformNormalBias
+  +UniformLocation uniformShadowNormalBias
   +void initShadowLocation()
   -void _applyShadow()
 }
@@ -1421,7 +1436,9 @@ class "macbear_3d::src::light::light.dart::M3SpotLightManager" {
   -UniformLocation _uniformSpotLightCounts
   -UniformLocation _uniformSamplerSpotShadowmap
   -UniformLocation _uniformSpotShadowmapTexelSize
-  -UniformLocation _uniformMatrixSpotShadowmap
+  -UniformLocation _uniformMatrixSpotShadowAtlas
+  -UniformLocation _uniformSpotShadowNormalBias
+  -Float32List _spotShadowMats
   -List<M3SpotLight> _spotLights
   +int spotCount
   +int shadowFlag
@@ -2096,6 +2113,7 @@ class "macbear_3d::src::engine::render_options.dart::M3ShaderOptions" {
   -bool _pointLights
   -bool _spotLights
   +bool isDirty
+  -bool _csmOnFS
   +bool pointLights
   +bool spotLights
   +bool fog
@@ -2104,6 +2122,7 @@ class "macbear_3d::src::engine::render_options.dart::M3ShaderOptions" {
   +bool pbr
   +bool ibl
   +int pcf
+  +bool csmOnFS
 }
 
 class "macbear_3d::src::engine::render_options.dart::M3RenderStats" {

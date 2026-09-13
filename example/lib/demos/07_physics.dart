@@ -84,8 +84,8 @@ class PhysicsScene_07 extends DemoScene {
     );
     M3Texture texGround = M3Texture.createCheckerboard(
       size: 2,
-      lightColor: Vector4(.7, 1, .5, 1),
-      darkColor: Vector4(.5, 0.8, .3, 1),
+      lightColor: Vector4(.8, 1, .9, 1),
+      darkColor: Vector4(.6, 0.8, .7, 1),
     );
     plane.mesh.subMeshes[0].mtr.diffuseTexture = texGround;
   }

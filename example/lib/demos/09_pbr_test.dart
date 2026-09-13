@@ -25,7 +25,7 @@ class PbrTestScene_09 extends DemoScene {
 
         final mesh = M3Mesh(sphereGeom);
         mesh.subMeshes[0].mtr
-          ..diffuse = Vector4(0.6, 1.0, 0.6, 1.0)
+          ..diffuse = Vector4(1.0, 1.0, 0.8, 1.0)
           ..reflection = metallic
           ..metallic = metallic
           ..roughness = max(roughness, 0.05); // Avoid zero roughness for GGX
@@ -33,13 +33,13 @@ class PbrTestScene_09 extends DemoScene {
         double x = (i - (rows - 1) / 2) * spacing;
         double y = (j - (cols - 1) / 2) * spacing;
 
-        final ball = addMesh(mesh, Vector3(x, y, 0));
+        final ball = addMesh(mesh, Vector3(x, y, -1));
         ball.rotation.setEuler(i * pi / 10, j * pi / 20, 0);
         ball.scale = Vector3.all((i + 40) * 0.05);
       }
     }
 
-    final groundZ = -2.0;
+    final groundZ = -2.2;
     // Add a ground plane
     // final planeMesh = M3Mesh(M3PlaneGeom(30, 30));
     final planeMesh = M3TiledPlaneMesh(tilesX: 5, tilesY: 5, tileWidth: 5, tileHeight: 5);
@@ -56,7 +56,7 @@ class PbrTestScene_09 extends DemoScene {
     }
 
     // axis gizmo
-    addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 2));
+    addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 0));
 
     // 08-3: Apply mirror shader to ground
     renderEngine.planarReflection.clipPlane.setFromComponents(0, 0, 1, -groundZ);

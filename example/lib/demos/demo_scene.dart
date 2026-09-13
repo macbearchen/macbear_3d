@@ -16,7 +16,7 @@ class DemoScene extends M3Scene {
     pointLights[0].intensity = 2.5;
     pointLights[0].range = 9;
 
-    initSpotLights(4);
+    initSpotLights(8);
     spotLights[0].setShadowMap(renderEngine.spotLightShadowMap);
     spotLights[0].outerAngle = 60.0;
     spotLights[1].outerAngle = 50.0;
@@ -34,25 +34,13 @@ class DemoScene extends M3Scene {
     // M3Log.d('DemoScene', 'Light Direction: $dirLight');
 
     // move point lights
-    final cosSec = cos(sec * 0.3);
-    final sinSec = sin(sec * 0.3);
 
     final pointCount = pointLights.length;
-
-    if (pointCount > 0) {
-      pointLights[0].position = Vector3(5 * cosSec, 5 * sinSec, 0.75);
-    }
-    if (pointCount > 1) {
-      pointLights[1].position = Vector3(3 * -sinSec, 3 * -cosSec, 0.7);
-    }
-    if (pointCount > 2) {
-      pointLights[2].position = Vector3(8 * sinSec, 8 * sinSec, 1.2);
-    }
-    if (pointCount > 3) {
-      pointLights[3].position = Vector3(0, 8 * sinSec, 1.2);
-    }
-    if (pointCount > 4) {
-      pointLights[4].position = Vector3(0, 8 * cosSec, 1.2);
+    for (int i = 0; i < pointCount; i++) {
+      final cosSec = cos(sec * 0.1 * (i + 5));
+      final sinSec = sin(sec * 0.1 * (i + 5));
+      final r = i * 0.2 + 4;
+      pointLights[i].position = Vector3(r * cosSec, r * sinSec, 0.75);
     }
 
     final cosSec2 = cos(sec * 0.6);
@@ -60,14 +48,23 @@ class DemoScene extends M3Scene {
 
     final spotCount = spotLights.length;
 
-    if (spotCount > 0) {
-      spotLights[0].direction = Vector3(cosSec2 * 0.5, 0, -1);
-    }
-    if (spotCount > 1) {
-      spotLights[1].direction = Vector3(0.2, sinSec2 * 0.5, -1);
-    }
-    if (spotCount > 3) {
-      spotLights[3].direction = Vector3(sinSec2, cosSec2, -0.5);
+    for (int i = 0; i < spotCount; i++) {
+      if (i == 0) {
+        spotLights[0].direction = Vector3(cosSec2 * 0.5, 0, -1);
+      }
+      if (i == 1) {
+        spotLights[1].direction = Vector3(0.2, sinSec2 * 0.5, -1);
+      }
+      if (i == 3) {
+        spotLights[3].direction = Vector3(sinSec2, cosSec2, -0.5);
+        continue;
+      }
+
+      if (i < 3) {
+        final y = cos(sec) * 4 + 3;
+        final spotPos = spotLights[i].position;
+        spotLights[i].position = Vector3(spotPos.x, y, spotPos.z);
+      }
     }
   }
 

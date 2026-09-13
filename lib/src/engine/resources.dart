@@ -25,6 +25,7 @@ import '../shaders_gen/glsl/PixelFS.es3.glsl.g.dart';
 import '../shaders_gen/glsl/ShadowFS.es3.glsl.g.dart';
 import '../shaders_gen/glsl/ShadowVS.es3.glsl.g.dart';
 import '../shaders_gen/glsl/SkinningVS.es3.glsl.g.dart';
+import '../shaders_gen/glsl/SurfaceGeometry.glsl.g.dart';
 
 class M3Resources {
   // ------------------------------
@@ -207,7 +208,7 @@ class M3Resources {
 
     // texture lighting program
     String strVert = _SkinNormalVS_glsl + TexturedLighting_vert;
-    String strFrag = TexturedLighting_frag;
+    String strFrag = SurfaceGeometry_glsl + TexturedLighting_frag;
 
     // pixel lighting: phong shading, cartoon, PBR, IBL
     if (options.perPixel) {
@@ -261,7 +262,7 @@ class M3Resources {
     }
 
     strVert = ShadowVS_glsl + strVert; // shadow vertex shader
-    strFrag = strShadowFS + strFrag; // shadow fragment shader
+    strFrag = strFrag + strShadowFS; // shadow fragment shader
 
     // ENABLE_SPOT_SHADOW must be prepended AFTER ShadowVS_glsl so the define
     // appears before ShadowVS_glsl in the final string (preprocessor reads top-down)
@@ -279,8 +280,9 @@ class M3Resources {
     programShadowmap = M3ProgramShadowmap(vsShadow, fsShadow);
 
     // shadow CSM program
-    vsShadow = "#define ENABLE_SHADOW_CSM \n$strVert";
-    fsShadow = "#define ENABLE_SHADOW_CSM \n$strFrag";
+    final String csmDefine = options.csmOnFS ? "#define ENABLE_SHADOW_CSM_FS \n" : "#define ENABLE_SHADOW_CSM_VS \n";
+    vsShadow = "$csmDefine \n$strVert";
+    fsShadow = "$csmDefine \n$strFrag";
     programShadowCSM = M3ProgramShadowCSM(vsShadow, fsShadow);
 
     // water program without shadow
@@ -303,11 +305,12 @@ class M3Resources {
       vsWater = "#define ENABLE_FOG \n$vsWater";
       fsWater = "#define ENABLE_FOG \n$fsWater \n$FogFS_glsl";
     }
+    M3Log.i('setLightingProgram', 'prepare water');
     programWater = M3ProgramWater(vsWater, fsWater);
 
     // water program with shadow CSM
-    vsWater = "#define ENABLE_SHADOW_CSM \n$ShadowVS_glsl \n$vsWater";
-    fsWater = "#define ENABLE_SHADOW_CSM \n$strShadowFS \n$fsWater";
+    vsWater = "$csmDefine \n$ShadowVS_glsl \n$vsWater";
+    fsWater = "$csmDefine \n$fsWater \n$strShadowFS";
     programWaterCSM = M3ProgramWaterCSM(vsWater, fsWater);
   }
 

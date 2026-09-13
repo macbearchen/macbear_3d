@@ -1,13 +1,18 @@
 // ignore_for_file: unused_import, unused_local_variable
-import 'dart:math';
 import 'package:material_ui/material_ui.dart';
-import 'package:vector_math/vector_math.dart' hide Colors;
 
 // Macbear3D engine
-import 'package:macbear_3d/macbear_3d.dart';
 export 'package:macbear_3d/src/m3_internal.dart';
 // physics engine
 export 'rapier/rapier_physics_engine.dart';
+// rapier scenes
+import 'rapier/base_scene.dart' hide Colors;
+import 'rapier/physics_scene.dart';
+import 'rapier/compound_scene.dart';
+import 'rapier/double_pendulum.dart';
+import 'rapier/newton_cradle.dart';
+import 'rapier/character_controller_scene.dart';
+import 'rapier/scene_query_scene.dart';
 import 'demos/demo_scene.dart';
 export 'demos/demo_scene.dart';
 
@@ -77,7 +82,9 @@ class _MainPageState extends State<MainPage> {
   // 2 - csm
   int shadowMode = 2;
   int _selectedSceneIndex = 1; // 00 starter, 01-08 scenes, 9 sample
+  int _selectedPhysicsSubIndex = 0; // cycles 0-5 through the 6 physics scenes
   bool _showSettings = true;
+  final separateWidget = SizedBox(width: 2, height: 2);
 
   @override
   void initState() {
@@ -106,7 +113,7 @@ class _MainPageState extends State<MainPage> {
         return Dialog(
           backgroundColor: Colors.black54,
           child: Padding(
-            padding: EdgeInsets.all(20.0),
+            padding: EdgeInsets.all(12.0),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -171,10 +178,10 @@ class _MainPageState extends State<MainPage> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (_showSettings) ...[
-            getFogWidget(),
-            const SizedBox(height: 8),
             getHelperWidget(),
             const SizedBox(height: 8),
+            getFogWidget(),
+            separateWidget,
             getShaderWidget(),
             const SizedBox(height: 8),
           ],
@@ -209,10 +216,7 @@ class _MainPageState extends State<MainPage> {
         children: [
           const Icon(Icons.speed, color: Colors.white70, size: 20),
           const SizedBox(width: 8),
-          Text(
-            "${engine.timeScale.toStringAsFixed(2)}x",
-            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-          ),
+          Text("${engine.timeScale.toStringAsFixed(2)}x", style: const TextStyle(color: Colors.white, fontSize: 10)),
           SizedBox(
             width: 100,
             child: SliderTheme(
@@ -236,7 +240,7 @@ class _MainPageState extends State<MainPage> {
               ),
             ),
           ),
-          const SizedBox(width: 4),
+          separateWidget,
           Container(width: 1, height: 16, color: Colors.white24),
           const SizedBox(width: 8),
           GestureDetector(
@@ -264,7 +268,7 @@ class _MainPageState extends State<MainPage> {
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        FloatingActionButton(
+        FloatingActionButton.small(
           heroTag: 'shadow',
           backgroundColor: shadowMode > 0 ? Colors.amber : null,
           onPressed: () {
@@ -276,8 +280,8 @@ class _MainPageState extends State<MainPage> {
             shadowMode == 2 ? Icons.layers : (shadowMode == 1 ? Icons.light_mode : Icons.light_mode_outlined),
           ),
         ),
-        const SizedBox(width: 4),
-        FloatingActionButton(
+        separateWidget,
+        FloatingActionButton.small(
           heroTag: 'pcf',
           backgroundColor: shaderOptions.pcf > 0 ? Colors.amber : null,
           onPressed: () {
@@ -285,10 +289,21 @@ class _MainPageState extends State<MainPage> {
               shaderOptions.pcf = (shaderOptions.pcf + 1) % 4;
             });
           },
-          child: Text('PCF ${shaderOptions.pcf}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          child: Text('PCF ${shaderOptions.pcf}', style: const TextStyle(fontSize: 10)),
         ),
-        const SizedBox(width: 10),
-        FloatingActionButton(
+        separateWidget,
+        FloatingActionButton.small(
+          heroTag: 'csm_vs_fs',
+          backgroundColor: shaderOptions.csmOnFS ? Colors.amber : null,
+          onPressed: () {
+            setState(() {
+              shaderOptions.csmOnFS = !shaderOptions.csmOnFS;
+            });
+          },
+          child: Text(shaderOptions.csmOnFS ? 'CSM FS' : 'CSM VS', style: const TextStyle(fontSize: 10)),
+        ),
+        const SizedBox(width: 8),
+        FloatingActionButton.small(
           heroTag: 'per_pixel',
           backgroundColor: shaderOptions.perPixel ? Colors.amber : null,
           onPressed: () {
@@ -298,8 +313,8 @@ class _MainPageState extends State<MainPage> {
           },
           child: const Icon(Icons.draw),
         ),
-        const SizedBox(width: 4),
-        FloatingActionButton(
+        separateWidget,
+        FloatingActionButton.small(
           heroTag: 'cartoon',
           backgroundColor: shaderOptions.cartoon ? Colors.amber : null,
           onPressed: () {
@@ -309,8 +324,8 @@ class _MainPageState extends State<MainPage> {
           },
           child: const Text('toon'),
         ),
-        const SizedBox(width: 4),
-        FloatingActionButton(
+        separateWidget,
+        FloatingActionButton.small(
           heroTag: 'pbr',
           backgroundColor: shaderOptions.pbr ? Colors.amber : null,
           onPressed: () {
@@ -320,8 +335,8 @@ class _MainPageState extends State<MainPage> {
           },
           child: const Text('PBR'),
         ),
-        const SizedBox(width: 4),
-        FloatingActionButton(
+        separateWidget,
+        FloatingActionButton.small(
           heroTag: 'ibl',
           backgroundColor: shaderOptions.ibl ? Colors.amber : null,
           onPressed: () {
@@ -338,11 +353,65 @@ class _MainPageState extends State<MainPage> {
   /// Helper
   Widget getHelperWidget() {
     final renderEngine = M3AppEngine.instance.renderEngine;
+    final scene = M3AppEngine.instance.activeScene;
+    final lightBrightness = scene != null
+        ? ((scene.dirLight.color.x + scene.dirLight.color.y + scene.dirLight.color.z) / 3.0).clamp(0.0, 1.0)
+        : 0.8;
     return Row(
-      mainAxisAlignment: .start,
-      mainAxisSize: .min,
+      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        FloatingActionButton(
+        // ── Directional light brightness slider ──
+        if (scene != null)
+          Container(
+            width: 60,
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(12)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('\u2600', style: TextStyle(fontSize: 11, color: Colors.amber)),
+                SizedBox(
+                  width: 60,
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 2,
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                    ),
+                    child: Slider(
+                      value: lightBrightness,
+                      min: 0.0,
+                      max: 1.0,
+                      activeColor: Colors.amber,
+                      inactiveColor: Colors.white24,
+                      onChanged: (val) {
+                        setState(() {
+                          scene.dirLight.color = Vector3.all(val);
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                Text(lightBrightness.toStringAsFixed(2), style: const TextStyle(fontSize: 9, color: Colors.white70)),
+              ],
+            ),
+          ),
+        separateWidget,
+        FloatingActionButton.small(
+          heroTag: 'light',
+          backgroundColor: renderEngine.options.debug.showLight ? Colors.lightGreen : null,
+          onPressed: () {
+            setState(() {
+              renderEngine.options.debug.showLight = !renderEngine.options.debug.showLight;
+            });
+          },
+          child: Icon(renderEngine.options.debug.showLight ? Icons.lightbulb_sharp : Icons.lightbulb_outline),
+        ),
+        separateWidget,
+
+        FloatingActionButton.small(
           heroTag: 'wireframe',
           backgroundColor: renderEngine.options.debug.wireframe ? Colors.lightGreen : null,
           onPressed: () {
@@ -352,8 +421,8 @@ class _MainPageState extends State<MainPage> {
           },
           child: const Icon(Icons.grid_4x4_sharp),
         ),
-        const SizedBox(width: 4),
-        FloatingActionButton(
+        separateWidget,
+        FloatingActionButton.small(
           heroTag: 'map',
           backgroundColor: renderEngine.options.debug.showMaps ? Colors.lightGreen : null,
           onPressed: () {
@@ -363,8 +432,8 @@ class _MainPageState extends State<MainPage> {
           },
           child: const Icon(Icons.map),
         ),
-        const SizedBox(width: 4),
-        FloatingActionButton(
+        separateWidget,
+        FloatingActionButton.small(
           heroTag: 'info',
           backgroundColor: renderEngine.options.debug.showHelpers != M3HelperType.none ? Colors.cyan : null,
           onPressed: () {
@@ -380,11 +449,11 @@ class _MainPageState extends State<MainPage> {
                   renderEngine.options.debug.showHelpers == M3HelperType.entity
                       ? 'Ent'
                       : (renderEngine.options.debug.showHelpers == M3HelperType.subMesh ? 'Sub' : 'Both'),
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 10),
                 ),
         ),
-        const SizedBox(width: 4),
-        FloatingActionButton(
+        separateWidget,
+        FloatingActionButton.small(
           heroTag: 'camera',
           backgroundColor: renderEngine.options.debug.showCamera ? Colors.lightGreen : null,
           onPressed: () {
@@ -393,17 +462,6 @@ class _MainPageState extends State<MainPage> {
             });
           },
           child: const Icon(Icons.videocam_outlined),
-        ),
-        const SizedBox(width: 4),
-        FloatingActionButton(
-          heroTag: 'light',
-          backgroundColor: renderEngine.options.debug.showLight ? Colors.lightGreen : null,
-          onPressed: () {
-            setState(() {
-              renderEngine.options.debug.showLight = !renderEngine.options.debug.showLight;
-            });
-          },
-          child: Icon(renderEngine.options.debug.showLight ? Icons.lightbulb_sharp : Icons.lightbulb_outline),
         ),
       ],
     );
@@ -431,10 +489,7 @@ class _MainPageState extends State<MainPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text("fog: ", style: TextStyle(color: Colors.white70, fontSize: 12)),
-                Text(
-                  "${fogStartPct.toStringAsFixed(0)}%",
-                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                ),
+                Text("${fogStartPct.toStringAsFixed(0)}%", style: const TextStyle(color: Colors.white, fontSize: 10)),
                 SizedBox(
                   width: 100,
                   child: SliderTheme(
@@ -464,7 +519,7 @@ class _MainPageState extends State<MainPage> {
             ),
           ),
         ],
-        FloatingActionButton(
+        FloatingActionButton.small(
           heroTag: 'fog',
           backgroundColor: shaderOptions.fog ? Colors.lime : null,
           onPressed: () {
@@ -474,8 +529,8 @@ class _MainPageState extends State<MainPage> {
           },
           child: Icon(shaderOptions.fog ? Icons.cloud : Icons.cloud_queue),
         ),
-        const SizedBox(width: 4),
-        FloatingActionButton(
+        separateWidget,
+        FloatingActionButton.small(
           heroTag: 'point_lights',
           backgroundColor: shaderOptions.pointLights ? Colors.amber : null,
           onPressed: () {
@@ -485,8 +540,8 @@ class _MainPageState extends State<MainPage> {
           },
           child: const Icon(Icons.lightbulb_circle),
         ),
-        const SizedBox(width: 4),
-        FloatingActionButton(
+        separateWidget,
+        FloatingActionButton.small(
           heroTag: 'spot_lights',
           backgroundColor: shaderOptions.spotLights ? Colors.amber : null,
           onPressed: () {
@@ -508,7 +563,7 @@ class _MainPageState extends State<MainPage> {
         mainAxisAlignment: MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          FloatingActionButton(
+          FloatingActionButton.small(
             heroTag: 'scene_01',
             backgroundColor: _selectedSceneIndex == 1 ? Colors.cyan : null,
             onPressed: () {
@@ -518,7 +573,7 @@ class _MainPageState extends State<MainPage> {
             child: const Icon(Icons.filter_1),
           ),
           const SizedBox(width: 4),
-          FloatingActionButton(
+          FloatingActionButton.small(
             heroTag: 'scene_02',
             backgroundColor: _selectedSceneIndex == 2 ? Colors.cyan : null,
             onPressed: () {
@@ -527,8 +582,8 @@ class _MainPageState extends State<MainPage> {
             },
             child: const Icon(Icons.filter_2),
           ),
-          const SizedBox(width: 4),
-          FloatingActionButton(
+          separateWidget,
+          FloatingActionButton.small(
             heroTag: 'scene_03',
             backgroundColor: _selectedSceneIndex == 3 ? Colors.cyan : null,
             onPressed: () {
@@ -537,8 +592,8 @@ class _MainPageState extends State<MainPage> {
             },
             child: const Icon(Icons.filter_3),
           ),
-          const SizedBox(width: 4),
-          FloatingActionButton(
+          separateWidget,
+          FloatingActionButton.small(
             heroTag: 'scene_04',
             backgroundColor: _selectedSceneIndex == 4 ? Colors.cyan : null,
             onPressed: () {
@@ -547,8 +602,8 @@ class _MainPageState extends State<MainPage> {
             },
             child: const Icon(Icons.filter_4),
           ),
-          const SizedBox(width: 4),
-          FloatingActionButton(
+          separateWidget,
+          FloatingActionButton.small(
             heroTag: 'scene_05',
             backgroundColor: _selectedSceneIndex == 5 ? Colors.cyan : null,
             onPressed: () {
@@ -557,8 +612,8 @@ class _MainPageState extends State<MainPage> {
             },
             child: const Icon(Icons.filter_5),
           ),
-          const SizedBox(width: 4),
-          FloatingActionButton(
+          separateWidget,
+          FloatingActionButton.small(
             heroTag: 'scene_06',
             backgroundColor: _selectedSceneIndex == 6 ? Colors.cyan : null,
             onPressed: () {
@@ -567,18 +622,41 @@ class _MainPageState extends State<MainPage> {
             },
             child: const Icon(Icons.terrain),
           ),
-          const SizedBox(width: 4),
-          FloatingActionButton(
+          separateWidget,
+          FloatingActionButton.small(
             heroTag: 'scene_07',
             backgroundColor: _selectedSceneIndex == 7 ? Colors.cyan : null,
             onPressed: () {
-              _selectedSceneIndex = 7;
-              _loadScene(PhysicsScene_07());
+              setState(() {
+                _selectedSceneIndex = 7;
+                _selectedPhysicsSubIndex = (_selectedPhysicsSubIndex + 1) % 7;
+              });
+              final M3Scene physicsScene;
+              switch (_selectedPhysicsSubIndex) {
+                case 0:
+                  physicsScene = PhysicsScene_07();
+                case 1:
+                  physicsScene = BaseScene.createPhysicsScene((p) => PhysicsScene(physics: p));
+                case 2:
+                  physicsScene = BaseScene.createPhysicsScene((p) => CompoundScene(physics: p));
+                case 3:
+                  physicsScene = BaseScene.createPhysicsScene((p) => DoublePendulumScene(physics: p));
+                case 4:
+                  physicsScene = BaseScene.createPhysicsScene((p) => NewtonCradleScene(physics: p));
+                case 5:
+                  physicsScene = BaseScene.createPhysicsScene((p) => CharacterControllerScene(physics: p));
+                case _:
+                  physicsScene = BaseScene.createPhysicsScene((p) => SceneQueryScene(physics: p));
+              }
+              _loadScene(physicsScene);
             },
-            child: const Icon(Icons.filter_7),
+            child: Text(
+              'Phys$_selectedPhysicsSubIndex',
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+            ),
           ),
-          const SizedBox(width: 4),
-          FloatingActionButton(
+          separateWidget,
+          FloatingActionButton.small(
             heroTag: 'scene_08',
             backgroundColor: _selectedSceneIndex == 8 ? Colors.cyan : null,
             onPressed: () {
@@ -587,8 +665,8 @@ class _MainPageState extends State<MainPage> {
             },
             child: const Icon(Icons.filter_8),
           ),
-          const SizedBox(width: 4),
-          FloatingActionButton(
+          separateWidget,
+          FloatingActionButton.small(
             heroTag: 'scene_09',
             backgroundColor: _selectedSceneIndex == 9 ? Colors.cyan : null,
             onPressed: () {
@@ -597,7 +675,7 @@ class _MainPageState extends State<MainPage> {
             },
             child: const Icon(Icons.filter_9),
           ),
-          const SizedBox(width: 4),
+          separateWidget,
           /*          FloatingActionButton(
             heroTag: 'scene_10',
             backgroundColor: _selectedSceneIndex == 10 ? Colors.cyan : null,
@@ -608,7 +686,7 @@ class _MainPageState extends State<MainPage> {
             child: const Icon(Icons.terrain),
           ),
           const SizedBox(width: 4), */
-          FloatingActionButton(
+          FloatingActionButton.small(
             heroTag: 'scene_12',
             backgroundColor: _selectedSceneIndex == 12 ? Colors.cyan : null,
             onPressed: () {

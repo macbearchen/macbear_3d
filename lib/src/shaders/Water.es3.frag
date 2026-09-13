@@ -27,7 +27,7 @@ lowp vec4 ShadeLit(in lowp vec4 texDiffuse)
 
 lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse)
 {
-	return vec4(texDiffuse.rgb * 0.7, 1.0);
+	return vec4(texDiffuse.rgb * 0.8, 1.0);
 }
 
 // output color
@@ -66,6 +66,9 @@ uniform lowp vec3 LightDiffuse;		// diffuse of light
 uniform mediump vec3 uLightDir;		// parallel light
 #endif // ENABLE_WATER_SPECULAR
 
+#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS) || defined(ENABLE_SHADOW_CSM_FS)
+lowp vec4 ShadeLitShadowMix(in lowp vec4 color);
+#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS or ENABLE_SHADOW_CSM_FS
 #ifdef ENABLE_FOG
 lowp vec4 ApplyFog(in lowp vec4 texResult);
 #endif // ENABLE_FOG
@@ -104,19 +107,15 @@ void main(void)
 	// resultColor = vec4(uColor, 1);
 #endif // ENABLE_WATER_SPECULAR
 
-#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
-	lowp float litFactor = ComputeShadowLitFactor();
-	if (litFactor >= 1.0) {
-		resultColor = ShadeLit(resultColor);
-	} else if (litFactor <= 0.0) {
-		resultColor = ShadeUnlit(resultColor);
-	} else {
-		resultColor = mix(ShadeUnlit(resultColor), ShadeLit(resultColor), litFactor);
-	}
-#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
+#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS) || defined(ENABLE_SHADOW_CSM_FS)
+	// ObjectspaceV, vAccumulatedNormal
+	resultColor = ShadeLitShadowMix(resultColor);
+#else
+	resultColor = ShadeLit(resultColor);
+#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS or ENABLE_SHADOW_CSM_FS
 
 #ifdef ENABLE_POINT_LIGHTS
-	resultColor.rgb += CalculateLighting(ObjectspaceV, vAccumulatedNormal) * 0.3;
+	// resultColor.rgb += CalculateLighting(ObjectspaceV, vAccumulatedNormal);
 #endif
 
 #ifdef ENABLE_FOG

@@ -7,7 +7,6 @@ uniform lowp vec4 ColorDiffuse;		// diffuse RGBA
 uniform mediump vec4 ColorSpecular;	// specular RGB, w: shininess
 
 uniform mediump vec3 uLightDir; // parallel light
-in mediump vec3 ObjectspaceN;
 
 mediump vec3 safe_normalize(mediump vec3 v) {
     mediump float len2 = max(dot(v, v), 1e-8);
@@ -186,11 +185,11 @@ lowp vec4 ShadeLit(in lowp vec4 texDiffuse)
 #endif // ENABLE_PBR
 
 #ifdef ENABLE_POINT_LIGHTS
-    resultColor += CalculateLighting(ObjectspaceV, ObjectspaceN) * diffuse.rgb;
+    resultColor += CalculateLighting(ObjectspaceV, ObjectspaceN) * texDiffuse.rgb;
 #endif
 
 #ifdef ENABLE_SPOT_LIGHTS
-    resultColor += CalculateSpotLighting(ObjectspaceV, ObjectspaceN) * diffuse.rgb;
+    resultColor += CalculateSpotLighting(ObjectspaceV, ObjectspaceN) * texDiffuse.rgb;
 #endif
 
 	return vec4(resultColor, diffuse.a);

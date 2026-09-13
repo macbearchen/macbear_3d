@@ -16,23 +16,23 @@ uniform lowp vec3 uFogColor;
 uniform mediump vec4 uPlaneFog;
 uniform lowp vec3 uPlaneFogColor;
 
-lowp vec4 ApplyFog(in lowp vec4 texResult)
+lowp vec4 ApplyFog(in lowp vec4 color)
 {
     mediump float fogDensity;
     mediump float fogBlend;
-    lowp vec4 result = texResult;
+    lowp vec4 result = color;
     // 1/2: plane fog
     if (uFogParams.z > 0.0) {
         mediump float planeDist = dot(uPlaneFog.xyz, ObjectspaceV) + uPlaneFog.w;
         fogDensity = clamp(planeDist / uFogParams.z, 0.0, 1.0);
-        fogBlend = clamp(fogDensity + 1.0 - texResult.a, 0.0, 1.0);
-        result = vec4(mix(result.rgb, uPlaneFogColor, fogBlend), texResult.a);
+        fogBlend = clamp(fogDensity + 1.0 - color.a, 0.0, 1.0);
+        result = vec4(mix(result.rgb, uPlaneFogColor, fogBlend), color.a);
     }
     // 2/2: sphere fog
     if (uFogParams.y > 0.0) {
         fogDensity = clamp((fogDist - uFogParams.x) / uFogParams.y, 0.0, 1.0);
-        fogBlend = clamp(fogDensity + 1.0 - texResult.a, 0.0, 1.0);
-        result = vec4(mix(result.rgb, uFogColor, fogBlend), texResult.a);
+        fogBlend = clamp(fogDensity + 1.0 - color.a, 0.0, 1.0);
+        result = vec4(mix(result.rgb, uFogColor, fogBlend), color.a);
     }
     return result;
 }

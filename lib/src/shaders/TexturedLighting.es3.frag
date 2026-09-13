@@ -9,9 +9,12 @@ uniform sampler2D SamplerDiffuse;	// GL_TEXTURE0
 
 uniform mediump vec3 uEyePos;
 uniform mediump vec3 uInvObjScale;
-in highp vec3 ObjectspaceV;    // Object space Vertex
+
+in highp vec3 ObjectspaceV;		// Object space Vertex
 
 #ifdef ENABLE_PIXEL_LIGHTING
+in mediump vec3 ObjectspaceN;	// Object space Normal
+
 // per pixel lighting: "glsl/Pixel.es3.frag" must append on this shader
 lowp vec4 ShadeLit(in lowp vec4 texDiffuse);
 lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse);
@@ -37,6 +40,10 @@ lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse)
 }
 #endif // ENABLE_PIXEL_LIGHTING
 
+#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS) || defined(ENABLE_SHADOW_CSM_FS)
+lowp vec4 ShadeLitShadowMix(in lowp vec4 color);
+#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS or ENABLE_SHADOW_CSM_FS
+
 #ifdef ENABLE_FOG
 lowp vec4 ApplyFog(in lowp vec4 texResult);
 #endif // ENABLE_FOG
@@ -56,18 +63,11 @@ void main(void)
 #endif // ENABLE_ALPHA_TEST
 	
 	////////// shadow map //////////
-#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
-	lowp float litFactor = ComputeShadowLitFactor();
-	if (litFactor >= 1.0) {
-		texResult = ShadeLit(texResult);
-	} else if (litFactor <= 0.0) {
-		texResult = ShadeUnlit(texResult);
-	} else {
-		texResult = mix(ShadeUnlit(texResult), ShadeLit(texResult), litFactor);
-	}
+#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS) || defined(ENABLE_SHADOW_CSM_FS)
+	texResult = ShadeLitShadowMix(texResult);
 #else // no shadow
     texResult = ShadeLit(texResult);
-#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
+#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS or ENABLE_SHADOW_CSM_FS
 
 #ifdef ENABLE_FOG
 	texResult = ApplyFog(texResult);

@@ -50,9 +50,9 @@ void main(void)
 	}
 #endif // ENABLE_SKINNING
 
-#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM)
+#if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS)
     ComputeShadowPosition(objVert.xyz, AxisNormal);
-#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM
+#endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS
 
     gl_Position = ModelviewProjection * objVert;	// pre-compute Projection * Modelview
 	

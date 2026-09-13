@@ -7,6 +7,8 @@ import '../main_all.dart' hide Colors;
 class TerrainScene_06 extends DemoScene {
   M3TiledTerrain? _tiledTerrain;
   M3Entity? _terrainEntity;
+  M3HeightField? _heightField; // stored for height sampling
+  double _terrainZOffset = 0.0; // world-Z offset applied to terrain mesh
   bool _useHeightmap = true;
   bool _useTiled = true;
   bool _useLod = true;
@@ -73,7 +75,8 @@ class TerrainScene_06 extends DemoScene {
     for (int i = 0; i <= 10; i++) {
       final double posX = i * 10 - 50;
       final double posY = 5;
-      final double posZ = posX * 0.15 + 5;
+      // Place objects 5 units above the terrain surface at (posX, posY)
+      final double posZ = _terrainSurfaceZ(posX, posY) + 5;
       final rot = i * pi / 15;
       // 06-2: sphere geometry
       final meshSphere = M3Mesh(geomSphere);
@@ -101,16 +104,24 @@ class TerrainScene_06 extends DemoScene {
 
       // 06-3: box geometry
       final mtrBox = M3Material()..diffuseTexture = texGrid;
-      final box = addMesh(M3Mesh(geomBox, material: mtrBox), Vector3(posX / 2, posY + 10, posZ * 1.5 + 2));
+      final box = addMesh(M3Mesh(geomBox, material: mtrBox), Vector3(posX / 2, posY + 10, posZ + 2));
       box.mesh.name = 'BoxMesh';
       box.rotation.setEuler(0, 0, rot);
 
       // 06-4: torus geometry
-      final torus = addMesh(M3Mesh(geomTorus), Vector3(posX, posY + 15, posZ + 2));
+      final torus = addMesh(M3Mesh(geomTorus), Vector3(posX, posY + 15, posZ + 1));
       torus.mesh.name = 'TorusMesh';
       torus.mesh.subMeshes[0].mtr.diffuseTexture = texGrid2;
       torus.rotation.setEuler(0, rot, 0);
     }
+  }
+
+  /// Returns the terrain surface Z at the given world XY position.
+  /// Falls back to [_terrainZOffset] if no height field is available.
+  double _terrainSurfaceZ(double x, double y) {
+    final hf = _heightField;
+    if (hf == null) return _terrainZOffset;
+    return hf.heightAt(x, y) + _terrainZOffset;
   }
 
   Future<void> _setupTerrain() async {
@@ -152,6 +163,7 @@ class TerrainScene_06 extends DemoScene {
         heightSegments: terrainSegments,
         maxHeight: maxHeight,
       );
+      _heightField = hf; // store for surface height sampling
       if (_useTiled) {
         // Mode 1: Tiled + Heightmap
 
@@ -172,6 +184,7 @@ class TerrainScene_06 extends DemoScene {
         terrainMesh = M3Mesh(terrainGeom, material: terrainMtr);
       }
     } else {
+      _heightField = null; // procedural noise — no height field
       terrainMtr.diffuse = Vector4(0.4, 0.6, 0.3, 1.0); // Grass green
 
       if (_useTiled) {
@@ -207,8 +220,9 @@ class TerrainScene_06 extends DemoScene {
       _tiledTerrain!.enableLod = _useLod;
     }
 
-    double posZ = _useHeightmap ? -21 : -9;
-    _terrainEntity = addMesh(terrainMesh, Vector3(0, 0, posZ));
+    double terrainZ = _useHeightmap ? -21 : -9;
+    _terrainZOffset = terrainZ;
+    _terrainEntity = addMesh(terrainMesh, Vector3(0, 0, terrainZ));
     M3AppEngine.instance.resume();
   }
 
