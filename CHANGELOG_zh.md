@@ -12,18 +12,11 @@
   * **共用 `ShadeLitShadowMix()` 輔助函式**：將 `TexturedLighting` 與 `Water` 著色器中的明暗混合邏輯提取至 `ShadowFS.es3.glsl` 的單一 `ShadeLitShadowMix()` 函式，消除重複程式碼。
   * **重命名 `NormalBias` → `ShadowNormalBias`**：對所有著色器與 Dart 綁定中的陰影法線偏移 Uniform 進行一致命名。
   * **水面捕捉顎提陰影**：在反射與折射捕捉 Pass 期間停用陰影狀態，避免錯誤的陰影取樣，完成後恢復原狀態。
-  * **聨聚光位置調整**：重新排列 8 盏聨聚光以提供更大的場景覆蓋範圍；範圍學 `12` → `16`；修正點光色彩模數式 `6` → `8`。
   * **`ComputeShadowPCF` 函式簽名簡化**：移除冗餘的 `in` 修飾符，符合 GLSL ES 3.0 想念。
   * **水面陰影整合**：Water 片段著色器現在使用共用的 `ShadeLitShadowMix()`，並為 `ENABLE_SHADOW_CSM_FS` 支持加入前向宣告。
-  * **水面除錯預覽位置修正**：將反射與折射預覽的 Y 錨點修正為畫面底部定位 (`appHeight - 210`)，取代硬編的 `y=8`。
 
 * 範例與 UI:
   * **場景 07 物理子場景循環**：場景 07 按鈕現在可循環切換 7 個物理演示子場景（`PhysicsScene_07`、`PhysicsScene`、`CompoundScene`、`DoublePendulumScene`、`NewtonCradleScene`、`CharacterControllerScene`、`SceneQueryScene`）。
-  * **`FloatingActionButton.small`**：將所有場景與著色器控制 FAB 替換為 `.small` 變體，縮小工具列占用面積。
-  * **UI 整理**：移除冗餘的 `showLight` 除錯按鈕；簡化 Fog 標籤文字樣式；將各處散落的 `SizedBox(width:4)` 替換為可重用的 `separateWidget`。
-
-* 著色器（生成）:
-  * 回生所有 `.g.dart` 著色器包裝器以配合 GLSL 來源變更。
 
 ## 0.10.1
 #### 2026-09-05

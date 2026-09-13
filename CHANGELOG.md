@@ -12,18 +12,11 @@
   * **Shared `ShadeLitShadowMix()` helper**: Extracted lit/shadow mix logic from both `TexturedLighting` and `Water` shaders into a single `ShadeLitShadowMix()` function in `ShadowFS.es3.glsl`, eliminating duplication.
   * **Renamed `NormalBias` → `ShadowNormalBias`**: Consistent naming for the shadow normal-bias uniform across all shaders and Dart bindings.
   * **Shadow-free water capture passes**: Disabled shadow state during reflection and refraction capture to prevent incorrect shadow sampling; state is restored afterwards.
-  * **Spot light layout**: Repositioned all 8 spot lights for better scene coverage; extended range from `12` → `16`; fixed point-light color modulo `6` → `8`.
   * **`ComputeShadowPCF` signature**: Simplified function signature (removed redundant `in` qualifiers for consistency with GLSL ES 3.0 conventions).
   * **Water shadow integration**: Water fragment shader now uses the shared `ShadeLitShadowMix()` and declares a forward-declaration for `ENABLE_SHADOW_CSM_FS` support.
-  * **Water debug preview**: Fixed Y-anchor for reflection/refraction preview to bottom of screen (`appHeight - 210`) instead of hardcoded `y=8`.
 
 * Example & UI:
   * **Scene 07 physics sub-scene cycling**: Scene 07 button now cycles through 7 physics demo sub-scenes on repeated tap (`PhysicsScene_07`, `PhysicsScene`, `CompoundScene`, `DoublePendulumScene`, `NewtonCradleScene`, `CharacterControllerScene`, `SceneQueryScene`).
-  * **`FloatingActionButton.small`**: Replaced all scene/shader control FABs with `.small` variant for a more compact toolbar.
-  * **UI cleanup**: Removed redundant `showLight` debug button; compacted fog label text style; replaced scattered `SizedBox(width:4)` with a reusable `separateWidget`.
-
-* Shaders (generated):
-  * Regenerated all `.g.dart` shader wrappers to match GLSL source changes.
 
 ## 0.10.1
 #### 2026-09-05
