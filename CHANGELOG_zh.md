@@ -1,5 +1,30 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
+## 0.10.2
+#### 2026-09-13
+* 新增功能 (Add):
+  * **CSM 片段著色器模式 (`ENABLE_SHADOW_CSM_FS`)**：新增 CSM 變體，在片段著色器中透過 `MatrixCSM[4]` Uniform 進行級聯層級選擇，與現有頂點著色器模式 (`ENABLE_SHADOW_CSM_VS`) 互補。加入編譯期錄誤保護，強制兩者互斌。
+  * **`SurfaceGeometry.glsl`**：新增共用 GLSL 結構體 (`Position`, `Normal`)，用於著色器階段之間演道表面幾何資訊。
+  * **`M3HeightField.heightAt(x, y)`**：地形双線性插値世界坐標高度取樣器。可回傳任意 XY 平面坐標的插値高度，超出地形範圍時回傳 `0`。
+  * **`csmOnFS` 著色器選項**：新增 `M3ShaderOptions.csmOnFS` 標誌（附職高髠追蹤），支持執行期切換 CSM-VS 與 CSM-FS 模式。
+
+* 優化與重構 (Optimize / Refactor):
+  * **共用 `ShadeLitShadowMix()` 輔助函式**：將 `TexturedLighting` 與 `Water` 著色器中的明暗混合邏輯提取至 `ShadowFS.es3.glsl` 的單一 `ShadeLitShadowMix()` 函式，消除重複程式碼。
+  * **重命名 `NormalBias` → `ShadowNormalBias`**：對所有著色器與 Dart 綁定中的陰影法線偏移 Uniform 進行一致命名。
+  * **水面捕捉顎提陰影**：在反射與折射捕捉 Pass 期間停用陰影狀態，避免錯誤的陰影取樣，完成後恢復原狀態。
+  * **聨聚光位置調整**：重新排列 8 盏聨聚光以提供更大的場景覆蓋範圍；範圍學 `12` → `16`；修正點光色彩模數式 `6` → `8`。
+  * **`ComputeShadowPCF` 函式簽名簡化**：移除冗餘的 `in` 修飾符，符合 GLSL ES 3.0 想念。
+  * **水面陰影整合**：Water 片段著色器現在使用共用的 `ShadeLitShadowMix()`，並為 `ENABLE_SHADOW_CSM_FS` 支持加入前向宣告。
+  * **水面除錯預覽位置修正**：將反射與折射預覽的 Y 錨點修正為畫面底部定位 (`appHeight - 210`)，取代硬編的 `y=8`。
+
+* 範例與 UI:
+  * **場景 07 物理子場景循環**：場景 07 按鈕現在可循環切換 7 個物理演示子場景（`PhysicsScene_07`、`PhysicsScene`、`CompoundScene`、`DoublePendulumScene`、`NewtonCradleScene`、`CharacterControllerScene`、`SceneQueryScene`）。
+  * **`FloatingActionButton.small`**：將所有場景與著色器控制 FAB 替換為 `.small` 變體，縮小工具列占用面積。
+  * **UI 整理**：移除冗餘的 `showLight` 除錯按鈕；簡化 Fog 標籤文字樣式；將各處散落的 `SizedBox(width:4)` 替換為可重用的 `separateWidget`。
+
+* 著色器（生成）:
+  * 回生所有 `.g.dart` 著色器包裝器以配合 GLSL 來源變更。
+
 ## 0.10.1
 #### 2026-09-05
 * 文檔與依賴 (Documentation & Dependencies):
