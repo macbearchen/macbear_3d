@@ -25,7 +25,7 @@ float calcAttenuation(float distSq, float radiusSq) {
 uniform mediump mat4 uPointLights[4];
 uniform mediump ivec2 uPointLightCounts; // x=lightCount, y=shadowCastingCount
 
-vec3 calcPointLight(int i, vec3 fragPos, vec3 N, bool castShadow) {
+vec3 calcPointLight(int i, SurfaceGeometry geo, bool castShadow) {
     int matIndex = i >> 1;      // i / 2 bit shift
     int localIndex = i & 1;     // i % 2 bitwise AND
 
@@ -35,7 +35,7 @@ vec3 calcPointLight(int i, vec3 fragPos, vec3 N, bool castShadow) {
     vec3 lightPos = positionRangeSq.xyz;
     float radiusSq = positionRangeSq.w;
 
-    vec3 L = (lightPos - fragPos) * uInvObjScale;
+    vec3 L = (lightPos - geo.Position) * uInvObjScale;
     float distSq = dot(L, L);
 
     // Early exit: 超出光源半徑直接略過所有計算
@@ -46,7 +46,7 @@ vec3 calcPointLight(int i, vec3 fragPos, vec3 N, bool castShadow) {
     float invDist = inversesqrt(max(distSq, 0.0001));
     L *= invDist; // 就地 normalize
 
-    float NdotL = dot(N, L);
+    float NdotL = dot(geo.Normal, L);
     if (NdotL <= 0.0) {
         return vec3(0.0);
     }
@@ -59,7 +59,7 @@ vec3 calcPointLight(int i, vec3 fragPos, vec3 N, bool castShadow) {
 
     if (castShadow) {
         // TODO: DPSM shadow lookup 接進來
-        // float shadow = sampleDPSMShadow(i, fragPos, lightPos);
+        // float shadow = sampleDPSMShadow(i, geo.Position, lightPos);
         // radiance *= shadow;
     }
 
@@ -67,7 +67,7 @@ vec3 calcPointLight(int i, vec3 fragPos, vec3 N, bool castShadow) {
 }
 
 // point lights lighting in object space
-lowp vec3 CalculateLighting(vec3 fragPos, vec3 N) {
+lowp vec3 CalculateLighting(SurfaceGeometry geo) {
     int lightCount = uPointLightCounts.x;
     if (lightCount == 0) return vec3(0.0);
 
@@ -77,7 +77,7 @@ lowp vec3 CalculateLighting(vec3 fragPos, vec3 N) {
     for (int i = 0; i < 8; i++) {
         if (i >= lightCount) break;
         bool castShadow = (i < shadowCount);
-        result += calcPointLight(i, fragPos, N, castShadow);
+        result += calcPointLight(i, geo, castShadow);
     }
     return result;
 }
@@ -103,8 +103,8 @@ uniform highp mat4 uMatrixSpotShadowAtlas[8];       // Bias * Projection * View 
 uniform highp float SpotShadowNormalBias;           // normal bias for spotlight shadow acne
 
 // Spot shadow with atlas: project biased fragment position using spotlight i's shadow matrix
-lowp float ComputeSpotShadow(int i, vec3 fragPos, vec3 N) {
-    vec4 biasedPos = vec4(fragPos + N * SpotShadowNormalBias, 1.0);
+lowp float ComputeSpotShadow(int i, SurfaceGeometry geo) {
+    vec4 biasedPos = vec4(geo.Position + geo.Normal * SpotShadowNormalBias, 1.0);
     highp vec4 lightCoord = uMatrixSpotShadowAtlas[i] * biasedPos;
 
     if (lightCoord.w <= 0.0) {
@@ -131,13 +131,13 @@ float calcConeAttenuation(float cosTheta, float cosInner, float cosOuter) {
     return t * t; // quadratic for smooth edge
 }
 
-vec3 calcSpotLight(int i, vec3 fragPos, vec3 N) {
+vec3 calcSpotLight(int i, SurfaceGeometry geo) {
     mat4 m = uSpotLights[i];
     vec4 posRangeSq = m[0]; // xyz: position, w: range²
     float radiusSq  = posRangeSq.w;
 
     vec3 lightPos  = posRangeSq.xyz;
-    vec3 L = (lightPos - fragPos) * uInvObjScale;
+    vec3 L = (lightPos - geo.Position) * uInvObjScale;
     float distSq = dot(L, L);
 
     // Early exit: 距離超出半徑
@@ -158,7 +158,7 @@ vec3 calcSpotLight(int i, vec3 fragPos, vec3 N) {
         return vec3(0.0);
     }
 
-    float NdotL = dot(N, Lnorm);
+    float NdotL = dot(geo.Normal, Lnorm);
     if (NdotL <= 0.0) {
         return vec3(0.0);
     }
@@ -173,7 +173,7 @@ vec3 calcSpotLight(int i, vec3 fragPos, vec3 N) {
 }
 
 // Spot lights lighting in object space
-lowp vec3 CalculateSpotLighting(vec3 fragPos, vec3 N) {
+lowp vec3 CalculateSpotLighting(SurfaceGeometry geo) {
     int lightCount = uSpotLightCounts.x;
     if (lightCount == 0) return vec3(0.0);
 
@@ -181,14 +181,14 @@ lowp vec3 CalculateSpotLighting(vec3 fragPos, vec3 N) {
     int shadowBitmask = uSpotLightCounts.y;
     for (int i = 0; i < 8; i++) {
         if (i >= lightCount) break;
-        vec3 radiance = calcSpotLight(i, fragPos, N);
+        vec3 radiance = calcSpotLight(i, geo);
         if (radiance == vec3(0.0)) {
             continue;
         }
 #ifdef ENABLE_SPOT_SHADOW
         bool castShadow = ((shadowBitmask & (1 << i)) != 0);
         if (castShadow) {
-            radiance *= ComputeSpotShadow(i, fragPos, N);
+            radiance *= ComputeSpotShadow(i, geo);
         }
 #endif
         result += radiance;

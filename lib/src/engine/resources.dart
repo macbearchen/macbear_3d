@@ -287,7 +287,7 @@ class M3Resources {
 
     // water program without shadow
     String vsWater = SkinningVS_glsl + Water_vert;
-    String fsWater = Water_frag;
+    String fsWater = SurfaceGeometry_glsl + Water_frag;
     // bool bSpecularLight = false;
     // if (bSpecularLight) {
     //   fsWater = "#define ENABLE_WATER_SPECULAR \n$fsWater";

@@ -354,63 +354,20 @@ class _MainPageState extends State<MainPage> {
   Widget getHelperWidget() {
     final renderEngine = M3AppEngine.instance.renderEngine;
     final scene = M3AppEngine.instance.activeScene;
-    final lightBrightness = scene != null
-        ? ((scene.dirLight.color.x + scene.dirLight.color.y + scene.dirLight.color.z) / 3.0).clamp(0.0, 1.0)
-        : 0.8;
+    if (scene == null) {
+      return SizedBox.shrink();
+    }
+
+    final lightBrightness = ((scene.dirLight.color.x + scene.dirLight.color.y + scene.dirLight.color.z) / 3.0).clamp(
+      0.0,
+      1.0,
+    );
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // ── Directional light brightness slider ──
-        if (scene != null)
-          Container(
-            width: 60,
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(12)),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('\u2600', style: TextStyle(fontSize: 11, color: Colors.amber)),
-                SizedBox(
-                  width: 60,
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 2,
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
-                    ),
-                    child: Slider(
-                      value: lightBrightness,
-                      min: 0.0,
-                      max: 1.0,
-                      activeColor: Colors.amber,
-                      inactiveColor: Colors.white24,
-                      onChanged: (val) {
-                        setState(() {
-                          scene.dirLight.color = Vector3.all(val);
-                        });
-                      },
-                    ),
-                  ),
-                ),
-                Text(lightBrightness.toStringAsFixed(2), style: const TextStyle(fontSize: 9, color: Colors.white70)),
-              ],
-            ),
-          ),
-        separateWidget,
-        FloatingActionButton.small(
-          heroTag: 'light',
-          backgroundColor: renderEngine.options.debug.showLight ? Colors.lightGreen : null,
-          onPressed: () {
-            setState(() {
-              renderEngine.options.debug.showLight = !renderEngine.options.debug.showLight;
-            });
-          },
-          child: Icon(renderEngine.options.debug.showLight ? Icons.lightbulb_sharp : Icons.lightbulb_outline),
-        ),
-        separateWidget,
-
         FloatingActionButton.small(
           heroTag: 'wireframe',
           backgroundColor: renderEngine.options.debug.wireframe ? Colors.lightGreen : null,
@@ -462,6 +419,53 @@ class _MainPageState extends State<MainPage> {
             });
           },
           child: const Icon(Icons.videocam_outlined),
+        ),
+        separateWidget,
+        FloatingActionButton.small(
+          heroTag: 'light',
+          backgroundColor: renderEngine.options.debug.showLight ? Colors.lightGreen : null,
+          onPressed: () {
+            setState(() {
+              renderEngine.options.debug.showLight = !renderEngine.options.debug.showLight;
+            });
+          },
+          child: Icon(renderEngine.options.debug.showLight ? Icons.lightbulb_sharp : Icons.lightbulb_outline),
+        ),
+        separateWidget,
+        // ── Directional light brightness slider ──
+        Container(
+          width: 60,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(12)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('\u2600', style: TextStyle(fontSize: 11, color: Colors.amber)),
+              SizedBox(
+                width: 60,
+                child: SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: 2,
+                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                  ),
+                  child: Slider(
+                    value: lightBrightness,
+                    min: 0.0,
+                    max: 1.0,
+                    activeColor: Colors.amber,
+                    inactiveColor: Colors.white24,
+                    onChanged: (val) {
+                      setState(() {
+                        scene.dirLight.color = Vector3.all(val);
+                      });
+                    },
+                  ),
+                ),
+              ),
+              Text(lightBrightness.toStringAsFixed(2), style: const TextStyle(fontSize: 9, color: Colors.white70)),
+            ],
+          ),
         ),
       ],
     );

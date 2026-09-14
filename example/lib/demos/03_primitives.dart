@@ -16,6 +16,9 @@ class PrimitivesScene_03 extends DemoScene {
     box.mesh.subMeshes[0].mtr.diffuseTexture = texGrid;
 
     M3Texture texGrid2 = M3Texture.createCheckerboard(size: 6);
+    // ASTC image
+    final texName = "example/test_8x8.astc";
+    M3Texture texTest = await M3Texture.loadTexture(texName);
 
     // 02: sample cubemap
     // skybox = await createCubemapLobby(); // nvlobby cubemap
@@ -28,7 +31,7 @@ class PrimitivesScene_03 extends DemoScene {
       lightColor: Vector4(.7, 1, .7, 1),
       darkColor: Vector4(.6, 0.8, .7, 1),
     );
-    plane.mesh.subMeshes[0].mtr.diffuseTexture = texGround;
+    plane.mesh.subMeshes[0].mtr.diffuseTexture = texTest;
 
     // 03-2: sphere geometry
     final sphere = addMesh(M3Mesh(M3SphereGeom(0.5)), Vector3(2, 0, 0));

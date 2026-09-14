@@ -70,7 +70,7 @@ uniform highp vec4 DepthCSM;        // depth clip-plane
 
 // compute litFactor with shadow
 #ifdef ENABLE_SHADOW_CSM_FS
-lowp float ComputeShadowLitFactor(in vec3 fragPos, in vec3 N)
+lowp float ComputeShadowLitFactor(in SurfaceGeometry geo)
 #else
 lowp float ComputeShadowLitFactor()
 #endif
@@ -93,7 +93,7 @@ lowp float ComputeShadowLitFactor()
 #endif // ENABLE_SHADOW_CSM_VS
 
 #ifdef ENABLE_SHADOW_CSM_FS
-	vec4 biasedPos = vec4(fragPos + N * ShadowNormalBias, 1.0);
+	vec4 biasedPos = vec4(geo.Position + geo.Normal * ShadowNormalBias, 1.0);
 	highp vec4 lightCoord;
 	if (gl_FragCoord.z < DepthCSM.x) {
 		lightCoord = MatrixCSM[0] * biasedPos;
@@ -120,9 +120,9 @@ lowp float ComputeShadowLitFactor()
 lowp vec4 ShadeLitShadowMix(in lowp vec4 color) {
 #ifdef ENABLE_SHADOW_CSM_FS
 	#ifdef ENABLE_PIXEL_LIGHTING
-		lowp float litFactor = ComputeShadowLitFactor(ObjectspaceV, normalize(ObjectspaceN));
+		lowp float litFactor = ComputeShadowLitFactor(SurfaceGeometry(ObjectspaceV, normalize(ObjectspaceN)));
 	#else
-		lowp float litFactor = ComputeShadowLitFactor(ObjectspaceV, vec3(0.0));
+		lowp float litFactor = ComputeShadowLitFactor(SurfaceGeometry(ObjectspaceV, vec3(0.0)));
 	#endif // ENABLE_PIXEL_LIGHTING
 #else
 	lowp float litFactor = ComputeShadowLitFactor();

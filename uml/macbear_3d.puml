@@ -225,11 +225,14 @@ class "macbear_3d::src::renderer::render_queue.dart::M3RenderQueue" {
 class "macbear_3d::src::renderer::shadow_map.dart::M3ShadowMap" {
   -M3RenderContext _context
   -M3Framebuffer _framebuffer
+  +RenderingContext gl
   +int mapW
   +int mapH
   +M3Texture depthTex
   +String toString()
   +void dispose()
+  -void _beginShadowPass()
+  -void _endShadowPass()
   +void renderDepth()
   +void renderSpotDepths()
   +void debugDrawDepth()
@@ -237,6 +240,7 @@ class "macbear_3d::src::renderer::shadow_map.dart::M3ShadowMap" {
 
 "macbear_3d::src::renderer::shadow_map.dart::M3ShadowMap" o-- "macbear_3d::src::renderer::render_context.dart::M3RenderContext"
 "macbear_3d::src::renderer::shadow_map.dart::M3ShadowMap" o-- "macbear_3d::src::renderer::framebuffer.dart::M3Framebuffer"
+"macbear_3d::src::renderer::shadow_map.dart::M3ShadowMap" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 "macbear_3d::src::renderer::shadow_map.dart::M3ShadowMap" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
 
 class "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" {

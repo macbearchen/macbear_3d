@@ -66,7 +66,7 @@ class M3RenderEngine {
     bool enableShadow = true,
     int width = 2048,
     int height = 4096,
-    int smWidth = 256,
+    int smWidth = 512,
     int? smHeight,
   }) {
     options.useShadow = enableShadow;

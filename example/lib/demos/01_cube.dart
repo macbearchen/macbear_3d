@@ -36,7 +36,6 @@ class CubeScene_01 extends DemoScene {
 
     final texName = "example/test_8x8.astc";
     final texName2 = "example/nvlobby_xneg.jpg";
-    M3Texture texTest = await M3Texture.loadTexture(texName);
     M3Texture texGround = M3Texture.createCheckerboard(
       size: 8,
       lightColor: Vector4(0.65, 0.45, 0.25, 1),

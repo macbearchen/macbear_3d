@@ -18,12 +18,12 @@ mediump vec3 safe_normalize(mediump vec3 v) {
 
 #ifdef ENABLE_POINT_LIGHTS
 // multi-point-lights
-lowp vec3 CalculateLighting(vec3 fragPos, vec3 N);
+lowp vec3 CalculateLighting(SurfaceGeometry geo);
 #endif // ENABLE_POINT_LIGHTS
 
 #ifdef ENABLE_SPOT_LIGHTS
 // spot lights
-lowp vec3 CalculateSpotLighting(vec3 fragPos, vec3 N);
+lowp vec3 CalculateSpotLighting(SurfaceGeometry geo);
 #endif // ENABLE_SPOT_LIGHTS
 
 // View direction from surface to eye. Used by both Lit (for H = V+L) and Unlit (for IBL) paths.
@@ -188,11 +188,11 @@ lowp vec4 ShadeLit(in lowp vec4 texDiffuse)
 #endif // ENABLE_PBR
 
 #ifdef ENABLE_POINT_LIGHTS
-    resultColor += CalculateLighting(ObjectspaceV, ObjectspaceN) * texDiffuse.rgb;
+    resultColor += CalculateLighting(SurfaceGeometry(ObjectspaceV, N)) * texDiffuse.rgb;
 #endif
 
 #ifdef ENABLE_SPOT_LIGHTS
-    resultColor += CalculateSpotLighting(ObjectspaceV, ObjectspaceN) * texDiffuse.rgb;
+    resultColor += CalculateSpotLighting(SurfaceGeometry(ObjectspaceV, N)) * texDiffuse.rgb;
 #endif
 
 	return vec4(resultColor, diffuse.a);
@@ -226,11 +226,11 @@ lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse)
 #endif // ENABLE_PBR
 
 #ifdef ENABLE_POINT_LIGHTS
-    resultColor += CalculateLighting(ObjectspaceV, ObjectspaceN) * diffuse.rgb;
+    resultColor += CalculateLighting(SurfaceGeometry(ObjectspaceV, N)) * texDiffuse.rgb;
 #endif
 
 #ifdef ENABLE_SPOT_LIGHTS
-    resultColor += CalculateSpotLighting(ObjectspaceV, ObjectspaceN) * diffuse.rgb;
+    resultColor += CalculateSpotLighting(SurfaceGeometry(ObjectspaceV, N)) * texDiffuse.rgb;
 #endif
 
 	return vec4(resultColor, diffuse.a);

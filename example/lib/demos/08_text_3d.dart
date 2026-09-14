@@ -56,7 +56,7 @@ class Text3DScene_08 extends DemoScene {
     _textEntity!.rotation.setEuler(0, pi * 0.45, 0);
 
     final mesh2 = M3Mesh(textGeom2);
-    final entity2 = addMesh(mesh2, Vector3(-4, -1, 1.2)); // Macbear 3D
+    final entity2 = addMesh(mesh2, Vector3(-4, -1, 1)); // Macbear 3D
     entity2.rotation.setEuler(0, 0, pi / 5);
 
     final mesh3 = M3Mesh(textGeom2, material: mtr2);
