@@ -1,8 +1,10 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
 ## 0.10.2
-#### 2026-09-13
+#### 2026-09-14
 * 新增功能 (Add):
+  * **`M3TiledPlaneMesh`**：支援每格材質構建器與可選逐頂點高度回調 (`onVertex`) 的瓦片平面網格。包含 `fromTotalSize` 建構子及 `getTileSubMesh` / `tyIndex` 輔助方法；未設定 `onVertex` 時共用幾何體以節省記憶體。
+  * **多聚光燈陰影圖集 (Multi-Spotlight Shadow Atlas)**：`renderSpotDepths()` 將最多 **8 盞聚光燈**批量渲染至單一垂直陰影圖集；每盞聚光燈依場景索引自動指定陰影圖插槽。`initSpotLights` 最大聚光燈數量從 4 擴展至 8。
   * **CSM 片段著色器模式 (`ENABLE_SHADOW_CSM_FS`)**：新增 CSM 變體，在片段著色器中透過 `MatrixCSM[4]` Uniform 進行級聯層級選擇，與現有頂點著色器模式 (`ENABLE_SHADOW_CSM_VS`) 互補。加入編譯期錄誤保護，強制兩者互斌。
   * **`SurfaceGeometry.glsl`**：新增共用 GLSL 結構體 (`Position`, `Normal`)，用於著色器階段之間演道表面幾何資訊。
   * **`M3HeightField.heightAt(x, y)`**：地形双線性插値世界坐標高度取樣器。可回傳任意 XY 平面坐標的插値高度，超出地形範圍時回傳 `0`。

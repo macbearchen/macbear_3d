@@ -1,8 +1,10 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
 ## 0.10.2
-#### 2026-09-13
+#### 2026-09-14
 * Add:
+  * **`M3TiledPlaneMesh`**: Tiled plane mesh with per-tile material builder and optional per-vertex height callback (`onVertex`). Includes `fromTotalSize` constructor and `getTileSubMesh` / `tyIndex` helpers; geometry is shared when no `onVertex` is provided.
+  * **Multi-Spotlight Shadow Atlas**: `renderSpotDepths()` batches up to **8 spotlights** into a single vertical shadow-map atlas; each spotlight is auto-assigned a shadow map slot via scene index. `initSpotLights` expanded from 4 → 8 maximum spotlights.
   * **CSM Fragment-Shader Mode (`ENABLE_SHADOW_CSM_FS`)**: New CSM variant that performs cascade selection entirely in the fragment shader using `MatrixCSM[4]` uniforms, complementing the existing vertex-shader mode (`ENABLE_SHADOW_CSM_VS`). A compile-time `#error` guard enforces mutual exclusivity between the two modes.
   * **`SurfaceGeometry.glsl`**: New shared GLSL struct (`Position`, `Normal`) for clean surface geometry passing between shader stages.
   * **`M3HeightField.heightAt(x, y)`**: Bilinear-interpolated world-space height sampler for terrain. Returns the interpolated height at any world XY coordinate, or `0` outside terrain bounds.
