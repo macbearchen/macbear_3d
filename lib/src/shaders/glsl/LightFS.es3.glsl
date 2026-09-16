@@ -67,7 +67,7 @@ vec3 calcPointLight(int i, SurfaceGeometry geo, bool castShadow) {
 }
 
 // point lights lighting in object space
-lowp vec3 CalculateLighting(SurfaceGeometry geo) {
+lowp vec3 CalculatePointLighting(SurfaceGeometry geo) {
     int lightCount = uPointLightCounts.x;
     if (lightCount == 0) return vec3(0.0);
 

@@ -19,8 +19,8 @@ in highp vec3 ObjectspaceV;		// Object space Vertex
 in mediump vec3 ObjectspaceN;	// Object space Normal
 
 // per pixel lighting: "glsl/Pixel.es3.frag" must append on this shader
-lowp vec4 ShadeLit(in lowp vec4 texDiffuse);
-lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse);
+lowp vec4 ShadeLit(in lowp vec4 texDiffuse, in SurfaceGeometry geo);
+lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse, in SurfaceGeometry geo);
 
 #else
 // per vertex lighting
@@ -29,14 +29,14 @@ in lowp vec4 DestinationColor;
 
 // no pre-multiply alpha
 // lit result by per-vertex
-lowp vec4 ShadeLit(in lowp vec4 texDiffuse)
+lowp vec4 ShadeLit(in lowp vec4 texDiffuse, in SurfaceGeometry geo)
 {
 	lowp vec4 result = texDiffuse * DestinationColor;
 	result.rgb += SpecularOut.rgb;
 	return result;
 }
 
-lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse)
+lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse, in SurfaceGeometry geo)
 {
 	// unlit = ambient 
 	return texDiffuse * vec4(ColorAmbient, DestinationColor.a);
@@ -44,7 +44,7 @@ lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse)
 #endif // ENABLE_PIXEL_LIGHTING
 
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS) || defined(ENABLE_SHADOW_CSM_FS)
-lowp vec4 ShadeLitShadowMix(in lowp vec4 color);
+lowp vec4 ShadeLitShadowMix(in lowp vec4 color, in SurfaceGeometry geo);
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS or ENABLE_SHADOW_CSM_FS
 
 #ifdef ENABLE_FOG
@@ -64,12 +64,20 @@ void main(void)
 	if (texResult.a < 0.5)
 		discard;
 #endif // ENABLE_ALPHA_TEST
-	
+
+#ifdef ENABLE_PIXEL_LIGHTING
+	mediump vec3 N = safe_normalize(ObjectspaceN);
+	N = gl_FrontFacing ? N : -N;
+#else
+	mediump vec3 N = vec3(0.0, 0.0, 1.0);
+#endif // ENABLE_PIXEL_LIGHTING
+	SurfaceGeometry geo = SurfaceGeometry(ObjectspaceV, N);
+
 	////////// shadow map //////////
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS) || defined(ENABLE_SHADOW_CSM_FS)
-	texResult = ShadeLitShadowMix(texResult);
+	texResult = ShadeLitShadowMix(texResult, geo);
 #else // no shadow
-    texResult = ShadeLit(texResult);
+    texResult = ShadeLit(texResult, geo);
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS or ENABLE_SHADOW_CSM_FS
 
 #ifdef ENABLE_FOG

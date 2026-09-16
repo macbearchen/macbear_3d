@@ -45,6 +45,7 @@ class GltfMaterial {
   final double roughnessFactor;
   final String alphaMode; // "OPAQUE", "MASK", "BLEND"
   final double alphaCutoff;
+  final bool doubleSided;
 
   GltfMaterial({
     required this.name,
@@ -54,6 +55,7 @@ class GltfMaterial {
     this.roughnessFactor = 1.0,
     this.alphaMode = 'OPAQUE',
     this.alphaCutoff = 0.5,
+    this.doubleSided = false,
   });
 
   static GltfMaterial parse(Map<String, dynamic> json) {
@@ -93,6 +95,7 @@ class GltfMaterial {
       roughnessFactor: roughness,
       alphaMode: json['alphaMode'] as String? ?? 'OPAQUE',
       alphaCutoff: (json['alphaCutoff'] as num?)?.toDouble() ?? 0.5,
+      doubleSided: json['doubleSided'] as bool? ?? false,
     );
   }
 }

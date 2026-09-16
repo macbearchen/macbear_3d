@@ -13,7 +13,7 @@ uniform lowp vec3 uFogColor;
 uniform mediump vec4 uPlaneFog;
 uniform lowp vec3 uPlaneFogColor;
 
-lowp vec4 ApplyFog(in lowp vec4 color)
+lowp vec4 ApplyFog(lowp vec4 color)
 {
     mediump float fogDensity;
     mediump float fogBlend;

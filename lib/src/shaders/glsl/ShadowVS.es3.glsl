@@ -15,7 +15,7 @@ uniform mat4 MatrixCSM[4];
 out highp vec4 LightcoordCSM[4];
 #endif // ENABLE_SHADOW_CSM_VS
 
-void ComputeShadowPosition(in highp vec3 objVert, in mediump vec3 objNormal)
+void ComputeShadowPosition(highp vec3 objVert, mediump vec3 objNormal)
 {
     vec4 biasedVert = vec4(objVert + objNormal * ShadowNormalBias, 1.0);
 

@@ -33,6 +33,7 @@ class M3Water extends M3Entity {
   }) {
     final mtr = M3Material()
       ..setGlossy()
+      ..doubleSided = true
       ..metallic = 0.3
       ..reflection = 0.3;
     final waterMesh = M3Mesh(

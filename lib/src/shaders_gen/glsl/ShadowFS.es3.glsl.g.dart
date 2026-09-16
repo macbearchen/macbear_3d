@@ -70,7 +70,7 @@ uniform highp vec4 DepthCSM;        // depth clip-plane
 
 // compute litFactor with shadow
 #ifdef ENABLE_SHADOW_CSM_FS
-lowp float ComputeShadowLitFactor(in SurfaceGeometry geo)
+lowp float ComputeShadowLitFactor(SurfaceGeometry geo)
 #else
 lowp float ComputeShadowLitFactor()
 #endif
@@ -117,24 +117,20 @@ lowp float ComputeShadowLitFactor()
 }
 
 // shade lit/unlit to mix with shadow factor
-lowp vec4 ShadeLitShadowMix(in lowp vec4 color) {
+lowp vec4 ShadeLitShadowMix(lowp vec4 color, SurfaceGeometry geo) {
 #ifdef ENABLE_SHADOW_CSM_FS
-	#ifdef ENABLE_PIXEL_LIGHTING
-		lowp float litFactor = ComputeShadowLitFactor(SurfaceGeometry(ObjectspaceV, normalize(ObjectspaceN)));
-	#else
-		lowp float litFactor = ComputeShadowLitFactor(SurfaceGeometry(ObjectspaceV, vec3(0.0)));
-	#endif // ENABLE_PIXEL_LIGHTING
+	lowp float litFactor = ComputeShadowLitFactor(geo);
 #else
 	lowp float litFactor = ComputeShadowLitFactor();
 #endif // ENABLE_SHADOW_CSM_FS
 
 	lowp vec4 result;
 	if (litFactor >= 1.0) {
-		result = ShadeLit(color);
+		result = ShadeLit(color, geo);
 	} else if (litFactor <= 0.0) {
-		result = ShadeUnlit(color);
+		result = ShadeUnlit(color, geo);
 	} else {
-		result = mix(ShadeUnlit(color), ShadeLit(color), litFactor);
+		result = mix(ShadeUnlit(color, geo), ShadeLit(color, geo), litFactor);
 	}
 	return result;
 }

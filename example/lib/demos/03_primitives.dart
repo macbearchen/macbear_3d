@@ -105,7 +105,9 @@ class PrimitivesScene_03 extends DemoScene {
         },
       ),
     );
-    smoothPlane.subMeshes[0].mtr.diffuseTexture = texGround;
+    smoothPlane.subMeshes[0].mtr
+      ..diffuseTexture = texGround
+      ..doubleSided = true;
     addMesh(smoothPlane, Vector3(-4.1, 9, 1.2));
 
     // 03-11: Create a terrain-like plane with flat shading
@@ -122,7 +124,9 @@ class PrimitivesScene_03 extends DemoScene {
         },
       ),
     );
-    flatPlane.subMeshes[0].mtr.diffuseTexture = texGround;
+    flatPlane.subMeshes[0].mtr
+      ..diffuseTexture = texGround
+      ..doubleSided = true;
     addMesh(flatPlane, Vector3(4.1, 9, 1.2));
   }
 

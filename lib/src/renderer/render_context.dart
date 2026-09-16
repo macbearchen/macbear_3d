@@ -9,8 +9,9 @@ class M3RenderContext {
   late M3Camera _viewer; // scene camera or light (light for shadow map)
 
   // opaque, transparent, unlit
-  final M3RenderQueue opaque = M3RenderQueue();
-  final M3RenderQueue transparent = M3RenderQueue();
+  final M3RenderQueue opaque = M3RenderQueue(); // M3AlphaMode.opaque
+  final M3RenderQueue masked = M3RenderQueue(); // M3AlphaMode.mask
+  final M3RenderQueue transparent = M3RenderQueue(); // M3AlphaMode.blend
 
   final M3RenderQueue unlit = M3RenderQueue(); // external OES
 
@@ -26,6 +27,7 @@ class M3RenderContext {
   }) {
     // reset queues
     opaque.clear();
+    masked.clear();
     transparent.clear();
     unlit.clear();
 
@@ -84,13 +86,15 @@ class M3RenderContext {
         item.pointLights = scene.pointLights;
         item.spotLights = scene.spotLights;
 
-        // 1-1. Collect for unlit / opacity / transparency
+        // 1-1. Collect for unlit / opacity / masked / transparency
         if (sub.mtr.diffuseTexture is M3ExternalTexture) {
           unlit.add(item);
         } else if (sub.mtr.alphaMode == M3AlphaMode.blend) {
           if (!bOnlyOpaque) {
             transparent.add(item);
           }
+        } else if (sub.mtr.alphaMode == M3AlphaMode.mask) {
+          masked.add(item);
         } else {
           opaque.add(item);
         }
@@ -105,8 +109,9 @@ class M3RenderContext {
         }
       }
     }
-    // 2. Sort opaque
+    // 2. Sort opaque and masked (Front-to-Back for Early-Z)
     opaque.sortOpaque();
+    masked.sortOpaque();
     if (bOnlyOpaque) {
       return; // remark it: produce some shore effect
     }
@@ -119,6 +124,7 @@ class M3RenderContext {
   void excludeEntities(List<M3Entity> entities) {
     for (var e in entities) {
       opaque.items.removeWhere((item) => item.entity == e);
+      masked.items.removeWhere((item) => item.entity == e);
       transparent.items.removeWhere((item) => item.entity == e);
       unlit.items.removeWhere((item) => item.entity == e);
     }
@@ -134,17 +140,34 @@ class M3RenderContext {
 
   /// render all render queues
   void render(M3Program prog, {M3FillMode fillMode = .solid}) {
-    // (1/3) Opaque objects
+    final gl = M3AppEngine.instance.renderEngine.gl;
+
+    // 1. Opaque & Masked: Disable blending, enable depth writing
+    gl.disable(WebGL.BLEND);
+    gl.blendFunc(WebGL.ONE, WebGL.ONE);
+    gl.depthMask(true);
+
+    // (1/4) Opaque objects
     _executeQueue(opaque, prog, fillMode: fillMode);
 
-    // (2/3) Unlit objects
+    // (2/4) Masked objects (alpha test / cutoff)
+    _executeQueue(masked, prog, fillMode: fillMode);
+
+    // (3/4) Unlit objects
     if (fillMode == .solid) {
       final progUnlit = M3Resources.programExternalOES!;
       _executeQueue(unlit, progUnlit);
     }
 
-    // (3/3) Transparent objects
-    _executeQueue(transparent, prog, fillMode: fillMode);
+    // 2. Transparent objects: Enable alpha blending, disable depth writing
+    if (!transparent.isEmpty) {
+      gl.enable(WebGL.BLEND);
+      gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA);
+      gl.depthMask(false);
+      // (4/4) Transparent objects
+      gl.depthMask(true);
+      gl.disable(WebGL.BLEND);
+    }
   }
 
   /// composited 2-pass reflection rendering
@@ -153,6 +176,7 @@ class M3RenderContext {
 
     gl.depthFunc(WebGL.EQUAL); // Match exactly from 1st pass
     gl.depthMask(false); // Don't write to depth buffer in blending pass
+    gl.enable(WebGL.BLEND);
     gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA); // alpha blending
 
     final stats = M3AppEngine.instance.renderEngine.stats;
@@ -197,10 +221,24 @@ class M3RenderContext {
     M3Texture currentCubemap = defaultCubemap;
     prog.setEnvironmentMap(currentCubemap);
 
+    // track cull face state (default is cull face enabled)
+    bool cullFaceEnabled = true;
+
     for (final item in queue.items) {
       final sub = item.subMesh;
       final entity = item.entity;
       final nextCubemap = entity.getProbe()?.cubemapTexture ?? defaultCubemap;
+
+      // toggle CULL_FACE per material
+      final shouldCull = !sub.mtr.doubleSided;
+      if (shouldCull != cullFaceEnabled) {
+        if (shouldCull) {
+          gl.enable(WebGL.CULL_FACE);
+        } else {
+          gl.disable(WebGL.CULL_FACE);
+        }
+        cullFaceEnabled = shouldCull;
+      }
 
       // copy material from sub
       mtrOverride.setFrom(sub.mtr);
@@ -229,6 +267,11 @@ class M3RenderContext {
         prog.setEnvironmentMap(currentCubemap);
       }
       sub.geom.draw(prog, fillMode: fillMode);
+    }
+
+    // restore default cull face state
+    if (!cullFaceEnabled) {
+      gl.enable(WebGL.CULL_FACE);
     }
   }
 }

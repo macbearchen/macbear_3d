@@ -156,9 +156,15 @@ class _MainPageState extends State<MainPage> {
         scene.camera.csmCount = 0;
         final halfView = 12;
         final lightViewer = scene.dirLight.lightViewer;
+        final euler = lightViewer.euler;
         lightViewer.target = Vector3.zero();
         lightViewer.setViewport(-halfView, -halfView, halfView * 2, halfView * 2, fovy: 0, far: 100);
-        lightViewer.setEuler(pi / 4, -pi / 4, 0, distance: 30); // rotate light
+        lightViewer.setEuler(
+          euler.yaw,
+          euler.pitch,
+          euler.roll,
+          distance: lightViewer.distanceToTarget,
+        ); // rotate light
         lightViewer.refreshProjectionMatrix();
         break;
       case 2: // cascade shadow map

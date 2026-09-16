@@ -162,7 +162,7 @@ class M3RenderEngine {
     gl.depthMask(true);
     gl.depthFunc(WebGL.LEQUAL);
 
-    gl.enable(WebGL.BLEND);
+    gl.disable(WebGL.BLEND);
     gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA); // WebGL.ONE
 
     if (!options.debug.wireframe) {

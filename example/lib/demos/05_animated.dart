@@ -46,51 +46,53 @@ class AnimatedScene_05 extends DemoScene {
     // 05-1: GLTF model - using M3Mesh.load()
     final meshGltf = await M3Mesh.load('example/CesiumMan.glb');
     meshGltf.animator?.play(0);
-    _man = addMesh(meshGltf, Vector3(0, 5, 0));
+    _man = addMesh(meshGltf, Vector3(0, 2, 0));
     _man!.color = Colors.white;
     _man!.rotation = Quaternion.euler(0, pi / 2, 0);
     _man!.scale = Vector3.all(2.0);
+
+    // 05-1: GLTF model - using M3Mesh.load()
+    final glassUrl =
+        'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/GlassBrokenWindow/glTF-Binary/GlassBrokenWindow.glb';
+    final meshGlass = await M3Mesh.load(glassUrl);
+    final glass = addMesh(meshGlass, Vector3(-1, 4.5, 0.3));
+    glass.rotation = Quaternion.euler(0, pi / 2, 0);
+    glass.scale = Vector3.all(3.0);
+
+    // 05-1: GLTF model - using M3Mesh.load()
+    final maskUrl =
+        'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/AlphaBlendModeTest/glTF-Binary/AlphaBlendModeTest.glb';
+    final meshMask = await M3Mesh.load(maskUrl);
+    final mask = addMesh(meshMask, Vector3(5, 5, 0.2));
+    mask.rotation = Quaternion.euler(0, pi / 2, 0);
+    mask.scale = Vector3.all(1.0);
 
     // 05-2: GLTF model - using M3Mesh.load()
     final meshDuck = await M3Mesh.load('example/Duck.glb');
     _duck = addMesh(meshDuck, Vector3(-4, -4, 0));
     _duck!.scale = Vector3.all(1.0);
 
-    final duck2 = addMesh(meshDuck, Vector3(-8, -4, 0));
+    final duck2 = addMesh(meshDuck, Vector3(-7, 0, 0));
     duck2
       ..rotation = Quaternion.euler(0, pi / 2, 0) * Quaternion.euler(pi / 3, 0, 0)
-      ..scale = Vector3.all(2.5);
+      ..scale = Vector3.all(2.0);
 
     final meshFox = await M3Mesh.load('example/Fox.glb');
     meshFox.animator?.play(0);
-    _fox = addMesh(meshFox, Vector3(-2, 0, 0));
+    _fox = addMesh(meshFox, Vector3(-4, 0, 0));
     _fox!.rotation = Quaternion.euler(0, pi / 2, 0);
     _fox!.scale = Vector3.all(0.04);
 
     // Fox 1: Survey Animation (Index 0)
+    // Walk Animation (Index 1)
+    // Run Animation (Index 2)
     final mesh1 = meshFox.clone();
-    mesh1.animator?.play(0);
+    mesh1.animator?.play(2);
     mesh1.animator?.playRate = 0.6;
-    final entity1 = addMesh(mesh1, Vector3(-4, 0, 0));
+    final entity1 = addMesh(mesh1, Vector3(-2, 0, 0));
     entity1.rotation = Quaternion.euler(0, pi / 2, 0);
-    entity1.scale = Vector3.all(0.05);
+    entity1.scale = Vector3.all(0.02);
     entity1.color = Vector4(1, 0.5, 0.5, 1); // Reddish
-
-    // Fox 2: Walk Animation (Index 1)
-    final mesh2 = meshFox.clone();
-    mesh2.animator?.play(1);
-    final entity2 = addMesh(mesh2, Vector3(2, 0, 0));
-    entity2.rotation = Quaternion.euler(0, pi / 2, 0);
-    entity2.scale = Vector3.all(0.03);
-    entity2.color = Vector4(0.5, 1, 0.5, 1); // Greenish
-
-    // Fox 3: Run Animation (Index 2)
-    final mesh3 = meshFox.clone();
-    mesh3.animator?.play(2);
-    final entity3 = addMesh(mesh3, Vector3(4, 0, 0));
-    entity3.rotation = Quaternion.euler(0, pi / 2, 0);
-    entity3.scale = Vector3.all(0.02);
-    entity3.color = Vector4(0.5, 0.5, 1, 1); // Blueish
 
     // BVH resource: Biovision hierarchical data
     // https://theorangeduck.com/media/uploads/BVHView/bvhview.html

@@ -117,6 +117,11 @@ class M3Resources {
   static M3ProgramShadowmap? programShadowmap;
   static M3ProgramShadowCSM? programShadowCSM;
 
+  // with masked (alpha test)
+  static M3ProgramLighting? programTextureMasked;
+  static M3ProgramShadowmap? programShadowmapMasked;
+  static M3ProgramShadowCSM? programShadowCSMMasked;
+
   // ignore: non_constant_identifier_names
   static final _SkinNormalVS_glsl = "#define ENABLE_NORMAL \n$SkinningVS_glsl";
 
@@ -134,6 +139,7 @@ class M3Resources {
       ?..setViewport(0, 0, 8, 5, fovy: 45, near: 1, far: 30)
       ..target.setFrom(Vector3(-10, 0, 1))
       ..setEuler(0, -pi / 5, 0, distance: 4);
+    debugCamera = null;
 
     // Mesh
     axisDotMesh;
@@ -201,6 +207,21 @@ class M3Resources {
     M3Log.i('M3Resources', 'init done');
   }
 
+  static String _getShadowFS(M3ShaderOptions options) {
+    // shadow map, CSM, PCF
+    String strShadowFS = ShadowFS_glsl;
+
+    // PCF - 0:none, 1:default(4-tap), 2:3x3, 3:5x5
+    if (options.pcf == 1) {
+      strShadowFS = "#define ENABLE_PCF \n$strShadowFS";
+    } else if (options.pcf == 2) {
+      strShadowFS = "#define ENABLE_PCF_3x3 \n$strShadowFS";
+    } else if (options.pcf == 3) {
+      strShadowFS = "#define ENABLE_PCF_5x5 \n$strShadowFS";
+    }
+    return strShadowFS;
+  }
+
   static void setLightingProgram(M3ShaderOptions options) {
     programTexture?.dispose();
     programShadowmap?.dispose();
@@ -249,18 +270,10 @@ class M3Resources {
     M3Log.i('setLightingProgram', 'prepare lighting');
     programTexture = M3ProgramLighting(strVert, strFrag);
 
-    // shadow map, CSM, PCF
-    String strShadowFS = ShadowFS_glsl;
+    // PCF: Percentage Closer Filtering
+    String strShadowFS = _getShadowFS(options);
 
-    // PCF - 0:none, 1:default(4-tap), 2:3x3, 3:5x5
-    if (options.pcf == 1) {
-      strShadowFS = "#define ENABLE_PCF \n$strShadowFS";
-    } else if (options.pcf == 2) {
-      strShadowFS = "#define ENABLE_PCF_3x3 \n$strShadowFS";
-    } else if (options.pcf == 3) {
-      strShadowFS = "#define ENABLE_PCF_5x5 \n$strShadowFS";
-    }
-
+    // shadow map, CSM
     strVert = ShadowVS_glsl + strVert; // shadow vertex shader
     strFrag = strFrag + strShadowFS; // shadow fragment shader
 
@@ -285,6 +298,10 @@ class M3Resources {
     fsShadow = "$csmDefine \n$strFrag";
     programShadowCSM = M3ProgramShadowCSM(vsShadow, fsShadow);
 
+    _setWaterProgram(options);
+  }
+
+  static void _setWaterProgram(M3ShaderOptions options) {
     // water program without shadow
     String vsWater = SkinningVS_glsl + Water_vert;
     String fsWater = SurfaceGeometry_glsl + Water_frag;
@@ -308,7 +325,11 @@ class M3Resources {
     M3Log.i('setLightingProgram', 'prepare water');
     programWater = M3ProgramWater(vsWater, fsWater);
 
+    // PCF: Percentage Closer Filtering
+    String strShadowFS = _getShadowFS(options);
+
     // water program with shadow CSM
+    final String csmDefine = options.csmOnFS ? "#define ENABLE_SHADOW_CSM_FS \n" : "#define ENABLE_SHADOW_CSM_VS \n";
     vsWater = "$csmDefine \n$ShadowVS_glsl \n$vsWater";
     fsWater = "$csmDefine \n$fsWater \n$strShadowFS";
     programWaterCSM = M3ProgramWaterCSM(vsWater, fsWater);

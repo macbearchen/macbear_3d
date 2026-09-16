@@ -23,6 +23,8 @@ class M3Material {
   double roughness = 0.8;
   int mipLevel = 7; // max mipmap level for reflection roughness
   M3AlphaMode alphaMode = M3AlphaMode.opaque;
+  double alphaCutoff = 0.5; // alpha test threshold for M3AlphaMode.mask
+  bool doubleSided = false;
   int renderOrder = 0; // manual override for fine-tuned sorting
 
   // textures
@@ -68,6 +70,8 @@ class M3Material {
     roughness = other.roughness;
     mipLevel = other.mipLevel;
     alphaMode = other.alphaMode;
+    alphaCutoff = other.alphaCutoff;
+    doubleSided = other.doubleSided;
     renderOrder = other.renderOrder;
     diffuseTexture = other.diffuseTexture;
     texMatrix.setFrom(other.texMatrix);
@@ -80,6 +84,8 @@ class M3Material {
     mtr.diffuse.setFrom(gltfMat.baseColorFactor);
     mtr.metallic = gltfMat.metallicFactor;
     mtr.roughness = gltfMat.roughnessFactor;
+    mtr.doubleSided = gltfMat.doubleSided;
+    mtr.alphaCutoff = gltfMat.alphaCutoff;
     if (gltfMat.alphaMode == 'BLEND') {
       mtr.alphaMode = M3AlphaMode.blend;
     } else if (gltfMat.alphaMode == 'MASK') {

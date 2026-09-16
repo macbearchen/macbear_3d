@@ -131,11 +131,11 @@ class GltfPrimitive {
     return document.getFloatAccessor(weightAccessor!);
   }
 
-  /// 取得索引資料 (自動處理 UNSIGNED_SHORT/UNSIGNED_INT)
+  /// 取得索引資料 (自動處理 UNSIGNED_BYTE/UNSIGNED_SHORT/UNSIGNED_INT)
   List<int>? getIndices() {
     if (indicesAccessor == null) return null;
     final componentType = document.getAccessorComponentType(indicesAccessor!);
-    if (componentType == GltfAccessor.UNSIGNED_SHORT) {
+    if (componentType == GltfAccessor.UNSIGNED_BYTE || componentType == GltfAccessor.UNSIGNED_SHORT) {
       return document.getUint16Accessor(indicesAccessor!).toList();
     } else if (componentType == GltfAccessor.UNSIGNED_INT) {
       return document.getUint32Accessor(indicesAccessor!).toList();

@@ -20,12 +20,12 @@ uniform mediump vec4 CameraViewport; // xyzw for (x,y,width,height)
 // uniform lowp vec4 uColor;
 
 // shade lit/unlit functions
-lowp vec4 ShadeLit(in lowp vec4 texDiffuse)
+lowp vec4 ShadeLit(in lowp vec4 texDiffuse, in SurfaceGeometry geo)
 {
 	return texDiffuse;
 }
 
-lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse)
+lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse, in SurfaceGeometry geo)
 {
 	return vec4(texDiffuse.rgb * 0.8, 1.0);
 }
@@ -67,16 +67,19 @@ uniform mediump vec3 uLightDir;		// parallel light
 #endif // ENABLE_WATER_SPECULAR
 
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS) || defined(ENABLE_SHADOW_CSM_FS)
-lowp vec4 ShadeLitShadowMix(in lowp vec4 color);
+lowp vec4 ShadeLitShadowMix(in lowp vec4 color, in SurfaceGeometry geo);
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS or ENABLE_SHADOW_CSM_FS
 #ifdef ENABLE_FOG
 lowp vec4 ApplyFog(in lowp vec4 texResult);
 #endif // ENABLE_FOG
 
-#ifdef ENABLE_POINT_LIGHTS
-// multi-point-lights
-lowp vec3 CalculateLighting(vec3 fragPos, vec3 N);
+#ifdef ENABLE_POINT_LIGHTS	// multi-point-lights
+lowp vec3 CalculatePointLighting(SurfaceGeometry geo);
 #endif // ENABLE_POINT_LIGHTS
+
+#ifdef ENABLE_SPOT_LIGHTS   // spot lights
+lowp vec3 CalculateSpotLighting(SurfaceGeometry geo);
+#endif // ENABLE_SPOT_LIGHTS
 
 void main(void)
 {
@@ -89,6 +92,7 @@ void main(void)
 	// When distortion is enabled, use the normal map to calculate perturbation
 	// Same as * 2.0 - 1.0
 	lowp vec3 vAccumulatedNormal = texture(NormalTex, BumpCoord0).rgb + texture(NormalTex, BumpCoord1).rgb - 1.0;
+	SurfaceGeometry geo = SurfaceGeometry(ObjectspaceV, vAccumulatedNormal);
 
 	// blend reflection and refraction
 	lowp vec4 resultColor;
@@ -109,13 +113,17 @@ void main(void)
 
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS) || defined(ENABLE_SHADOW_CSM_FS)
 	// ObjectspaceV, vAccumulatedNormal
-	resultColor = ShadeLitShadowMix(resultColor);
+	resultColor = ShadeLitShadowMix(resultColor, geo);
 #else
-	resultColor = ShadeLit(resultColor);
+	resultColor = ShadeLit(resultColor, geo);
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS or ENABLE_SHADOW_CSM_FS
 
 #ifdef ENABLE_POINT_LIGHTS
-	// resultColor.rgb += CalculateLighting(ObjectspaceV, vAccumulatedNormal);
+	resultColor.rgb += CalculatePointLighting(geo);
+#endif
+
+#ifdef ENABLE_SPOT_LIGHTS
+    resultColor.rgb += CalculateSpotLighting(geo);
 #endif
 
 #ifdef ENABLE_FOG

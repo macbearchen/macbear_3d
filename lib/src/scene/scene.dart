@@ -294,7 +294,9 @@ abstract class M3Scene {
       if (drawBulb) {
         light.drawBulb(progSimple, camera);
       } else {
-        light.drawHelper(progSimple, camera);
+        if (renderEngine.options.shader.pointLights) {
+          light.drawHelper(progSimple, camera);
+        }
       }
     }
 
@@ -304,7 +306,9 @@ abstract class M3Scene {
       if (drawBulb) {
         light.drawBulb(progSimple, camera);
       } else {
-        light.drawHelper(progSimple, camera);
+        if (renderEngine.options.shader.spotLights) {
+          light.drawHelper(progSimple, camera);
+        }
       }
     }
   }

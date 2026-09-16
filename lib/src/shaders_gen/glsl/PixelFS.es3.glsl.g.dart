@@ -11,26 +11,13 @@ uniform mediump vec4 ColorSpecular;	// specular RGB, w: shininess
 
 uniform mediump vec3 uLightDir; // parallel light
 
-mediump vec3 safe_normalize(mediump vec3 v) {
-    mediump float len2 = max(dot(v, v), 1e-8);
-    return v * inversesqrt(len2);
-}
-
-#ifdef ENABLE_POINT_LIGHTS
-// multi-point-lights
-lowp vec3 CalculateLighting(SurfaceGeometry geo);
+#ifdef ENABLE_POINT_LIGHTS  // multi-point-lights
+lowp vec3 CalculatePointLighting(SurfaceGeometry geo);
 #endif // ENABLE_POINT_LIGHTS
 
-#ifdef ENABLE_SPOT_LIGHTS
-// spot lights
+#ifdef ENABLE_SPOT_LIGHTS   // spot lights
 lowp vec3 CalculateSpotLighting(SurfaceGeometry geo);
 #endif // ENABLE_SPOT_LIGHTS
-
-// View direction from surface to eye. Used by both Lit (for H = V+L) and Unlit (for IBL) paths.
-mediump vec3 ComputeViewDir() {
-    mediump vec3 ObjToEye = uEyePos - ObjectspaceV;
-    return safe_normalize(ObjToEye);
-}
 
 #ifdef ENABLE_PBR
 uniform mediump vec3 uParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level
@@ -131,12 +118,12 @@ mediump vec3 ApplyIBL(mediump vec3 ambientDiffuse, mediump vec3 N, mediump vec3 
 #endif // ENABLE_IBL
 
 // lit result by per-pixel: by lighting
-lowp vec4 ShadeLit(in lowp vec4 texDiffuse)
+lowp vec4 ShadeLit(lowp vec4 texDiffuse, SurfaceGeometry geo)
 {
 	lowp vec3 resultColor;
-    mediump vec3 N = safe_normalize(ObjectspaceN);
+    mediump vec3 N = geo.Normal;
     mediump vec3 L = uLightDir;		// parallel light source
-    mediump vec3 V = ComputeViewDir();
+    mediump vec3 V = safe_normalize(uEyePos - geo.Position); // View direction from surface to eye
     mediump vec3 H = safe_normalize(V + L);
     mediump vec4 diffuse = ColorDiffuse * texDiffuse;
 
@@ -188,25 +175,25 @@ lowp vec4 ShadeLit(in lowp vec4 texDiffuse)
 #endif // ENABLE_PBR
 
 #ifdef ENABLE_POINT_LIGHTS
-    resultColor += CalculateLighting(SurfaceGeometry(ObjectspaceV, N)) * texDiffuse.rgb;
+    resultColor += CalculatePointLighting(geo) * texDiffuse.rgb;
 #endif
 
 #ifdef ENABLE_SPOT_LIGHTS
-    resultColor += CalculateSpotLighting(SurfaceGeometry(ObjectspaceV, N)) * texDiffuse.rgb;
+    resultColor += CalculateSpotLighting(geo) * texDiffuse.rgb;
 #endif
 
 	return vec4(resultColor, diffuse.a);
 }
 
 // unlit result by per-pixel: in shadow
-lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse)
+lowp vec4 ShadeUnlit(lowp vec4 texDiffuse, SurfaceGeometry geo)
 {
 	lowp vec3 resultColor;
     mediump vec4 diffuse = ColorDiffuse * texDiffuse;
+    mediump vec3 N = geo.Normal;
 
 #ifdef ENABLE_PBR
-    mediump vec3 N = safe_normalize(ObjectspaceN);
-    mediump vec3 V = ComputeViewDir();
+    mediump vec3 V = safe_normalize(uEyePos - geo.Position); // View direction from surface to eye
 
     mediump vec3 ambient = ComputeAmbientLinear(texDiffuse.rgb);
 
@@ -226,11 +213,11 @@ lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse)
 #endif // ENABLE_PBR
 
 #ifdef ENABLE_POINT_LIGHTS
-    resultColor += CalculateLighting(SurfaceGeometry(ObjectspaceV, N)) * texDiffuse.rgb;
+    resultColor += CalculatePointLighting(geo) * texDiffuse.rgb;
 #endif
 
 #ifdef ENABLE_SPOT_LIGHTS
-    resultColor += CalculateSpotLighting(SurfaceGeometry(ObjectspaceV, N)) * texDiffuse.rgb;
+    resultColor += CalculateSpotLighting(geo) * texDiffuse.rgb;
 #endif
 
 	return vec4(resultColor, diffuse.a);
