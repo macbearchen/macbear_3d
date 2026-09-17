@@ -77,10 +77,8 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  // 0 - no shadow
-  // 1 - shadowmap
-  // 2 - csm
-  int shadowMode = 2;
+  // -1: no shadow, 0: shadowmap (CSM=0), 1~4: cascade shadow map
+  int shadowMode = 4;
   int _selectedSceneIndex = 1; // 00 starter, 01-08 scenes, 9 sample
   int _selectedPhysicsSubIndex = 0; // cycles 0-5 through the 6 physics scenes
   bool _showSettings = true;
@@ -146,14 +144,15 @@ class _MainPageState extends State<MainPage> {
     if (scene == null) return;
 
     shadowMode = mode;
-    switch (shadowMode) {
-      case 0: // no shadow
-        renderEngine.options.useShadow = false;
-        scene.camera.csmCount = 0;
-        break;
-      case 1: // shadowmap
-        renderEngine.options.useShadow = true;
-        scene.camera.csmCount = 0;
+    final bool enableShadow = mode >= 0;
+    renderEngine.options.useShadow = enableShadow;
+
+    if (enableShadow) {
+      final csm = mode.clamp(0, 4);
+      scene.camera.csmCount = csm;
+      renderEngine.options.shader.csmCount = csm;
+
+      if (csm == 0) {
         final halfView = 12;
         final lightViewer = scene.dirLight.lightViewer;
         final euler = lightViewer.euler;
@@ -166,11 +165,7 @@ class _MainPageState extends State<MainPage> {
           distance: lightViewer.distanceToTarget,
         ); // rotate light
         lightViewer.refreshProjectionMatrix();
-        break;
-      case 2: // cascade shadow map
-        renderEngine.options.useShadow = true;
-        scene.camera.csmCount = 4;
-        break;
+      }
     }
   }
 
@@ -270,20 +265,66 @@ class _MainPageState extends State<MainPage> {
   Widget getShaderWidget() {
     final renderEngine = M3AppEngine.instance.renderEngine;
     final shaderOptions = renderEngine.options.shader;
+    final scene = M3AppEngine.instance.activeScene;
+    final csmCount = scene?.camera.csmCount ?? 0;
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (scene != null && renderEngine.options.useShadow) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(16)),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text("CSM:", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                Text(
+                  "$csmCount",
+                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(
+                  width: 50,
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 2,
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                    ),
+                    child: Slider(
+                      value: csmCount.toDouble().clamp(0.0, 4.0),
+                      min: 0,
+                      max: 4,
+                      divisions: 4,
+                      activeColor: Colors.amber,
+                      inactiveColor: Colors.white24,
+                      onChanged: (val) {
+                        setState(() {
+                          setShadowMode(val.toInt());
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          separateWidget,
+        ],
         FloatingActionButton.small(
           heroTag: 'shadow',
-          backgroundColor: shadowMode > 0 ? Colors.amber : null,
+          backgroundColor: renderEngine.options.useShadow ? Colors.amber : null,
           onPressed: () {
             setState(() {
-              setShadowMode((shadowMode + 1) % 3);
+              if (renderEngine.options.useShadow) {
+                setShadowMode(-1); // turn off
+              } else {
+                setShadowMode(scene?.camera.csmCount ?? 4); // turn on with current or default csm
+              }
             });
           },
           child: Icon(
-            shadowMode == 2 ? Icons.layers : (shadowMode == 1 ? Icons.light_mode : Icons.light_mode_outlined),
+            renderEngine.options.useShadow ? Icons.light_mode : Icons.light_mode_outlined,
           ),
         ),
         separateWidget,
@@ -494,14 +535,14 @@ class _MainPageState extends State<MainPage> {
         if (shaderOptions.fog) ...[
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(24)),
+            decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(16)),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text("fog: ", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                const Text("fog: ", style: TextStyle(color: Colors.white70, fontSize: 10)),
                 Text("${fogStartPct.toStringAsFixed(0)}%", style: const TextStyle(color: Colors.white, fontSize: 10)),
                 SizedBox(
-                  width: 100,
+                  width: 50,
                   child: SliderTheme(
                     data: SliderTheme.of(context).copyWith(
                       trackHeight: 2,

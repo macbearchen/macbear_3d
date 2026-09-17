@@ -157,6 +157,15 @@ class M3ShaderOptions {
     _csmOnFS = v;
     isDirty = true;
   }
+
+  // --- csmCount ---
+  int _csmCount = 4; // 0: single shadowmap, 1~4: cascade shadow map
+  int get csmCount => _csmCount;
+  set csmCount(int v) {
+    if (_csmCount == v) return;
+    _csmCount = v;
+    isDirty = true;
+  }
 }
 
 /// Rendering statistics

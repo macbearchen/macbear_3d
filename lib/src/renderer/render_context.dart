@@ -151,7 +151,13 @@ class M3RenderContext {
     _executeQueue(opaque, prog, fillMode: fillMode);
 
     // (2/4) Masked objects (alpha test / cutoff)
-    _executeQueue(masked, prog, fillMode: fillMode);
+    M3Program? progMasked = prog;
+    if (prog == M3Resources.programTexture) {
+      progMasked = M3Resources.programTextureMasked;
+    } else if (prog == M3Resources.programShadow) {
+      progMasked = M3Resources.programShadowMasked;
+    }
+    if (progMasked != null) _executeQueue(masked, progMasked, fillMode: fillMode);
 
     // (3/4) Unlit objects
     if (fillMode == .solid) {
@@ -165,6 +171,7 @@ class M3RenderContext {
       gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA);
       gl.depthMask(false);
       // (4/4) Transparent objects
+      _executeQueue(transparent, prog);
       gl.depthMask(true);
       gl.disable(WebGL.BLEND);
     }

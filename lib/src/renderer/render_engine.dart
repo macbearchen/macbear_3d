@@ -134,12 +134,8 @@ class M3RenderEngine {
   M3ProgramLighting getSceneProgram(M3Scene scene) {
     M3ProgramLighting prog = M3Resources.programTexture!; // texture shader
 
-    if (isShadowEnabled) {
-      // select shadow map shader: single or cascaded
-      final M3ProgramShadow progShadow = scene.dirLight.cascades.isEmpty
-          ? M3Resources.programShadowmap!
-          : M3Resources.programShadowCSM!;
-      prog = progShadow;
+    if (isShadowEnabled && M3Resources.programShadow != null) {
+      prog = M3Resources.programShadow!;
     }
 
     // M3ProgramLighting prog = M3Resources.programSimpleLighting!; // for debug
@@ -172,6 +168,17 @@ class M3RenderEngine {
       prog.attachDirectionalLight(scene.dirLight);
       prog.attachPointLights(scene.pointLights);
       prog.attachSpotLights(scene.spotLights);
+
+      M3ProgramLighting progMasked = prog;
+      if (prog == M3Resources.programTexture) {
+        progMasked = M3Resources.programTextureMasked!;
+      } else if (prog == M3Resources.programShadow) {
+        progMasked = M3Resources.programShadowMasked!;
+      }
+
+      progMasked.attachDirectionalLight(scene.dirLight);
+      progMasked.attachPointLights(scene.pointLights);
+      progMasked.attachSpotLights(scene.spotLights);
 
       // main context render pass
       mainContext.render(prog);

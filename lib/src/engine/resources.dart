@@ -114,13 +114,11 @@ class M3Resources {
   // with lighting
   static M3ProgramLighting? programSimpleLighting;
   static M3ProgramLighting? programTexture;
-  static M3ProgramShadowmap? programShadowmap;
-  static M3ProgramShadowCSM? programShadowCSM;
+  static M3ProgramShadow? programShadow;
 
   // with masked (alpha test)
   static M3ProgramLighting? programTextureMasked;
-  static M3ProgramShadowmap? programShadowmapMasked;
-  static M3ProgramShadowCSM? programShadowCSMMasked;
+  static M3ProgramShadow? programShadowMasked;
 
   // ignore: non_constant_identifier_names
   static final _SkinNormalVS_glsl = "#define ENABLE_NORMAL \n$SkinningVS_glsl";
@@ -224,8 +222,9 @@ class M3Resources {
 
   static void setLightingProgram(M3ShaderOptions options) {
     programTexture?.dispose();
-    programShadowmap?.dispose();
-    programShadowCSM?.dispose();
+    programShadow?.dispose();
+    programTextureMasked?.dispose();
+    programShadowMasked?.dispose();
 
     // texture lighting program
     String strVert = _SkinNormalVS_glsl + TexturedLighting_vert;
@@ -269,6 +268,8 @@ class M3Resources {
 
     M3Log.i('setLightingProgram', 'prepare lighting');
     programTexture = M3ProgramLighting(strVert, strFrag);
+    final strFragMasked = "#define ENABLE_ALPHA_TEST \n$strFrag";
+    programTextureMasked = M3ProgramLighting(strVert, strFragMasked);
 
     // PCF: Percentage Closer Filtering
     String strShadowFS = _getShadowFS(options);
@@ -285,23 +286,31 @@ class M3Resources {
       strFrag = "#define ENABLE_SPOT_SHADOW \n$strFrag";
     }
 
-    // shadow map program
-    String vsShadow = "#define ENABLE_SHADOW_MAP \n$strVert";
-    String fsShadow = "#define ENABLE_SHADOW_MAP \n$strFrag";
-
-    M3Log.i('setLightingProgram', 'prepare shadowmap');
-    programShadowmap = M3ProgramShadowmap(vsShadow, fsShadow);
-
-    // shadow CSM program
-    final String csmDefine = options.csmOnFS ? "#define ENABLE_SHADOW_CSM_FS \n" : "#define ENABLE_SHADOW_CSM_VS \n";
-    vsShadow = "$csmDefine \n$strVert";
-    fsShadow = "$csmDefine \n$strFrag";
-    programShadowCSM = M3ProgramShadowCSM(vsShadow, fsShadow);
+    // Shadow program: programShadowmap when csmCount == 0, programShadowCSM when csmCount > 0
+    if (options.csmCount == 0) {
+      String vsShadow = "#define ENABLE_SHADOW_MAP \n$strVert";
+      String fsShadow = "#define ENABLE_SHADOW_MAP \n$strFrag";
+      M3Log.i('setLightingProgram', 'prepare shadowmap (CSM=0)');
+      programShadow = M3ProgramShadowmap(vsShadow, fsShadow);
+      fsShadow = "#define ENABLE_ALPHA_TEST \n$fsShadow";
+      programShadowMasked = M3ProgramShadowmap(vsShadow, fsShadow);
+    } else {
+      final String csmDefine = options.csmOnFS ? "#define ENABLE_SHADOW_CSM_FS \n" : "#define ENABLE_SHADOW_CSM_VS \n";
+      String vsShadow = "$csmDefine \n$strVert";
+      String fsShadow = "$csmDefine \n$strFrag";
+      M3Log.i('setLightingProgram', 'prepare shadow CSM (count=${options.csmCount})');
+      programShadow = M3ProgramShadowCSM(vsShadow, fsShadow);
+      fsShadow = "#define ENABLE_ALPHA_TEST \n$fsShadow";
+      programShadowMasked = M3ProgramShadowCSM(vsShadow, fsShadow);
+    }
 
     _setWaterProgram(options);
   }
 
   static void _setWaterProgram(M3ShaderOptions options) {
+    programWater?.dispose();
+    programWaterCSM?.dispose();
+
     // water program without shadow
     String vsWater = SkinningVS_glsl + Water_vert;
     String fsWater = SurfaceGeometry_glsl + Water_frag;
@@ -380,7 +389,8 @@ class M3Resources {
     programSimpleLighting?.dispose();
 
     programTexture?.dispose();
-    programShadowmap?.dispose();
-    programShadowCSM?.dispose();
+    programShadow?.dispose();
+    programTextureMasked?.dispose();
+    programShadowMasked?.dispose();
   }
 }

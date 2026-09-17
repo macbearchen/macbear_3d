@@ -51,18 +51,20 @@ class AnimatedScene_05 extends DemoScene {
     _man!.rotation = Quaternion.euler(0, pi / 2, 0);
     _man!.scale = Vector3.all(2.0);
 
+    const prefixUrl = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/';
+    final glassUrl = '${prefixUrl}GlassBrokenWindow/glTF-Binary/GlassBrokenWindow.glb';
+    final glassPath = 'glb/GlassBrokenWindow.glb';
+
     // 05-1: GLTF model - using M3Mesh.load()
-    final glassUrl =
-        'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/GlassBrokenWindow/glTF-Binary/GlassBrokenWindow.glb';
     final meshGlass = await M3Mesh.load(glassUrl);
     final glass = addMesh(meshGlass, Vector3(-1, 4.5, 0.3));
     glass.rotation = Quaternion.euler(0, pi / 2, 0);
     glass.scale = Vector3.all(3.0);
 
     // 05-1: GLTF model - using M3Mesh.load()
-    final maskUrl =
-        'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/AlphaBlendModeTest/glTF-Binary/AlphaBlendModeTest.glb';
-    final meshMask = await M3Mesh.load(maskUrl);
+    final maskUrl = '${prefixUrl}AlphaBlendModeTest/glTF-Binary/AlphaBlendModeTest.glb';
+    final maskPath = 'glb/AlphaBlendModeTest.glb';
+    final meshMask = await M3Mesh.load(maskUrl); // maskPath, maskUrl
     final mask = addMesh(meshMask, Vector3(5, 5, 0.2));
     mask.rotation = Quaternion.euler(0, pi / 2, 0);
     mask.scale = Vector3.all(1.0);

@@ -141,6 +141,17 @@ class M3PlanarReflection {
     prog.attachPointLights(scene.pointLights);
     prog.attachSpotLights(scene.spotLights);
 
+    M3ProgramLighting progMasked = prog;
+    if (prog == M3Resources.programTexture) {
+      progMasked = M3Resources.programTextureMasked!;
+    } else if (prog == M3Resources.programShadow) {
+      progMasked = M3Resources.programShadowMasked!;
+    }
+
+    progMasked.attachDirectionalLight(scene.dirLight);
+    progMasked.attachPointLights(scene.pointLights);
+    progMasked.attachSpotLights(scene.spotLights);
+
     // (1/2) prepare render queue: exclude this plane
     _context.prepareRenderQueue(scene, _camera, excludeReflection: this);
 

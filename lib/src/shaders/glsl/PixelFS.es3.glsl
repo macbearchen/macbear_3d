@@ -172,11 +172,11 @@ lowp vec4 ShadeLit(lowp vec4 texDiffuse, SurfaceGeometry geo)
 #endif // ENABLE_PBR
 
 #ifdef ENABLE_POINT_LIGHTS
-    resultColor += CalculatePointLighting(geo) * texDiffuse.rgb;
+    resultColor += CalculatePointLighting(geo) * diffuse.rgb;
 #endif
 
 #ifdef ENABLE_SPOT_LIGHTS
-    resultColor += CalculateSpotLighting(geo) * texDiffuse.rgb;
+    resultColor += CalculateSpotLighting(geo) * diffuse.rgb;
 #endif
 
 	return vec4(resultColor, diffuse.a);
@@ -210,11 +210,11 @@ lowp vec4 ShadeUnlit(lowp vec4 texDiffuse, SurfaceGeometry geo)
 #endif // ENABLE_PBR
 
 #ifdef ENABLE_POINT_LIGHTS
-    resultColor += CalculatePointLighting(geo) * texDiffuse.rgb;
+    resultColor += CalculatePointLighting(geo) * diffuse.rgb;
 #endif
 
 #ifdef ENABLE_SPOT_LIGHTS
-    resultColor += CalculateSpotLighting(geo) * texDiffuse.rgb;
+    resultColor += CalculateSpotLighting(geo) * diffuse.rgb;
 #endif
 
 	return vec4(resultColor, diffuse.a);
