@@ -273,12 +273,12 @@ class _MainPageState extends State<MainPage> {
       children: [
         if (scene != null && renderEngine.options.useShadow) ...[
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(16)),
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+            decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text("CSM:", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                const Text("CSM:", style: TextStyle(color: Colors.white70, fontSize: 9)),
                 Text(
                   "$csmCount",
                   style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
@@ -323,9 +323,7 @@ class _MainPageState extends State<MainPage> {
               }
             });
           },
-          child: Icon(
-            renderEngine.options.useShadow ? Icons.light_mode : Icons.light_mode_outlined,
-          ),
+          child: Icon(renderEngine.options.useShadow ? Icons.light_mode : Icons.light_mode_outlined),
         ),
         separateWidget,
         FloatingActionButton.small(
@@ -481,20 +479,20 @@ class _MainPageState extends State<MainPage> {
         separateWidget,
         // ── Directional light brightness slider ──
         Container(
-          width: 60,
+          width: 50,
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-          decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(8)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('\u2600', style: TextStyle(fontSize: 11, color: Colors.amber)),
+              const Text('\u2600', style: TextStyle(fontSize: 10, color: Colors.amber)),
               SizedBox(
-                width: 60,
+                width: 50,
                 child: SliderTheme(
                   data: SliderTheme.of(context).copyWith(
                     trackHeight: 2,
-                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 4),
+                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 8),
                   ),
                   child: Slider(
                     value: lightBrightness,

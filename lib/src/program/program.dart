@@ -52,6 +52,8 @@ class M3Program {
     return id != null && (id is! int || id >= 0);
   }
 
+  String name = 'program';
+
   // shader program
   late WebGLShader _shaderVert;
   late WebGLShader _shaderFrag;
@@ -77,6 +79,7 @@ class M3Program {
   late UniformLocation attribUV; // texture coordinate UV
 
   late UniformLocation uniformColor; // "uColor" for color mesh
+  late UniformLocation uniformAlphaCutoff; // "uAlphaCutoff" for masked material
 
   // vertex by bone-skinning/weight
   late UniformLocation uniformBoneCount; // "BonesCount" for mesh-vertex
@@ -196,6 +199,8 @@ class M3Program {
     uniformMVP = gl.getUniformLocation(program, "ModelviewProjection");
 
     uniformColor = gl.getUniformLocation(program, "uColor");
+    uniformAlphaCutoff = gl.getUniformLocation(program, "uAlphaCutoff");
+
     uniformTexMatrix = gl.getUniformLocation(program, "uTexMatrix");
     uniformSamplerDiffuse = gl.getUniformLocation(program, "SamplerDiffuse");
     uniformParamPBR = gl.getUniformLocation(program, "uParamPBR");
@@ -206,6 +211,10 @@ class M3Program {
     // Set up some default material parameters.
     if (M3Program.isLocationValid(uniformParamPBR)) {
       gl.uniform3f(uniformParamPBR, 0.0, 0.5, 3.0);
+    }
+
+    if (M3Program.isLocationValid(uniformAlphaCutoff)) {
+      gl.uniform1f(uniformAlphaCutoff, 0.5);
     }
 
     // vertex-attrib
@@ -255,7 +264,7 @@ class M3Program {
   }
 
   /// apply uniforms per frame
-  void applyUniforms(M3Camera cam) {
+  void applyFrameUniforms(M3Camera cam) {
     if (isLocationValid(uniformCameraViewport)) {
       gl.uniform4f(
         uniformCameraViewport,
@@ -289,6 +298,11 @@ class M3Program {
       // gl.vertexAttrib4fv(attribColor.id, pRGBA); // diffuse as glColor4f in fixed-function GL 1.x
 
       gl.uniform4fv(uniformColor, colorMix.storage);
+    }
+
+    // alpha cutoff
+    if (M3Program.isLocationValid(uniformAlphaCutoff)) {
+      gl.uniform1f(uniformAlphaCutoff, mtr.alphaCutoff);
     }
 
     // texture matrix

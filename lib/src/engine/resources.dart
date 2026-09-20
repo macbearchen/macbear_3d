@@ -119,6 +119,7 @@ class M3Resources {
   // with masked (alpha test)
   static M3ProgramLighting? programTextureMasked;
   static M3ProgramShadow? programShadowMasked;
+  static M3Program? programUnlitMasked;
 
   // ignore: non_constant_identifier_names
   static final _SkinNormalVS_glsl = "#define ENABLE_NORMAL \n$SkinningVS_glsl";
@@ -198,6 +199,10 @@ class M3Resources {
 '''; */
     }
     programExternalOES = M3Program(Unlit_vert, fsUnlit);
+    // masked
+    final progUnlitMasked = M3Program(Unlit_vert, '#define ENABLE_ALPHA_TEST \n$fsUnlit');
+    progUnlitMasked.name = 'programUnlitMasked';
+    programUnlitMasked = progUnlitMasked;
 
     // lighting related programs
     setLightingProgram(M3ShaderOptions());
@@ -386,8 +391,10 @@ class M3Resources {
     programWaterCSM?.dispose();
     programSkyboxReflect?.dispose();
     programExternalOES?.dispose();
+    programUnlitMasked?.dispose();
     programSimpleLighting?.dispose();
 
+    // lighting related programs
     programTexture?.dispose();
     programShadow?.dispose();
     programTextureMasked?.dispose();

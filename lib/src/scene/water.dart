@@ -207,7 +207,7 @@ class M3Water extends M3Entity {
       prog.attachDirectionalLight(scene.dirLight);
       prog.attachPointLights(scene.pointLights);
       prog.attachSpotLights(scene.spotLights);
-      prog.applyUniforms(viewer);
+      prog.applyFrameUniforms(viewer);
       prog.applyFog(scene.fog);
       (prog as M3WaterShader).bindWater(this);
 

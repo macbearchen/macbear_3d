@@ -12,6 +12,16 @@ class M3ProgramLighting extends M3ProgramEye with M3LightingShader, M3FogShader 
     initFogLocation(program);
   }
 
+  @override
+  void applyFrameUniforms(M3Camera cam) {
+    super.applyFrameUniforms(cam);
+
+    // directional light color: RGB
+    if (M3Program.isLocationValid(uniformLightColor)) {
+      gl.uniform3fv(uniformLightColor, _dirLight!.color.storage);
+    }
+  }
+
   void setLightTBN(Vector3 tangent, Vector3 binormal, Vector3 normal) {
     if (_dirLight != null) {
       Vector3 lightDir = _dirLight!.getDirection();
@@ -42,7 +52,6 @@ class M3ProgramLighting extends M3ProgramEye with M3LightingShader, M3FogShader 
 
     // diffuse: RGBA
     if (M3Program.isLocationValid(uniformDiffuse)) {
-      outDiffuse.xyz = M3Light.blendRGB(_dirLight!.color, outDiffuse.rgb);
       gl.uniform4fv(uniformDiffuse, outDiffuse.storage);
     }
 

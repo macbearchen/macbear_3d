@@ -48,6 +48,10 @@ lowp vec4 ShadeLitShadowMix(in lowp vec4 color, in SurfaceGeometry geo);
 lowp vec4 ApplyFog(in lowp vec4 texResult);
 #endif // ENABLE_FOG
 
+#ifdef ENABLE_ALPHA_TEST
+uniform lowp float uAlphaCutoff;	// alpha cutoff
+#endif // ENABLE_ALPHA_TEST
+
 out vec4 fragColor;
 
 void main(void)
@@ -58,7 +62,7 @@ void main(void)
 #endif // ENABLE_TEXTURE0_BGRA
 
 #ifdef ENABLE_ALPHA_TEST
-	if (texResult.a < 0.5)
+	if (texResult.a < uAlphaCutoff)
 		discard;
 #endif // ENABLE_ALPHA_TEST
 

@@ -7,6 +7,7 @@ uniform lowp vec4 ColorDiffuse;		// diffuse RGBA
 uniform mediump vec4 ColorSpecular;	// specular RGB, w: shininess
 
 uniform mediump vec3 uLightDir; // parallel light
+uniform lowp vec3 uLightColor;  // light color RGB
 
 #ifdef ENABLE_POINT_LIGHTS  // multi-point-lights
 lowp vec3 CalculatePointLighting(SurfaceGeometry geo);
@@ -44,9 +45,7 @@ mediump float GeometrySchlickGGX(mediump float NdotV, mediump float roughness) {
     return num / denom;
 }
 
-mediump float GeometrySmith(mediump vec3 N, mediump vec3 V, mediump vec3 L, mediump float roughness) {
-    mediump float NdotV = max(dot(N, V), 0.0);
-    mediump float NdotL = max(dot(N, L), 0.0);
+mediump float GeometrySmith(mediump float NdotV, mediump float NdotL, mediump float roughness) {
     mediump float ggx2 = GeometrySchlickGGX(NdotV, roughness);
     mediump float ggx1 = GeometrySchlickGGX(NdotL, roughness);
 
@@ -117,35 +116,37 @@ mediump vec3 ApplyIBL(mediump vec3 ambientDiffuse, mediump vec3 N, mediump vec3 
 // lit result by per-pixel: by lighting
 lowp vec4 ShadeLit(lowp vec4 texDiffuse, SurfaceGeometry geo)
 {
+    mediump vec4 diffuse = ColorDiffuse * texDiffuse;
 	lowp vec3 resultColor;
     mediump vec3 N = geo.Normal;
     mediump vec3 L = uLightDir;		// parallel light source
     mediump vec3 V = safe_normalize(uEyePos - geo.Position); // View direction from surface to eye
     mediump vec3 H = safe_normalize(V + L);
-    mediump vec4 diffuse = ColorDiffuse * texDiffuse;
+    mediump float NdotL = max(dot(N, L), 0.0);
 
 #ifdef ENABLE_PBR
+    mediump float NdotV = max(dot(N, V), 0.0);
+    
     // PBR calculations should be done in linear space
-    mediump vec3 baseColor = pow(diffuse.rgb, vec3(2.2));
-
+    mediump vec3 baseColor = diffuse.rgb * uLightColor;
+    baseColor = pow(baseColor, vec3(2.2));
     mediump vec3 F0 = ComputeF0(baseColor);
 
     // Reflectance equation
     mediump float NDF = DistributionGGX(N, H, uParamPBR.y); // Roughness
-    mediump float G = GeometrySmith(N, V, L, uParamPBR.y); // Roughness
+    mediump float G = GeometrySmith(NdotV, NdotL, uParamPBR.y); // Roughness
     mediump vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
 
     mediump vec3 kD = (vec3(1.0) - F) * (1.0 - uParamPBR.x); // Metallic
 
     mediump vec3 numerator = NDF * G * F;
-    mediump float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
+    mediump float denominator = 4.0 * NdotV * NdotL + 0.0001;
     mediump vec3 specular = numerator / denominator;
 
-    mediump float NdotL = max(dot(N, L), 0.0);
     mediump vec3 ambient = ComputeAmbientLinear(texDiffuse.rgb);
 
     #ifdef ENABLE_IBL
-    mediump vec3 Fibl = fresnelSchlick(max(dot(N, V), 0.0), F0);
+    mediump vec3 Fibl = fresnelSchlick(NdotV, F0);
     ambient = ApplyIBL(ambient, N, V, Fibl);
     #endif // ENABLE_IBL
 
@@ -155,7 +156,7 @@ lowp vec4 ShadeLit(lowp vec4 texDiffuse, SurfaceGeometry geo)
     // HDR tone mapping removed as we use LDR lights; only keep Gamma Correction
     resultColor = FinalizePBRColor(color);
 #else // ENABLE_PBR
-    mediump float df = max(0.0, dot(N, L));
+    mediump float df = NdotL;
     mediump float NdotH = max(0.0, dot(N, H));
     mediump float sf = pow(NdotH, ColorSpecular.w);
 
@@ -196,7 +197,8 @@ lowp vec4 ShadeUnlit(lowp vec4 texDiffuse, SurfaceGeometry geo)
 
     #ifdef ENABLE_IBL
     // PBR calculations for IBL
-    mediump vec3 baseColor = pow(diffuse.rgb, vec3(2.2));
+    mediump vec3 baseColor = diffuse.rgb * uLightColor;
+    baseColor = pow(baseColor, vec3(2.2));
     mediump vec3 F0 = ComputeF0(baseColor);
     mediump vec3 F = fresnelSchlick(max(dot(N, V), 0.0), F0);
 

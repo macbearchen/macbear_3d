@@ -10,6 +10,7 @@ mixin M3LightingShader {
 
   // directional light related:
   late UniformLocation uniformLightDirection; // light direction "uLightDir" (per object-space)
+  late UniformLocation uniformLightColor; // light color "uLightColor"
 
   M3PointLightManager pointLightManager = M3PointLightManager();
   M3SpotLightManager spotLightManager = M3SpotLightManager();
@@ -23,6 +24,7 @@ mixin M3LightingShader {
     uniformSpecular = gl.getUniformLocation(prog, "ColorSpecular");
 
     uniformLightDirection = gl.getUniformLocation(prog, "uLightDir");
+    uniformLightColor = gl.getUniformLocation(prog, "uLightColor");
 
     // light managers
     pointLightManager.initLocation(prog);

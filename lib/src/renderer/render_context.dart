@@ -151,14 +151,22 @@ class M3RenderContext {
     _executeQueue(opaque, prog, fillMode: fillMode);
 
     // (2/4) Masked objects (alpha test / cutoff)
-    M3Program? progMasked = prog;
-    if (prog == M3Resources.programTexture) {
-      progMasked = M3Resources.programTextureMasked;
-    } else if (prog == M3Resources.programShadow) {
-      progMasked = M3Resources.programShadowMasked;
+    if (!masked.isEmpty) {
+      M3Program? progMasked;
+      if (fillMode == .solid) {
+        if (prog == M3Resources.programTexture) {
+          progMasked = M3Resources.programTextureMasked;
+        } else if (prog == M3Resources.programShadow) {
+          progMasked = M3Resources.programShadowMasked;
+        } else if (prog == M3Resources.programSimple) {
+          progMasked = M3Resources.programUnlitMasked;
+        }
+      } else {
+        progMasked = prog;
+      }
+      // progMasked = M3Resources.programUnlitMasked;
+      if (progMasked != null) _executeQueue(masked, progMasked, fillMode: fillMode);
     }
-    if (progMasked != null) _executeQueue(masked, progMasked, fillMode: fillMode);
-
     // (3/4) Unlit objects
     if (fillMode == .solid) {
       final progUnlit = M3Resources.programExternalOES!;
@@ -214,7 +222,7 @@ class M3RenderContext {
     RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
     // pre-draw state
     gl.useProgram(prog.program);
-    prog.applyUniforms(_viewer);
+    prog.applyFrameUniforms(_viewer);
     // apply fog to lighting programs
     if (prog is M3ProgramLighting) {
       prog.applyFog(_scene.fog); // fog supported
