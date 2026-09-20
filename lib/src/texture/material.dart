@@ -29,6 +29,8 @@ class M3Material {
 
   // textures
   M3Texture diffuseTexture = M3Resources.texWhite;
+  M3Texture? normalTexture;
+  double normalScale = 1.0;
   Matrix3 texMatrix = Matrix3.identity();
 
   M3PlanarReflection? planarReflection; // planar reflection
@@ -74,6 +76,8 @@ class M3Material {
     doubleSided = other.doubleSided;
     renderOrder = other.renderOrder;
     diffuseTexture = other.diffuseTexture;
+    normalTexture = other.normalTexture;
+    normalScale = other.normalScale;
     texMatrix.setFrom(other.texMatrix);
     planarReflection = other.planarReflection;
   }
@@ -99,6 +103,18 @@ class M3Material {
         final tex = doc.runtimeTextures[texIndex];
         if (tex is M3Texture) {
           mtr.diffuseTexture = tex;
+        }
+      }
+    }
+
+    // Normal Texture
+    if (gltfMat.normalTextureIndex != null) {
+      final texIndex = gltfMat.normalTextureIndex!;
+      if (texIndex < doc.runtimeTextures.length) {
+        final tex = doc.runtimeTextures[texIndex];
+        if (tex is M3Texture) {
+          mtr.normalTexture = tex;
+          mtr.normalScale = gltfMat.normalTextureScale;
         }
       }
     }

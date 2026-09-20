@@ -67,6 +67,8 @@ class M3Program {
 
   late UniformLocation uniformTexMatrix; // "uTexMatrix" for texture-matrix
   late UniformLocation uniformSamplerDiffuse; // texture "SamplerDiffuse"
+  late UniformLocation uniformSamplerNormal; // texture "SamplerNormal"
+  late UniformLocation uniformNormalScale; // "uNormalScale" for normal-scale factor
   late UniformLocation uniformParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level
   late UniformLocation uniformSamplerEnvironment;
 
@@ -203,6 +205,8 @@ class M3Program {
 
     uniformTexMatrix = gl.getUniformLocation(program, "uTexMatrix");
     uniformSamplerDiffuse = gl.getUniformLocation(program, "SamplerDiffuse");
+    uniformSamplerNormal = gl.getUniformLocation(program, "SamplerNormal");
+    uniformNormalScale = gl.getUniformLocation(program, "uNormalScale");
     uniformParamPBR = gl.getUniformLocation(program, "uParamPBR");
     uniformSamplerEnvironment = gl.getUniformLocation(program, "SamplerEnvironment");
 
@@ -235,6 +239,12 @@ class M3Program {
       // defaults to zero anyway, but good practice.
       gl.activeTexture(WebGL.TEXTURE0);
       gl.uniform1i(uniformSamplerDiffuse, 0); // GL_TEXTURE0 for active-texture
+    }
+
+    if (isLocationValid(uniformSamplerNormal)) {
+      gl.activeTexture(WebGL.TEXTURE1);
+      gl.uniform1i(uniformSamplerNormal, 1); // GL_TEXTURE1 for normal map
+      gl.activeTexture(WebGL.TEXTURE0);
     }
   }
 
@@ -313,6 +323,16 @@ class M3Program {
     if (isLocationValid(uniformSamplerDiffuse)) {
       gl.activeTexture(WebGL.TEXTURE0);
       mtr.diffuseTexture.bind(); // 2D texture only; Cubemap use setEnvironmentMap()
+    }
+
+    // normal-texture: GL_TEXTURE1
+    if (isLocationValid(uniformSamplerNormal)) {
+      gl.activeTexture(WebGL.TEXTURE1);
+      (mtr.normalTexture ?? M3Resources.texNormal).bind();
+      gl.activeTexture(WebGL.TEXTURE0);
+    }
+    if (isLocationValid(uniformNormalScale)) {
+      gl.uniform1f(uniformNormalScale, mtr.normalScale);
     }
 
     // PBR

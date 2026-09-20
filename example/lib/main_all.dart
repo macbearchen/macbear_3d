@@ -278,7 +278,7 @@ class _MainPageState extends State<MainPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text("CSM:", style: TextStyle(color: Colors.white70, fontSize: 9)),
+                const Text("CSM=", style: TextStyle(color: Colors.white70, fontSize: 9)),
                 Text(
                   "$csmCount",
                   style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
@@ -390,6 +390,17 @@ class _MainPageState extends State<MainPage> {
             });
           },
           child: const Text('IBL'),
+        ),
+        separateWidget,
+        FloatingActionButton.small(
+          heroTag: 'normalmap',
+          backgroundColor: shaderOptions.normalMap ? Colors.tealAccent.shade700 : null,
+          onPressed: () {
+            setState(() {
+              shaderOptions.normalMap = !shaderOptions.normalMap;
+            });
+          },
+          child: const Text('NRM', style: TextStyle(fontSize: 10)),
         ),
       ],
     );

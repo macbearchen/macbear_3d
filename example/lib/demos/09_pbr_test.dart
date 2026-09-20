@@ -58,9 +58,28 @@ class PbrTestScene_09 extends DemoScene {
     // axis gizmo
     addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 0));
 
-    // 08-3: Apply mirror shader to ground
+    // 09-3: Apply mirror shader to ground
     renderEngine.planarReflection.clipPlane.setFromComponents(0, 0, 1, -groundZ);
     renderEngine.planarReflection.setRenderScale(1.0);
+
+    const prefixUrl = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/';
+    final glassUrl = '${prefixUrl}GlassBrokenWindow/glTF-Binary/GlassBrokenWindow.glb';
+    const glassPath = 'glb/GlassBrokenWindow.glb';
+
+    // 09-1: GLTF model - using M3Mesh.load()
+    final meshGlass = await M3Mesh.load(glassPath); // glassPath, glassUrl
+    final glass = addMesh(meshGlass, Vector3(-1, 4, 0.6));
+    glass.rotation = Quaternion.euler(0, pi / 4, 0);
+    glass.scale = Vector3.all(3.0);
+
+    // 00-1: GLTF model - using M3Mesh.load()
+    final maskUrl = '${prefixUrl}AlphaBlendModeTest/glTF-Binary/AlphaBlendModeTest.glb';
+    final maskPath = 'glb/AlphaBlendModeTest.glb';
+    final maskPath2 = 'glb/NormalTangentTest.glb';
+    final meshMask = await M3Mesh.load(maskPath2); // maskPath, maskUrl
+    final mask = addMesh(meshMask, Vector3(2, 6, 2.3));
+    mask.rotation = Quaternion.euler(0, pi / 2, 0);
+    mask.scale = Vector3.all(6.0);
   }
 
   @override
@@ -69,6 +88,6 @@ class PbrTestScene_09 extends DemoScene {
 
     // Rotate camera slowly
     final euler = camera.euler;
-    camera.setEuler(euler.yaw + delta * 0.1, euler.pitch, 0, distance: camera.distanceToTarget);
+    // camera.setEuler(euler.yaw + delta * 0.1, euler.pitch, 0, distance: camera.distanceToTarget);
   }
 }

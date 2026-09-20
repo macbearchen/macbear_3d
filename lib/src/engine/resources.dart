@@ -237,6 +237,9 @@ class M3Resources {
 
     // pixel lighting: phong shading, cartoon, PBR, IBL
     if (options.perPixel) {
+      if (options.normalMap) {
+        strFrag = "#define ENABLE_NORMALMAP \n$strFrag";
+      }
       if (options.pbr) {
         // ES3 PBR: Use modern ES3 shaders
         strVert = "#define ENABLE_PBR \n$strVert";

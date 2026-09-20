@@ -37,6 +37,7 @@ class M3DebugOptions {
 // GLSL options
 class M3ShaderOptions {
   bool _perPixel = true; // per-pixel lighting
+  bool _normalMap = true; // normal mapping
   bool _cartoon = false; // cartoon shading
   bool _pbr = true; // physics based rendering
   bool _ibl = true; // image based lighting
@@ -46,6 +47,19 @@ class M3ShaderOptions {
   bool _spotLights = true; // spot lights
 
   bool isDirty = false;
+
+  // --- normalMap ---
+  bool get normalMap => _normalMap;
+  set normalMap(bool v) {
+    if (_normalMap == v) return;
+    _normalMap = v;
+    isDirty = true;
+
+    // normalMap 開啟時，自動強制 perPixel
+    if (_normalMap) {
+      if (!_perPixel) perPixel = true;
+    }
+  }
 
   // --- pointLights ---
   bool get pointLights => _pointLights;
@@ -88,12 +102,13 @@ class M3ShaderOptions {
     _perPixel = v;
     isDirty = true;
 
-    // perPixel 關閉時，cartoon, pbr, pointLights, spotLights 一定要關
+    // perPixel 關閉時，cartoon, pbr, pointLights, spotLights, normalMap 一定要關
     if (!_perPixel) {
       if (_cartoon) _cartoon = false;
       if (pbr) pbr = false; // 這也會自動連動關閉 ibl
       if (_pointLights) _pointLights = false;
       if (_spotLights) _spotLights = false;
+      if (_normalMap) _normalMap = false;
     }
   }
 

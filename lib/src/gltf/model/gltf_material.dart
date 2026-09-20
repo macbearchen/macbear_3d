@@ -41,6 +41,8 @@ class GltfMaterial {
   final String name;
   final Vector4 baseColorFactor;
   final int? baseColorTextureIndex; // index of textures
+  final int? normalTextureIndex; // index of normal map texture
+  final double normalTextureScale;
   final double metallicFactor;
   final double roughnessFactor;
   final String alphaMode; // "OPAQUE", "MASK", "BLEND"
@@ -51,6 +53,8 @@ class GltfMaterial {
     required this.name,
     required this.baseColorFactor,
     this.baseColorTextureIndex,
+    this.normalTextureIndex,
+    this.normalTextureScale = 1.0,
     this.metallicFactor = 1.0,
     this.roughnessFactor = 1.0,
     this.alphaMode = 'OPAQUE',
@@ -77,6 +81,17 @@ class GltfMaterial {
       texIndex = tex['index'] as int?;
     }
 
+    // Normal Texture
+    int? normalTexIndex;
+    double normalScale = 1.0;
+    if (json.containsKey('normalTexture')) {
+      final normalTex = json['normalTexture'] as Map<String, dynamic>;
+      normalTexIndex = normalTex['index'] as int?;
+      if (normalTex.containsKey('scale')) {
+        normalScale = (normalTex['scale'] as num).toDouble();
+      }
+    }
+
     // Metallic/Roughness
     double metallic = 1.0;
     double roughness = 1.0;
@@ -91,6 +106,8 @@ class GltfMaterial {
       name: json['name'] as String? ?? 'Material',
       baseColorFactor: color,
       baseColorTextureIndex: texIndex,
+      normalTextureIndex: normalTexIndex,
+      normalTextureScale: normalScale,
       metallicFactor: metallic,
       roughnessFactor: roughness,
       alphaMode: json['alphaMode'] as String? ?? 'OPAQUE',
