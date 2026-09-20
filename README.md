@@ -32,6 +32,7 @@ Preview the `main_all.dart` example live in your browser!
 
 ### 🎨 Rendering & Visuals
 - **Model Loaders**: Native support for **glTF/GLB**, **OBJ**, and **BVH** formats.
+- **Double-Sided & Masked Face**: Native support for **double-sided rendering** (`doubleSided`) with automatic cull-face management, and **masked face alpha testing / cutout** with configurable `alphaCutoff` threshold and dedicated masked shader programs (`programTextureMasked`, `programShadowMasked`, `programUnlitMasked`).
 - **Skeletal Animation**: Full support for skinned meshes and bone-based animations (including `M3OctahedralGeom` for bone visualization).
 - **Advanced Lighting & Shadows**: Dynamic lighting supporting **1 directional light, 8 point lights, and up to 8 spotlights** with a shared vertical **Spot Light Shadow Atlas**, **Cascaded Shadow Mapping (CSM)**, **Spot Light Shadow Mapping**, **PCF (Percentage Closer Filtering)** for smooth shadows, **PBR (Physically Based Rendering)** and **IBL (Image-Based Lighting)**. Improved `RenderPipeline` with enhanced support for opaque and transparency materials.
 - **Modular Shaders**: Refactored shader system with clean `.glsl` source files and dedicated, type-safe Dart shader program wrappers (`M3FogShader`, `M3LightingShader`, `M3ShadowShader`, `M3WaterShader`) for easy uniform binding and encapsulation.
@@ -77,7 +78,7 @@ Add `macbear_3d` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  macbear_3d: ^0.10.2
+  macbear_3d: ^0.11.0
 ```
 
 ## Usage

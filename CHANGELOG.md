@@ -1,5 +1,21 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
+## 0.11.0
+#### 2026-09-20
+* Add:
+  * **Double-Sided Face Rendering**: Added `doubleSided` property to `M3Material` with automatic GL cull-face state management (`gl.enable(CULL_FACE)` / `gl.disable(CULL_FACE)`) during queue execution in `M3RenderContext`. Seamlessly parsed from glTF `doubleSided` property in `M3GltfMaterial`.
+  * **Masked Face (Alpha Testing / Cutoff)**: Added full support for masked face rendering with configurable alpha threshold `uAlphaCutoff` (via `material.alphaCutoff`, default `0.5`). Introduced dedicated shader variants `programTextureMasked`, `programShadowMasked`, and `programUnlitMasked` with `#define ENABLE_ALPHA_TEST` to ensure proper cutout rendering and depth sorting without blending artifacts.
+  * **Separate Light Color in PBR**: Introduced `uLightColor` uniform in `PixelFS.es3.glsl` and `M3LightingShader` to decouple directional light color from surface diffuse properties, ensuring accurate PBR energy conservation and linear colorspace conversions.
+  * **Configurable CSM Count**: Added `csmCount` property to `M3ShaderOptions` with dynamic cascades support (1 to 4) and consolidated shadow program selection in `M3Resources`.
+
+* Optimize / Refactor:
+  * **Render Queue Pipeline for Masked Faces**: Explicitly separated and routed masked face queues in `M3RenderContext` and `M3PlanarReflection` to their respective masked shader programs based on fill mode, maintaining Early-Z front-to-back sorting.
+  * **GeometrySmith Optimization**: Optimized PBR `GeometrySmith` GGX calculation to accept pre-calculated `NdotV` and `NdotL` directly instead of re-calculating them.
+  * **Renamed Uniform Binder**: Renamed `applyUniforms(cam)` to `applyFrameUniforms(cam)` across `M3Program`, `M3ProgramLighting`, `M3ProgramShadow`, and `M3Water` for clearer semantic lifecycle distinction between frame-level and draw-level uniforms.
+
+* Example & UI:
+  * **Masked & Glass glTF Showcase**: Updated Scene 05 with masked alpha-cutoff test model and broken glass glTF models. Added CSM cascade count indicator and light brightness controls to the demo control panel.
+
 ## 0.10.2
 #### 2026-09-14
 * Add:
