@@ -246,7 +246,7 @@ class M3RenderContext {
     final mtrOverride = M3Material();
     final colorOverride = Vector4.all(1.0);
     // apply reflection cubemap
-    final M3Texture defaultCubemap = _scene.skybox?.cubemapTexture ?? M3Resources.texDefaultCube;
+    final M3Texture defaultCubemap = _scene.skybox?.cubemapTexture ?? M3Resources.texDefaultCubemap;
     M3Texture currentCubemap = defaultCubemap;
     prog.setEnvironmentMap(currentCubemap);
 

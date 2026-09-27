@@ -43,11 +43,17 @@ class GltfMaterial {
   final int? baseColorTextureIndex; // index of textures
   final int? normalTextureIndex; // index of normal map texture
   final double normalTextureScale;
+  final int? metallicRoughnessTextureIndex; // index of metallic/roughness texture (G=roughness, B=metallic)
+  final int? occlusionTextureIndex; // index of occlusion texture (R=AO)
+  final double occlusionStrength;
   final double metallicFactor;
   final double roughnessFactor;
   final String alphaMode; // "OPAQUE", "MASK", "BLEND"
   final double alphaCutoff;
   final bool doubleSided;
+
+  /// Returns the index of the ORM texture (packed Occlusion/Roughness/Metallic).
+  int? get ormTextureIndex => metallicRoughnessTextureIndex ?? occlusionTextureIndex;
 
   GltfMaterial({
     required this.name,
@@ -55,6 +61,9 @@ class GltfMaterial {
     this.baseColorTextureIndex,
     this.normalTextureIndex,
     this.normalTextureScale = 1.0,
+    this.metallicRoughnessTextureIndex,
+    this.occlusionTextureIndex,
+    this.occlusionStrength = 1.0,
     this.metallicFactor = 1.0,
     this.roughnessFactor = 1.0,
     this.alphaMode = 'OPAQUE',
@@ -92,6 +101,24 @@ class GltfMaterial {
       }
     }
 
+    // Metallic-Roughness Texture
+    int? mrTexIndex;
+    if (pbr.containsKey('metallicRoughnessTexture')) {
+      final mrTex = pbr['metallicRoughnessTexture'] as Map<String, dynamic>;
+      mrTexIndex = mrTex['index'] as int?;
+    }
+
+    // Occlusion Texture
+    int? occlusionTexIndex;
+    double occlusionStrength = 1.0;
+    if (json.containsKey('occlusionTexture')) {
+      final occTex = json['occlusionTexture'] as Map<String, dynamic>;
+      occlusionTexIndex = occTex['index'] as int?;
+      if (occTex.containsKey('strength')) {
+        occlusionStrength = (occTex['strength'] as num).toDouble();
+      }
+    }
+
     // Metallic/Roughness
     double metallic = 1.0;
     double roughness = 1.0;
@@ -108,6 +135,9 @@ class GltfMaterial {
       baseColorTextureIndex: texIndex,
       normalTextureIndex: normalTexIndex,
       normalTextureScale: normalScale,
+      metallicRoughnessTextureIndex: mrTexIndex,
+      occlusionTextureIndex: occlusionTexIndex,
+      occlusionStrength: occlusionStrength,
       metallicFactor: metallic,
       roughnessFactor: roughness,
       alphaMode: json['alphaMode'] as String? ?? 'OPAQUE',

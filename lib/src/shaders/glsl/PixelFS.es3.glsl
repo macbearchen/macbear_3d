@@ -57,14 +57,14 @@ mediump vec3 fresnelSchlick(mediump float cosTheta, mediump vec3 F0) {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-// ---- Shared PBR helpers (new: factor out logic duplicated between ShadeLit/ShadeUnlit) ----
+// ---- Shared PBR helpers ----
 
 // F0 reflectance at normal incidence, blended toward albedo by metallic.
-mediump vec3 ComputeF0(mediump vec3 baseColor) {
-    return mix(vec3(0.04), baseColor, uParamPBR.x); // Metallic
+mediump vec3 ComputeF0(mediump vec3 baseColor, mediump float metallic) {
+    return mix(vec3(0.04), baseColor, metallic);
 }
 
-// ColorAmbient * texColor, converted to linear space. Identical term in both Lit/Unlit PBR paths.
+// ColorAmbient * texColor, converted to linear space.
 mediump vec3 ComputeAmbientLinear(lowp vec3 texColor) {
     return pow(ColorAmbient, vec3(2.2)) * pow(texColor, vec3(2.2));
 }
@@ -81,7 +81,7 @@ uniform mediump mat4 Model;
 uniform samplerCube SamplerEnvironment;
 
 // kS: specular weight for this IBL sample (the Fresnel term computed by the caller).
-mediump vec3 ApplyIBL(mediump vec3 ambientDiffuse, mediump vec3 N, mediump vec3 V, mediump vec3 kS) {
+mediump vec3 ApplyIBL(mediump vec3 ambientDiffuse, mediump vec3 N, mediump vec3 V, mediump vec3 kS, mediump float roughness, mediump float metallic) {
     // IBL: Sample environment map for ambient reflection
     mediump vec3 reflectDir = reflect(-V, N);
     reflectDir = normalize(mat3(Model) * reflectDir).xyz;
@@ -92,19 +92,13 @@ mediump vec3 ApplyIBL(mediump vec3 ambientDiffuse, mediump vec3 N, mediump vec3 
     sampleDir.z = -reflectDir.y;
 
     // Roughness based Mip-mapping for Specular IBL (ES3 native textureLod)
-    mediump float mipLevel = uParamPBR.y * uParamPBR.z; // Roughness * MaxMipLevel
+    mediump float mipLevel = roughness * uParamPBR.z; // Roughness * MaxMipLevel
     mediump vec3 envColor = textureLod(SamplerEnvironment, sampleDir, mipLevel).rgb;
     envColor = pow(envColor, vec3(2.2));
-    //--------------------
-    // notice: comment block for align 'es2.frag' and 'es3.frag'
-    // so we can use textureLod instead of textureCubeLodEXT
-    // textureCubeLodEXT depend on 'GL_EXT_shader_texture_lod' extension
-    // https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_shader_texture_lod.txt
-    //--------------------
 
     // PBR weighting for ambient:
     // kD (diffuse) reduction for energy conservation
-    mediump vec3 kD = (vec3(1.0) - kS) * (1.0 - uParamPBR.x); // Metallic
+    mediump vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
 
     // IBL Specular reflection: attenuated by roughness
     mediump vec3 iblSpecular = envColor * kS;
@@ -127,27 +121,33 @@ lowp vec4 ShadeLit(lowp vec4 texDiffuse, SurfaceGeometry geo)
 #ifdef ENABLE_PBR
     mediump float NdotV = max(dot(N, V), 0.0);
     
+    // Sample ORM texture: R = Occlusion, G = Roughness, B = Metallic
+    mediump vec3 orm = texture(SamplerORM, TextureCoordOut).rgb;
+    mediump float occlusion = orm.r;
+    mediump float roughness = clamp(orm.g * uParamPBR.y, 0.04, 1.0);
+    mediump float metallic = clamp(orm.b * uParamPBR.x, 0.0, 1.0);
+
     // PBR calculations should be done in linear space
     mediump vec3 baseColor = diffuse.rgb * uLightColor;
     baseColor = pow(baseColor, vec3(2.2));
-    mediump vec3 F0 = ComputeF0(baseColor);
+    mediump vec3 F0 = ComputeF0(baseColor, metallic);
 
     // Reflectance equation
-    mediump float NDF = DistributionGGX(N, H, uParamPBR.y); // Roughness
-    mediump float G = GeometrySmith(NdotV, NdotL, uParamPBR.y); // Roughness
+    mediump float NDF = DistributionGGX(N, H, roughness);
+    mediump float G = GeometrySmith(NdotV, NdotL, roughness);
     mediump vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
 
-    mediump vec3 kD = (vec3(1.0) - F) * (1.0 - uParamPBR.x); // Metallic
+    mediump vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
 
     mediump vec3 numerator = NDF * G * F;
     mediump float denominator = 4.0 * NdotV * NdotL + 0.0001;
     mediump vec3 specular = numerator / denominator;
 
-    mediump vec3 ambient = ComputeAmbientLinear(texDiffuse.rgb);
+    mediump vec3 ambient = ComputeAmbientLinear(texDiffuse.rgb) * occlusion;
 
     #ifdef ENABLE_IBL
     mediump vec3 Fibl = fresnelSchlick(NdotV, F0);
-    ambient = ApplyIBL(ambient, N, V, Fibl);
+    ambient = ApplyIBL(ambient, N, V, Fibl, roughness, metallic);
     #endif // ENABLE_IBL
 
     // Lit: ambient + (diffuse + specular)
@@ -193,16 +193,22 @@ lowp vec4 ShadeUnlit(lowp vec4 texDiffuse, SurfaceGeometry geo)
 #ifdef ENABLE_PBR
     mediump vec3 V = safe_normalize(uEyePos - geo.Position); // View direction from surface to eye
 
-    mediump vec3 ambient = ComputeAmbientLinear(texDiffuse.rgb);
+    // Sample ORM texture: R = Occlusion, G = Roughness, B = Metallic
+    mediump vec3 orm = texture(SamplerORM, TextureCoordOut).rgb;
+    mediump float occlusion = orm.r;
+    mediump float roughness = clamp(orm.g * uParamPBR.y, 0.04, 1.0);
+    mediump float metallic = clamp(orm.b * uParamPBR.x, 0.0, 1.0);
+
+    mediump vec3 ambient = ComputeAmbientLinear(texDiffuse.rgb) * occlusion;
 
     #ifdef ENABLE_IBL
     // PBR calculations for IBL
     mediump vec3 baseColor = diffuse.rgb * uLightColor;
     baseColor = pow(baseColor, vec3(2.2));
-    mediump vec3 F0 = ComputeF0(baseColor);
+    mediump vec3 F0 = ComputeF0(baseColor, metallic);
     mediump vec3 F = fresnelSchlick(max(dot(N, V), 0.0), F0);
 
-    ambient = ApplyIBL(ambient, N, V, F);
+    ambient = ApplyIBL(ambient, N, V, F, roughness, metallic);
     #endif // ENABLE_IBL
 
     resultColor = FinalizePBRColor(ambient);

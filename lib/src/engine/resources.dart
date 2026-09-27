@@ -31,9 +31,16 @@ class M3Resources {
   // ------------------------------
   // Textures
   // ------------------------------
+  // white color for default albedo / emissive / ORM, or fill texture
   static final texWhite = M3Texture.createSolidColor(Vector4(1, 1, 1, 1));
-  static final texNormal = M3Texture.createSolidColor(Vector4(0.5, 0.5, 1, 1));
-  static final texDefaultCube = M3Texture.createDefaultIBLCube();
+  // black color for default emissive or other purposes
+  static final texBlack = M3Texture.createSolidColor(Vector4(0, 0, 0, 1));
+  // normal map : (0.5, 0.5, 1.0) is up-direction
+  static final texDefaultNormal = M3Texture.createSolidColor(Vector4(0.5, 0.5, 1, 1));
+  // default IBL cubemap
+  static final texDefaultCubemap = M3Texture.createDefaultIBLCube();
+  // oclussion(R), roughness(G), metallic(B)
+  static final texDefaultORM = M3Texture.createSolidColor(Vector4(1, 1, 1, 1));
 
   // axis gizmo mesh
   static M3Mesh? _axisDotMesh;
@@ -138,8 +145,10 @@ class M3Resources {
     M3Log.i('M3Resources', 'init starting...');
     // Textures
     texWhite;
-    texNormal;
-    texDefaultCube;
+    texBlack;
+    texDefaultNormal;
+    texDefaultCubemap;
+    texDefaultORM;
     M3Log.i('M3Resources', 'basic textures initialized');
 
     // debug camera for directional-light shadow map frustum only
@@ -327,7 +336,8 @@ class M3Resources {
 
       String fsShadowNormal = "#define ENABLE_NORMALMAP \n#define ENABLE_SHADOW_MAP \n$strFrag";
       programShadowNormal = M3ProgramShadowmap(vsShadow, fsShadowNormal);
-      String fsShadowNormalMasked = "#define ENABLE_ALPHA_TEST \n#define ENABLE_NORMALMAP \n#define ENABLE_SHADOW_MAP \n$strFrag";
+      String fsShadowNormalMasked =
+          "#define ENABLE_ALPHA_TEST \n#define ENABLE_NORMALMAP \n#define ENABLE_SHADOW_MAP \n$strFrag";
       programShadowNormalMasked = M3ProgramShadowmap(vsShadow, fsShadowNormalMasked);
     } else {
       final String csmDefine = options.csmOnFS ? "#define ENABLE_SHADOW_CSM_FS \n" : "#define ENABLE_SHADOW_CSM_VS \n";
@@ -394,8 +404,10 @@ class M3Resources {
   static void dispose() {
     // Textures
     texWhite.dispose();
-    texNormal.dispose();
-    texDefaultCube.dispose();
+    texBlack.dispose();
+    texDefaultNormal.dispose();
+    texDefaultCubemap.dispose();
+    texDefaultORM.dispose();
 
     // Geometries
     debugAxis.dispose();

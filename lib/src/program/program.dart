@@ -28,6 +28,7 @@ part 'shader/water_shader.dart';
 // Slot  2 : Cubemap (environment / skybox)
 // Slot  3 : Directional Shadow map
 // Slot  4 : Spot Light Shadow map
+// Slot  5 : ORM map (Occlusion, Roughness, Metallic)
 // ────────────────────────────────────────────────────────
 // ── Texture Unit for Water ──────────────────────────────
 // Slot  0 : Water Reflection map
@@ -68,6 +69,7 @@ class M3Program {
   late UniformLocation uniformTexMatrix; // "uTexMatrix" for texture-matrix
   late UniformLocation uniformSamplerDiffuse; // texture "SamplerDiffuse"
   late UniformLocation uniformSamplerNormal; // texture "SamplerNormal"
+  late UniformLocation uniformSamplerORM; // texture "SamplerORM"
   late UniformLocation uniformNormalScale; // "uNormalScale" for normal-scale factor
   late UniformLocation uniformParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level
   late UniformLocation uniformSamplerEnvironment;
@@ -208,6 +210,7 @@ class M3Program {
     uniformTexMatrix = gl.getUniformLocation(program, "uTexMatrix");
     uniformSamplerDiffuse = gl.getUniformLocation(program, "SamplerDiffuse");
     uniformSamplerNormal = gl.getUniformLocation(program, "SamplerNormal");
+    uniformSamplerORM = gl.getUniformLocation(program, "SamplerORM");
     uniformNormalScale = gl.getUniformLocation(program, "uNormalScale");
     uniformParamPBR = gl.getUniformLocation(program, "uParamPBR");
     uniformSamplerEnvironment = gl.getUniformLocation(program, "SamplerEnvironment");
@@ -247,6 +250,12 @@ class M3Program {
     if (isLocationValid(uniformSamplerNormal)) {
       gl.activeTexture(WebGL.TEXTURE1);
       gl.uniform1i(uniformSamplerNormal, 1); // GL_TEXTURE1 for normal map
+      gl.activeTexture(WebGL.TEXTURE0);
+    }
+
+    if (isLocationValid(uniformSamplerORM)) {
+      gl.activeTexture(WebGL.TEXTURE5);
+      gl.uniform1i(uniformSamplerORM, 5); // GL_TEXTURE5 for ORM map
       gl.activeTexture(WebGL.TEXTURE0);
     }
   }
@@ -331,11 +340,18 @@ class M3Program {
     // normal-texture: GL_TEXTURE1
     if (isLocationValid(uniformSamplerNormal)) {
       gl.activeTexture(WebGL.TEXTURE1);
-      (mtr.normalTexture ?? M3Resources.texNormal).bind();
+      (mtr.normalTexture ?? M3Resources.texDefaultNormal).bind();
       gl.activeTexture(WebGL.TEXTURE0);
     }
     if (isLocationValid(uniformNormalScale)) {
       gl.uniform1f(uniformNormalScale, mtr.normalScale);
+    }
+
+    // ORM-texture: GL_TEXTURE5
+    if (isLocationValid(uniformSamplerORM)) {
+      gl.activeTexture(WebGL.TEXTURE5);
+      (mtr.ormTexture ?? M3Resources.texDefaultORM).bind();
+      gl.activeTexture(WebGL.TEXTURE0);
     }
 
     // PBR

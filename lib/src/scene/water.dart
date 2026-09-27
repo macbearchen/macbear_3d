@@ -16,7 +16,7 @@ class M3Water extends M3Entity {
   M3ProgramWaterCSM get progWaterCSM => M3Resources.programWaterCSM!;
 
   Plane surfacePlane = Plane.components(0, 0, 1, 0);
-  M3Texture normalMap = M3Resources.texNormal; // normal-map for water wave distortion
+  M3Texture normalMap = M3Resources.texDefaultNormal; // normal-map for water wave distortion
   double waveDistortion = 10.0;
   double reflectionDepthBias = 0.8;
   late M3Scene scene;
@@ -286,7 +286,7 @@ class M3Water extends M3Entity {
   }
 
   void dispose() {
-    if (normalMap != M3Resources.texNormal) {
+    if (normalMap != M3Resources.texDefaultNormal) {
       normalMap.dispose();
     }
 

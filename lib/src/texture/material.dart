@@ -32,6 +32,8 @@ class M3Material {
   M3Texture diffuseTexture = M3Resources.texWhite;
   M3Texture? normalTexture;
   double normalScale = 1.0;
+  M3Texture? ormTexture; // Occlusion(R), Roughness(G), Metallic(B)
+  double occlusionStrength = 1.0;
   Matrix3 texMatrix = Matrix3.identity();
 
   M3PlanarReflection? planarReflection; // planar reflection
@@ -80,6 +82,8 @@ class M3Material {
     diffuseTexture = other.diffuseTexture;
     normalTexture = other.normalTexture;
     normalScale = other.normalScale;
+    ormTexture = other.ormTexture;
+    occlusionStrength = other.occlusionStrength;
     texMatrix.setFrom(other.texMatrix);
     planarReflection = other.planarReflection;
   }
@@ -118,6 +122,18 @@ class M3Material {
           mtr.normalTexture = tex;
           mtr.normalScale = gltfMat.normalTextureScale;
           // mtr.diffuseTexture = tex;
+        }
+      }
+    }
+
+    // ORM Texture (Occlusion / Roughness / Metallic)
+    if (gltfMat.ormTextureIndex != null) {
+      final texIndex = gltfMat.ormTextureIndex!;
+      if (texIndex < doc.runtimeTextures.length) {
+        final tex = doc.runtimeTextures[texIndex];
+        if (tex is M3Texture) {
+          mtr.ormTexture = tex;
+          mtr.occlusionStrength = gltfMat.occlusionStrength;
         }
       }
     }

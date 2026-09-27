@@ -13,6 +13,10 @@ uniform mediump float uNormalScale;	// normal scale factor
 in mediump vec4 vTangent;           // xyz=tangent, w=handedness (from VS)
 #endif // ENABLE_NORMALMAP
 
+#ifdef ENABLE_PBR
+uniform sampler2D SamplerORM;		// GL_TEXTURE5: Occlusion(R), Roughness(G), Metallic(B)
+#endif // ENABLE_PBR
+
 uniform mediump vec3 uEyePos;
 uniform mediump vec3 uInvObjScale;
 
