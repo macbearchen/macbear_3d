@@ -25,6 +25,7 @@ class M3Material {
   M3AlphaMode alphaMode = M3AlphaMode.opaque;
   double alphaCutoff = 0.5; // alpha test threshold for M3AlphaMode.mask
   bool doubleSided = false;
+  bool receiveShadow = true;
   int renderOrder = 0; // manual override for fine-tuned sorting
 
   // textures
@@ -74,6 +75,7 @@ class M3Material {
     alphaMode = other.alphaMode;
     alphaCutoff = other.alphaCutoff;
     doubleSided = other.doubleSided;
+    receiveShadow = other.receiveShadow;
     renderOrder = other.renderOrder;
     diffuseTexture = other.diffuseTexture;
     normalTexture = other.normalTexture;
@@ -115,6 +117,7 @@ class M3Material {
         if (tex is M3Texture) {
           mtr.normalTexture = tex;
           mtr.normalScale = gltfMat.normalTextureScale;
+          // mtr.diffuseTexture = tex;
         }
       }
     }

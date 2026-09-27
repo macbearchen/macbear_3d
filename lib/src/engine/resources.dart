@@ -113,13 +113,23 @@ class M3Resources {
   static M3Program? programExternalOES; // external texture: video streaming
   // with lighting
   static M3ProgramLighting? programSimpleLighting;
+  // with texture
   static M3ProgramLighting? programTexture;
   static M3ProgramShadow? programShadow;
+  // with texture and normal map
+  static M3ProgramLighting? programTextureNormal;
+  static M3ProgramShadow? programShadowNormal;
 
   // with masked (alpha test)
   static M3ProgramLighting? programTextureMasked;
   static M3ProgramShadow? programShadowMasked;
-  static M3Program? programUnlitMasked;
+
+  // with masked (alpha test) and normal map
+  static M3ProgramLighting? programTextureNormalMasked;
+  static M3ProgramShadow? programShadowNormalMasked;
+
+  // depth-only masked: skinning + alpha test (for shadow depth pass)
+  static M3Program? programSimpleMasked;
 
   // ignore: non_constant_identifier_names
   static final _SkinNormalVS_glsl = "#define ENABLE_NORMAL \n$SkinningVS_glsl";
@@ -199,10 +209,11 @@ class M3Resources {
 '''; */
     }
     programExternalOES = M3Program(Unlit_vert, fsUnlit);
-    // masked
-    final progUnlitMasked = M3Program(Unlit_vert, '#define ENABLE_ALPHA_TEST \n$fsUnlit');
-    progUnlitMasked.name = 'programUnlitMasked';
-    programUnlitMasked = progUnlitMasked;
+
+    // depth-only masked: skinning + alpha test (for shadow depth pass)
+    final progSimpleMasked = M3Program(SkinningVS_glsl + Unlit_vert, '#define ENABLE_ALPHA_TEST \n$fsUnlit');
+    progSimpleMasked.name = 'programSimpleMasked';
+    programSimpleMasked = progSimpleMasked;
 
     // lighting related programs
     setLightingProgram(M3ShaderOptions());
@@ -230,6 +241,11 @@ class M3Resources {
     programShadow?.dispose();
     programTextureMasked?.dispose();
     programShadowMasked?.dispose();
+
+    programTextureNormal?.dispose();
+    programShadowNormal?.dispose();
+    programTextureNormalMasked?.dispose();
+    programShadowNormalMasked?.dispose();
 
     // texture lighting program
     String strVert = _SkinNormalVS_glsl + TexturedLighting_vert;
@@ -279,6 +295,12 @@ class M3Resources {
     final strFragMasked = "#define ENABLE_ALPHA_TEST \n$strFrag";
     programTextureMasked = M3ProgramLighting(strVert, strFragMasked);
 
+    // NormalMap variant programs
+    final String strFragNormal = "#define ENABLE_NORMALMAP \n$strFrag";
+    final String strFragNormalMasked = "#define ENABLE_ALPHA_TEST \n#define ENABLE_NORMALMAP \n$strFrag";
+    programTextureNormal = M3ProgramLighting(strVert, strFragNormal);
+    programTextureNormalMasked = M3ProgramLighting(strVert, strFragNormalMasked);
+
     // PCF: Percentage Closer Filtering
     String strShadowFS = _getShadowFS(options);
 
@@ -302,6 +324,11 @@ class M3Resources {
       programShadow = M3ProgramShadowmap(vsShadow, fsShadow);
       fsShadow = "#define ENABLE_ALPHA_TEST \n$fsShadow";
       programShadowMasked = M3ProgramShadowmap(vsShadow, fsShadow);
+
+      String fsShadowNormal = "#define ENABLE_NORMALMAP \n#define ENABLE_SHADOW_MAP \n$strFrag";
+      programShadowNormal = M3ProgramShadowmap(vsShadow, fsShadowNormal);
+      String fsShadowNormalMasked = "#define ENABLE_ALPHA_TEST \n#define ENABLE_NORMALMAP \n#define ENABLE_SHADOW_MAP \n$strFrag";
+      programShadowNormalMasked = M3ProgramShadowmap(vsShadow, fsShadowNormalMasked);
     } else {
       final String csmDefine = options.csmOnFS ? "#define ENABLE_SHADOW_CSM_FS \n" : "#define ENABLE_SHADOW_CSM_VS \n";
       String vsShadow = "$csmDefine \n$strVert";
@@ -310,6 +337,11 @@ class M3Resources {
       programShadow = M3ProgramShadowCSM(vsShadow, fsShadow);
       fsShadow = "#define ENABLE_ALPHA_TEST \n$fsShadow";
       programShadowMasked = M3ProgramShadowCSM(vsShadow, fsShadow);
+
+      String fsShadowNormal = "$csmDefine \n#define ENABLE_NORMALMAP \n$strFrag";
+      programShadowNormal = M3ProgramShadowCSM(vsShadow, fsShadowNormal);
+      String fsShadowNormalMasked = "$csmDefine \n#define ENABLE_ALPHA_TEST \n#define ENABLE_NORMALMAP \n$strFrag";
+      programShadowNormalMasked = M3ProgramShadowCSM(vsShadow, fsShadowNormalMasked);
     }
 
     _setWaterProgram(options);
@@ -394,7 +426,7 @@ class M3Resources {
     programWaterCSM?.dispose();
     programSkyboxReflect?.dispose();
     programExternalOES?.dispose();
-    programUnlitMasked?.dispose();
+    programSimpleMasked?.dispose();
     programSimpleLighting?.dispose();
 
     // lighting related programs
@@ -402,5 +434,10 @@ class M3Resources {
     programShadow?.dispose();
     programTextureMasked?.dispose();
     programShadowMasked?.dispose();
+
+    programTextureNormal?.dispose();
+    programShadowNormal?.dispose();
+    programTextureNormalMasked?.dispose();
+    programShadowNormalMasked?.dispose();
   }
 }

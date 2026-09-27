@@ -139,7 +139,7 @@ class M3RenderContext {
   }
 
   /// render all render queues
-  void render(M3Program prog, {M3FillMode fillMode = .solid}) {
+  void renderColorPass(M3Program prog, {M3FillMode fillMode = .solid}) {
     final gl = M3AppEngine.instance.renderEngine.gl;
 
     // 1. Opaque & Masked: Disable blending, enable depth writing
@@ -156,15 +156,16 @@ class M3RenderContext {
       if (fillMode == .solid) {
         if (prog == M3Resources.programTexture) {
           progMasked = M3Resources.programTextureMasked;
+        } else if (prog == M3Resources.programTextureNormal) {
+          progMasked = M3Resources.programTextureNormalMasked;
         } else if (prog == M3Resources.programShadow) {
           progMasked = M3Resources.programShadowMasked;
-        } else if (prog == M3Resources.programSimple) {
-          progMasked = M3Resources.programUnlitMasked;
+        } else if (prog == M3Resources.programShadowNormal) {
+          progMasked = M3Resources.programShadowNormalMasked;
         }
       } else {
         progMasked = prog;
       }
-      // progMasked = M3Resources.programUnlitMasked;
       if (progMasked != null) _executeQueue(masked, progMasked, fillMode: fillMode);
     }
     // (3/4) Unlit objects
@@ -183,6 +184,19 @@ class M3RenderContext {
       gl.depthMask(true);
       gl.disable(WebGL.BLEND);
     }
+  }
+
+  /// Depth-only pass: opaque + masked with skinning + alpha test.
+  /// Used by shadow map rendering — transparent and unlit objects are intentionally excluded.
+  void renderDepthPass() {
+    // Opaque: write depth, no blending
+    _executeQueue(opaque, M3Resources.programSimple!);
+    // Masked: same depth shader but with alpha cutoff
+    final progMasked = M3Resources.programSimpleMasked;
+    if (progMasked != null && !masked.isEmpty) {
+      _executeQueue(masked, progMasked);
+    }
+    // transparent & unlit: intentionally skipped for shadow depth
   }
 
   /// composited 2-pass reflection rendering

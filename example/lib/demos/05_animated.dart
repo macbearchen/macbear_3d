@@ -78,6 +78,14 @@ class AnimatedScene_05 extends DemoScene {
     entity1.scale = Vector3.all(0.02);
     entity1.color = Vector4(1, 0.5, 0.5, 1); // Reddish
 
+    const glassPath = 'glb/GlassBrokenWindow.glb';
+
+    // 09-1: GLTF model - using M3Mesh.load()
+    final meshGlass = await M3Mesh.load(glassPath); // glassPath, glassUrl
+    final glass = addMesh(meshGlass, Vector3(-1, 4, 0.6));
+    glass.rotation = Quaternion.euler(0, pi / 4, 0);
+    glass.scale = Vector3.all(3.0);
+
     // BVH resource: Biovision hierarchical data
     // https://theorangeduck.com/media/uploads/BVHView/bvhview.html
     // http://lo-th.github.io/olympe/BVH_player.html

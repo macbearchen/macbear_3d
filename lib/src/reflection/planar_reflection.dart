@@ -144,8 +144,12 @@ class M3PlanarReflection {
     M3ProgramLighting progMasked = prog;
     if (prog == M3Resources.programTexture) {
       progMasked = M3Resources.programTextureMasked!;
+    } else if (prog == M3Resources.programTextureNormal) {
+      progMasked = M3Resources.programTextureNormalMasked!;
     } else if (prog == M3Resources.programShadow) {
       progMasked = M3Resources.programShadowMasked!;
+    } else if (prog == M3Resources.programShadowNormal) {
+      progMasked = M3Resources.programShadowNormalMasked!;
     }
 
     progMasked.attachDirectionalLight(scene.dirLight);
@@ -156,7 +160,7 @@ class M3PlanarReflection {
     _context.prepareRenderQueue(scene, _camera, excludeReflection: this);
 
     // (2/2) render scene for planar reflection/refraction
-    _context.render(prog);
+    _context.renderColorPass(prog);
 
     texture.generateMipmap();
 

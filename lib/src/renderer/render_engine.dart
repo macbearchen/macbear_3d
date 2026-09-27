@@ -172,8 +172,12 @@ class M3RenderEngine {
       M3ProgramLighting progMasked = prog;
       if (prog == M3Resources.programTexture) {
         progMasked = M3Resources.programTextureMasked!;
+      } else if (prog == M3Resources.programTextureNormal) {
+        progMasked = M3Resources.programTextureNormalMasked!;
       } else if (prog == M3Resources.programShadow) {
         progMasked = M3Resources.programShadowMasked!;
+      } else if (prog == M3Resources.programShadowNormal) {
+        progMasked = M3Resources.programShadowNormalMasked!;
       }
 
       progMasked.attachDirectionalLight(scene.dirLight);
@@ -181,7 +185,7 @@ class M3RenderEngine {
       progMasked.attachSpotLights(scene.spotLights);
 
       // main context render pass
-      mainContext.render(prog);
+      mainContext.renderColorPass(prog);
 
       // reflection pass:
       // 1. cubemap reflection (only if not using single-pass IBL)
@@ -192,7 +196,7 @@ class M3RenderEngine {
       scene.water?.render();
     } else {
       // wireframe
-      mainContext.render(M3Resources.programSimple!, fillMode: .wireframe);
+      mainContext.renderColorPass(M3Resources.programSimple!, fillMode: .wireframe);
       // water wireframe
       scene.water?.render(fillMode: .wireframe);
     }

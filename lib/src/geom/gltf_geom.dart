@@ -42,6 +42,17 @@ class M3GltfGeom extends M3Geom {
       }
     }
 
+    // Copy Tangents (vec4: xyz = tangent direction, w = handedness ±1)
+    final tangents = primitive.getTangents();
+    if (tangents != null && _tangents != null) {
+      for (int i = 0; i < tangents.length; i++) {
+        _tangents!.buffer[i] = tangents[i];
+      }
+    } else if (normals != null && uvs != null && primitive.mode == 4) {
+      // Fallback: compute tangents algorithmically when the asset lacks them
+      _computeTangents(finalIndices);
+    }
+
     // Copy Joints
     final joints = primitive.getJoints();
     if (joints != null && _joints != null) {

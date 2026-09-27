@@ -8,6 +8,9 @@ class PbrTestScene_09 extends DemoScene {
     if (isLoaded) return;
     await super.load();
 
+    pointLights.clear();
+    spotLights.clear();
+
     camera.setEuler(-pi / 12, -pi / 8, 0, distance: 30);
 
     skybox = await createCubemapLobby(); // nvlobby cubemap
@@ -56,7 +59,7 @@ class PbrTestScene_09 extends DemoScene {
     }
 
     // axis gizmo
-    addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 0));
+    // addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 0));
 
     // 09-3: Apply mirror shader to ground
     renderEngine.planarReflection.clipPlane.setFromComponents(0, 0, 1, -groundZ);
@@ -65,21 +68,21 @@ class PbrTestScene_09 extends DemoScene {
     const prefixUrl = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/';
     final glassUrl = '${prefixUrl}GlassBrokenWindow/glTF-Binary/GlassBrokenWindow.glb';
     const glassPath = 'glb/GlassBrokenWindow.glb';
-
+    /*
     // 09-1: GLTF model - using M3Mesh.load()
     final meshGlass = await M3Mesh.load(glassPath); // glassPath, glassUrl
     final glass = addMesh(meshGlass, Vector3(-1, 4, 0.6));
     glass.rotation = Quaternion.euler(0, pi / 4, 0);
     glass.scale = Vector3.all(3.0);
-
+*/
     // 00-1: GLTF model - using M3Mesh.load()
     final maskUrl = '${prefixUrl}AlphaBlendModeTest/glTF-Binary/AlphaBlendModeTest.glb';
     final maskPath = 'glb/AlphaBlendModeTest.glb';
     final maskPath2 = 'glb/NormalTangentTest.glb';
     final meshMask = await M3Mesh.load(maskPath2); // maskPath, maskUrl
-    final mask = addMesh(meshMask, Vector3(2, 6, 2.3));
-    mask.rotation = Quaternion.euler(0, pi / 2, 0);
-    mask.scale = Vector3.all(6.0);
+    final mask = addMesh(meshMask, Vector3(2, 3, 5));
+    mask.rotation = Quaternion.euler(0, pi / 4, 0);
+    mask.scale = Vector3.all(5.0);
   }
 
   @override

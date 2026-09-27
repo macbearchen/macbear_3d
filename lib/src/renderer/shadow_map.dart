@@ -61,8 +61,6 @@ class M3ShadowMap {
 
   /// Render depth map from directional light's perspective.
   void renderDepth(M3Scene scene, M3DirectionalLight light) {
-    final prog = M3Resources.programSimple!;
-
     _beginShadowPass();
 
     light.updateShadowCascades(scene.cameras[0]);
@@ -80,17 +78,17 @@ class M3ShadowMap {
         lightViewer.projectionMatrix = cascade.projectionMatrix;
         // frustum matrix for culling
         lightViewer.updateFrustum();
-        // shadowmap render scene only opaque
-        _context.prepareRenderQueue(scene, lightViewer, bOnlyOpaque: true);
-        _context.render(prog);
+        // shadowmap: depth only (opaque + masked, no transparent)
+        _context.prepareRenderQueue(scene, lightViewer, bOnlyOpaque: false);
+        _context.renderDepthPass();
       }
       lightViewer.projectionMatrix = backupMatrix;
       lightViewer.updateFrustum();
     } else {
       // directional light without shadow cascades
       lightViewer.updateFrustum();
-      _context.prepareRenderQueue(scene, lightViewer, bOnlyOpaque: true);
-      _context.render(prog);
+      _context.prepareRenderQueue(scene, lightViewer, bOnlyOpaque: false);
+      _context.renderDepthPass();
     }
 
     _endShadowPass();
@@ -100,8 +98,6 @@ class M3ShadowMap {
   void renderSpotDepths(M3Scene scene, List<M3SpotLight> lights) {
     final active = lights.take(8).toList();
     if (!active.any((l) => l.castShadow)) return;
-
-    final prog = M3Resources.programSimple!;
 
     _beginShadowPass();
 
@@ -116,8 +112,8 @@ class M3ShadowMap {
       final lightViewer = light.lightViewer;
       lightViewer.updateFrustum();
 
-      _context.prepareRenderQueue(scene, lightViewer, bOnlyOpaque: true);
-      _context.render(prog);
+      _context.prepareRenderQueue(scene, lightViewer, bOnlyOpaque: false);
+      _context.renderDepthPass();
     }
 
     _endShadowPass();

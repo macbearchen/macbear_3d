@@ -89,6 +89,7 @@ class M3Program {
   late UniformLocation uniformBoneMatrixArrayIT; // "BoneMatrixArrayIT" inverse-tranpose-matrix-array
   late UniformLocation attribBoneIndex; // bone-index
   late UniformLocation attribBoneWeight; // bone-weight
+  late UniformLocation attribTangent; // vertex tangent (vec4, w = handedness)
 
   /// Compiles and links a shader program from vertex and fragment sources.
   M3Program(String strVert, String strFrag, {this.reflectionType = M3ReflectionType.none}) {
@@ -133,6 +134,7 @@ class M3Program {
       gl.bindAttribLocation(program, 3, "inTexCoord");
       gl.bindAttribLocation(program, 4, "inBoneIndex");
       gl.bindAttribLocation(program, 5, "inBoneWeight");
+      gl.bindAttribLocation(program, 6, "inTangent");
     }
 
     gl.linkProgram(program);
@@ -226,6 +228,7 @@ class M3Program {
     attribColor = gl.getAttribLocation(program, "inColor");
     attribNormal = gl.getAttribLocation(program, "inNormal");
     attribUV = gl.getAttribLocation(program, "inTexCoord");
+    attribTangent = gl.getAttribLocation(program, "inTangent");
     // bones matrix-array
     uniformBoneCount = gl.getUniformLocation(program, "BoneCount");
     uniformBoneMatrixArray = gl.getUniformLocation(program, "BoneMatrixArray");
@@ -374,6 +377,9 @@ class M3Program {
     }
     if (isLocationValid(attribUV)) {
       gl.disableVertexAttribArray(attribUV.id);
+    }
+    if (isLocationValid(attribTangent)) {
+      gl.disableVertexAttribArray(attribTangent.id);
     }
   }
 }

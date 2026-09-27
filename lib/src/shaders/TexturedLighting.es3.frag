@@ -10,6 +10,7 @@ uniform sampler2D SamplerDiffuse;	// GL_TEXTURE0
 #ifdef ENABLE_NORMALMAP
 uniform sampler2D SamplerNormal;	// GL_TEXTURE1
 uniform mediump float uNormalScale;	// normal scale factor
+in mediump vec4 vTangent;           // xyz=tangent, w=handedness (from VS)
 #endif // ENABLE_NORMALMAP
 
 uniform mediump vec3 uEyePos;
@@ -76,20 +77,14 @@ void main(void)
 	N = gl_FrontFacing ? N : -N;
 
 #ifdef ENABLE_NORMALMAP
-	// Cotangent frame calculation for tangent space normal mapping
-	highp vec3 pos_dx = dFdx(ObjectspaceV);
-	highp vec3 pos_dy = dFdy(ObjectspaceV);
-	highp vec2 tex_dx = dFdx(TextureCoordOut);
-	highp vec2 tex_dy = dFdy(TextureCoordOut);
-
-	highp vec3 t_ = (pos_dx * tex_dy.t - pos_dy * tex_dx.t);
-	highp vec3 b_ = (pos_dy * tex_dx.s - pos_dx * tex_dy.s);
-
-	mediump vec3 T = safe_normalize(t_ - N * dot(N, t_));
-	mediump vec3 B = safe_normalize(b_ - N * dot(N, b_) - T * dot(T, b_));
+	// TBN from vertex tangent (xyz=tangent, w=handedness)
+	mediump vec3 T = safe_normalize(vTangent.xyz);
+	mediump float handedness = gl_FrontFacing ? vTangent.w : -vTangent.w;
+	mediump vec3 B = safe_normalize(cross(N, T) * handedness);
 	mediump mat3 tbn = mat3(T, B, N);
 
 	mediump vec3 mapN = texture(SamplerNormal, TextureCoordOut).xyz * 2.0 - 1.0;
+	mapN.z = gl_FrontFacing ? mapN.z : -mapN.z;
 	mapN.xy *= uNormalScale;
 	N = safe_normalize(tbn * mapN);
 #endif // ENABLE_NORMALMAP

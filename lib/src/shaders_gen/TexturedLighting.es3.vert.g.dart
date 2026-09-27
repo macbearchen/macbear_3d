@@ -13,6 +13,7 @@ layout(location = 2) in mediump vec3 inNormal;
 #endif // ENABLE_SKINNING
 
 layout(location = 3) in mediump vec2 inTexCoord;
+layout(location = 6) in mediump vec4 inTangent; // xyz=tangent, w=handedness
 uniform lowp vec4 uColor;
 
 out highp vec3 ObjectspaceV;    // Object space Vertex
@@ -32,6 +33,7 @@ uniform mediump vec3 uInvObjScale;
 
 out lowp vec4 DestinationColor;
 out mediump vec2 TextureCoordOut;
+out mediump vec4 vTangent;  // xyz=tangent, w=handedness
 
 uniform mat4 ModelviewProjection;
 
@@ -87,6 +89,7 @@ void main(void)
 #endif // ENABLE_FOG
 
     TextureCoordOut = inTexCoord;
+    vTangent = inTangent;
     gl_Position = ModelviewProjection * objVert;
 }
 

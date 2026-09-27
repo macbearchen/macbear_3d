@@ -106,7 +106,7 @@ class M3ReflectionProbe {
         // ignore exclude entity
         _context.excludeEntities([owner!]);
       }
-      _context.render(prog);
+      _context.renderColorPass(prog);
     }
     cubemapTexture.generateMipmap();
     // Restore state

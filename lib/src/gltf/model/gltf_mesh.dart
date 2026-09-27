@@ -57,6 +57,7 @@ class GltfPrimitive {
   // Accessor indices
   final int? positionAccessor;
   final int? normalAccessor;
+  final int? tangentAccessor;
   final int? texCoordAccessor;
   final int? jointAccessor;
   final int? weightAccessor;
@@ -75,6 +76,7 @@ class GltfPrimitive {
     required this.document,
     this.positionAccessor,
     this.normalAccessor,
+    this.tangentAccessor,
     this.texCoordAccessor,
     this.jointAccessor,
     this.weightAccessor,
@@ -91,6 +93,7 @@ class GltfPrimitive {
       document: doc,
       positionAccessor: attributes['POSITION'] as int?,
       normalAccessor: attributes['NORMAL'] as int?,
+      tangentAccessor: attributes['TANGENT'] as int?,
       texCoordAccessor: attributes['TEXCOORD_0'] as int?,
       jointAccessor: attributes['JOINTS_0'] as int?,
       weightAccessor: attributes['WEIGHTS_0'] as int?,
@@ -111,6 +114,12 @@ class GltfPrimitive {
   Float32List? getNormals() {
     if (normalAccessor == null) return null;
     return document.getFloatAccessor(normalAccessor!);
+  }
+
+  /// 取得切線資料 (vec4: xyz = tangent direction, w = handedness ±1)
+  Float32List? getTangents() {
+    if (tangentAccessor == null) return null;
+    return document.getFloatAccessor(tangentAccessor!);
   }
 
   /// 取得 UV 座標資料

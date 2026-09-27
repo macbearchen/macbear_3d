@@ -115,6 +115,7 @@ abstract class M3Geom {
   Vector3List? _vertices; // vertex positions
   Vector3List? _normals; // vertex normals
   Vector2List? _uvs; // vertex texture coordinates(u,v)
+  Vector4List? _tangents; // vertex tangents (for normal mapping)
   Vector3List? _colors; // vertex colors
   Uint16List? _joints; // vertex bone indices (4 per vertex)
   Float32List? _weights; // vertex bone weights (4 per vertex)
@@ -122,6 +123,7 @@ abstract class M3Geom {
   // VBO: vertex buffer object
   Buffer? _vertexBuffer;
   Buffer? _normalBuffer;
+  Buffer? _tangentBuffer; // buffer for tangents
   Buffer? _uvBuffer;
   Buffer? _colorBuffer;
   Buffer? _jointBuffer;
@@ -155,6 +157,9 @@ abstract class M3Geom {
     }
     if (withUV) {
       _uvs = Vector2List(vertexCount);
+    }
+    if (withNormals && withUV) {
+      _tangents = Vector4List(vertexCount);
     }
     if (withColors) {
       _colors = Vector3List(vertexCount);
@@ -204,6 +209,13 @@ abstract class M3Geom {
       gl.bindBuffer(WebGL.ARRAY_BUFFER, _uvBuffer);
       gl.bufferData(WebGL.ARRAY_BUFFER, toF32List(_uvs!.buffer), WebGL.STATIC_DRAW);
       _uvs = null;
+    }
+
+    if (_tangents != null) {
+      _tangentBuffer = gl.createBuffer();
+      gl.bindBuffer(WebGL.ARRAY_BUFFER, _tangentBuffer);
+      gl.bufferData(WebGL.ARRAY_BUFFER, toF32List(_tangents!.buffer), WebGL.STATIC_DRAW);
+      _tangents = null;
     }
 
     if (_colors != null) {
@@ -283,6 +295,87 @@ abstract class M3Geom {
         _normals!.setValues(i, vA.x, vA.y, vA.z);
       }
     }
+
+    // 4. Auto-compute tangents when UVs are available
+    if (_uvs != null) {
+      _computeTangents(indices);
+    }
+  }
+
+  /// Computes vertex tangents using positions, normals, and UVs.
+  ///
+  /// Uses the Lengyel algorithm: accumulates tangent/bitangent per triangle,
+  /// then Gram–Schmidt orthogonalises against the vertex normal and stores the
+  /// handedness (±1) in tangent.w so the shader can reconstruct the bitangent.
+  ///
+  /// Must be called **after** [_vertices], [_normals] and [_uvs] are filled
+  /// and **before** [_createVBO].
+  void _computeTangents(List<int> indices) {
+    if (_vertices == null || _normals == null || _uvs == null) return;
+    if (_vertexCount == 0 || indices.isEmpty) return;
+
+    // Accumulator arrays – tan1 (sdir) and tan2 (tdir) per vertex
+    final tan1 = List<Vector3>.generate(_vertexCount, (_) => Vector3.zero());
+    final tan2 = List<Vector3>.generate(_vertexCount, (_) => Vector3.zero());
+
+    final vA = Vector3.zero(), vB = Vector3.zero(), vC = Vector3.zero();
+    final uvA = Vector2.zero(), uvB = Vector2.zero(), uvC = Vector2.zero();
+    final sdir = Vector3.zero(), tdir = Vector3.zero();
+
+    for (int i = 0; i < indices.length - 2; i += 3) {
+      final i1 = indices[i], i2 = indices[i + 1], i3 = indices[i + 2];
+
+      _vertices!.load(i1, vA);
+      _vertices!.load(i2, vB);
+      _vertices!.load(i3, vC);
+
+      _uvs!.load(i1, uvA);
+      _uvs!.load(i2, uvB);
+      _uvs!.load(i3, uvC);
+
+      final double x1 = vB.x - vA.x, x2 = vC.x - vA.x;
+      final double y1 = vB.y - vA.y, y2 = vC.y - vA.y;
+      final double z1 = vB.z - vA.z, z2 = vC.z - vA.z;
+
+      final double s1 = uvB.x - uvA.x, s2 = uvC.x - uvA.x;
+      final double t1 = uvB.y - uvA.y, t2 = uvC.y - uvA.y;
+
+      final double denom = s1 * t2 - s2 * t1;
+      if (denom.abs() < 1e-10) continue; // degenerate UV triangle
+      final double r = 1.0 / denom;
+
+      sdir.setValues((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
+      tdir.setValues((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r);
+
+      for (final idx in [i1, i2, i3]) {
+        tan1[idx].add(sdir);
+        tan2[idx].add(tdir);
+      }
+    }
+
+    // Gram–Schmidt orthogonalise and store handedness in w
+    _tangents ??= Vector4List(_vertexCount);
+
+    final n = Vector3.zero();
+    final t = Vector3.zero();
+    final tmp = Vector3.zero();
+
+    for (int i = 0; i < _vertexCount; i++) {
+      _normals!.load(i, n);
+      t.setFrom(tan1[i]);
+
+      // Gram–Schmidt: t = normalize(t - n * dot(n, t))
+      tmp.setFrom(n);
+      tmp.scale(n.dot(t));
+      t.sub(tmp);
+      if (t.length2 > 1e-10) t.normalize();
+
+      // Handedness: w = (dot(cross(n, t), tan2[i]) > 0) ? -1 : 1
+      n.crossInto(t, tmp);
+      final double hand = tmp.dot(tan2[i]) > 0.0 ? -1.0 : 1.0;
+
+      _tangents!.setValues(i, t.x, t.y, t.z, hand);
+    }
   }
 
   /// Generates wireframe edge indices from triangle indices.
@@ -330,6 +423,10 @@ abstract class M3Geom {
       gl.deleteBuffer(_uvBuffer!);
       _uvBuffer = null;
     }
+    if (_tangentBuffer != null) {
+      gl.deleteBuffer(_tangentBuffer!);
+      _tangentBuffer = null;
+    }
     if (_colorBuffer != null) {
       gl.deleteBuffer(_colorBuffer!);
       _colorBuffer = null;
@@ -345,6 +442,7 @@ abstract class M3Geom {
     _vertices = null;
     _normals = null;
     _uvs = null;
+    _tangents = null;
     _colors = null;
 
     // dispose indices
@@ -375,6 +473,11 @@ abstract class M3Geom {
       gl.enableVertexAttribArray(prog.attribUV.id);
       gl.vertexAttribPointer(prog.attribUV.id, 2, WebGL.FLOAT, false, 0, 0);
     }
+    if (_tangentBuffer != null && prog.attribTangent.id >= 0) {
+      gl.bindBuffer(WebGL.ARRAY_BUFFER, _tangentBuffer);
+      gl.enableVertexAttribArray(prog.attribTangent.id);
+      gl.vertexAttribPointer(prog.attribTangent.id, 4, WebGL.FLOAT, false, 0, 0);
+    }
     if (_colorBuffer != null && prog.attribColor.id >= 0) {
       gl.bindBuffer(WebGL.ARRAY_BUFFER, _colorBuffer);
       gl.enableVertexAttribArray(prog.attribColor.id);
@@ -404,6 +507,9 @@ abstract class M3Geom {
     }
     if (_uvBuffer != null && prog.attribUV.id >= 0) {
       gl.disableVertexAttribArray(prog.attribUV.id);
+    }
+    if (_tangentBuffer != null && prog.attribTangent.id >= 0) {
+      gl.disableVertexAttribArray(prog.attribTangent.id);
     }
     if (_colorBuffer != null && prog.attribColor.id >= 0) {
       gl.disableVertexAttribArray(prog.attribColor.id);
