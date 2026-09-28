@@ -8,8 +8,8 @@ class PbrTestScene_09 extends DemoScene {
     if (isLoaded) return;
     await super.load();
 
-    pointLights.clear();
-    spotLights.clear();
+    // pointLights.clear();
+    // spotLights.clear();
 
     camera.setEuler(-pi / 12, -pi / 8, 0, distance: 30);
 
@@ -79,9 +79,10 @@ class PbrTestScene_09 extends DemoScene {
     final maskUrl = '${prefixUrl}AlphaBlendModeTest/glTF-Binary/AlphaBlendModeTest.glb';
     final maskPath = 'glb/AlphaBlendModeTest.glb';
     final maskPath2 = 'glb/NormalTangentTest.glb';
-    final meshMask = await M3Mesh.load(maskPath2); // maskPath, maskUrl
-    final mask = addMesh(meshMask, Vector3(2, 3, 5));
-    mask.rotation = Quaternion.euler(0, pi / 4, 0);
+    final maskPath3 = 'glb/NormalTangentMirrorTest.glb';
+    final meshMask = await M3Mesh.load(maskPath3); // maskPath, maskUrl
+    final mask = addMesh(meshMask, Vector3(2, 2, 3));
+    mask.rotation = Quaternion.euler(0, pi / 6, 0);
     mask.scale = Vector3.all(5.0);
   }
 

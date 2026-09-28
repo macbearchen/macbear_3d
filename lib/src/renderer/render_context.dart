@@ -138,8 +138,8 @@ class M3RenderContext {
     return reflectionProbe.items.any((item) => item.entity.getProbe() != null);
   }
 
-  /// render all render queues
-  void renderColorPass(M3Program prog, {M3FillMode fillMode = .solid}) {
+  /// render all render queues: solid color pass
+  void renderColorPass([M3Program? fallbackProg]) {
     final gl = M3AppEngine.instance.renderEngine.gl;
 
     // 1. Opaque & Masked: Disable blending, enable depth writing
@@ -148,31 +148,14 @@ class M3RenderContext {
     gl.depthMask(true);
 
     // (1/4) Opaque objects
-    _executeQueue(opaque, prog, fillMode: fillMode);
+    _executeQueue(opaque, defaultProg: fallbackProg);
 
     // (2/4) Masked objects (alpha test / cutoff)
-    if (!masked.isEmpty) {
-      M3Program? progMasked;
-      if (fillMode == .solid) {
-        if (prog == M3Resources.programTexture) {
-          progMasked = M3Resources.programTextureMasked;
-        } else if (prog == M3Resources.programTextureNormal) {
-          progMasked = M3Resources.programTextureNormalMasked;
-        } else if (prog == M3Resources.programShadow) {
-          progMasked = M3Resources.programShadowMasked;
-        } else if (prog == M3Resources.programShadowNormal) {
-          progMasked = M3Resources.programShadowNormalMasked;
-        }
-      } else {
-        progMasked = prog;
-      }
-      if (progMasked != null) _executeQueue(masked, progMasked, fillMode: fillMode);
-    }
+    _executeQueue(masked, defaultProg: fallbackProg);
+
     // (3/4) Unlit objects
-    if (fillMode == .solid) {
-      final progUnlit = M3Resources.programExternalOES!;
-      _executeQueue(unlit, progUnlit);
-    }
+    final progUnlit = M3Resources.programExternalOES!;
+    _executeQueue(unlit, defaultProg: progUnlit, useVariant: false);
 
     // 2. Transparent objects: Enable alpha blending, disable depth writing
     if (!transparent.isEmpty) {
@@ -180,21 +163,50 @@ class M3RenderContext {
       gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA);
       gl.depthMask(false);
       // (4/4) Transparent objects
-      _executeQueue(transparent, prog);
+      _executeQueue(transparent, defaultProg: fallbackProg);
       gl.depthMask(true);
       gl.disable(WebGL.BLEND);
     }
+  }
+
+  /// render all render queues: wireframe pass
+  void renderWireframePass() {
+    final gl = M3AppEngine.instance.renderEngine.gl;
+    M3Program prog = M3Resources.programSimple!;
+
+    // 1. Opaque & Masked: Disable blending, enable depth writing
+    gl.disable(WebGL.BLEND);
+    gl.blendFunc(WebGL.ONE, WebGL.ONE);
+    gl.depthMask(true);
+
+    // (1/4) Opaque objects
+    _executeQueue(opaque, defaultProg: prog, fillMode: .wireframe, useVariant: false);
+
+    // (2/4) Masked objects (alpha test / cutoff)
+    _executeQueue(masked, defaultProg: prog, fillMode: .wireframe, useVariant: false);
+
+    // (3/4) Unlit objects
+    _executeQueue(unlit, defaultProg: prog, fillMode: .wireframe, useVariant: false);
+
+    // 2. Transparent objects: Enable alpha blending, disable depth writing
+    gl.enable(WebGL.BLEND);
+    gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA);
+    gl.depthMask(false);
+    // (4/4) Transparent objects
+    _executeQueue(transparent, defaultProg: prog, fillMode: .wireframe, useVariant: false);
+    gl.depthMask(true);
+    gl.disable(WebGL.BLEND);
   }
 
   /// Depth-only pass: opaque + masked with skinning + alpha test.
   /// Used by shadow map rendering — transparent and unlit objects are intentionally excluded.
   void renderDepthPass() {
     // Opaque: write depth, no blending
-    _executeQueue(opaque, M3Resources.programSimple!);
+    _executeQueue(opaque, defaultProg: M3Resources.programSimple!, useVariant: false);
     // Masked: same depth shader but with alpha cutoff
     final progMasked = M3Resources.programSimpleMasked;
     if (progMasked != null && !masked.isEmpty) {
-      _executeQueue(masked, progMasked);
+      _executeQueue(masked, defaultProg: progMasked, useVariant: false);
     }
     // transparent & unlit: intentionally skipped for shadow depth
   }
@@ -213,14 +225,14 @@ class M3RenderContext {
     M3Program? progProbe = M3Resources.programSkyboxReflect;
     final options = M3AppEngine.instance.renderEngine.options;
     if (progProbe != null && !options.shader.ibl) {
-      _executeQueue(reflectionProbe, progProbe); // reflection cubemap
+      _executeQueue(reflectionProbe, defaultProg: progProbe, useVariant: false); // reflection cubemap
       stats.reflection += reflectionProbe.items.length;
     }
 
     // (2/2) render planar reflection objects
     M3Program? progPlanar = M3Resources.programMirror;
     if (progPlanar != null) {
-      _executeQueue(planarReflection, progPlanar); // planar reflection
+      _executeQueue(planarReflection, defaultProg: progPlanar, useVariant: false); // planar reflection
       stats.reflection += planarReflection.items.length;
     }
 
@@ -229,17 +241,28 @@ class M3RenderContext {
     gl.depthFunc(WebGL.LEQUAL);
   }
 
-  /// execute queue with shader
-  void _executeQueue(M3RenderQueue queue, M3Program prog, {M3FillMode fillMode = .solid}) {
+  /// execute queue with shader, switching among the 8 variant keys when [useVariant] is true.
+  void _executeQueue(
+    M3RenderQueue queue, {
+    M3Program? defaultProg,
+    M3FillMode fillMode = .solid,
+    bool useVariant = true,
+  }) {
     if (queue.isEmpty) return;
 
     RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
-    // pre-draw state
-    gl.useProgram(prog.program);
-    prog.applyFrameUniforms(_viewer);
-    // apply fog to lighting programs
-    if (prog is M3ProgramLighting) {
-      prog.applyFog(_scene.fog); // fog supported
+
+    M3Program? currentProg;
+    int currentVariantKey = -1;
+
+    void bindProgram(M3Program prog) {
+      if (currentProg == prog) return;
+      currentProg = prog;
+      gl.useProgram(prog.program);
+      prog.applyFrameUniforms(_viewer);
+      if (prog is M3ProgramLighting) {
+        prog.applyFog(_scene.fog); // fog supported
+      }
     }
 
     // override material to apply entity color and reflection
@@ -248,12 +271,30 @@ class M3RenderContext {
     // apply reflection cubemap
     final M3Texture defaultCubemap = _scene.skybox?.cubemapTexture ?? M3Resources.texDefaultCubemap;
     M3Texture currentCubemap = defaultCubemap;
-    prog.setEnvironmentMap(currentCubemap);
+
+    // If not using dynamic variants, bind default program upfront
+    if (!useVariant) {
+      final prog = defaultProg ?? M3Resources.programTexture!;
+      bindProgram(prog);
+      prog.setEnvironmentMap(currentCubemap);
+    }
 
     // track cull face state (default is cull face enabled)
     bool cullFaceEnabled = true;
 
     for (final item in queue.items) {
+      // Switch program when variant key changes (items are pre-sorted by variantKey)
+      if (useVariant) {
+        if (item.variantKey != currentVariantKey || currentProg == null) {
+          currentVariantKey = item.variantKey;
+          final prog =
+              M3Resources.getLightingProgramByVariant(currentVariantKey) ?? defaultProg ?? M3Resources.programTexture!;
+          bindProgram(prog);
+          prog.setEnvironmentMap(currentCubemap);
+        }
+      }
+
+      final prog = currentProg!;
       final sub = item.subMesh;
       final entity = item.entity;
       final nextCubemap = entity.getProbe()?.cubemapTexture ?? defaultCubemap;

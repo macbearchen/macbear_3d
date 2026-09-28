@@ -31,19 +31,11 @@ mixin M3LightingShader {
     spotLightManager.initLocation(prog);
   }
 
-  /// directional light: scene only support one directional light.
-  void attachDirectionalLight(M3DirectionalLight dirLight) {
-    _dirLight = dirLight;
-  }
-
-  /// point light: scene support multiple point lights.
-  void attachPointLights(List<M3PointLight> pointLights) {
-    pointLightManager.attachPointLights(pointLights);
-  }
-
-  /// spot light: scene support multiple spot lights.
-  void attachSpotLights(List<M3SpotLight> spotLights) {
-    spotLightManager.attachSpotLights(spotLights);
+  /// attach scene lights: directional light, point lights, spot lights
+  void attachSceneLights(M3Scene scene) {
+    _dirLight = scene.dirLight;
+    pointLightManager.attachPointLights(scene.pointLights);
+    spotLightManager.attachSpotLights(scene.spotLights);
   }
 
   /// set light uniforms.
@@ -65,4 +57,3 @@ mixin M3LightingShader {
     spotLightManager.setLightUniforms(matInv, mMatrix);
   }
 }
-

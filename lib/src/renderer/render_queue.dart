@@ -43,12 +43,15 @@ class M3RenderItem {
     if (subMesh.mtr.alphaMode == M3AlphaMode.mask) {
       bits |= M3ShaderVariantBits.enableAlphaTest;
     }
-    if (subMesh.mtr.normalTexture != null) {
+
+    // check normal map
+    final frameUseNormalMap = M3AppEngine.instance.renderEngine.options.useNormalMap;
+    if (subMesh.mtr.normalTexture != null && frameUseNormalMap) {
       bits |= M3ShaderVariantBits.enableNormalMap;
     }
 
-    final frameShadowEnabled = M3AppEngine.instance.renderEngine.isShadowEnabled;
-    if (subMesh.mtr.receiveShadow && frameShadowEnabled) {
+    final frameUseShadow = M3AppEngine.instance.renderEngine.isShadowEnabled;
+    if (subMesh.mtr.receiveShadow && frameUseShadow) {
       bits |= M3ShaderVariantBits.enableShadowReceive;
     }
 

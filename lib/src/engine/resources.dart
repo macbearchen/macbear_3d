@@ -118,25 +118,56 @@ class M3Resources {
   static M3ProgramWaterCSM? programWaterCSM; // water shadow CSM
   static M3ProgramEye? programSkyboxReflect;
   static M3Program? programExternalOES; // external texture: video streaming
+  // depth-only masked: skinning + alpha test (for shadow depth pass)
+  static M3Program? programSimpleMasked;
   // with lighting
   static M3ProgramLighting? programSimpleLighting;
+
   // with texture
   static M3ProgramLighting? programTexture;
   static M3ProgramShadow? programShadow;
   // with texture and normal map
   static M3ProgramLighting? programTextureNormal;
   static M3ProgramShadow? programShadowNormal;
-
   // with masked (alpha test)
   static M3ProgramLighting? programTextureMasked;
   static M3ProgramShadow? programShadowMasked;
-
   // with masked (alpha test) and normal map
   static M3ProgramLighting? programTextureNormalMasked;
   static M3ProgramShadow? programShadowNormalMasked;
 
-  // depth-only masked: skinning + alpha test (for shadow depth pass)
-  static M3Program? programSimpleMasked;
+  /// All currently initialized lighting programs
+  static Iterable<M3ProgramLighting> get lightingPrograms => [
+    ?programTexture,
+    ?programTextureNormal,
+    ?programShadow,
+    ?programShadowNormal,
+    ?programTextureMasked,
+    ?programTextureNormalMasked,
+    ?programShadowMasked,
+    ?programShadowNormalMasked,
+  ];
+
+  /// Get the lighting program corresponding to the 8 variant key combinations
+  static M3ProgramLighting? getLightingProgramByVariant(int variantKey) {
+    final bool hasAlpha = (variantKey & M3ShaderVariantBits.enableAlphaTest) != 0;
+    final bool hasNormal = (variantKey & M3ShaderVariantBits.enableNormalMap) != 0;
+    final bool hasShadow = (variantKey & M3ShaderVariantBits.enableShadowReceive) != 0;
+
+    if (hasShadow) {
+      if (hasNormal) {
+        return hasAlpha ? programShadowNormalMasked : programShadowNormal;
+      } else {
+        return hasAlpha ? programShadowMasked : programShadow;
+      }
+    } else {
+      if (hasNormal) {
+        return hasAlpha ? programTextureNormalMasked : programTextureNormal;
+      } else {
+        return hasAlpha ? programTextureMasked : programTexture;
+      }
+    }
+  }
 
   // ignore: non_constant_identifier_names
   static final _SkinNormalVS_glsl = "#define ENABLE_NORMAL \n$SkinningVS_glsl";
@@ -262,9 +293,6 @@ class M3Resources {
 
     // pixel lighting: phong shading, cartoon, PBR, IBL
     if (options.perPixel) {
-      if (options.normalMap) {
-        strFrag = "#define ENABLE_NORMALMAP \n$strFrag";
-      }
       if (options.pbr) {
         // ES3 PBR: Use modern ES3 shaders
         strVert = "#define ENABLE_PBR \n$strVert";

@@ -193,20 +193,18 @@ class M3Water extends M3Entity {
 
     final viewer = scene.camera;
     if (fillMode == .solid) {
-      RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
+      final renderEngine = M3AppEngine.instance.renderEngine;
+      RenderingContext gl = renderEngine.gl;
       gl.enable(WebGL.BLEND);
       gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA); // alpha blending
       gl.depthMask(false); // Don't write to depth buffer in blending pass
       gl.disable(WebGL.CULL_FACE);
 
-      final renderEngine = M3AppEngine.instance.renderEngine;
       bool csmEnabled = renderEngine.isShadowEnabled && scene.dirLight.cascades.isNotEmpty;
       final M3ProgramLighting prog = csmEnabled ? progWaterCSM : progWater;
+      prog.attachSceneLights(scene);
 
       gl.useProgram(prog.program);
-      prog.attachDirectionalLight(scene.dirLight);
-      prog.attachPointLights(scene.pointLights);
-      prog.attachSpotLights(scene.spotLights);
       prog.applyFrameUniforms(viewer);
       prog.applyFog(scene.fog);
       (prog as M3WaterShader).bindWater(this);

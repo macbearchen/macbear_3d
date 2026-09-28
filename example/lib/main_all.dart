@@ -313,7 +313,7 @@ class _MainPageState extends State<MainPage> {
         ],
         FloatingActionButton.small(
           heroTag: 'shadow',
-          backgroundColor: renderEngine.options.useShadow ? Colors.amber : null,
+          backgroundColor: renderEngine.options.useShadow ? Colors.tealAccent.shade700 : null,
           onPressed: () {
             setState(() {
               if (renderEngine.options.useShadow) {
@@ -391,17 +391,6 @@ class _MainPageState extends State<MainPage> {
           },
           child: const Text('IBL'),
         ),
-        separateWidget,
-        FloatingActionButton.small(
-          heroTag: 'normalmap',
-          backgroundColor: shaderOptions.normalMap ? Colors.tealAccent.shade700 : null,
-          onPressed: () {
-            setState(() {
-              shaderOptions.normalMap = !shaderOptions.normalMap;
-            });
-          },
-          child: const Text('NRM', style: TextStyle(fontSize: 10)),
-        ),
       ],
     );
   }
@@ -409,6 +398,7 @@ class _MainPageState extends State<MainPage> {
   /// Helper
   Widget getHelperWidget() {
     final renderEngine = M3AppEngine.instance.renderEngine;
+    final debugOptions = renderEngine.options.debug;
     final scene = M3AppEngine.instance.activeScene;
     if (scene == null) {
       return SizedBox.shrink();
@@ -426,10 +416,10 @@ class _MainPageState extends State<MainPage> {
       children: [
         FloatingActionButton.small(
           heroTag: 'wireframe',
-          backgroundColor: renderEngine.options.debug.wireframe ? Colors.lightGreen : null,
+          backgroundColor: debugOptions.wireframe ? Colors.lightGreen : null,
           onPressed: () {
             setState(() {
-              renderEngine.options.debug.wireframe = !renderEngine.options.debug.wireframe;
+              debugOptions.wireframe = !debugOptions.wireframe;
             });
           },
           child: const Icon(Icons.grid_4x4_sharp),
@@ -437,10 +427,10 @@ class _MainPageState extends State<MainPage> {
         separateWidget,
         FloatingActionButton.small(
           heroTag: 'map',
-          backgroundColor: renderEngine.options.debug.showMaps ? Colors.lightGreen : null,
+          backgroundColor: debugOptions.showMaps ? Colors.lightGreen : null,
           onPressed: () {
             setState(() {
-              renderEngine.options.debug.showMaps = !renderEngine.options.debug.showMaps;
+              debugOptions.showMaps = !debugOptions.showMaps;
             });
           },
           child: const Icon(Icons.map),
@@ -448,30 +438,42 @@ class _MainPageState extends State<MainPage> {
         separateWidget,
         FloatingActionButton.small(
           heroTag: 'info',
-          backgroundColor: renderEngine.options.debug.showHelpers != M3HelperType.none ? Colors.cyan : null,
+          backgroundColor: debugOptions.showHelpers != M3HelperType.none ? Colors.cyan : null,
           onPressed: () {
             setState(() {
-              final current = renderEngine.options.debug.showHelpers;
+              final current = debugOptions.showHelpers;
               final next = M3HelperType.values[(current.index + 1) % M3HelperType.values.length];
-              renderEngine.options.debug.showHelpers = next;
+              debugOptions.showHelpers = next;
             });
           },
-          child: renderEngine.options.debug.showHelpers == M3HelperType.none
+          child: debugOptions.showHelpers == M3HelperType.none
               ? const Icon(Icons.info)
               : Text(
-                  renderEngine.options.debug.showHelpers == M3HelperType.entity
+                  debugOptions.showHelpers == M3HelperType.entity
                       ? 'Ent'
-                      : (renderEngine.options.debug.showHelpers == M3HelperType.subMesh ? 'Sub' : 'Both'),
+                      : (debugOptions.showHelpers == M3HelperType.subMesh ? 'Sub' : 'Both'),
                   style: const TextStyle(fontSize: 10),
                 ),
         ),
         separateWidget,
+
         FloatingActionButton.small(
-          heroTag: 'camera',
-          backgroundColor: renderEngine.options.debug.showCamera ? Colors.lightGreen : null,
+          heroTag: 'normalmap',
+          backgroundColor: renderEngine.options.useNormalMap ? Colors.tealAccent.shade700 : null,
           onPressed: () {
             setState(() {
-              renderEngine.options.debug.showCamera = !renderEngine.options.debug.showCamera;
+              renderEngine.options.useNormalMap = !renderEngine.options.useNormalMap;
+            });
+          },
+          child: const Text('NRM', style: TextStyle(fontSize: 10)),
+        ),
+        separateWidget,
+        FloatingActionButton.small(
+          heroTag: 'camera',
+          backgroundColor: debugOptions.showCamera ? Colors.lightGreen : null,
+          onPressed: () {
+            setState(() {
+              debugOptions.showCamera = !debugOptions.showCamera;
             });
           },
           child: const Icon(Icons.videocam_outlined),
@@ -479,13 +481,13 @@ class _MainPageState extends State<MainPage> {
         separateWidget,
         FloatingActionButton.small(
           heroTag: 'light',
-          backgroundColor: renderEngine.options.debug.showLight ? Colors.lightGreen : null,
+          backgroundColor: debugOptions.showLight ? Colors.lightGreen : null,
           onPressed: () {
             setState(() {
-              renderEngine.options.debug.showLight = !renderEngine.options.debug.showLight;
+              debugOptions.showLight = !debugOptions.showLight;
             });
           },
-          child: Icon(renderEngine.options.debug.showLight ? Icons.lightbulb_sharp : Icons.lightbulb_outline),
+          child: Icon(debugOptions.showLight ? Icons.lightbulb_sharp : Icons.lightbulb_outline),
         ),
         separateWidget,
         // ── Directional light brightness slider ──

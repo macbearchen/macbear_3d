@@ -417,9 +417,12 @@ class M3AppEngine with ChangeNotifier {
 
   // application render
   Future<void> _render() async {
-    // 1. pre-render: shadow map, reflection, etc.
     final scene = activeScene;
     if (scene != null) {
+      // 0. attach scene lights for all lighting programs per-frame
+      renderEngine.attachAllProgramsLights(scene);
+
+      // 1. pre-render: shadow map, reflection, etc.
       // shadow map
       renderEngine.renderShadowMap(scene);
 
@@ -459,13 +462,15 @@ class M3AppEngine with ChangeNotifier {
       // draw debug: only implement when needed
       scene.debugDraw();
 
+      final debugOptions = renderEngine.options.debug;
+
       // draw Helper
-      if (renderEngine.options.debug.showHelpers != M3HelperType.none) {
-        scene.drawHelper(renderEngine.options.debug.showHelpers);
+      if (debugOptions.showHelpers != M3HelperType.none) {
+        scene.drawHelper(debugOptions.showHelpers);
       }
 
       // draw camera frustums
-      if (renderEngine.options.debug.showCamera) {
+      if (debugOptions.showCamera) {
         scene.drawCameraHelper();
         // for debug camera frustum only
         M3Resources.debugCamera?.drawHelper(M3Resources.programSimple!, scene.camera);
@@ -476,7 +481,7 @@ class M3AppEngine with ChangeNotifier {
       }
 
       // draw light helper
-      if (renderEngine.options.debug.showLight) {
+      if (debugOptions.showLight) {
         if (M3Resources.debugCamera != null) {
           // for debug directional light frustum only
           scene.dirLight.updateShadowCascades(M3Resources.debugCamera!);
@@ -484,7 +489,7 @@ class M3AppEngine with ChangeNotifier {
         scene.dirLight.drawHelper(M3Resources.programSimple!, scene.camera);
         scene.drawLightHelper(drawBulb: false);
       }
-      if (renderEngine.options.debug.lightBulb) {
+      if (debugOptions.lightBulb) {
         scene.drawLightHelper();
       }
     }

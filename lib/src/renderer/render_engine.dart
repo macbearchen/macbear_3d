@@ -142,6 +142,12 @@ class M3RenderEngine {
     return prog;
   }
 
+  void attachAllProgramsLights(M3Scene scene) {
+    for (final prog in M3Resources.lightingPrograms) {
+      prog.attachSceneLights(scene);
+    }
+  }
+
   /// Render scene
   void renderScene(M3Scene scene) {
     stats.frames++;
@@ -165,25 +171,6 @@ class M3RenderEngine {
       // get scene program
       final prog = getSceneProgram(scene);
 
-      prog.attachDirectionalLight(scene.dirLight);
-      prog.attachPointLights(scene.pointLights);
-      prog.attachSpotLights(scene.spotLights);
-
-      M3ProgramLighting progMasked = prog;
-      if (prog == M3Resources.programTexture) {
-        progMasked = M3Resources.programTextureMasked!;
-      } else if (prog == M3Resources.programTextureNormal) {
-        progMasked = M3Resources.programTextureNormalMasked!;
-      } else if (prog == M3Resources.programShadow) {
-        progMasked = M3Resources.programShadowMasked!;
-      } else if (prog == M3Resources.programShadowNormal) {
-        progMasked = M3Resources.programShadowNormalMasked!;
-      }
-
-      progMasked.attachDirectionalLight(scene.dirLight);
-      progMasked.attachPointLights(scene.pointLights);
-      progMasked.attachSpotLights(scene.spotLights);
-
       // main context render pass
       mainContext.renderColorPass(prog);
 
@@ -196,7 +183,7 @@ class M3RenderEngine {
       scene.water?.render();
     } else {
       // wireframe
-      mainContext.renderColorPass(M3Resources.programSimple!, fillMode: .wireframe);
+      mainContext.renderWireframePass();
       // water wireframe
       scene.water?.render(fillMode: .wireframe);
     }

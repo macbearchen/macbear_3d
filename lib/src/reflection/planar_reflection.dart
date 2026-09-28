@@ -134,30 +134,11 @@ class M3PlanarReflection {
     gl.enable(WebGL.POLYGON_OFFSET_FILL);
     gl.polygonOffset(1.1, 4.0);
 
-    // get scene program
-    final prog = renderEngine.getSceneProgram(scene);
-
-    prog.attachDirectionalLight(scene.dirLight);
-    prog.attachPointLights(scene.pointLights);
-    prog.attachSpotLights(scene.spotLights);
-
-    M3ProgramLighting progMasked = prog;
-    if (prog == M3Resources.programTexture) {
-      progMasked = M3Resources.programTextureMasked!;
-    } else if (prog == M3Resources.programTextureNormal) {
-      progMasked = M3Resources.programTextureNormalMasked!;
-    } else if (prog == M3Resources.programShadow) {
-      progMasked = M3Resources.programShadowMasked!;
-    } else if (prog == M3Resources.programShadowNormal) {
-      progMasked = M3Resources.programShadowNormalMasked!;
-    }
-
-    progMasked.attachDirectionalLight(scene.dirLight);
-    progMasked.attachPointLights(scene.pointLights);
-    progMasked.attachSpotLights(scene.spotLights);
-
     // (1/2) prepare render queue: exclude this plane
     _context.prepareRenderQueue(scene, _camera, excludeReflection: this);
+
+    // get scene program
+    final prog = renderEngine.getSceneProgram(scene);
 
     // (2/2) render scene for planar reflection/refraction
     _context.renderColorPass(prog);

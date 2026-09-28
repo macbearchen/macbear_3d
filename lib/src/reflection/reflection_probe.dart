@@ -63,11 +63,6 @@ class M3ReflectionProbe {
       WebGL.TEXTURE_CUBE_MAP_NEGATIVE_Z,
     ];
 
-    final prog = M3Resources.programTexture!;
-    prog.attachDirectionalLight(scene.dirLight);
-    prog.attachPointLights(scene.pointLights);
-    prog.attachSpotLights(scene.spotLights);
-
     for (int i = 0; i < 6; i++) {
       // Bind FBO, then attach texture face
       _framebuffer.bind();
@@ -106,6 +101,7 @@ class M3ReflectionProbe {
         // ignore exclude entity
         _context.excludeEntities([owner!]);
       }
+      final prog = M3Resources.programTexture!;
       _context.renderColorPass(prog);
     }
     cubemapTexture.generateMipmap();
