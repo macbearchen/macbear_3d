@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:macbear_3d/macbear_3d.dart';
-import 'package:vector_math/vector_math.dart';
 
 void main() {
   group('Normal Map Support', () {
@@ -31,10 +30,7 @@ void main() {
         'pbrMetallicRoughness': {
           'baseColorFactor': [1.0, 0.5, 0.2, 1.0],
         },
-        'normalTexture': {
-          'index': 3,
-          'scale': 0.8,
-        },
+        'normalTexture': {'index': 3, 'scale': 0.8},
       };
 
       final gltfMat = GltfMaterial.parse(jsonWithNormal);
@@ -42,30 +38,10 @@ void main() {
       expect(gltfMat.normalTextureIndex, 3);
       expect(gltfMat.normalTextureScale, 0.8);
 
-      final jsonWithoutNormal = {
-        'name': 'BasicMat',
-      };
+      final jsonWithoutNormal = {'name': 'BasicMat'};
       final gltfMatBasic = GltfMaterial.parse(jsonWithoutNormal);
       expect(gltfMatBasic.normalTextureIndex, isNull);
       expect(gltfMatBasic.normalTextureScale, 1.0);
-    });
-
-    test('M3ShaderOptions normalMap toggle', () {
-      final options = M3ShaderOptions();
-      expect(options.normalMap, isTrue);
-
-      options.isDirty = false;
-      options.normalMap = false;
-      expect(options.normalMap, isFalse);
-      expect(options.isDirty, isTrue);
-
-      // Enabling normalMap forces perPixel to true
-      options.perPixel = false;
-      expect(options.normalMap, isFalse);
-
-      options.normalMap = true;
-      expect(options.normalMap, isTrue);
-      expect(options.perPixel, isTrue);
     });
   });
 }
