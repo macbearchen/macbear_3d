@@ -76,14 +76,35 @@ class PbrTestScene_09 extends DemoScene {
     glass.scale = Vector3.all(3.0);
 */
     // 00-1: GLTF model - using M3Mesh.load()
-    final maskUrl = '${prefixUrl}AlphaBlendModeTest/glTF-Binary/AlphaBlendModeTest.glb';
-    final maskPath = 'glb/AlphaBlendModeTest.glb';
-    final maskPath2 = 'glb/NormalTangentTest.glb';
-    final maskPath3 = 'glb/NormalTangentMirrorTest.glb';
-    final meshMask = await M3Mesh.load(maskPath3); // maskPath, maskUrl
-    final mask = addMesh(meshMask, Vector3(2, 2, 3));
-    mask.rotation = Quaternion.euler(0, pi / 6, 0);
-    mask.scale = Vector3.all(5.0);
+    final testUrl = '${prefixUrl}AlphaBlendModeTest/glTF-Binary/AlphaBlendModeTest.glb';
+    final testPath = 'glb/AlphaBlendModeTest.glb';
+    final testPath2 = 'glb/NormalTangentTest.glb';
+    final testPath3 = 'glb/NormalTangentMirrorTest.glb';
+    final testPathM = 'glb/CompareMetallic.glb';
+    final testPathR = 'glb/CompareRoughness.glb';
+    final testPathAO = 'glb/CompareAmbientOcclusion.glb';
+    final testPath7 = 'glb/WaterBottle.glb';
+    final testPathN = 'glb/CompareNormal.glb';
+
+    final meshNormalTest = await M3Mesh.load(testPath2); // testUrl
+    final entityNTest = addMesh(meshNormalTest, Vector3(16, 6, 2));
+    entityNTest.rotation = Quaternion.euler(0, pi / 6, 0);
+    entityNTest.scale = Vector3.all(5.0);
+
+    final meshNormal = await M3Mesh.load(testPathN); // testUrl
+    final entityN = addMesh(meshNormal, Vector3(-4, 2, 4));
+    entityN.rotation = Quaternion.euler(0, pi / 3, 0);
+    entityN.scale = Vector3.all(2.0);
+
+    final meshMetallic = await M3Mesh.load(testPathM);
+    final entityM = addMesh(meshMetallic, Vector3(0, 4, 4));
+    entityM.rotation = Quaternion.euler(0, pi / 3, 0);
+    entityM.scale = Vector3.all(2.0);
+
+    final meshRoughness = await M3Mesh.load(testPathR);
+    final entityR = addMesh(meshRoughness, Vector3(4, 6, 4));
+    entityR.rotation = Quaternion.euler(0, pi / 3, 0);
+    entityR.scale = Vector3.all(2.0);
   }
 
   @override

@@ -29,7 +29,7 @@ class TerrainScene_06 extends DemoScene {
 
     camera.farClip = 800;
     camera.refreshProjectionMatrix();
-    camera.setEuler(pi / 4, -pi / 9, 0, distance: 30);
+    camera.setEuler(pi / 4, -pi / 9, 0, distance: 50);
     M3Log.i('TerrainScene', 'Camera: $camera');
     // 2. Add Skybox
     skybox = M3Skybox(M3Texture.createDefaultIBLCube());

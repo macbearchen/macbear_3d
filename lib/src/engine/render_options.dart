@@ -17,6 +17,7 @@ class M3RenderOptions {
   M3ShaderOptions shader = M3ShaderOptions();
   bool useShadow = true; // shadow map
   bool useNormalMap = true; // normal map
+  bool useOcclusion = true; // ambient occlusion (ORM R-channel)
   double dprScale = 1.0; // (0 ~ 1): 0 mean dpr = 1.0, 1 mean dpr = deviceDpr, in the middle is 0.5
   double getDpr(double deviceDpr) {
     return lerpDouble(1.0, deviceDpr, dprScale.clamp(0.0, 1.0))!;
@@ -179,6 +180,9 @@ class M3RenderStats {
   int totalEntities = 0;
   int submeshes = 0;
   int totalSubmeshes = 0;
+  int maskedSubmeshes = 0;
+  int normalmapSubmeshes = 0;
+  int occlusionSubmeshes = 0;
   int reflection = 0;
 
   void reset() {
@@ -189,6 +193,9 @@ class M3RenderStats {
     totalEntities = 0;
     submeshes = 0;
     totalSubmeshes = 0;
+    maskedSubmeshes = 0;
+    normalmapSubmeshes = 0;
+    occlusionSubmeshes = 0;
     reflection = 0;
   }
 
@@ -198,6 +205,7 @@ class M3RenderStats {
 frame${frames.toString().padLeft(6)}
 ecs:$entities/$totalEntities
 sub:$submeshes/$totalSubmeshes
+mask:$maskedSubmeshes nrm:$normalmapSubmeshes ao:$occlusionSubmeshes
 reflect:$reflection
  tri:$triangles
 vert:$vertices''';

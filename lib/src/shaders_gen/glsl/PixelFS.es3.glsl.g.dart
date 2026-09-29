@@ -21,7 +21,7 @@ lowp vec3 CalculateSpotLighting(SurfaceGeometry geo);
 #endif // ENABLE_SPOT_LIGHTS
 
 #ifdef ENABLE_PBR
-uniform mediump vec3 uParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level
+uniform mediump vec4 uParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level, w: Occlusion-strength
 
 // Trowbridge-Reitz GGX
 mediump float DistributionGGX(mediump vec3 N, mediump vec3 H, mediump float roughness) {
@@ -126,7 +126,7 @@ lowp vec4 ShadeLit(lowp vec4 texDiffuse, SurfaceGeometry geo)
     
     // Sample ORM texture: R = Occlusion, G = Roughness, B = Metallic
     mediump vec3 orm = texture(SamplerORM, TextureCoordOut).rgb;
-    mediump float occlusion = orm.r;
+    mediump float occlusion = clamp(1.0 + uParamPBR.w * (orm.r - 1.0), 0.0, 1.0);
     mediump float roughness = clamp(orm.g * uParamPBR.y, 0.04, 1.0);
     mediump float metallic = clamp(orm.b * uParamPBR.x, 0.0, 1.0);
 
@@ -198,7 +198,7 @@ lowp vec4 ShadeUnlit(lowp vec4 texDiffuse, SurfaceGeometry geo)
 
     // Sample ORM texture: R = Occlusion, G = Roughness, B = Metallic
     mediump vec3 orm = texture(SamplerORM, TextureCoordOut).rgb;
-    mediump float occlusion = orm.r;
+    mediump float occlusion = clamp(1.0 + uParamPBR.w * (orm.r - 1.0), 0.0, 1.0);
     mediump float roughness = clamp(orm.g * uParamPBR.y, 0.04, 1.0);
     mediump float metallic = clamp(orm.b * uParamPBR.x, 0.0, 1.0);
 

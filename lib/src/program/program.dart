@@ -71,7 +71,7 @@ class M3Program {
   late UniformLocation uniformSamplerNormal; // texture "SamplerNormal"
   late UniformLocation uniformSamplerORM; // texture "SamplerORM"
   late UniformLocation uniformNormalScale; // "uNormalScale" for normal-scale factor
-  late UniformLocation uniformParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level
+  late UniformLocation uniformParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level, w: Ambient-Occlusion-strength
   late UniformLocation uniformSamplerEnvironment;
 
   late UniformLocation uniformCameraViewport; // camera viewport
@@ -219,7 +219,7 @@ class M3Program {
 
     // Set up some default material parameters.
     if (M3Program.isLocationValid(uniformParamPBR)) {
-      gl.uniform3f(uniformParamPBR, 0.0, 0.5, 3.0);
+      gl.uniform4f(uniformParamPBR, 0.0, 0.5, 3.0, 1.0);
     }
 
     if (M3Program.isLocationValid(uniformAlphaCutoff)) {
@@ -356,7 +356,8 @@ class M3Program {
 
     // PBR
     if (M3Program.isLocationValid(uniformParamPBR)) {
-      gl.uniform3f(uniformParamPBR, mtr.metallic, mtr.roughness, mtr.mipLevel.toDouble());
+      final occStrength = M3AppEngine.instance.renderEngine.options.useOcclusion ? mtr.occlusionStrength : 0.0;
+      gl.uniform4f(uniformParamPBR, mtr.metallic, mtr.roughness, mtr.mipLevel.toDouble(), occStrength);
     }
   }
 

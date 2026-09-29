@@ -469,6 +469,17 @@ class _MainPageState extends State<MainPage> {
         ),
         separateWidget,
         FloatingActionButton.small(
+          heroTag: 'occlusion',
+          backgroundColor: renderEngine.options.useOcclusion ? Colors.tealAccent.shade700 : null,
+          onPressed: () {
+            setState(() {
+              renderEngine.options.useOcclusion = !renderEngine.options.useOcclusion;
+            });
+          },
+          child: const Text('AO', style: TextStyle(fontSize: 10)),
+        ),
+        separateWidget,
+        FloatingActionButton.small(
           heroTag: 'camera',
           backgroundColor: debugOptions.showCamera ? Colors.lightGreen : null,
           onPressed: () {

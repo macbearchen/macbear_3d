@@ -265,13 +265,13 @@ class M3RenderEngine {
 shadow:${options.useShadow ? 'Y' : 'N'}
 $directionalShadowMap
 csm=${scene.camera.csmCount}''';
-        matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 150, 0));
+        matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 160, 0));
         // Shadow Info
         M3Resources.text2D.drawText(shadowText, matStats, color: Vector4(1, 1, 0, 1));
 
         // reflection probes info
         final probesText = 'probes: ${probes.length}';
-        matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 200, 0));
+        matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 205, 0));
         M3Resources.text2D.drawText(probesText, matStats, color: Vector4(0, 1, 1, 1));
       }
 

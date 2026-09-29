@@ -69,6 +69,13 @@ class M3RenderContext {
           stats.submeshes++;
           stats.vertices += sub.geom.vertexCount;
           stats.triangles += sub.geom.getTriangleCount();
+          if (sub.mtr.alphaMode == M3AlphaMode.mask) stats.maskedSubmeshes++;
+          if (sub.mtr.normalTexture != null && M3AppEngine.instance.renderEngine.options.useNormalMap) {
+            stats.normalmapSubmeshes++;
+          }
+          if (sub.mtr.ormTexture != null && M3AppEngine.instance.renderEngine.options.useOcclusion) {
+            stats.occlusionSubmeshes++;
+          }
         }
 
         // skip planar reflection surface

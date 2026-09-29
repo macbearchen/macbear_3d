@@ -1,20 +1,25 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
 ## 0.11.0
-#### 2026-09-20
+#### 2026-09-29
 * Add:
-  * **Double-Sided Face Rendering**: Added `doubleSided` property to `M3Material` with automatic GL cull-face state management (`gl.enable(CULL_FACE)` / `gl.disable(CULL_FACE)`) during queue execution in `M3RenderContext`. Seamlessly parsed from glTF `doubleSided` property in `M3GltfMaterial`.
-  * **Masked Face (Alpha Testing / Cutoff)**: Added full support for masked face rendering with configurable alpha threshold `uAlphaCutoff` (via `material.alphaCutoff`, default `0.5`). Introduced dedicated shader variants `programTextureMasked`, `programShadowMasked`, and `programUnlitMasked` with `#define ENABLE_ALPHA_TEST` to ensure proper cutout rendering and depth sorting without blending artifacts.
-  * **Separate Light Color in PBR**: Introduced `uLightColor` uniform in `PixelFS.es3.glsl` and `M3LightingShader` to decouple directional light color from surface diffuse properties, ensuring accurate PBR energy conservation and linear colorspace conversions.
+  * **Tangent-Space Normal Mapping**: Added full per-pixel tangent-space normal mapping support. Geometry now computes and stores tangent vectors (`M3Geom`, `M3GltfGeom`). The vertex shader outputs a TBN matrix and the fragment shader (`TexturedLighting.es3`) samples `SamplerNormalMap` and transforms normals into world space for accurate per-pixel lighting.
+  * **glTF PBR ORM Texture**: Added ORM (Occlusion, Roughness, Metallic) packed-texture support. `M3Material.ormTexture` binds to `GL_TEXTURE5`; the PBR shader samples R→Occlusion, G→Roughness, B→Metallic and modulates GGX/Smith, Fresnel, and ambient-occlusion terms accordingly. `M3GltfMaterial` now parses `metallicRoughnessTexture` and `occlusionTexture`.
+  * **Default Resource Textures**: Added `M3Resources.texDefaultORM` (1×1 white: AO=1.0, Roughness=1.0, Metallic=0.0) and `M3Resources.texBlack`. Renamed `texNormal` → `texDefaultNormal` and `texDefaultCube` → `texDefaultCubemap` for consistency.
+  * **Depth Pre-Pass Support**: Added a dedicated depth-pass rendering stage in `M3RenderContext` and `M3RenderQueue` to enable Early-Z occlusion culling and reduce overdraw cost.
+  * **Double-Sided Face Rendering**: Added `doubleSided` property to `M3Material` with automatic GL cull-face state management (`gl.enable(CULL_FACE)` / `gl.disable(CULL_FACE)`) during queue execution. Seamlessly parsed from glTF `doubleSided` property in `M3GltfMaterial`.
+  * **Masked Face (Alpha Testing / Cutoff)**: Full support for masked face rendering with configurable alpha threshold `uAlphaCutoff` (via `material.alphaCutoff`, default `0.5`). Dedicated shader variants `programTextureMasked`, `programShadowMasked`, and `programUnlitMasked` with `#define ENABLE_ALPHA_TEST` ensure correct cutout rendering and Early-Z depth sorting.
+  * **Separate Light Color in PBR**: Introduced `uLightColor` uniform in `PixelFS.es3.glsl` and `M3LightingShader` to decouple directional light color from surface diffuse, ensuring accurate PBR energy conservation and linear colorspace conversions.
   * **Configurable CSM Count**: Added `csmCount` property to `M3ShaderOptions` with dynamic cascades support (1 to 4) and consolidated shadow program selection in `M3Resources`.
 
 * Optimize / Refactor:
-  * **Render Queue Pipeline for Masked Faces**: Explicitly separated and routed masked face queues in `M3RenderContext` and `M3PlanarReflection` to their respective masked shader programs based on fill mode, maintaining Early-Z front-to-back sorting.
+  * **Dynamic Shader Variant System**: Introduced an 8-bit shader variant key (alpha-test, normal-map, shadow-receive flags) in `M3RenderContext`. The render queue is pre-sorted by variant key to minimise GPU program switching and state changes per frame.
+  * **Batch Queue Sorting**: `M3RenderContext` now sorts opaque items by variant key before drawing, reducing redundant `gl.useProgram` calls and improving CPU-side draw-call batching.
+  * **`M3Resources.lightingPrograms` & `attachAllProgramsLights`**: Centralised collection of all active lighting programs with a single helper to propagate per-frame light uniforms across all variants in one call.
+  * **Wireframe Pass Refactor**: Extracted wireframe rendering into a dedicated `wireframePass()` method in `M3RenderContext`, cleaning up the main render loop.
+  * **Render Queue Pipeline for Masked Faces**: Explicitly separated and routed masked face queues in `M3RenderContext` and `M3PlanarReflection` to their respective masked shader programs, maintaining Early-Z front-to-back sorting.
   * **GeometrySmith Optimization**: Optimized PBR `GeometrySmith` GGX calculation to accept pre-calculated `NdotV` and `NdotL` directly instead of re-calculating them.
   * **Renamed Uniform Binder**: Renamed `applyUniforms(cam)` to `applyFrameUniforms(cam)` across `M3Program`, `M3ProgramLighting`, `M3ProgramShadow`, and `M3Water` for clearer semantic lifecycle distinction between frame-level and draw-level uniforms.
-
-* Example & UI:
-  * **Masked & Glass glTF Showcase**: Updated Scene 05 with masked alpha-cutoff test model and broken glass glTF models. Added CSM cascade count indicator and light brightness controls to the demo control panel.
 
 ## 0.10.2
 #### 2026-09-14

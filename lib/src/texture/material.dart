@@ -32,7 +32,7 @@ class M3Material {
   M3Texture diffuseTexture = M3Resources.texWhite;
   M3Texture? normalTexture;
   double normalScale = 1.0;
-  M3Texture? ormTexture; // Occlusion(R), Roughness(G), Metallic(B)
+  M3Texture? ormTexture; // AmbientOcclusion(R), Roughness(G), Metallic(B)
   double occlusionStrength = 1.0;
   Matrix3 texMatrix = Matrix3.identity();
 

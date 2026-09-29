@@ -27,14 +27,17 @@ Preview the `main_all.dart` example live in your browser!
 - **Scene Graph**: Hierarchical architecture with **M3Node** for flexible entity transformations and multi-camera support.
 - **Resource Management**: Efficient centralized loading and caching for textures, meshes, and fonts, including `M3Resources.axisMesh` for coordinate systems.
 - **Multi-Geometry Support**: Added `multi-M3SubMesh` to support multiple geometries within a single `M3Mesh`.
+- **Dynamic Shader Variant System**: 8-bit shader variant keys (alpha-test, normal-map, shadow-receive) pre-sort the render queue to minimise GPU program switches and maximise draw-call batching per frame.
 - **WebGL/Web Optimizations**: Platform abstraction and alignment adjustments optimized specifically for web builds.
 - **Console Logger (M3Log)**: Built-in `M3Log` class for structured, ANSI-colored debug, info, warning, error, system, and highlight console logging.
 
 ### 🎨 Rendering & Visuals
 - **Model Loaders**: Native support for **glTF/GLB**, **OBJ**, and **BVH** formats.
+- **Tangent-Space Normal Mapping**: Full per-pixel tangent-space normal mapping — geometry computes TBN tangent vectors, the vertex shader outputs the TBN matrix, and the fragment shader samples `SamplerNormalMap` for high-fidelity surface detail.
+- **glTF PBR ORM Texture**: Packed ORM (Occlusion/Roughness/Metallic) texture support (`M3Material.ormTexture`) with full `M3GltfMaterial` parser integration for `metallicRoughnessTexture` and `occlusionTexture`.
 - **Double-Sided & Masked Face**: Native support for **double-sided rendering** (`doubleSided`) with automatic cull-face management, and **masked face alpha testing / cutout** with configurable `alphaCutoff` threshold and dedicated masked shader programs (`programTextureMasked`, `programShadowMasked`, `programUnlitMasked`).
 - **Skeletal Animation**: Full support for skinned meshes and bone-based animations (including `M3OctahedralGeom` for bone visualization).
-- **Advanced Lighting & Shadows**: Dynamic lighting supporting **1 directional light, 8 point lights, and up to 8 spotlights** with a shared vertical **Spot Light Shadow Atlas**, **Cascaded Shadow Mapping (CSM)**, **Spot Light Shadow Mapping**, **PCF (Percentage Closer Filtering)** for smooth shadows, **PBR (Physically Based Rendering)** and **IBL (Image-Based Lighting)**. Improved `RenderPipeline` with enhanced support for opaque and transparency materials.
+- **Advanced Lighting & Shadows**: Dynamic lighting supporting **1 directional light, 8 point lights, and up to 8 spotlights** with a shared vertical **Spot Light Shadow Atlas**, **Cascaded Shadow Mapping (CSM)**, **Spot Light Shadow Mapping**, **PCF (Percentage Closer Filtering)** for smooth shadows, **PBR (Physically Based Rendering)** and **IBL (Image-Based Lighting)**. Depth pre-pass for Early-Z occlusion culling reduces overdraw. Improved `RenderPipeline` with enhanced support for opaque and transparency materials.
 - **Modular Shaders**: Refactored shader system with clean `.glsl` source files and dedicated, type-safe Dart shader program wrappers (`M3FogShader`, `M3LightingShader`, `M3ShadowShader`, `M3WaterShader`) for easy uniform binding and encapsulation.
 - **Skybox & Environment**: Support for skybox environment backgrounds and reflection mapping via cubemaps.
 - **Planar Reflections**: Added support for planar reflections with `M3PlanarReflection` and Mirror shaders for high-quality reflective surfaces.

@@ -62,8 +62,8 @@ lowp vec4 BlendReflectionRefraction(in lowp vec3 vAccumulatedNormal, in lowp vec
 
 #ifdef ENABLE_WATER_SPECULAR
 // tangent-space by light
-uniform lowp vec3 LightDiffuse;		// diffuse of light
-uniform mediump vec3 uLightDir;		// parallel light
+uniform mediump vec3 uLightDir; // parallel light
+uniform lowp vec3 uLightColor;  // light color RGB
 #endif // ENABLE_WATER_SPECULAR
 
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS) || defined(ENABLE_SHADOW_CSM_FS)
@@ -101,14 +101,11 @@ void main(void)
 #ifdef ENABLE_WATER_SPECULAR
 	// specular part:
 	mediump vec3 H = normalize(eyeToObjNormal + uLightDir);
-	mediump float sf = max(0.0, dot(H, vAccumulatedNormal));
-//	mediump float sf = clamp(dot(H, vAccumulatedNormal), 0.0, 1.0);
+	highp float sf = clamp(dot(H, vAccumulatedNormal), 0.0, 1.0);
 	sf = pow(sf, 120.0);
 	
-	lowp float fTemp = sf;
-//	resultColor = vec4(LightDiffuse * fTemp, 1.0);		// for debug purpose
-	resultColor = vec4(resultColor.rgb + LightDiffuse * fTemp, 1.0);
-	// resultColor = vec4(uColor, 1);
+	resultColor = vec4(resultColor.rgb + uLightColor * sf, 1.0);
+	// resultColor = vec4(uLightColor, 1.0); // for debug
 #endif // ENABLE_WATER_SPECULAR
 
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS) || defined(ENABLE_SHADOW_CSM_FS)

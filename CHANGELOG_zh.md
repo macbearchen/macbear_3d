@@ -1,20 +1,25 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
 ## 0.11.0
-#### 2026-09-20
+#### 2026-09-29
 * 新增功能 (Add):
+  * **切線空間法線貼圖 (Tangent-Space Normal Mapping)**：新增完整的逐像素切線空間法線貼圖支援。幾何體現在計算並儲存切線向量 (`M3Geom`, `M3GltfGeom`)。頂點著色器輸出 TBN 矩陣，片段著色器 (`TexturedLighting.es3`) 取樣 `SamplerNormalMap` 並將法線轉換至世界空間，實現精確的逐像素光照。
+  * **glTF PBR ORM 紋理 (glTF PBR ORM Texture)**：新增 ORM（遮蔽、粗糙度、金屬度）打包紋理支援。`M3Material.ormTexture` 綁定至 `GL_TEXTURE5`；PBR 著色器取樣 R→遮蔽、G→粗糙度、B→金屬度，並相應調節 GGX/Smith、Fresnel 與環境遮蔽項。`M3GltfMaterial` 現在解析 `metallicRoughnessTexture` 與 `occlusionTexture`。
+  * **預設資源紋理 (Default Resource Textures)**：新增 `M3Resources.texDefaultORM`（1×1 白色：AO=1.0, Roughness=1.0, Metallic=0.0）及 `M3Resources.texBlack`。重命名 `texNormal` → `texDefaultNormal` 與 `texDefaultCube` → `texDefaultCubemap` 以保持一致命名。
+  * **深度預通道支援 (Depth Pre-Pass)**：在 `M3RenderContext` 與 `M3RenderQueue` 中新增專屬深度通道渲染階段，啟用 Early-Z 遮擋剔除以降低過度繪製成本。
   * **雙面渲染 (Double-Sided Face Rendering)**：在 `M3Material` 中新增 `doubleSided` 屬性，並於 `M3RenderContext` 佇列繪製時自動管理 GL 面剔除狀態 (`gl.enable(CULL_FACE)` / `gl.disable(CULL_FACE)`)。原生支援 glTF 模型的 `doubleSided` 材質屬性解析。
-  * **遮罩面 Alpha 測試 (Masked Face / Alpha Testing / Cutoff)**：完整支援 Masked 遮罩面繪製與可自訂的閥值 `uAlphaCutoff`（由 `material.alphaCutoff` 指定，預設為 0.5）。新增專屬著色器變體 `programTextureMasked`、`programShadowMasked` 與 `programUnlitMasked`（帶有 `#define ENABLE_ALPHA_TEST`），確保邊緣剔除正確且享有不透明物件的 Early-Z 深度排序優勢，避免半透明混合排序瑕疵。
+  * **遮罩面 Alpha 測試 (Masked Face / Alpha Testing / Cutoff)**：完整支援 Masked 遮罩面繪製與可自訂的閥值 `uAlphaCutoff`（由 `material.alphaCutoff` 指定，預設為 0.5）。專屬著色器變體 `programTextureMasked`、`programShadowMasked` 與 `programUnlitMasked`（帶有 `#define ENABLE_ALPHA_TEST`），確保邊緣剔除正確且享有 Early-Z 深度排序優勢。
   * **PBR 光源顏色獨立 (Separate Light Color)**：在 `PixelFS.es3.glsl` 與 `M3LightingShader` 中引入 `uLightColor` Uniform，將平行光顏色與表面 Diffuse 屬性解耦，以符合線性色彩空間與 PBR 能量守恆計算。
   * **可自訂 CSM 級聯數量 (Configurable CSM Count)**：在 `M3ShaderOptions` 中新增 `csmCount` 屬性，支援動態設置 1 至 4 層級聯，並整合 `M3Resources` 中的陰影 Program 切換管理。
 
 * 優化與重構 (Optimize / Refactor):
-  * **遮罩面專屬渲染佇列 (Render Queue for Masked Faces)**：在 `M3RenderContext` 與 `M3PlanarReflection` 中明確將遮罩面佇列獨立並在 Solid 模式下導流至對應的 Masked Program，同時保持由前至後的 Early-Z 深度排序。
+  * **動態著色器變體系統 (Dynamic Shader Variant System)**：在 `M3RenderContext` 中引入 8 位元著色器變體鍵值（alpha-test、normal-map、shadow-receive 標誌）。渲染佇列按變體鍵值預先排序，以最小化每幀 GPU Program 切換與狀態變更次數。
+  * **批次佇列排序 (Batch Queue Sorting)**：`M3RenderContext` 現在在繪製不透明物件前按變體鍵值排序，減少冗餘的 `gl.useProgram` 呼叫並改善 CPU 端繪製呼叫批次效率。
+  * **`M3Resources.lightingPrograms` 與 `attachAllProgramsLights`**：集中管理所有激活的光照著色器 Program，並以單一輔助函式在所有變體中傳播每幀光源 Uniform。
+  * **線框通道重構 (Wireframe Pass Refactor)**：將線框渲染提取至 `M3RenderContext` 的專屬 `wireframePass()` 方法，清理主渲染迴圈。
+  * **遮罩面專屬渲染佇列 (Render Queue for Masked Faces)**：在 `M3RenderContext` 與 `M3PlanarReflection` 中明確將遮罩面佇列獨立並導流至對應的 Masked Program，同時保持 Early-Z 由前至後的深度排序。
   * **GeometrySmith 計算優化**：優化 PBR GGX `GeometrySmith` 演算法，直接帶入預先計算好的 `NdotV` 與 `NdotL`，減少重複點積運算。
   * **Uniform 綁定方法重命名**：將 `M3Program`、`M3ProgramLighting`、`M3ProgramShadow` 與 `M3Water` 中的 `applyUniforms(cam)` 重命名為 `applyFrameUniforms(cam)`，清晰區分 Frame-level 與 Draw-level 的 Uniform 生命週期。
-
-* 範例與 UI:
-  * **Masked 與透明玻璃模型演示**：在場景 05 更新了 AlphaBlendModeTest (Masked) 與 GlassBrokenWindow 破裂玻璃 glTF 測試模型。在 Demo 介面中新增 CSM 級聯數量徽章與光照亮度調整滑桿。
 
 ## 0.10.2
 #### 2026-09-14
