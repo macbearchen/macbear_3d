@@ -5,7 +5,7 @@ precision mediump float;
 in lowp vec4 DestinationColor;
 in mediump vec3 TexCoordDirOut;
 uniform samplerCube SamplerEnvironment; // cubemap texture
-uniform mediump vec3 uParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level
+uniform mediump vec4 uParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level, w: Occlusion-strength
 out vec4 fragColor;
 
 void main(void)

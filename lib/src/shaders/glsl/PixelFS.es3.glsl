@@ -64,9 +64,9 @@ mediump vec3 ComputeF0(mediump vec3 baseColor, mediump float metallic) {
     return mix(vec3(0.04), baseColor, metallic);
 }
 
-// ColorAmbient * texColor, converted to linear space.
+// ColorAmbient * texColor, in linear space.
 mediump vec3 ComputeAmbientLinear(lowp vec3 texColor) {
-    return pow(ColorAmbient, vec3(2.2)) * pow(texColor, vec3(2.2));
+    return pow(ColorAmbient, vec3(2.2)) * texColor;
 }
 
 // Shared tail: gamma-correct linear color back to sRGB. Alpha is never part
@@ -128,8 +128,8 @@ lowp vec4 ShadeLit(lowp vec4 texDiffuse, SurfaceGeometry geo)
     mediump float metallic = clamp(orm.b * uParamPBR.x, 0.0, 1.0);
 
     // PBR calculations should be done in linear space
+    // Note: diffuse.rgb is already linear when diffuse/baseColor texture is sampled via GL_SRGB8_ALPHA8.
     mediump vec3 baseColor = diffuse.rgb * uLightColor;
-    baseColor = pow(baseColor, vec3(2.2));
     mediump vec3 F0 = ComputeF0(baseColor, metallic);
 
     // Reflectance equation
@@ -202,9 +202,8 @@ lowp vec4 ShadeUnlit(lowp vec4 texDiffuse, SurfaceGeometry geo)
     mediump vec3 ambient = ComputeAmbientLinear(texDiffuse.rgb) * occlusion;
 
     #ifdef ENABLE_IBL
-    // PBR calculations for IBL
+    // PBR calculations for IBL (diffuse is already in linear space)
     mediump vec3 baseColor = diffuse.rgb * uLightColor;
-    baseColor = pow(baseColor, vec3(2.2));
     mediump vec3 F0 = ComputeF0(baseColor, metallic);
     mediump vec3 F = fresnelSchlick(max(dot(N, V), 0.0), F0);
 

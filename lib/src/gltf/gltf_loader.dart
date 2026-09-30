@@ -72,7 +72,17 @@ class M3GltfLoader {
     // Load and initialize textures defined in the document
     final dir = name.contains('/') ? name.substring(0, name.lastIndexOf('/') + 1) : '';
 
-    for (final texDef in doc.textures) {
+    // Collect all texture indices used as baseColor (diffuse)
+    final baseColorTexIndices = <int>{};
+    for (final mat in doc.materials) {
+      if (mat.baseColorTextureIndex != null) {
+        baseColorTexIndices.add(mat.baseColorTextureIndex!);
+      }
+    }
+
+    for (int texIndex = 0; texIndex < doc.textures.length; texIndex++) {
+      final texDef = doc.textures[texIndex];
+      final isSRGB = baseColorTexIndices.contains(texIndex);
       dynamic tex; // M3Texture?
       try {
         if (texDef.source != null && texDef.source! < doc.images.length) {
@@ -82,14 +92,14 @@ class M3GltfLoader {
             // Internal Reference: Load texture from a GLB bufferView
             final bytes = doc.getBufferViewData(imgDef.bufferView!);
             final texName = imgDef.name ?? '${name}_tex_${texDef.source}';
-            tex = await M3Texture.createFromBytes(bytes, texName);
+            tex = await M3Texture.createFromBytes(bytes, texName, isSRGB: isSRGB);
           } else if (imgDef.uri != null) {
             // External Reference: Load texture from a URI
             var uri = imgDef.uri!;
             if (!uri.startsWith('data:')) {
               // Path is relative to the glTF file
               final path = '$dir$uri';
-              tex = await M3Texture.loadTexture(path);
+              tex = await M3Texture.loadTexture(path, isSRGB: isSRGB);
             } else {
               // Data URI support (TODO: implement decoding if needed)
             }

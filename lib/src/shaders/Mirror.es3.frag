@@ -4,7 +4,7 @@ precision mediump float;
 
 in lowp vec4 DestinationColor;
 
-uniform mediump vec3 uParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level
+uniform mediump vec4 uParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level, w: Occlusion-strength
 uniform sampler2D SamplerDiffuse; // GL_TEXTURE0
 uniform mediump vec4 CameraViewport; // xyzw for (x,y,width,height)
 out vec4 fragColor;

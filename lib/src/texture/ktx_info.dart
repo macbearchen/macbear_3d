@@ -57,7 +57,7 @@ class KtxInfo {
     required this.texData,
   });
 
-  static Future<KtxInfo> parseKtx(String assetPath) async {
+  static Future<KtxInfo> parseKtx(String assetPath, {bool isSRGB = false}) async {
     final buffer = await M3ResourceManager.loadBuffer(assetPath);
     final ByteData data = buffer.asByteData();
     final u8List = buffer.asUint8List();
@@ -66,7 +66,7 @@ class KtxInfo {
     final idKtx2 = Uint8List.fromList([0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A]);
 
     if (listEquals(u8List.sublist(0, 4), idAstc)) {
-      return _parseAstc(data); // parse ASTC
+      return _parseAstc(data, isSRGB: isSRGB); // parse ASTC
     } else if (listEquals(u8List.sublist(0, 12), idKtx)) {
       return _parseKtx1(data); // parse KTX
     } else if (listEquals(u8List.sublist(0, 12), idKtx2)) {
@@ -81,7 +81,7 @@ class KtxInfo {
 // ASTC parser
 // Magic number: 13 AB A1 5C
 // ─────────────────────────────────────────────────────────────
-KtxInfo _parseAstc(ByteData data) {
+KtxInfo _parseAstc(ByteData data, {bool isSRGB = false}) {
   final block_x = data.getUint8(0x04); // 4, 5, 6, 8, 10, 12
   final block_y = data.getUint8(0x05); // 4, 5, 6, 8, 10, 12
   final block_z = data.getUint8(0x06); // 1
@@ -92,17 +92,17 @@ KtxInfo _parseAstc(ByteData data) {
   int glInternalFormat = 0;
 
   if (block_x == 4 && block_y == 4) {
-    glInternalFormat = M3GL.COMPRESSED_RGBA_ASTC_4x4_KHR;
+    glInternalFormat = isSRGB ? M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR : M3GL.COMPRESSED_RGBA_ASTC_4x4_KHR;
   } else if (block_x == 6 && block_y == 6) {
-    glInternalFormat = M3GL.COMPRESSED_RGBA_ASTC_6x6_KHR;
+    glInternalFormat = isSRGB ? M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR : M3GL.COMPRESSED_RGBA_ASTC_6x6_KHR;
   } else if (block_x == 8 && block_y == 6) {
-    glInternalFormat = M3GL.COMPRESSED_RGBA_ASTC_8x6_KHR;
+    glInternalFormat = isSRGB ? M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR : M3GL.COMPRESSED_RGBA_ASTC_8x6_KHR;
   } else if (block_x == 8 && block_y == 8) {
-    glInternalFormat = M3GL.COMPRESSED_RGBA_ASTC_8x8_KHR;
+    glInternalFormat = isSRGB ? M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR : M3GL.COMPRESSED_RGBA_ASTC_8x8_KHR;
   } else if (block_x == 10 && block_y == 10) {
-    glInternalFormat = M3GL.COMPRESSED_RGBA_ASTC_10x10_KHR;
+    glInternalFormat = isSRGB ? M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR : M3GL.COMPRESSED_RGBA_ASTC_10x10_KHR;
   } else if (block_x == 12 && block_y == 12) {
-    glInternalFormat = M3GL.COMPRESSED_RGBA_ASTC_12x12_KHR;
+    glInternalFormat = isSRGB ? M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR : M3GL.COMPRESSED_RGBA_ASTC_12x12_KHR;
   } else {
     throw Exception('Unsupported ASTC block size: $block_x x $block_y');
   }
@@ -292,6 +292,12 @@ String _glFormatName(int f) {
     M3GL.COMPRESSED_RGBA_ASTC_8x8_KHR: 'ASTC_8x8',
     M3GL.COMPRESSED_RGBA_ASTC_10x10_KHR: 'ASTC_10x10',
     M3GL.COMPRESSED_RGBA_ASTC_12x12_KHR: 'ASTC_12x12',
+    M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR: 'ASTC_4x4_sRGB',
+    M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR: 'ASTC_6x6_sRGB',
+    M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR: 'ASTC_8x6_sRGB',
+    M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR: 'ASTC_8x8_sRGB',
+    M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR: 'ASTC_10x10_sRGB',
+    M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR: 'ASTC_12x12_sRGB',
     0x9274: 'ETC2_RGB8',
     0x9278: 'ETC2_RGBA8',
     0x8C02: 'PVRTC1_4BPP',

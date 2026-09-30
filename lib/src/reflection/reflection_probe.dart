@@ -96,11 +96,8 @@ class M3ReflectionProbe {
       gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA); // WebGL.ONE
 
       // render scene for cubemap face
-      _context.prepareRenderQueue(scene, _camCapture);
-      if (owner != null) {
-        // ignore exclude entity
-        _context.excludeEntities([owner!]);
-      }
+      _context.prepareRenderQueue(scene, _camCapture, excludeEntities: {owner!});
+
       final prog = M3Resources.programTexture!;
       _context.renderColorPass(prog);
     }

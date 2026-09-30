@@ -14,10 +14,9 @@ layout(location = 6) in mediump vec4 inTangent; // xyz=tangent, w=handedness
 uniform lowp vec4 uColor;
 
 out highp vec3 ObjectspaceV;    // Object space Vertex
+out mediump vec3 ObjectspaceN;  // Object space Normal
 
-#ifdef ENABLE_PIXEL_LIGHTING
-out mediump vec3 ObjectspaceN;
-#else
+#ifndef ENABLE_PIXEL_LIGHTING   // per-vertex lighting
 uniform lowp vec4 ColorDiffuse;
 uniform mediump vec4 ColorSpecular;
 out lowp vec4 SpecularOut;
@@ -54,10 +53,9 @@ void main(void)
     highp float eyeToObjDist = length(eyeToObj);
 
     ObjectspaceV = objVert.xyz;
-
-#ifdef ENABLE_PIXEL_LIGHTING
     ObjectspaceN = objNormal;
-#else
+
+#ifndef ENABLE_PIXEL_LIGHTING   // per-vertex lighting
     mediump vec3 L = uLightDir;
     mediump vec3 E = eyeToObj / eyeToObjDist;
 

@@ -24,6 +24,7 @@ class M3RenderContext {
     M3Camera viewer, {
     bool bOnlyOpaque = false,
     M3PlanarReflection? excludeReflection,
+    Set<M3Entity>? excludeEntities,
   }) {
     // reset queues
     opaque.clear();
@@ -42,6 +43,11 @@ class M3RenderContext {
 
     // 1. Collect phase: Cull and categorize into queues
     for (final entity in scene.entities) {
+      // exclude specific entities
+      if (excludeEntities != null && excludeEntities.contains(entity)) {
+        continue;
+      }
+
       // statistics: total entities
       if (stats.enabled) {
         stats.totalEntities++;
@@ -125,16 +131,6 @@ class M3RenderContext {
 
     // 3. Sort transparent
     transparent.sortTransparent();
-  }
-
-  /// exclude entities from render queue
-  void excludeEntities(List<M3Entity> entities) {
-    for (var e in entities) {
-      opaque.items.removeWhere((item) => item.entity == e);
-      masked.items.removeWhere((item) => item.entity == e);
-      transparent.items.removeWhere((item) => item.entity == e);
-      unlit.items.removeWhere((item) => item.entity == e);
-    }
   }
 
   bool needsPlanarReflectionPass() {

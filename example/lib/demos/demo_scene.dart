@@ -39,7 +39,7 @@ class DemoScene extends M3Scene {
     for (int i = 0; i < pointCount; i++) {
       final cosSec = cos(sec * 0.1 * (i + 5));
       final sinSec = sin(sec * 0.1 * (i + 5));
-      final r = i * 0.2 + 4;
+      final r = i * 0.3 + 6;
       pointLights[i].position = Vector3(r * cosSec, r * sinSec, 0.75);
     }
 

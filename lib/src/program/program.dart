@@ -157,6 +157,9 @@ class M3Program {
     gl.checkError();
   }
 
+  // extension regex
+  static final RegExp _extensionRegExp = RegExp(r"^#extension\s+.+:(enable|require).*$", multiLine: true);
+
   String _ensureVersionAtStart(String source, {String? precision}) {
     const versionHeader = "#version 300 es";
     String cleanSource = source;
@@ -174,10 +177,9 @@ class M3Program {
     }
 
     // 3. Find and remove all #extension headers
-    final extensionRegExp = RegExp(r"^#extension\s+.+:(enable|require).*$", multiLine: true);
-    final Iterable<Match> matches = extensionRegExp.allMatches(cleanSource);
+    final Iterable<Match> matches = _extensionRegExp.allMatches(cleanSource);
     final List<String> extensions = matches.map((m) => m.group(0)!.trim()).toList();
-    cleanSource = cleanSource.replaceAll(extensionRegExp, "");
+    cleanSource = cleanSource.replaceAll(_extensionRegExp, "");
 
     // 4. Rebuild source
     final buffer = StringBuffer();

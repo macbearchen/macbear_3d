@@ -13,7 +13,7 @@ class CubeScene_01 extends DemoScene {
 
     camera.setEuler(-pi / 9, -pi / 4, 0, distance: 24);
 
-    final num = 9;
+    final num = 7;
     final spacingX = 2.5;
     final spacingY = 2.5;
     // 01: box geometry

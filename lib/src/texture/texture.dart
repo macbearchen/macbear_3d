@@ -29,6 +29,7 @@ class M3Texture {
   late WebGLTexture _texture;
   int get glId => _texture.id;
   final bool useMipmaps;
+  final bool isSRGB;
   final int target; // GL_TEXTURE_2D, GL_TEXTURE_CUBE_MAP
   int texW = 32;
   int texH = 32;
@@ -36,7 +37,7 @@ class M3Texture {
   /// Get the mathematically correct maximum mipmap level based on dimensions
   int get maxMipLevel => (log(max(texW, texH)) / ln2).floor();
 
-  M3Texture({this.target = WebGL.TEXTURE_2D, this.useMipmaps = true, int? wrap}) {
+  M3Texture({this.target = WebGL.TEXTURE_2D, this.useMipmaps = true, this.isSRGB = false, int? wrap}) {
     _texture = gl.createTexture();
 
     setParameters(wrap: wrap);
@@ -91,8 +92,13 @@ class M3Texture {
   }
 
   /// Create a texture from a WebGL texture.
-  M3Texture.fromWebGLTexture(this._texture, {this.texW = 1024, this.texH = 1024, this.useMipmaps = false})
-    : target = WebGL.TEXTURE_2D;
+  M3Texture.fromWebGLTexture(
+    this._texture, {
+    this.texW = 1024,
+    this.texH = 1024,
+    this.useMipmaps = false,
+    this.isSRGB = false,
+  }) : target = WebGL.TEXTURE_2D;
 
   @override
   String toString() {
@@ -344,8 +350,8 @@ class M3Texture {
   }
 
   /// Load a texture from the given URL.
-  static Future<M3Texture> loadTexture(String url) async {
-    M3Texture tex = M3Texture(useMipmaps: false);
+  static Future<M3Texture> loadTexture(String url, {bool isSRGB = false}) async {
+    M3Texture tex = M3Texture(useMipmaps: false, isSRGB: isSRGB);
     tex.name = url;
     await tex._loadTarget(url);
 
@@ -375,8 +381,8 @@ class M3Texture {
   }
 
   /// Create a texture from bytes.
-  static Future<M3Texture> createFromBytes(Uint8List bytes, String name) async {
-    M3Texture tex = M3Texture();
+  static Future<M3Texture> createFromBytes(Uint8List bytes, String name, {bool isSRGB = false}) async {
+    M3Texture tex = M3Texture(isSRGB: isSRGB);
     tex.name = name;
 
     final img = await M3ResourceManager.createImageFromBytes(bytes);
@@ -399,7 +405,7 @@ class M3Texture {
 
     if (lowerName.endsWith('.ktx') || lowerName.endsWith('.ktx2') || lowerName.endsWith('.astc')) {
       // KTX compressed texture: ASTC
-      final ktxInfo = await KtxInfo.parseKtx(filename);
+      final ktxInfo = await KtxInfo.parseKtx(filename, isSRGB: isSRGB);
       name = filename;
       texW = ktxInfo.width;
       texH = ktxInfo.height;
@@ -427,6 +433,7 @@ class M3Texture {
     texW = image.width;
     texH = image.height;
 
+    final internalFormat = isSRGB ? WebGL.SRGB8_ALPHA8 : WebGL.RGBA;
     final pixelFormat = WebGL.RGBA;
     // Macbear note: texImage2DfromImage not working on web
     // await gl.texImage2DfromImage(
@@ -444,7 +451,7 @@ class M3Texture {
     }
     final pixels = byteData.buffer.asUint8List();
 
-    gl.texImage2D(faceTarget, 0, pixelFormat, texW, texH, 0, pixelFormat, WebGL.UNSIGNED_BYTE, toU8List(pixels));
+    gl.texImage2D(faceTarget, 0, internalFormat, texW, texH, 0, pixelFormat, WebGL.UNSIGNED_BYTE, toU8List(pixels));
   }
 
   /// Create a procedural water normal map texture of a specified size and strength.
