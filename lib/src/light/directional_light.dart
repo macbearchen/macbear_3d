@@ -42,32 +42,7 @@ class M3DirectionalLight extends M3Light {
     final int count = splits.length - 1;
 
     if (isCameraAligned) {
-      // Calculate camera frustum center in world space
-      final double near = splits.first;
-      final double far = splits.last;
-      final double midZ = (near + far) / 2.0;
-
-      // Centroid in camera space (negative Z is forward)
-      final Vector3 centroidCam = Vector3(0, 0, -midZ);
-      final Vector3 centroidWorld = cam.cameraToWorldMatrix.transform3(centroidCam);
-
-      // maintain light direction (Z-axis of viewMatrix is backward direction)
-      final Vector3 dirLightBackward = lightViewer.viewMatrix.getRow(2).xyz;
-      // update light eye/target to center on frustum
-      final double dist = lightViewer.distanceToTarget;
-      lightViewer.target.setFrom(centroidWorld);
-      lightViewer.position.setFrom(lightViewer.target + dirLightBackward * dist);
-
-      // check for gimbal lock (singularity when light direction is parallel to up vector)
-      Vector3 safeUp = -cam.viewMatrix.getRow(2).xyz;
-      if (dirLightBackward.dot(safeUp).abs() > 0.99) {
-        // if parallel to camera up, use camera backward or right as fallback
-        safeUp = cam.viewMatrix.getRow(1).xyz; // camera backward
-        if (dirLightBackward.dot(safeUp).abs() > 0.99) {
-          safeUp = cam.viewMatrix.getRow(0).xyz; // camera right
-        }
-      }
-      lightViewer.setLookat(lightViewer.position, lightViewer.target, safeUp);
+      _alignLightWithCamera(cam, splits);
     }
 
     if (cascades.length != count) {
@@ -79,83 +54,142 @@ class M3DirectionalLight extends M3Light {
     final Matrix4 camToWorld = cam.cameraToWorldMatrix;
     final Matrix4 worldToLight = lightViewer.viewMatrix;
 
-    // 1. Calculate the overall Z-range for the entire camera frustum in light space
-    // This ensures all cascades share the same near/far clipping planes for consistency.
+    // 1. Calculate overall Z-range for consistent near/far clipping across all cascades
+    final (depthNear, depthFar) = _computeGlobalDepthRange(
+      cam,
+      aspect: aspect,
+      tanHalfFov: tanHalfFov,
+      camToWorld: camToWorld,
+      worldToLight: worldToLight,
+    );
+
+    // 2. Compute stable projection matrix for each cascade
+    for (int i = 0; i < count; i++) {
+      _updateCascadeProjection(
+        i,
+        splits[i],
+        splits[i + 1],
+        aspect: aspect,
+        tanHalfFov: tanHalfFov,
+        camToWorld: camToWorld,
+        worldToLight: worldToLight,
+        depthNear: depthNear,
+        depthFar: depthFar,
+      );
+    }
+    _updateCascadeAtlasV();
+  }
+
+  /// Align light eye and target with camera frustum centroid while maintaining light direction
+  void _alignLightWithCamera(M3Camera cam, List<double> splits) {
+    final double near = splits.first;
+    final double far = splits.last;
+    final double midZ = (near + far) / 2.0;
+
+    // Centroid in camera space (negative Z is forward)
+    final Vector3 centroidCam = Vector3(0, 0, -midZ);
+    final Vector3 centroidWorld = cam.cameraToWorldMatrix.transform3(centroidCam);
+
+    // Maintain light direction (Z-axis of viewMatrix is backward direction)
+    final Vector3 dirLightBackward = lightViewer.viewMatrix.getRow(2).xyz;
+    final double dist = lightViewer.distanceToTarget;
+    lightViewer.target.setFrom(centroidWorld);
+    lightViewer.position.setFrom(lightViewer.target + dirLightBackward * dist);
+
+    // Check for gimbal lock (singularity when light direction is parallel to up vector)
+    Vector3 safeUp = -cam.viewMatrix.getRow(2).xyz;
+    if (dirLightBackward.dot(safeUp).abs() > 0.99) {
+      safeUp = cam.viewMatrix.getRow(1).xyz; // camera backward
+      if (dirLightBackward.dot(safeUp).abs() > 0.99) {
+        safeUp = cam.viewMatrix.getRow(0).xyz; // camera right
+      }
+    }
+    lightViewer.setLookat(lightViewer.position, lightViewer.target, safeUp);
+  }
+
+  /// Calculate the overall Z-range for the full camera frustum transformed to light space
+  (double depthNear, double depthFar) _computeGlobalDepthRange(
+    M3Camera cam, {
+    required double aspect,
+    required double tanHalfFov,
+    required Matrix4 camToWorld,
+    required Matrix4 worldToLight,
+  }) {
     double overallMinZ = double.infinity;
     double overallMaxZ = -double.infinity;
 
-    // Corner points of the full camera frustum (near and far splits)
-    final List<Vector3> fullFrustumCorners = [];
-    for (double z in [-cam.nearClip, -cam.farClip]) {
-      double h = z.abs() * tanHalfFov;
-      double w = h * aspect;
-      fullFrustumCorners.add(Vector3(w, h, z));
-      fullFrustumCorners.add(Vector3(-w, h, z));
-      fullFrustumCorners.add(Vector3(w, -h, z));
-      fullFrustumCorners.add(Vector3(-w, -h, z));
+    final corner = Vector3.zero();
+    for (final double z in [-cam.nearClip, -cam.farClip]) {
+      final double h = z.abs() * tanHalfFov;
+      final double w = h * aspect;
+
+      // 4 corners at this slice
+      for (final double sx in [1.0, -1.0]) {
+        for (final double sy in [1.0, -1.0]) {
+          corner
+            ..setValues(w * sx, h * sy, z)
+            ..applyMatrix4(camToWorld)
+            ..applyMatrix4(worldToLight);
+
+          overallMinZ = min(overallMinZ, corner.z);
+          overallMaxZ = max(overallMaxZ, corner.z);
+        }
+      }
     }
 
-    for (var corner in fullFrustumCorners) {
-      final v = corner.clone()
-        ..applyMatrix4(camToWorld)
-        ..applyMatrix4(worldToLight);
-      overallMinZ = min(overallMinZ, v.z);
-      overallMaxZ = max(overallMaxZ, v.z);
-    }
-
-    // Add padding to avoid clipping objects that cast shadows into the frustum
-    final double depthNear = -overallMaxZ - csmPaddingNear; // padding for casters behind light
+    final double depthNear = -overallMaxZ - csmPaddingNear;
     final double depthFar = -overallMinZ + csmPaddingFar;
+    return (depthNear, depthFar);
+  }
 
-    for (int i = 0; i < count; i++) {
-      final double near = splits[i];
-      final double far = splits[i + 1];
+  /// Compute stable orthographic projection matrix using bounding-sphere and texel snapping
+  void _updateCascadeProjection(
+    int index,
+    double near,
+    double far, {
+    required double aspect,
+    required double tanHalfFov,
+    required Matrix4 camToWorld,
+    required Matrix4 worldToLight,
+    required double depthNear,
+    required double depthFar,
+  }) {
+    // 1. Calculate center and radius of bounding sphere in camera space
+    final double midZ = (near + far) / 2.0;
+    final Vector3 splitCenterCam = Vector3(0, 0, -midZ);
 
-      // 2. Use Bounding Sphere for Stability
-      // Calculate the center and radius of the frustum split in camera space
-      // For more stability, we use a sphere that encloses the frustum split.
-      // The radius of this sphere depends only on 'near' and 'far', making it invariant to camera rotation.
+    final double hFar = far * tanHalfFov;
+    final double wFar = hFar * aspect;
+    final Vector3 farCornerCam = Vector3(wFar, hFar, -far);
+    final double radius = (farCornerCam - splitCenterCam).length;
 
-      // Center of the split along Z axis in camera space
-      final double midZ = (near + far) / 2.0;
-      final Vector3 splitCenterCam = Vector3(0, 0, -midZ);
+    // Transform split center to light space
+    final Vector3 splitCenterLight = splitCenterCam
+      ..applyMatrix4(camToWorld)
+      ..applyMatrix4(worldToLight);
 
-      // Far corner of the split to calculate radius
-      final double hFar = far * tanHalfFov;
-      final double wFar = hFar * aspect;
-      final Vector3 farCornerCam = Vector3(wFar, hFar, -far);
-      final double radius = (farCornerCam - splitCenterCam).length;
+    // Initial AABB from bounding sphere
+    double minX = splitCenterLight.x - radius;
+    double maxX = splitCenterLight.x + radius;
+    double minY = splitCenterLight.y - radius;
+    double maxY = splitCenterLight.y + radius;
 
-      // Transform center to light space
-      final Vector3 splitCenterLight = splitCenterCam.clone()
-        ..applyMatrix4(camToWorld)
-        ..applyMatrix4(worldToLight);
+    // 2. Texel Snapping to prevent shimmering
+    final double shadowResolutionX = shadowMap!.mapW.toDouble();
+    final double atlasScaleV = cascades[index].atlasScaleV;
+    final double shadowResolutionY = shadowMap!.mapH.toDouble() * atlasScaleV;
 
-      // AABB in light space based on the bounding sphere (for X and Y)
-      // This AABB is square and centered on the split center, preventing shimmering.
-      double minX = splitCenterLight.x - radius;
-      double maxX = splitCenterLight.x + radius;
-      double minY = splitCenterLight.y - radius;
-      double maxY = splitCenterLight.y + radius;
+    final double worldUnitsPerTexelX = (maxX - minX) / shadowResolutionX;
+    final double worldUnitsPerTexelY = (maxY - minY) / shadowResolutionY;
 
-      // 3. Texel Snapping
-      final double shadowResolutionX = shadowMap!.mapW.toDouble();
-      final double atlasScaleV = cascades[i].atlasScaleV;
-      final double shadowResolutionY = shadowMap!.mapH.toDouble() * atlasScaleV;
+    minX = (minX / worldUnitsPerTexelX).floorToDouble() * worldUnitsPerTexelX;
+    maxX = minX + (radius * 2.0 / worldUnitsPerTexelX).ceilToDouble() * worldUnitsPerTexelX;
 
-      double worldUnitsPerTexelX = (maxX - minX) / shadowResolutionX;
-      double worldUnitsPerTexelY = (maxY - minY) / shadowResolutionY;
+    minY = (minY / worldUnitsPerTexelY).floorToDouble() * worldUnitsPerTexelY;
+    maxY = minY + (radius * 2.0 / worldUnitsPerTexelY).ceilToDouble() * worldUnitsPerTexelY;
 
-      minX = (minX / worldUnitsPerTexelX).floorToDouble() * worldUnitsPerTexelX;
-      maxX = minX + (radius * 2.0 / worldUnitsPerTexelX).ceilToDouble() * worldUnitsPerTexelX;
-
-      minY = (minY / worldUnitsPerTexelY).floorToDouble() * worldUnitsPerTexelY;
-      maxY = minY + (radius * 2.0 / worldUnitsPerTexelY).ceilToDouble() * worldUnitsPerTexelY;
-
-      // Build stable orthographic projection Matrix
-      cascades[i].projectionMatrix = makeOrthographicMatrix(minX, maxX, minY, maxY, depthNear, depthFar);
-    }
-    _updateCascadeAtlasV();
+    // 3. Build orthographic projection Matrix
+    cascades[index].projectionMatrix = makeOrthographicMatrix(minX, maxX, minY, maxY, depthNear, depthFar);
   }
 
   void _updateCascadeAtlasV() {

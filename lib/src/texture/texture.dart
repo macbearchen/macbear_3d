@@ -29,7 +29,7 @@ class M3Texture {
   late WebGLTexture _texture;
   int get glId => _texture.id;
   final bool useMipmaps;
-  final bool isSRGB;
+  final bool isSrgb;
   final int target; // GL_TEXTURE_2D, GL_TEXTURE_CUBE_MAP
   int texW = 32;
   int texH = 32;
@@ -37,7 +37,10 @@ class M3Texture {
   /// Get the mathematically correct maximum mipmap level based on dimensions
   int get maxMipLevel => (log(max(texW, texH)) / ln2).floor();
 
-  M3Texture({this.target = WebGL.TEXTURE_2D, this.useMipmaps = true, this.isSRGB = false, int? wrap}) {
+  /// internal format for texture: RGBA8 or SRGB8_ALPHA8
+  int get _internalFormat => isSrgb ? WebGL.SRGB8_ALPHA8 : WebGL.RGBA8;
+
+  M3Texture({this.target = WebGL.TEXTURE_2D, this.useMipmaps = true, this.isSrgb = false, int? wrap}) {
     _texture = gl.createTexture();
 
     setParameters(wrap: wrap);
@@ -97,7 +100,7 @@ class M3Texture {
     this.texW = 1024,
     this.texH = 1024,
     this.useMipmaps = false,
-    this.isSRGB = false,
+    this.isSrgb = false,
   }) : target = WebGL.TEXTURE_2D;
 
   @override
@@ -222,7 +225,7 @@ class M3Texture {
       }
 
       tex.bind();
-      tex.gl.texImage2D(faceTarget, 0, WebGL.RGBA, size, size, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(data));
+      tex.gl.texImage2D(faceTarget, 0, WebGL.RGBA8, size, size, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(data));
     }
 
     tex.generateMipmap();
@@ -264,11 +267,11 @@ class M3Texture {
       (color.b * 255).round().clamp(0, 255),
       (color.a * 255).round().clamp(0, 255),
     ]);
-    gl.texImage2D(faceTarget, 0, WebGL.RGBA, 1, 1, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(pixel));
+    gl.texImage2D(faceTarget, 0, _internalFormat, 1, 1, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(pixel));
   }
 
   void _initEmptyTarget({int faceTarget = WebGL.TEXTURE_2D}) {
-    gl.texImage2D(faceTarget, 0, WebGL.RGBA, texW, texH, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, null);
+    gl.texImage2D(faceTarget, 0, WebGL.RGBA8, texW, texH, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, null);
   }
 
   void _initCheckerboard(int gridCount, Vector4 lightColor, Vector4 darkColor, {int faceTarget = WebGL.TEXTURE_2D}) {
@@ -304,7 +307,7 @@ class M3Texture {
       }
     }
 
-    gl.texImage2D(faceTarget, 0, WebGL.RGBA, gridCount, gridCount, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(data));
+    gl.texImage2D(faceTarget, 0, _internalFormat, gridCount, gridCount, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(data));
   }
 
   /// Create a checkerboard texture (2D) with specified size and colors.
@@ -350,8 +353,8 @@ class M3Texture {
   }
 
   /// Load a texture from the given URL.
-  static Future<M3Texture> loadTexture(String url, {bool isSRGB = false}) async {
-    M3Texture tex = M3Texture(useMipmaps: false, isSRGB: isSRGB);
+  static Future<M3Texture> loadTexture(String url, {bool isSrgb = false}) async {
+    M3Texture tex = M3Texture(useMipmaps: false, isSrgb: isSrgb);
     tex.name = url;
     await tex._loadTarget(url);
 
@@ -381,8 +384,8 @@ class M3Texture {
   }
 
   /// Create a texture from bytes.
-  static Future<M3Texture> createFromBytes(Uint8List bytes, String name, {bool isSRGB = false}) async {
-    M3Texture tex = M3Texture(isSRGB: isSRGB);
+  static Future<M3Texture> createFromBytes(Uint8List bytes, String name, {bool isSrgb = false}) async {
+    M3Texture tex = M3Texture(isSrgb: isSrgb);
     tex.name = name;
 
     final img = await M3ResourceManager.createImageFromBytes(bytes);
@@ -405,7 +408,7 @@ class M3Texture {
 
     if (lowerName.endsWith('.ktx') || lowerName.endsWith('.ktx2') || lowerName.endsWith('.astc')) {
       // KTX compressed texture: ASTC
-      final ktxInfo = await KtxInfo.parseKtx(filename, isSRGB: isSRGB);
+      final ktxInfo = await KtxInfo.parseKtx(filename, isSrgb: isSrgb);
       name = filename;
       texW = ktxInfo.width;
       texH = ktxInfo.height;
@@ -433,7 +436,6 @@ class M3Texture {
     texW = image.width;
     texH = image.height;
 
-    final internalFormat = isSRGB ? WebGL.SRGB8_ALPHA8 : WebGL.RGBA;
     final pixelFormat = WebGL.RGBA;
     // Macbear note: texImage2DfromImage not working on web
     // await gl.texImage2DfromImage(
@@ -451,7 +453,7 @@ class M3Texture {
     }
     final pixels = byteData.buffer.asUint8List();
 
-    gl.texImage2D(faceTarget, 0, internalFormat, texW, texH, 0, pixelFormat, WebGL.UNSIGNED_BYTE, toU8List(pixels));
+    gl.texImage2D(faceTarget, 0, _internalFormat, texW, texH, 0, pixelFormat, WebGL.UNSIGNED_BYTE, toU8List(pixels));
   }
 
   /// Create a procedural water normal map texture of a specified size and strength.
@@ -598,7 +600,7 @@ class M3Texture {
     }
 
     tex.bind();
-    tex.gl.texImage2D(WebGL.TEXTURE_2D, 0, WebGL.RGBA, size, size, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(data));
+    tex.gl.texImage2D(WebGL.TEXTURE_2D, 0, WebGL.RGBA8, size, size, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(data));
     tex.generateMipmap();
     return tex;
   }
