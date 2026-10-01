@@ -14,6 +14,7 @@
 <p align="center">
   <img width="400" src="img/scene08.png" />
   <img width="400" src="img/scene_all.gif" />
+  <img width="400" src="img/scene09.png" />
   <img width="400" src="img/scene05_gltf.gif" />
 </p>
 
@@ -34,7 +35,7 @@
 ### 🎨 渲染與視覺
 - **模型加載**: 原生支援 **glTF/GLB**、**OBJ** 與 **BVH (骨架動畫)** 格式。
 - **切線空間法線貼圖 (Tangent-Space Normal Mapping)**：完整的逐像素切線空間法線貼圖支援。幾何體計算並儲存切線向量 (TBN)，片段著色器取樣 `SamplerNormalMap` 實現高保真表面細節光照。
-- **glTF PBR ORM 紋理 (glTF PBR ORM Texture)**：打包式 ORM（遮蔽/粗糙度/金屬度）紋理支援 (`M3Material.ormTexture`)，搭配完整的 `M3GltfMaterial` 解析器整合，支援 `metallicRoughnessTexture` 與 `occlusionTexture`。
+- **glTF PBR ORM 與 sRGB 紋理 (glTF PBR ORM & sRGB Textures)**：打包式 ORM（遮蔽/粗糙度/金屬度）紋理支援 (`M3Material.ormTexture`)，搭配完整的 `M3GltfMaterial` 解析器整合。原生支援硬體級 sRGB 色彩空間轉換 (`isSrgb`、`WebGL.SRGB8_ALPHA8`) 支援 2D 與 ASTC 壓縮紋理，確保 PBR 光照在線性色彩空間中的能量守恆與精確渲染。
 - **雙面渲染與遮罩面 (Double-Sided & Masked Face)**：原生支援**雙面材質渲染** (`doubleSided`) 自動面剔除控制，以及具備可自訂閥值 (`alphaCutoff`) 與專屬著色器 (`programTextureMasked`、`programShadowMasked`、`programUnlitMasked`) 的 **Masked 遮罩面 Alpha 測試 (Cutout)**。
 - **骨架動畫**: 完整支援皮膚網格 (Skinned Mesh) 與基於骨骼的動畫系統 (包含 `M3OctahedralGeom` 骨骼視覺化)。
 - **進階光照與陰影**: 支援 **1 盞方向光、8 盞點光源與最多 8 盞聚光燈 (up to 8 spotlights)**，並提供共用垂直**聚光燈陰影圖集 (Spot Light Shadow Atlas)**、**級聯陰影貼圖 (CSM)**、**聚光燈陰影貼圖 (Spot Shadow Mapping)**、**PCF (百分比漸進過濾)** 以實現平滑陰影、**PBR (實體渲染)** 與 **IBL (環境光照)**。深度預通道 (Depth Pre-Pass) 啟用 Early-Z 遮擋剔除，降低過度繪製成本。優化 `RenderPipeline` 並增強對不透明與透明材質的支援。

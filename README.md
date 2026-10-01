@@ -14,6 +14,7 @@
 <p align="center">
   <img width="400" src="img/scene08.png" />
   <img width="400" src="img/scene_all.gif" />
+  <img width="400" src="img/scene09.png" />
   <img width="400" src="img/scene05_gltf.gif" />
 </p>
 
@@ -34,7 +35,7 @@ Preview the `main_all.dart` example live in your browser!
 ### 🎨 Rendering & Visuals
 - **Model Loaders**: Native support for **glTF/GLB**, **OBJ**, and **BVH** formats.
 - **Tangent-Space Normal Mapping**: Full per-pixel tangent-space normal mapping — geometry computes TBN tangent vectors, the vertex shader outputs the TBN matrix, and the fragment shader samples `SamplerNormalMap` for high-fidelity surface detail.
-- **glTF PBR ORM Texture**: Packed ORM (Occlusion/Roughness/Metallic) texture support (`M3Material.ormTexture`) with full `M3GltfMaterial` parser integration for `metallicRoughnessTexture` and `occlusionTexture`.
+- **glTF PBR ORM & sRGB Textures**: Packed ORM (Occlusion/Roughness/Metallic) texture support (`M3Material.ormTexture`) with full `M3GltfMaterial` parser integration. Native hardware sRGB color-space conversion (`isSrgb`, `WebGL.SRGB8_ALPHA8`) for 2D and ASTC compressed textures, ensuring accurate linear lighting and energy conservation in PBR shading.
 - **Double-Sided & Masked Face**: Native support for **double-sided rendering** (`doubleSided`) with automatic cull-face management, and **masked face alpha testing / cutout** with configurable `alphaCutoff` threshold and dedicated masked shader programs (`programTextureMasked`, `programShadowMasked`, `programUnlitMasked`).
 - **Skeletal Animation**: Full support for skinned meshes and bone-based animations (including `M3OctahedralGeom` for bone visualization).
 - **Advanced Lighting & Shadows**: Dynamic lighting supporting **1 directional light, 8 point lights, and up to 8 spotlights** with a shared vertical **Spot Light Shadow Atlas**, **Cascaded Shadow Mapping (CSM)**, **Spot Light Shadow Mapping**, **PCF (Percentage Closer Filtering)** for smooth shadows, **PBR (Physically Based Rendering)** and **IBL (Image-Based Lighting)**. Depth pre-pass for Early-Z occlusion culling reduces overdraw. Improved `RenderPipeline` with enhanced support for opaque and transparency materials.
@@ -58,8 +59,6 @@ Preview the `main_all.dart` example live in your browser!
 - **GUI Integration**: Seamlessly overlay and embed 2D GUI elements directly using standard Flutter widgets.
 
 <p align="center">
-  <img width="400" src="img/scene09.png" />
-  <img width="400" src="img/scene04.png" />
 </p>
 
 <details>
@@ -67,6 +66,7 @@ Preview the `main_all.dart` example live in your browser!
 <p align="center">
   <img width="400" src="img/scene01.png" />
   <img width="400" src="img/scene03.png" />
+  <img width="400" src="img/scene04.png" />
   <img width="400" src="img/scene07.png" />
   <img width="400" src="img/perpixel.png" />
   <img width="400" src="img/cartoon.png" />

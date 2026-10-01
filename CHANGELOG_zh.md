@@ -1,8 +1,9 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
 ## 0.11.0
-#### 2026-09-29
+#### 2026-10-01
 * 新增功能 (Add):
+  * **sRGB 紋理支援 (sRGB Texture Support)**：新增硬體級 sRGB 支援（`isSrgb`、`WebGL.SRGB8_ALPHA8`），涵蓋 2D 紋理、ASTC 壓縮紋理（`COMPRESSED_SRGB8_ALPHA8_ASTC_*`）及 glTF baseColor/diffuse 紋理，實現 GPU 硬體級由 sRGB 至線性色彩空間的無縫轉換。
   * **切線空間法線貼圖 (Tangent-Space Normal Mapping)**：新增完整的逐像素切線空間法線貼圖支援。幾何體現在計算並儲存切線向量 (`M3Geom`, `M3GltfGeom`)。頂點著色器輸出 TBN 矩陣，片段著色器 (`TexturedLighting.es3`) 取樣 `SamplerNormalMap` 並將法線轉換至世界空間，實現精確的逐像素光照。
   * **glTF PBR ORM 紋理 (glTF PBR ORM Texture)**：新增 ORM（遮蔽、粗糙度、金屬度）打包紋理支援。`M3Material.ormTexture` 綁定至 `GL_TEXTURE5`；PBR 著色器取樣 R→遮蔽、G→粗糙度、B→金屬度，並相應調節 GGX/Smith、Fresnel 與環境遮蔽項。`M3GltfMaterial` 現在解析 `metallicRoughnessTexture` 與 `occlusionTexture`。
   * **預設資源紋理 (Default Resource Textures)**：新增 `M3Resources.texDefaultORM`（1×1 白色：AO=1.0, Roughness=1.0, Metallic=0.0）及 `M3Resources.texBlack`。重命名 `texNormal` → `texDefaultNormal` 與 `texDefaultCube` → `texDefaultCubemap` 以保持一致命名。
@@ -13,6 +14,9 @@
   * **可自訂 CSM 級聯數量 (Configurable CSM Count)**：在 `M3ShaderOptions` 中新增 `csmCount` 屬性，支援動態設置 1 至 4 層級聯，並整合 `M3Resources` 中的陰影 Program 切換管理。
 
 * 優化與重構 (Optimize / Refactor):
+  * **PBR 光照管線精煉 (PBR Lighting Pipeline Refinements)**：改進 `PixelFS.es3.glsl` 中的線性色彩空間計算，移除 sRGB 取樣後的冗餘 Gamma 解碼，修正 `TexturedLighting.es3.frag` 中的法線切線空間與雙面朝向處理，並擴展各著色器中的 `uParamPBR` Uniform 以支援環境遮蔽強度。
+  * **陰影級聯計算拆分 (Shadow Cascades Calculation Split)**：將 `M3DirectionalLight.updateShadowCascades` 重構為清晰、易於維護的子方法：`_alignLightWithCamera`、`_computeGlobalDepthRange` 與 `_updateCascadeProjection`。
+  * **渲染佇列前置過濾 (Render Queue Pre-Filtering)**：優化 `M3RenderContext.prepareRenderQueue`，支援 `excludeEntities` 集合於收集階段即跳過排除實體，避免額外後置剔除遍歷。
   * **動態著色器變體系統 (Dynamic Shader Variant System)**：在 `M3RenderContext` 中引入 8 位元著色器變體鍵值（alpha-test、normal-map、shadow-receive 標誌）。渲染佇列按變體鍵值預先排序，以最小化每幀 GPU Program 切換與狀態變更次數。
   * **批次佇列排序 (Batch Queue Sorting)**：`M3RenderContext` 現在在繪製不透明物件前按變體鍵值排序，減少冗餘的 `gl.useProgram` 呼叫並改善 CPU 端繪製呼叫批次效率。
   * **`M3Resources.lightingPrograms` 與 `attachAllProgramsLights`**：集中管理所有激活的光照著色器 Program，並以單一輔助函式在所有變體中傳播每幀光源 Uniform。

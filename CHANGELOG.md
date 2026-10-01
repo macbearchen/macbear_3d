@@ -1,8 +1,9 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
 ## 0.11.0
-#### 2026-09-29
+#### 2026-10-01
 * Add:
+  * **sRGB Texture Support**: Added hardware sRGB support (`isSrgb`, `WebGL.SRGB8_ALPHA8`) for 2D textures, ASTC compressed textures (`COMPRESSED_SRGB8_ALPHA8_ASTC_*`), and glTF baseColor/diffuse textures, enabling automatic GPU hardware conversion from sRGB to linear color space.
   * **Tangent-Space Normal Mapping**: Added full per-pixel tangent-space normal mapping support. Geometry now computes and stores tangent vectors (`M3Geom`, `M3GltfGeom`). The vertex shader outputs a TBN matrix and the fragment shader (`TexturedLighting.es3`) samples `SamplerNormalMap` and transforms normals into world space for accurate per-pixel lighting.
   * **glTF PBR ORM Texture**: Added ORM (Occlusion, Roughness, Metallic) packed-texture support. `M3Material.ormTexture` binds to `GL_TEXTURE5`; the PBR shader samples R→Occlusion, G→Roughness, B→Metallic and modulates GGX/Smith, Fresnel, and ambient-occlusion terms accordingly. `M3GltfMaterial` now parses `metallicRoughnessTexture` and `occlusionTexture`.
   * **Default Resource Textures**: Added `M3Resources.texDefaultORM` (1×1 white: AO=1.0, Roughness=1.0, Metallic=0.0) and `M3Resources.texBlack`. Renamed `texNormal` → `texDefaultNormal` and `texDefaultCube` → `texDefaultCubemap` for consistency.
@@ -13,6 +14,9 @@
   * **Configurable CSM Count**: Added `csmCount` property to `M3ShaderOptions` with dynamic cascades support (1 to 4) and consolidated shadow program selection in `M3Resources`.
 
 * Optimize / Refactor:
+  * **PBR Lighting Pipeline Refinements**: Refined linear color space calculations in `PixelFS.es3.glsl` by removing redundant gamma decoding on sRGB-sampled diffuse textures, corrected normal map tangent space and double-sided face orientation in `TexturedLighting.es3.frag`, and expanded `uParamPBR` uniform to include ambient occlusion strength across shaders.
+  * **Shadow Cascades Calculation Split**: Modularized `updateShadowCascades` in `M3DirectionalLight` into clean, testable sub-methods: `_alignLightWithCamera`, `_computeGlobalDepthRange`, and `_updateCascadeProjection`.
+  * **Render Queue Pre-Filtering**: Optimized `M3RenderContext.prepareRenderQueue` with an optional `excludeEntities` set to filter entities during the collection phase, preventing unnecessary post-cull removal loops.
   * **Dynamic Shader Variant System**: Introduced an 8-bit shader variant key (alpha-test, normal-map, shadow-receive flags) in `M3RenderContext`. The render queue is pre-sorted by variant key to minimise GPU program switching and state changes per frame.
   * **Batch Queue Sorting**: `M3RenderContext` now sorts opaque items by variant key before drawing, reducing redundant `gl.useProgram` calls and improving CPU-side draw-call batching.
   * **`M3Resources.lightingPrograms` & `attachAllProgramsLights`**: Centralised collection of all active lighting programs with a single helper to propagate per-frame light uniforms across all variants in one call.
