@@ -29,22 +29,42 @@ class M3Texture {
   late WebGLTexture _texture;
   int get glId => _texture.id;
   final bool useMipmaps;
-  final bool isSrgb;
   final int target; // GL_TEXTURE_2D, GL_TEXTURE_CUBE_MAP
   int texW = 32;
   int texH = 32;
 
-  /// Get the mathematically correct maximum mipmap level based on dimensions
-  int get maxMipLevel => (log(max(texW, texH)) / ln2).floor();
+  /// glTexStorage2D 的 levels 參數（完整 mip 鏈層數）
+  int get mipLevelCount => useMipmaps ? max(1, max(texW, texH).bitLength) : 1;
 
-  /// internal format for texture: RGBA8 or SRGB8_ALPHA8
-  int get _internalFormat => isSrgb ? WebGL.SRGB8_ALPHA8 : WebGL.RGBA8;
+  /// 最大 mip 層索引（GL_TEXTURE_MAX_LEVEL 用）
+  int get maxMipLevel => useMipmaps ? (mipLevelCount - 1) : 0;
 
-  M3Texture({this.target = WebGL.TEXTURE_2D, this.useMipmaps = true, this.isSrgb = false, int? wrap}) {
+  /// GPU 內部格式（texStorage2D 使用）。
+  /// 未壓縮格式：[WebGL.RGBA8]（預設）、[WebGL.SRGB8_ALPHA8]。
+  /// 壓縮格式：傳入 KTX/ASTC 對應的 glFormat 常數。
+  final int _internalFormat;
+
+  /// 是否為 sRGB 色彩空間（由 _internalFormat 推導）。
+  bool get isSrgb =>
+      _internalFormat == WebGL.SRGB8_ALPHA8 ||
+      (_internalFormat >= M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR &&
+          _internalFormat <= M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR);
+
+  M3Texture({this.target = WebGL.TEXTURE_2D, this.useMipmaps = true, int internalFormat = WebGL.RGBA8, int? wrap})
+    : _internalFormat = internalFormat {
     _texture = gl.createTexture();
-
     setParameters(wrap: wrap);
   }
+
+  /// Create a texture from a WebGL texture.
+  M3Texture.fromWebGLTexture(
+    this._texture, {
+    required this.texW,
+    required this.texH,
+    this.useMipmaps = false,
+    this.target = WebGL.TEXTURE_2D,
+    int internalFormat = WebGL.RGBA8,
+  }) : _internalFormat = internalFormat;
 
   void setParameters({int? wrap}) {
     final bool isCubemap = target == WebGL.TEXTURE_CUBE_MAP;
@@ -58,11 +78,21 @@ class M3Texture {
       gl.texParameteri(target, WebGL.TEXTURE_WRAP_R, wrapMode);
     }
 
+    if (!useMipmaps) {
+      gl.texParameteri(target, WebGL.TEXTURE_MAX_LEVEL, 0);
+    }
+
     // filter: (min, mag)
     final minFilter = useMipmaps ? WebGL.LINEAR_MIPMAP_LINEAR : WebGL.LINEAR;
     gl.texParameteri(target, WebGL.TEXTURE_MIN_FILTER, minFilter); // NEAREST, GL_LINEAR_MIPMAP_LINEAR
     gl.texParameteri(target, WebGL.TEXTURE_MAG_FILTER, WebGL.LINEAR); // NEAREST
     gl.pixelStorei(WebGL.UNPACK_ALIGNMENT, 1);
+  }
+
+  void allocateStorage(int width, int height) {
+    texW = width;
+    texH = height;
+    gl.texStorage2D(target, mipLevelCount, _internalFormat, width, height);
   }
 
   void dispose() {
@@ -94,15 +124,6 @@ class M3Texture {
     }
   }
 
-  /// Create a texture from a WebGL texture.
-  M3Texture.fromWebGLTexture(
-    this._texture, {
-    this.texW = 1024,
-    this.texH = 1024,
-    this.useMipmaps = false,
-    this.isSrgb = false,
-  }) : target = WebGL.TEXTURE_2D;
-
   @override
   String toString() {
     final targetName = switch (target) {
@@ -110,21 +131,24 @@ class M3Texture {
       WebGL.TEXTURE_CUBE_MAP => 'CubeMap',
       _ => 'Unknown',
     };
-    return 'Texture $targetName ($texW x $texH): "$name"';
+    final colorSpace = isSrgb ? "sRGB" : "Linear";
+    return 'Texture($colorSpace/$_internalFormat) $targetName ($texW x $texH): "$name"';
   }
 
   /// Create a solid color texture (2D) with specified color.
   static M3Texture createSolidColor(Vector4 color) {
-    M3Texture tex = M3Texture(useMipmaps: false);
-    tex.name = "solid_color";
-    tex._initColorPixel(color);
-    return tex;
+    return M3Texture(useMipmaps: false)
+      ..name = "solid_color"
+      ..allocateStorage(1, 1)
+      .._initColorPixel(color);
   }
 
   /// Create a solid color cubemap (cube) with specified color.
   static M3Texture createSolidColorCube(Vector4 color) {
-    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, useMipmaps: false);
-    tex.name = "solid_color_cube";
+    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, useMipmaps: false, internalFormat: WebGL.SRGB8_ALPHA8)
+      ..name = "solid_color_cube"
+      ..allocateStorage(1, 1);
+
     for (int i = 0; i < 6; i++) {
       tex._initColorPixel(color, faceTarget: _cubeMapFaceTargets[i]);
     }
@@ -134,10 +158,9 @@ class M3Texture {
   /// Create a default IBL cubemap with simple sky/ground gradient colors.
   static M3Texture createDefaultIBLCube() {
     const int size = 16;
-    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, useMipmaps: true)
+    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, useMipmaps: true, internalFormat: WebGL.SRGB8_ALPHA8)
       ..name = "default_ibl_cube"
-      ..texW = size
-      ..texH = size;
+      ..allocateStorage(size, size);
 
     final colorSky = Vector4(0.5, 0.7, 0.9, 1.0); // Light bluish sky
     final colorGround = Vector4(0.2, 0.2, 0.2, 1.0); // Dark neutral gray ground
@@ -224,42 +247,14 @@ class M3Texture {
         }
       }
 
-      tex.bind();
-      tex.gl.texImage2D(faceTarget, 0, WebGL.RGBA8, size, size, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(data));
+      tex.gl.texSubImage2D(faceTarget, 0, 0, 0, size, size, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(data));
     }
 
     tex.generateMipmap();
     return tex;
   }
 
-  /// Create an empty 2D texture with a specified size.
-  static M3Texture createEmpty2D(int width, int height, {bool useMipmaps = true, int? wrap}) {
-    M3Texture tex = M3Texture(useMipmaps: useMipmaps, wrap: wrap)
-      ..name = "empty_2d_${width}x$height"
-      ..texW = width
-      ..texH = height
-      .._initEmptyTarget(faceTarget: WebGL.TEXTURE_2D);
-
-    return tex;
-  }
-
-  /// Create an empty cubemap with a specified size (all 6 faces filled with a neutral gray color).
-  static M3Texture createEmptyCubemap(int size) {
-    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, useMipmaps: true)
-      ..name = "empty_cubemap_${size}x$size"
-      ..texW = size
-      ..texH = size;
-
-    for (int i = 0; i < 6; i++) {
-      tex._initEmptyTarget(faceTarget: _cubeMapFaceTargets[i]);
-    }
-    return tex;
-  }
-
   void _initColorPixel(Vector4 color, {int faceTarget = WebGL.TEXTURE_2D}) {
-    texW = 1;
-    texH = 1;
-
     // Fill the texture with a 1x1 white pixel.
     final pixel = Uint8List.fromList([
       (color.r * 255).round().clamp(0, 255),
@@ -267,17 +262,10 @@ class M3Texture {
       (color.b * 255).round().clamp(0, 255),
       (color.a * 255).round().clamp(0, 255),
     ]);
-    gl.texImage2D(faceTarget, 0, _internalFormat, 1, 1, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(pixel));
-  }
-
-  void _initEmptyTarget({int faceTarget = WebGL.TEXTURE_2D}) {
-    gl.texImage2D(faceTarget, 0, WebGL.RGBA8, texW, texH, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, null);
+    gl.texSubImage2D(faceTarget, 0, 0, 0, 1, 1, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(pixel));
   }
 
   void _initCheckerboard(int gridCount, Vector4 lightColor, Vector4 darkColor, {int faceTarget = WebGL.TEXTURE_2D}) {
-    texW = gridCount;
-    texH = gridCount;
-
     gl.texParameteri(target, WebGL.TEXTURE_MIN_FILTER, WebGL.NEAREST); // NEAREST, GL_LINEAR_MIPMAP_LINEAR
     gl.texParameteri(target, WebGL.TEXTURE_MAG_FILTER, WebGL.NEAREST); // NEAREST
 
@@ -307,7 +295,11 @@ class M3Texture {
       }
     }
 
-    gl.texImage2D(faceTarget, 0, _internalFormat, gridCount, gridCount, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(data));
+    gl.texSubImage2D(faceTarget, 0, 0, 0, gridCount, gridCount, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(data));
+  }
+
+  static M3Texture createWarningTexture() {
+    return createCheckerboard(size: 8, lightColor: Vector4(.9, .2, .1, 1), darkColor: Vector4(.7, .6, .5, 1));
   }
 
   /// Create a checkerboard texture (2D) with specified size and colors.
@@ -317,10 +309,12 @@ class M3Texture {
     Vector4? darkColor,
     int faceTarget = WebGL.TEXTURE_2D,
   }) {
-    M3Texture tex = M3Texture();
     lightColor ??= Vector4(0.8, 0.8, 0.8, 1);
     darkColor ??= Vector4(0.5, 0.5, 0.5, 1);
-    tex.name = 'checkerboard';
+    M3Texture tex = M3Texture(internalFormat: WebGL.SRGB8_ALPHA8)
+      ..name = 'checkerboard_2d($size)'
+      ..allocateStorage(size, size);
+
     tex._initCheckerboard(size, lightColor, darkColor, faceTarget: faceTarget);
     tex.generateMipmap();
     return tex;
@@ -328,8 +322,9 @@ class M3Texture {
 
   /// Create a sampler cubemap for texture sampling test.
   static M3Texture createSampleCubemap({int gridCount = 8}) {
-    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP);
-    tex.name = 'sample_cubemap';
+    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, internalFormat: WebGL.SRGB8_ALPHA8)
+      ..name = 'sample_cubemap'
+      ..allocateStorage(gridCount, gridCount);
 
     List<Vector4> colors = [
       Vector4(0.8, 0.3, 0.3, 1),
@@ -352,91 +347,94 @@ class M3Texture {
     return tex;
   }
 
-  /// Load a texture from the given URL.
-  static Future<M3Texture> loadTexture(String url, {bool isSrgb = false}) async {
-    M3Texture tex = M3Texture(useMipmaps: false, isSrgb: isSrgb);
-    tex.name = url;
-    await tex._loadTarget(url);
-
-    M3Log.i('M3Texture', tex.toString());
-    return tex;
-  }
-
-  static Future<M3Texture> loadCubemap(
-    String urlPosX,
-    String urlNegX,
-    String urlPosY,
-    String urlNegY,
-    String urlPosZ,
-    String urlNegZ,
-  ) async {
-    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP);
-    List<String> urls = [urlPosX, urlNegX, urlPosY, urlNegY, urlPosZ, urlNegZ];
-
-    // 6 faces for cubemap
-    for (int i = 0; i < 6; i++) {
-      await tex._loadTarget(urls[i], faceTarget: _cubeMapFaceTargets[i]);
-      M3Log.i('M3Texture', tex.toString());
-    }
-    tex.generateMipmap();
-    tex.unbind();
-    return tex;
-  }
-
   /// Create a texture from bytes.
-  static Future<M3Texture> createFromBytes(Uint8List bytes, String name, {bool isSrgb = false}) async {
-    M3Texture tex = M3Texture(isSrgb: isSrgb);
-    tex.name = name;
-
+  static Future<M3Texture> fromBytes(Uint8List bytes, String name, {bool isSrgb = false}) async {
     final img = await M3ResourceManager.createImageFromBytes(bytes);
-    await tex.loadTargetFromImage(img);
+    M3Texture tex = await fromImages([img], isSrgb: isSrgb);
+    tex.name = name;
+    return tex;
+  }
+
+  static Future<M3Texture> fromImages(List<ui.Image> images, {bool useMipmaps = true, bool isSrgb = false}) async {
+    final fmt = isSrgb ? WebGL.SRGB8_ALPHA8 : WebGL.RGBA8;
+    final int target = (images.length == 6) ? WebGL.TEXTURE_CUBE_MAP : WebGL.TEXTURE_2D;
+    M3Texture tex = M3Texture(target: target, useMipmaps: useMipmaps, internalFormat: fmt)
+      ..name = "images(${images.length})"
+      ..allocateStorage(images[0].width, images[0].height);
+
+    if (target == WebGL.TEXTURE_2D) {
+      await tex.updateFromImage(images[0]);
+    } else if (target == WebGL.TEXTURE_CUBE_MAP) {
+      for (int i = 0; i < images.length; i++) {
+        await tex.updateFromImage(images[i], faceTarget: _cubeMapFaceTargets[i]);
+      }
+    }
+
     tex.generateMipmap();
     M3Log.i('M3Texture', tex.toString());
     return tex;
   }
 
-  Future<void> _loadTarget(String url, {int faceTarget = WebGL.TEXTURE_2D}) async {
+  /// Load a texture from the given URL.
+  /// [isSrgb] 控制色彩空間：
+  ///   - PNG/JPG：決定 internalFormat（SRGB8_ALPHA8 或 RGBA8）
+  ///   - KTX/ASTC：傳給 parseKtx，決定 COMPRESSED_SRGB8_* 或 COMPRESSED_RGBA_*
+  static Future<M3Texture> fromPath(String url, {bool isSrgb = false}) async {
     final filename = url;
     if (!await M3ResourceManager.isAssetExists(filename)) {
       M3Log.e('M3Texture', 'assets: $filename');
-      _initCheckerboard(8, Vector4(0.9, 0.2, 0.1, 1), Vector4(0.7, 0.6, 0.5, 1), faceTarget: faceTarget);
-      return;
+      return M3Texture.createWarningTexture();
     }
 
     final lowerName = filename.toLowerCase();
-    name = filename;
+    M3Texture tex;
 
     if (lowerName.endsWith('.ktx') || lowerName.endsWith('.ktx2') || lowerName.endsWith('.astc')) {
-      // KTX compressed texture: ASTC
-      final ktxInfo = await KtxInfo.parseKtx(filename, isSrgb: isSrgb);
-      name = filename;
-      texW = ktxInfo.width;
-      texH = ktxInfo.height;
-      Uint8List byteData = ktxInfo.texData;
-
-      final pixelFormat = ktxInfo.glFormat;
       if (kIsWeb) {
         if (!PlatformInfo.enableWebGLExtension('WEBGL_compressed_texture_astc')) {
           M3Log.w('M3Texture', 'ASTC extension NOT SUPPORTED, use checkerboard instead');
-          _initCheckerboard(8, Vector4(1.0, 0.3, 0.1, 1), Vector4(0.7, 0.1, 0.0, 1), faceTarget: faceTarget);
-          return;
+          return M3Texture.createWarningTexture();
         }
       }
-
-      gl.compressedTexImage2D(faceTarget, 0, pixelFormat, texW, texH, 0, byteData);
+      final ktxInfo = await KtxInfo.parseKtx(filename, isSrgb: isSrgb);
+      tex = fromKtx(ktxInfo);
       // } else if (lowerName.endsWith('.pvr')) {
       // PVR compressed texture
     } else {
-      final img = await M3ResourceManager.loadImage(filename);
-      await loadTargetFromImage(img, faceTarget: faceTarget);
+      final img = await M3ResourceManager.loadImage(url);
+      tex = await fromImages([img], isSrgb: isSrgb);
     }
+    tex.name = url;
+    M3Log.i('M3Texture', tex.toString());
+    return tex;
   }
 
-  Future<void> loadTargetFromImage(ui.Image image, {int faceTarget = WebGL.TEXTURE_2D}) async {
-    texW = image.width;
-    texH = image.height;
+  /// Create a texture from KTX.
+  /// KtxInfo.glFormat 已包含 sRGB/linear 資訊（由 parseKtx 決定），
+  /// 直接作為 internalFormat 傳入，isSrgb getter 會自動從 _internalFormat 推導。
+  static M3Texture fromKtx(KtxInfo ktxInfo) {
+    final target = WebGL.TEXTURE_2D;
+    final ktxW = ktxInfo.width;
+    final ktxH = ktxInfo.height;
+    M3Texture tex = M3Texture(target: target, useMipmaps: false, internalFormat: ktxInfo.glFormat)
+      ..name = "ktx(${ktxW}x${ktxH})"
+      ..texW = ktxW
+      ..texH = ktxH;
 
-    final pixelFormat = WebGL.RGBA;
+    final gl = tex.gl;
+    // A) immutable: storage already allocated, just sub-upload the data
+    gl.texStorage2D(target, ktxInfo.mipCount, ktxInfo.glFormat, ktxW, ktxH);
+    gl.compressedTexSubImage2D(target, 0, 0, 0, ktxW, ktxH, ktxInfo.glFormat, ktxInfo.texData);
+
+    // B) mutable (alternative)：
+    // gl.compressedTexImage2D(target, 0, ktxInfo.glFormat, ktxInfo.width, ktxInfo.height, 0, ktxInfo.texData);
+    // tex.generateMipmap();
+
+    M3Log.i('M3Texture', tex.toString());
+    return tex;
+  }
+
+  Future<void> updateFromImage(ui.Image image, {int faceTarget = WebGL.TEXTURE_2D}) async {
     // Macbear note: texImage2DfromImage not working on web
     // await gl.texImage2DfromImage(
     //   faceTarget,
@@ -452,16 +450,14 @@ class M3Texture {
       return;
     }
     final pixels = byteData.buffer.asUint8List();
-
-    gl.texImage2D(faceTarget, 0, _internalFormat, texW, texH, 0, pixelFormat, WebGL.UNSIGNED_BYTE, toU8List(pixels));
+    gl.texSubImage2D(faceTarget, 0, 0, 0, image.width, image.height, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(pixels));
   }
 
   /// Create a procedural water normal map texture of a specified size and strength.
   static M3Texture createWaterNormalMap({int size = 256, double strength = 5.0}) {
-    M3Texture tex = M3Texture(useMipmaps: true);
-    tex.name = "procedural_water_normal";
-    tex.texW = size;
-    tex.texH = size;
+    M3Texture tex = M3Texture(useMipmaps: true)
+      ..name = "procedural_water_normal"
+      ..allocateStorage(size, size);
 
     final data = Uint8List(size * size * 4);
     final p = List<int>.filled(512, 0);
@@ -599,17 +595,19 @@ class M3Texture {
       }
     }
 
-    tex.bind();
-    tex.gl.texImage2D(WebGL.TEXTURE_2D, 0, WebGL.RGBA8, size, size, 0, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(data));
+    tex.gl.texSubImage2D(WebGL.TEXTURE_2D, 0, 0, 0, size, size, WebGL.RGBA, WebGL.UNSIGNED_BYTE, toU8List(data));
     tex.generateMipmap();
     return tex;
   }
 
   /// Create a wood texture with specified size.
   static Future<M3Texture> createWoodTexture({int size = 512}) async {
-    M3Texture tex = M3Texture();
     final img = await _generateWoodImage(size: size);
-    await tex.loadTargetFromImage(img);
+    M3Texture tex = M3Texture(internalFormat: WebGL.SRGB8_ALPHA8)
+      ..name = "procedural_wood"
+      ..allocateStorage(img.width, img.height);
+
+    await tex.updateFromImage(img);
     tex.generateMipmap();
     return tex;
   }

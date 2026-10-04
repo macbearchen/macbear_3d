@@ -152,7 +152,7 @@ class TerrainScene_06 extends DemoScene {
       final buffer = await M3ResourceManager.loadBuffer('assets/example/Height16.png');
       final image = img.decodeImage(buffer.asUint8List());
       if (image == null) throw Exception('Failed to decode heightmap');
-      final texTerrain = await M3Texture.loadTexture('example/HeightDiffuse.jpg');
+      final texTerrain = await M3Texture.fromPath('example/HeightDiffuse.jpg');
       terrainMtr.diffuseTexture = texTerrain;
 
       final hf = M3HeightField.fromHeightmap(

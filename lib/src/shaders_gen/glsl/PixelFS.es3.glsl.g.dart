@@ -97,7 +97,7 @@ mediump vec3 ApplyIBL(mediump vec3 ambientDiffuse, mediump vec3 N, mediump vec3 
     // Roughness based Mip-mapping for Specular IBL (ES3 native textureLod)
     mediump float mipLevel = roughness * uParamPBR.z; // Roughness * MaxMipLevel
     mediump vec3 envColor = textureLod(SamplerEnvironment, sampleDir, mipLevel).rgb;
-    envColor = pow(envColor, vec3(2.2));
+    // envColor = pow(envColor, vec3(2.2));
 
     // PBR weighting for ambient:
     // kD (diffuse) reduction for energy conservation

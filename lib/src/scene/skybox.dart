@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 // Macbear3D engine
 import '../m3_internal.dart';
 
@@ -18,7 +20,14 @@ class M3Skybox {
     String urlPosZ,
     String urlNegZ,
   ) async {
-    final tex = await M3Texture.loadCubemap(urlPosX, urlNegX, urlPosY, urlNegY, urlPosZ, urlNegZ);
+    final List<String> urls = [urlPosX, urlNegX, urlPosY, urlNegY, urlPosZ, urlNegZ];
+    final List<ui.Image> images = [];
+    for (final url in urls) {
+      final img = await M3ResourceManager.loadImage(url);
+      images.add(img);
+    }
+
+    final tex = await M3Texture.fromImages(images, isSrgb: true);
     return M3Skybox(tex);
   }
 

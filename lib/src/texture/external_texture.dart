@@ -93,9 +93,9 @@ class M3ExternalTexture extends M3Texture {
         return;
       }
 
-      // If source is a ui.Image, we can use _loadTargetFromImage (inherited from M3Texture).
+      // If source is a ui.Image, we can use updateFromImage (inherited from M3Texture).
       if (source is ui.Image) {
-        loadTargetFromImage(source as ui.Image);
+        updateFromImage(source as ui.Image);
       } else if (source is VideoPlayerController) {
         // Note: For VideoPlayerController on Native, we need a way to get the current frame.
         // As a starting point, the user can pass a ui.Image captured from the controller.
@@ -140,7 +140,7 @@ class M3ExternalTexture extends M3Texture {
       final boundary = repaintKey!.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary != null) {
         final img = await boundary.toImage();
-        loadTargetFromImage(img);
+        updateFromImage(img);
       }
     } catch (e) {
       // M3Log.e('M3ExternalTexture', 'capturing frame: $e');

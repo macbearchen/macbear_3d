@@ -92,17 +92,17 @@ class PbrTestScene_09 extends DemoScene {
     entityNTest.scale = Vector3.all(6.0);
 
     final meshNormal = await M3Mesh.load(testPathN); // testUrl
-    final entityN = addMesh(meshNormal, Vector3(-8, 2, 2));
+    final entityN = addMesh(meshNormal, Vector3(-2, 2, 2));
     entityN.rotation = Quaternion.euler(0, pi / 3, 0);
     entityN.scale = Vector3.all(2.0);
 
     final meshMetallic = await M3Mesh.load(testPathM);
-    final entityM = addMesh(meshMetallic, Vector3(-8, 5, 2));
+    final entityM = addMesh(meshMetallic, Vector3(-2, 5, 2));
     entityM.rotation = Quaternion.euler(0, pi / 3, 0);
     entityM.scale = Vector3.all(2.0);
 
     final meshRoughness = await M3Mesh.load(testPathR);
-    final entityR = addMesh(meshRoughness, Vector3(-8, 8, 2));
+    final entityR = addMesh(meshRoughness, Vector3(-2, 8, 2));
     entityR.rotation = Quaternion.euler(0, pi / 3, 0);
     entityR.scale = Vector3.all(2.0);
   }

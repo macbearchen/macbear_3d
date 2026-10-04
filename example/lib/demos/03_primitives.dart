@@ -18,7 +18,7 @@ class PrimitivesScene_03 extends DemoScene {
     M3Texture texGrid2 = M3Texture.createCheckerboard(size: 6);
     // ASTC image
     final texName = "example/test_8x8.astc";
-    M3Texture texTest = await M3Texture.loadTexture(texName);
+    M3Texture texTest = await M3Texture.fromPath(texName, isSrgb: true);
 
     // 02: sample cubemap
     // skybox = await createCubemapLobby(); // nvlobby cubemap

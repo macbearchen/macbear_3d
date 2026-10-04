@@ -92,14 +92,14 @@ class M3GltfLoader {
             // Internal Reference: Load texture from a GLB bufferView
             final bytes = doc.getBufferViewData(imgDef.bufferView!);
             final texName = imgDef.name ?? '${name}_tex_${texDef.source}';
-            tex = await M3Texture.createFromBytes(bytes, texName, isSrgb: isSrgb);
+            tex = await M3Texture.fromBytes(bytes, texName, isSrgb: isSrgb);
           } else if (imgDef.uri != null) {
             // External Reference: Load texture from a URI
             var uri = imgDef.uri!;
             if (!uri.startsWith('data:')) {
               // Path is relative to the glTF file
               final path = '$dir$uri';
-              tex = await M3Texture.loadTexture(path, isSrgb: isSrgb);
+              tex = await M3Texture.fromPath(path, isSrgb: isSrgb);
             } else {
               // Data URI support (TODO: implement decoding if needed)
             }

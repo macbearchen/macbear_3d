@@ -4,17 +4,18 @@ class M3TextTexture extends M3Texture {
   String text;
   TextStyle style;
 
-  M3TextTexture._(this.text, {TextStyle? style})
-    : style = style ?? const TextStyle(color: Color(0xFFFFFFFF), fontSize: 32, fontFamily: 'Arial'),
-      super(useMipmaps: false) {
+  static const TextStyle defaultStyle = TextStyle(color: Color(0xFFFFFFFF), fontSize: 32, fontFamily: 'Arial');
+
+  M3TextTexture._(this.text, {TextStyle? style}) : style = style ?? defaultStyle, super(useMipmaps: false) {
     name = "font(${this.style.fontSize}, ${this.style.fontFamily}): [$text]";
   }
 
   static Future<M3TextTexture> createFixed(String text, {int width = 256, int height = 256, TextStyle? style}) async {
     final tex = M3TextTexture._(text, style: style);
-    tex.name = "createFixed: ${tex.name}";
-    tex.texW = width;
-    tex.texH = height;
+    tex
+      ..name = "createFixed: ${tex.name}"
+      ..allocateStorage(width, height);
+
     await tex._updateTexture();
     M3Log.i('M3TextTexture', tex.toString());
     return tex;
@@ -46,21 +47,26 @@ class M3TextTexture extends M3Texture {
 
     final picture = recorder.endRecording();
     final img = await picture.toImage(texW, texH);
-    await loadTargetFromImage(img);
+    await updateFromImage(img);
   }
 
   // size depends on text content
   static Future<M3TextTexture> createFromText(String text, {TextStyle? style}) async {
     final tex = M3TextTexture._(text, style: style);
-    tex.name = "createFromText: ${tex.name}";
-    await tex._createTextureFromLabel(text);
+    final img = await _makeLabelImage(text, style: tex.style);
+    tex
+      ..name = "createFromText: ${tex.name}"
+      ..allocateStorage(img.width, img.height);
+
+    await tex.updateFromImage(img);
     M3Log.i('M3TextTexture', tex.toString());
     return tex;
   }
 
-  Future<ui.Image> _makeLabelImage(
+  static Future<ui.Image> _makeLabelImage(
     String text, {
     EdgeInsets padding = const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+    TextStyle style = defaultStyle,
   }) async {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
@@ -81,10 +87,5 @@ class M3TextTexture extends M3Texture {
     final picture = recorder.endRecording();
     final img = await picture.toImage(w, h);
     return img;
-  }
-
-  Future<void> _createTextureFromLabel(String text) async {
-    final img = await _makeLabelImage(text);
-    await loadTargetFromImage(img);
   }
 }
