@@ -9,8 +9,8 @@ import '../m3_internal.dart';
 class M3Framebuffer {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
 
-  int frameW = 1024;
-  int frameH = 1024;
+  final int frameW;
+  final int frameH;
 
   late Framebuffer _fbo;
   Renderbuffer? _depthRenderbuffer;
@@ -27,11 +27,11 @@ class M3Framebuffer {
   }
 
   /// Create color texture
-  M3Texture? createColorTexture({int target = WebGL.TEXTURE_2D}) {
+  M3Texture? createColorTexture({int target = WebGL.TEXTURE_2D, int format = WebGL.SRGB8_ALPHA8}) {
     final isCubemap = target == WebGL.TEXTURE_CUBE_MAP;
     final texTarget = isCubemap ? WebGL.TEXTURE_CUBE_MAP_POSITIVE_X : WebGL.TEXTURE_2D;
-    final texName = isCubemap ? 'RT_Cube' : 'RT_2d';
-    M3Texture tex = M3Texture(target: target, wrap: WebGL.CLAMP_TO_EDGE, internalFormat: WebGL.SRGB8_ALPHA8)
+    final texName = isCubemap ? 'RTT_Cube' : 'RTT_2d';
+    M3Texture tex = M3Texture(target: target, wrap: WebGL.CLAMP_TO_EDGE, internalFormat: format)
       ..name = "${texName}_${frameW}x$frameH"
       ..allocateStorage(frameW, frameH)
       ..attachToFramebuffer(WebGL.COLOR_ATTACHMENT0, texTarget);

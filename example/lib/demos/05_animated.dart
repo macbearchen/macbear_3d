@@ -41,7 +41,7 @@ class AnimatedScene_05 extends DemoScene {
       ..diffuseTexture = texGround;
 
     final plane = addMesh(meshPlane, Vector3(0, 0, posZ));
-    renderEngine.planarReflection.setRenderScale(0.5);
+    renderEngine.renderTargets.get('mirror').setRenderScale(0.5);
 
     // 05-1: GLTF model - using M3Mesh.load()
     final meshGltf = await M3Mesh.load('example/CesiumMan.glb');

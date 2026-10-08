@@ -12,8 +12,9 @@ enum M3WaterCameraState { aboveWater, onSurface, underwater }
 
 /// water effect, using plane reflection / refraction.
 class M3Water extends M3Entity {
-  M3ProgramWater get progWater => M3Resources.programWater!; // debug: programMirror
-  M3ProgramWaterCSM get progWaterCSM => M3Resources.programWaterCSM!;
+  final renderEngine = M3AppEngine.instance.renderEngine;
+  M3ProgramWater get progWater => renderEngine.programs.programWater; // debug: programMirror
+  M3ProgramWaterCSM get progWaterCSM => renderEngine.programs.programWaterCSM;
 
   Plane surfacePlane = Plane.components(0, 0, 1, 0);
   M3Texture normalMap = M3Resources.texDefaultNormal; // normal-map for water wave distortion
@@ -62,8 +63,8 @@ class M3Water extends M3Entity {
     ..velocity = Vector2(0.025, -0.03);
 
   M3Water({M3Mesh? waterMesh, bool useReflection = true, bool useRefraction = true})
-    : reflectionPass = M3PlanarReflection(),
-      refractionPass = M3PlanarReflection(),
+    : reflectionPass = M3PlanarReflection('reflection'),
+      refractionPass = M3PlanarReflection('refraction'),
       super(mesh: waterMesh ?? createWaterSurface()) {
     // reflection/refraction enable state
     reflectionPass.enable = useReflection;
@@ -78,18 +79,12 @@ class M3Water extends M3Entity {
 
   set reflectionEnabled(bool value) {
     reflectionPass.enable = value;
-    if (value) {
-      reflectionPass.resize(M3AppEngine.instance.appWidth, M3AppEngine.instance.appHeight);
-    }
   }
 
   bool get refractionEnabled => refractionPass.enable;
 
   set refractionEnabled(bool value) {
     refractionPass.enable = value;
-    if (value) {
-      refractionPass.resize(M3AppEngine.instance.appWidth, M3AppEngine.instance.appHeight);
-    }
   }
 
   /// water surface tint color
@@ -105,11 +100,6 @@ class M3Water extends M3Entity {
     refractionPass.clipPlane.setFromComponents(n.x, n.y, n.z, constant);
 
     position = Vector3(0, 0, -constant);
-  }
-
-  void resize(int width, int height) {
-    reflectionPass.resize(width, height);
-    refractionPass.resize(width, height);
   }
 
   @override
@@ -175,7 +165,7 @@ class M3Water extends M3Entity {
     // --- capture reflection ---
     options.useShadow = false; // disable shadow state
     reflectionPass.clipPlane.setFromComponents(n.x, n.y, n.z, d);
-    reflectionPass.captureReflection(scene);
+    reflectionPass.capture(scene, M3PlanarPass.reflection); // above the plane
     options.useShadow = backupShadow; // restore shadow state
 
     // --- capture refraction ---
@@ -183,7 +173,7 @@ class M3Water extends M3Entity {
       options.useShadow = false; // disable shadow state
     }
     refractionPass.clipPlane.setFromComponents(n.x, n.y, n.z, d);
-    refractionPass.captureRefraction(scene);
+    refractionPass.capture(scene, M3PlanarPass.refraction); // below the plane
     options.useShadow = backupShadow; // restore shadow state
   }
 
@@ -193,7 +183,6 @@ class M3Water extends M3Entity {
 
     final viewer = scene.camera;
     if (fillMode == .solid) {
-      final renderEngine = M3AppEngine.instance.renderEngine;
       RenderingContext gl = renderEngine.gl;
       gl.enable(WebGL.BLEND);
       gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA); // alpha blending
@@ -252,7 +241,7 @@ class M3Water extends M3Entity {
           break;
       }
 
-      final progEdge = M3Resources.programSimple!;
+      final progEdge = renderEngine.programs.programSimple;
       final waterMatrix = worldMatrix;
       progEdge.setMatrices(viewer, waterMatrix);
       progEdge.setMaterial(waterMaterial, colorSurface);
@@ -272,9 +261,9 @@ class M3Water extends M3Entity {
     double h = 0;
     for (final pass in passes) {
       if (pass.enable && pass.visible) {
-        w = pass.width * ratio;
-        h = pass.height * ratio;
-        pass.debugDrawReflection(x, y - h - 2, w, h);
+        w = pass.texture.texW * ratio;
+        h = pass.texture.texH * ratio;
+        pass.debugDrawReflection(x, y - h - 2, ratio);
         x += w + 2;
       }
     }

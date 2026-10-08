@@ -209,7 +209,7 @@ abstract class M3Scene {
 
   // render helper: zero, camera, light, wireframe
   void drawHelper(M3HelperType helperType) {
-    M3Program progSimple = M3Resources.programSimple!;
+    M3Program progSimple = renderEngine.programs.programSimple;
     M3Material mtr = M3Material();
 
     // pre-draw
@@ -280,7 +280,7 @@ abstract class M3Scene {
   }
 
   void drawLightHelper({bool drawBulb = true}) {
-    M3Program progSimple = M3Resources.programSimple!;
+    M3Program progSimple = renderEngine.programs.programSimple;
     M3Material mtr = M3Material();
 
     gl.useProgram(progSimple.program);
@@ -314,7 +314,7 @@ abstract class M3Scene {
   }
 
   void drawCameraHelper() {
-    M3Program progSimple = M3Resources.programSimple!;
+    M3Program progSimple = renderEngine.programs.programSimple;
     gl.useProgram(progSimple.program);
     gl.uniform1i(progSimple.uniformBoneCount, 0);
 

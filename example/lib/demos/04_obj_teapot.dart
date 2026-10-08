@@ -56,7 +56,7 @@ class ObjTeapotScene_04 extends DemoScene {
         // ..texDiffuse = texGround
         ..planarReflection = renderEngine.planarReflection;
     }
-    renderEngine.planarReflection.setRenderScale(1.0);
+    renderEngine.renderTargets.get('mirror').setRenderScale(1.0);
 
     _plane = addMesh(planeMesh, Vector3(0, 0, 0));
     // _plane.rotation.setEuler(pi / 12, 0, 0);

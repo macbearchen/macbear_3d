@@ -98,7 +98,7 @@ class M3ReflectionProbe {
       // render scene for cubemap face
       _context.prepareRenderQueue(scene, _camCapture, excludeEntities: {owner!});
 
-      final prog = M3Resources.programTexture!;
+      final prog = renderEngine.programs.programTexture;
       _context.renderColorPass(prog);
     }
     cubemapTexture.generateMipmap();

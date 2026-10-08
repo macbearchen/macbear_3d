@@ -143,7 +143,8 @@ class M3RenderContext {
 
   /// render all render queues: solid color pass
   void renderColorPass([M3Program? fallbackProg]) {
-    final gl = M3AppEngine.instance.renderEngine.gl;
+    final renderEngine = M3AppEngine.instance.renderEngine;
+    final gl = renderEngine.gl;
 
     // 1. Opaque & Masked: Disable blending, enable depth writing
     gl.disable(WebGL.BLEND);
@@ -157,7 +158,7 @@ class M3RenderContext {
     _executeQueue(masked, defaultProg: fallbackProg);
 
     // (3/4) Unlit objects
-    final progUnlit = M3Resources.programExternalOES!;
+    final progUnlit = renderEngine.programs.programExternalOES;
     _executeQueue(unlit, defaultProg: progUnlit, useVariant: false);
 
     // 2. Transparent objects: Enable alpha blending, disable depth writing
@@ -174,8 +175,9 @@ class M3RenderContext {
 
   /// render all render queues: wireframe pass
   void renderWireframePass() {
-    final gl = M3AppEngine.instance.renderEngine.gl;
-    M3Program prog = M3Resources.programSimple!;
+    final renderEngine = M3AppEngine.instance.renderEngine;
+    final M3Program prog = renderEngine.programs.programSimple;
+    final gl = renderEngine.gl;
 
     // 1. Opaque & Masked: Disable blending, enable depth writing
     gl.disable(WebGL.BLEND);
@@ -204,11 +206,12 @@ class M3RenderContext {
   /// Depth-only pass: opaque + masked with skinning + alpha test.
   /// Used by shadow map rendering — transparent and unlit objects are intentionally excluded.
   void renderDepthPass() {
+    final progManager = M3AppEngine.instance.renderEngine.programs;
     // Opaque: write depth, no blending
-    _executeQueue(opaque, defaultProg: M3Resources.programSimple!, useVariant: false);
+    _executeQueue(opaque, defaultProg: progManager.programSimple, useVariant: false);
     // Masked: same depth shader but with alpha cutoff
-    final progMasked = M3Resources.programSimpleMasked;
-    if (progMasked != null && !masked.isEmpty) {
+    final progMasked = progManager.programSimpleMasked;
+    if (!masked.isEmpty) {
       _executeQueue(masked, defaultProg: progMasked, useVariant: false);
     }
     // transparent & unlit: intentionally skipped for shadow depth
@@ -216,28 +219,28 @@ class M3RenderContext {
 
   /// composited 2-pass reflection rendering
   void renderReflectionPass() {
-    RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
+    final renderEngine = M3AppEngine.instance.renderEngine;
+    final progManager = renderEngine.programs;
+    final gl = renderEngine.gl;
 
     gl.depthFunc(WebGL.EQUAL); // Match exactly from 1st pass
     gl.depthMask(false); // Don't write to depth buffer in blending pass
     gl.enable(WebGL.BLEND);
     gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA); // alpha blending
 
-    final stats = M3AppEngine.instance.renderEngine.stats;
+    final stats = renderEngine.stats;
     // (1/2) render reflection probe objects
-    M3Program? progProbe = M3Resources.programSkyboxReflect;
-    final options = M3AppEngine.instance.renderEngine.options;
-    if (progProbe != null && !options.shader.ibl) {
+    M3Program progProbe = progManager.programSkyboxReflect;
+    final options = renderEngine.options;
+    if (!options.shader.ibl) {
       _executeQueue(reflectionProbe, defaultProg: progProbe, useVariant: false); // reflection cubemap
       stats.reflection += reflectionProbe.items.length;
     }
 
     // (2/2) render planar reflection objects
-    M3Program? progPlanar = M3Resources.programMirror;
-    if (progPlanar != null) {
-      _executeQueue(planarReflection, defaultProg: progPlanar, useVariant: false); // planar reflection
-      stats.reflection += planarReflection.items.length;
-    }
+    M3Program progPlanar = progManager.programMirror;
+    _executeQueue(planarReflection, defaultProg: progPlanar, useVariant: false); // planar reflection
+    stats.reflection += planarReflection.items.length;
 
     // Restore depth state
     gl.depthMask(true);
@@ -253,7 +256,9 @@ class M3RenderContext {
   }) {
     if (queue.isEmpty) return;
 
-    RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
+    final renderEngine = M3AppEngine.instance.renderEngine;
+    final progManager = renderEngine.programs;
+    final gl = renderEngine.gl;
 
     M3Program? currentProg;
     int currentVariantKey = -1;
@@ -277,7 +282,7 @@ class M3RenderContext {
 
     // If not using dynamic variants, bind default program upfront
     if (!useVariant) {
-      final prog = defaultProg ?? M3Resources.programTexture!;
+      final prog = defaultProg ?? progManager.programTexture;
       bindProgram(prog);
       prog.setEnvironmentMap(currentCubemap);
     }
@@ -290,8 +295,7 @@ class M3RenderContext {
       if (useVariant) {
         if (item.variantKey != currentVariantKey || currentProg == null) {
           currentVariantKey = item.variantKey;
-          final prog =
-              M3Resources.getLightingProgramByVariant(currentVariantKey) ?? defaultProg ?? M3Resources.programTexture!;
+          final prog = progManager.getLightingProgramByVariant(currentVariantKey);
           bindProgram(prog);
           prog.setEnvironmentMap(currentCubemap);
         }

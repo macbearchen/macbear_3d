@@ -67,6 +67,36 @@ class M3GltfLoader {
   /// Parses the main glTF JSON structure and initializes resource loading.
   static Future<GltfDocument> _parseGltf(String jsonStr, String name, Uint8List? embeddedBin) async {
     final json = jsonDecode(jsonStr) as Map<String, dynamic>;
+
+    // For plain .gltf files the caller passes embeddedBin = null.
+    // Resolve the binary buffer from the glTF buffers array when possible.
+    if (embeddedBin == null) {
+      final buffers = json['buffers'] as List<dynamic>?;
+      if (buffers != null && buffers.isNotEmpty) {
+        final firstBuffer = buffers[0] as Map<String, dynamic>;
+        final uri = firstBuffer['uri'] as String?;
+        if (uri != null) {
+          if (uri.startsWith('data:')) {
+            // Inline base64-encoded buffer (data URI)
+            final commaIdx = uri.indexOf(',');
+            if (commaIdx != -1) {
+              embeddedBin = base64Decode(uri.substring(commaIdx + 1));
+            }
+          } else {
+            // External .bin file – load it relative to the .gltf file
+            final dir = name.contains('/') ? name.substring(0, name.lastIndexOf('/') + 1) : '';
+            final binPath = '$dir$uri';
+            try {
+              final binBuffer = await M3ResourceManager.loadBuffer(binPath);
+              embeddedBin = binBuffer.asUint8List();
+            } catch (e) {
+              M3Log.w('M3GltfLoader', 'Failed to load external bin "$binPath": $e');
+            }
+          }
+        }
+      }
+    }
+
     final doc = GltfDocument.parse(json, name, embeddedBin);
 
     // Load and initialize textures defined in the document
@@ -101,7 +131,19 @@ class M3GltfLoader {
               final path = '$dir$uri';
               tex = await M3Texture.fromPath(path, isSrgb: isSrgb);
             } else {
-              // Data URI support (TODO: implement decoding if needed)
+              // Data URI format: data:[<media_type>][;base64],<data>
+              // Example: data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...  
+              final dataUri = imgDef.uri!;
+              List<String> base64s = [ 'data:image/png;base64,','data:image/jpeg;base64,'];
+              for (final base64Prefix in base64s) {
+                if (dataUri.startsWith(base64Prefix)) {
+                  final base64Data = dataUri.substring(base64Prefix.length);
+                  final bytes = base64Decode(base64Data);
+                  final texName = imgDef.name ?? '${name}_tex_${texDef.source}';
+                  tex = await M3Texture.fromBytes(bytes, texName, isSrgb: isSrgb);
+                  break;
+                }
+              }
             }
           }
         }

@@ -59,7 +59,7 @@ class M3Skybox {
     gl.disable(WebGL.BLEND);
 
     // pre-draw
-    final prog = M3Resources.programSkybox!;
+    final prog = M3AppEngine.instance.renderEngine.programs.programSkybox;
     gl.useProgram(prog.program);
     M3Material mtr = M3Material()..setGlossy();
     // draw on target for debug

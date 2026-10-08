@@ -63,7 +63,7 @@ class PbrTestScene_09 extends DemoScene {
 
     // 09-3: Apply mirror shader to ground
     renderEngine.planarReflection.clipPlane.setFromComponents(0, 0, 1, -groundZ);
-    renderEngine.planarReflection.setRenderScale(1.0);
+    renderEngine.renderTargets.get('mirror').setRenderScale(1.0);
 
     const prefixUrl = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/';
     final glassUrl = '${prefixUrl}GlassBrokenWindow/glTF-Binary/GlassBrokenWindow.glb';
@@ -85,6 +85,7 @@ class PbrTestScene_09 extends DemoScene {
     final testPathAO = 'glb/CompareAmbientOcclusion.glb';
     final testPath7 = 'glb/WaterBottle.glb';
     final testPathN = 'glb/CompareNormal.glb';
+    final testPathBox = 'glb/BoxTextured.gltf';
 
     final meshNormalTest = await M3Mesh.load(testPath2); // testUrl
     final entityNTest = addMesh(meshNormalTest, Vector3(10, 8, 4));

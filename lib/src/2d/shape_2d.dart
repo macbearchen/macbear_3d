@@ -9,7 +9,7 @@ part 'rectangle_2d.dart';
 /// Base class for 2D shapes with dynamic vertex buffers for lines, triangles, and images.
 class M3Shape2D {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
-  static M3Program get prog2D => M3Resources.programRectangle!;
+  static M3Program get prog2D => M3AppEngine.instance.renderEngine.programs.programRectangle;
 
   // always GL_TRIANGLES, GL_TRIANGLE_STRIP, GL_LINES, GL_LINE_STRIP
   // not supported: GL_TRIANGLE_FAN, GL_LINE_LOOP

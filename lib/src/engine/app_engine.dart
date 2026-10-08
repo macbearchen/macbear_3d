@@ -33,7 +33,7 @@ Widget _buildCopyrightWidget() {
 class M3AppEngine with ChangeNotifier {
   static final M3AppEngine instance = M3AppEngine._internal();
 
-  static const String version = "macbear3d-lib v0.11.0 powered by ANGLE";
+  static const String version = "macbear3d-lib v0.12.0 powered by ANGLE";
   final FlutterAngle _angle = FlutterAngle();
   late FlutterAngleTexture _sourceTexture; // main framebuffer
   static Framebuffer get mainFbo => Framebuffer(kIsWeb ? null : instance._sourceTexture.fboId);
@@ -86,7 +86,7 @@ class M3AppEngine with ChangeNotifier {
   // it's also private, so it can only be called in this class
   M3AppEngine._internal();
 
-  Future<void> initApp({int width = 100, int height = 100, double dpr = 1.0}) async {
+  Future<void> initApp({required int width, required int height, double dpr = 1.0}) async {
     if (_didInit) {
       M3Log.w('AppEngine', 'initApp: context already initialized');
       return;
@@ -94,7 +94,10 @@ class M3AppEngine with ChangeNotifier {
     initTick = DateTime.now().millisecondsSinceEpoch;
 
     M3Log.s('AppEngine', version);
-    M3Log.s('AppEngine', '${PlatformInfo.getOS()}: initApp($width x $height)  dpr: $dpr');
+    M3Log.s('AppEngine', '${PlatformInfo.getOS()}: initApp($width x $height) @ $dpr');
+    appWidth = width;
+    appHeight = height;
+    devicePixelRatio = dpr;
 
     initKeyboard();
 
@@ -106,20 +109,11 @@ class M3AppEngine with ChangeNotifier {
     final options = AngleOptions(width: width, height: height, dpr: dpr, useSurfaceProducer: true);
     _sourceTexture = await _angle.createTexture(options);
 
-    // init render engine
+    // init render engine and resources
     renderEngine.gl = _sourceTexture.getContext();
-    M3Log.i('AppEngine', 'ANGLE context ready: $width x $height @ $dpr');
-    appWidth = width;
-    appHeight = height;
-    devicePixelRatio = dpr;
-
-    // check OpenGL extensions
-    // PlatformInfo.checkGLExtensions();
-
-    // init resources
+    // PlatformInfo.checkGLExtensions();    // check OpenGL extensions
     await M3Resources.init();
-    renderEngine.init();
-    renderEngine.resize(width, height, dpr);
+    renderEngine.init(width, height, dpr);
 
     _didInit = true;
     if (onDidInit != null) {
@@ -377,7 +371,7 @@ class M3AppEngine with ChangeNotifier {
         _stopwatch.start();
 
         // check shader update if dirty
-        M3Resources.checkUpdate(renderEngine.options.shader);
+        renderEngine.programs.checkUpdate(renderEngine.options.shader);
         // application update then render
         _update(delta);
         await _render();
@@ -440,7 +434,7 @@ class M3AppEngine with ChangeNotifier {
       }
       // capture planar reflection
       if (renderEngine.mainContext.needsPlanarReflectionPass()) {
-        renderEngine.planarReflection.captureReflection(scene);
+        renderEngine.planarReflection.capture(scene, M3PlanarPass.reflection); // above the plane
       }
 
       final water = scene.water;
@@ -469,11 +463,12 @@ class M3AppEngine with ChangeNotifier {
         scene.drawHelper(debugOptions.showHelpers);
       }
 
+      final progSimple = renderEngine.programs.programSimple;
       // draw camera frustums
       if (debugOptions.showCamera) {
         scene.drawCameraHelper();
         // for debug camera frustum only
-        M3Resources.debugCamera?.drawHelper(M3Resources.programSimple!, scene.camera);
+        M3Resources.debugCamera?.drawHelper(progSimple, scene.camera);
 
         if (renderEngine.mainContext.needsPlanarReflectionPass()) {
           // renderEngine.planarReflection.drawReflectionCamera(scene.camera); // remark for ignore
@@ -486,7 +481,7 @@ class M3AppEngine with ChangeNotifier {
           // for debug directional light frustum only
           scene.dirLight.updateShadowCascades(M3Resources.debugCamera!);
         }
-        scene.dirLight.drawHelper(M3Resources.programSimple!, scene.camera);
+        scene.dirLight.drawHelper(progSimple, scene.camera);
         scene.drawLightHelper(drawBulb: false);
       }
       if (debugOptions.lightBulb) {

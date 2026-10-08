@@ -157,7 +157,7 @@ class SceneQueryScene extends BaseScene {
     // draw line
     M3Material mtr = M3Material();
 
-    final prog = M3Resources.programSimple!;
+    final prog = renderEngine.programs.programSimple;
     prog.setMatrices(camera, Matrix4.identity());
     prog.setMaterial(mtr, Colors.yellow);
 

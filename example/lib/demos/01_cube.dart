@@ -53,19 +53,6 @@ class CubeScene_01 extends DemoScene {
   }
 
   @override
-  void drawHelper(M3HelperType helperType) {
-    super.drawHelper(helperType);
-
-    // draw line
-    M3Material mtr = M3Material();
-
-    final prog = M3Resources.programSimple!;
-    prog.setMatrices(camera, Matrix4.identity());
-    prog.setMaterial(mtr, Colors.red);
-    _line.drawLine(prog, Vector3(0, 0, 3), Vector3(-5, 5, 1));
-  }
-
-  @override
   fm.Widget buildUI(fm.BuildContext context) {
     const String info =
         '''

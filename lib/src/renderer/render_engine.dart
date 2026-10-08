@@ -6,6 +6,11 @@ import '../m3_internal.dart';
 /// Handles shader program creation, shadow mapping, 2D overlay rendering, and viewport management.
 class M3RenderEngine {
   late RenderingContext gl;
+
+  // render target manager
+  final M3RenderTargetManager renderTargets = M3RenderTargetManager();
+  late M3ProgramManager programs;
+
   // reflection map
   late M3PlanarReflection planarReflection;
 
@@ -56,10 +61,15 @@ class M3RenderEngine {
     M3Log.i('M3RenderEngine', 'constructor');
   }
 
-  void init() {
-    planarReflection = M3PlanarReflection();
+  void init(int width, int height, double dpr) {
+    programs = M3ProgramManager();
     // shadowmap: directional, spotlight
     initShadowMap(enableShadow: options.useShadow);
+
+    M3PostProcess.init();
+
+    resize(width, height, dpr);
+    planarReflection = M3PlanarReflection('mirror');
   }
 
   void initShadowMap({
@@ -83,10 +93,14 @@ class M3RenderEngine {
   }
 
   void dispose() {
+    renderTargets.dispose();
+
     _directionalShadowMap?.dispose();
     _spotLightShadowMap?.dispose();
-    planarReflection.dispose();
     cleanProbes();
+
+    M3PostProcess.dispose();
+    programs.dispose();
   }
 
   /// Bind default framebuffer
@@ -105,14 +119,13 @@ class M3RenderEngine {
     final pixelW = (width * dpr).toInt();
     final pixelH = (height * dpr).toInt();
 
-    // planar-reflection viewport by pixel size
-    planarReflection.resize(width, height);
+    // all render-targets resize
+    renderTargets.resize(width, height);
 
     // camera viewport by pixel size
     final scene = M3AppEngine.instance.activeScene;
     if (scene != null) {
       scene.camera.setViewport(0, 0, pixelW, pixelH);
-      scene.water?.resize(width, height);
     }
 
     // projection 2D viewport by screen size
@@ -132,10 +145,10 @@ class M3RenderEngine {
 
   /// get program shader for scene rendering
   M3ProgramLighting getSceneProgram(M3Scene scene) {
-    M3ProgramLighting prog = M3Resources.programTexture!; // texture shader
+    M3ProgramLighting prog = programs.programTexture; // texture shader
 
-    if (isShadowEnabled && M3Resources.programShadow != null) {
-      prog = M3Resources.programShadow!;
+    if (isShadowEnabled) {
+      prog = programs.programShadow;
     }
 
     // M3ProgramLighting prog = M3Resources.programSimpleLighting!; // for debug
@@ -143,7 +156,7 @@ class M3RenderEngine {
   }
 
   void attachAllProgramsLights(M3Scene scene) {
-    for (final prog in M3Resources.lightingPrograms) {
+    for (final prog in programs.lightingPrograms) {
       prog.attachSceneLights(scene);
     }
   }
@@ -197,7 +210,10 @@ class M3RenderEngine {
     gl.enable(WebGL.BLEND);
     gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA);
 
-    final prog2D = M3Resources.programRectangle!;
+    // fullscreen post processing: test on going...
+    // M3PostProcess.drawFullscreen(M3Resources.text2D.mtr.diffuseTexture);
+
+    final prog2D = programs.programRectangle;
     gl.useProgram(prog2D.program);
     prog2D.setProjectionMatrix(_projection2D.projectionMatrix);
 
@@ -231,12 +247,8 @@ class M3RenderEngine {
       // show planar reflection
       if (mainContext.needsPlanarReflectionPass()) {
         final engine = M3AppEngine.instance;
-        final ratio = 0.33;
         final y = engine.appHeight - 210.0;
-        final w = planarReflection.width * ratio;
-        final h = planarReflection.height * ratio;
-
-        planarReflection.debugDrawReflection(x, y, w, h);
+        planarReflection.debugDrawReflection(x, y, 0.33);
       }
 
       final water = engine.activeScene?.water;
