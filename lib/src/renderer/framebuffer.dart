@@ -65,12 +65,12 @@ class M3Framebuffer {
   }
 
   /// Create depth renderbuffer: DEPTH_COMPONENT24, (DEPTH24_STENCIL8)
-  void createDepthRenderbuffer({int depthFormat = WebGL.DEPTH24_STENCIL8}) {
+  void createDepthRenderbuffer({int format = WebGL.DEPTH24_STENCIL8}) {
     _depthRenderbuffer = gl.createRenderbuffer();
     gl.bindRenderbuffer(WebGL.RENDERBUFFER, _depthRenderbuffer!);
-    gl.renderbufferStorage(WebGL.RENDERBUFFER, depthFormat, frameW, frameH);
+    gl.renderbufferStorage(WebGL.RENDERBUFFER, format, frameW, frameH);
 
-    final attachment = switch (depthFormat) {
+    final attachment = switch (format) {
       WebGL.DEPTH24_STENCIL8 => WebGL.DEPTH_STENCIL_ATTACHMENT,
       _ => WebGL.DEPTH_ATTACHMENT,
     };

@@ -443,6 +443,8 @@ class M3AppEngine with ChangeNotifier {
       }
     }
 
+    renderEngine.stats.frames++;
+
     _sourceTexture.activate();
 
     final gl = renderEngine.gl;
@@ -451,42 +453,7 @@ class M3AppEngine with ChangeNotifier {
 
     // 2. render active scene
     if (scene != null) {
-      renderEngine.renderScene(scene);
-
-      // draw debug: only implement when needed
-      scene.debugDraw();
-
-      final debugOptions = renderEngine.options.debug;
-
-      // draw Helper
-      if (debugOptions.showHelpers != M3HelperType.none) {
-        scene.drawHelper(debugOptions.showHelpers);
-      }
-
-      final progSimple = renderEngine.programs.programSimple;
-      // draw camera frustums
-      if (debugOptions.showCamera) {
-        scene.drawCameraHelper();
-        // for debug camera frustum only
-        M3Resources.debugCamera?.drawHelper(progSimple, scene.camera);
-
-        if (renderEngine.mainContext.needsPlanarReflectionPass()) {
-          // renderEngine.planarReflection.drawReflectionCamera(scene.camera); // remark for ignore
-        }
-      }
-
-      // draw light helper
-      if (debugOptions.showLight) {
-        if (M3Resources.debugCamera != null) {
-          // for debug directional light frustum only
-          scene.dirLight.updateShadowCascades(M3Resources.debugCamera!);
-        }
-        scene.dirLight.drawHelper(progSimple, scene.camera);
-        scene.drawLightHelper(drawBulb: false);
-      }
-      if (debugOptions.lightBulb) {
-        scene.drawLightHelper();
-      }
+      renderEngine.scenePass.render(scene);
     }
     // 3. render 2D: UI, text etc.
     renderEngine.render2D();

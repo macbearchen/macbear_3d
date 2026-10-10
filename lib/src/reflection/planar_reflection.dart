@@ -66,6 +66,7 @@ class M3PlanarReflection {
     gl.clearColor(bg.r, bg.g, bg.b, 1.0);
     gl.clear(WebGL.COLOR_BUFFER_BIT | WebGL.DEPTH_BUFFER_BIT);
 
+    // draw skybox
     if (scene.skybox != null) {
       scene.skybox!.drawSkybox(_camera);
     }
@@ -80,6 +81,7 @@ class M3PlanarReflection {
     final p = isReflection ? Plane.normalconstant(n, d) : Plane.normalconstant(-n, -d);
     _camera.setObliqueClipPlane(p);
     _camera.updateFrustum();
+    _context.prepareRenderQueue(scene, _camera, excludeReflection: this);
 
     final int frontFace = isReflection ? WebGL.CW : WebGL.CCW;
 
@@ -87,7 +89,6 @@ class M3PlanarReflection {
     gl.frontFace(frontFace);
     gl.enable(WebGL.CULL_FACE);
     gl.enable(WebGL.DEPTH_TEST);
-
     gl.depthMask(true);
     gl.depthFunc(WebGL.LEQUAL);
 
@@ -97,13 +98,10 @@ class M3PlanarReflection {
     gl.enable(WebGL.POLYGON_OFFSET_FILL);
     gl.polygonOffset(1.1, 4.0);
 
-    // (1/2) prepare render queue: exclude this plane
-    _context.prepareRenderQueue(scene, _camera, excludeReflection: this);
-
     // get scene program
     final prog = renderEngine.getSceneProgram(scene);
 
-    // (2/2) render scene for planar reflection/refraction
+    // render scene for planar reflection/refraction
     _context.renderColorPass(prog);
 
     _target.texture.generateMipmap();

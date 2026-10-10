@@ -77,7 +77,7 @@ class Text3DScene_08 extends DemoScene {
 
     // 08-3: Apply mirror shader to ground
     renderEngine.planarReflection.clipPlane.setFromComponents(0, 0, 1, -groundZ);
-    renderEngine.renderTargets.get('mirror').setRenderScale(1.0);
+    renderEngine.renderTargets.get('mirror').setRenderScale(0.5);
 
     plane.mesh.subMeshes[0].mtr
       ..reflection = 0.2

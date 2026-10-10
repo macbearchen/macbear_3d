@@ -63,7 +63,7 @@ class PbrTestScene_09 extends DemoScene {
 
     // 09-3: Apply mirror shader to ground
     renderEngine.planarReflection.clipPlane.setFromComponents(0, 0, 1, -groundZ);
-    renderEngine.renderTargets.get('mirror').setRenderScale(1.0);
+    renderEngine.renderTargets.get('mirror').setRenderScale(0.5);
 
     const prefixUrl = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/';
     final glassUrl = '${prefixUrl}GlassBrokenWindow/glTF-Binary/GlassBrokenWindow.glb';

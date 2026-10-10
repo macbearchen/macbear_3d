@@ -7,6 +7,11 @@ import '../m3_internal.dart';
 class M3RenderEngine {
   late RenderingContext gl;
 
+  // render pass
+  late M3ScenePass scenePass;
+  late M3BloomPass bloomPass;
+  late M3CompositePass compositePass;
+
   // render target manager
   final M3RenderTargetManager renderTargets = M3RenderTargetManager();
   late M3ProgramManager programs;
@@ -69,6 +74,10 @@ class M3RenderEngine {
     M3PostProcess.init();
 
     resize(width, height, dpr);
+    // create render passes
+    scenePass = M3ScenePass('scene');
+    bloomPass = M3BloomPass('bloom_ping');
+    compositePass = M3CompositePass('composite');
     planarReflection = M3PlanarReflection('mirror');
   }
 
@@ -158,47 +167,6 @@ class M3RenderEngine {
   void attachAllProgramsLights(M3Scene scene) {
     for (final prog in programs.lightingPrograms) {
       prog.attachSceneLights(scene);
-    }
-  }
-
-  /// Render scene
-  void renderScene(M3Scene scene) {
-    stats.frames++;
-
-    // draw skybox
-    if (scene.skybox != null) {
-      scene.skybox!.drawSkybox(scene.camera);
-    }
-
-    // set default GL state
-    gl.frontFace(WebGL.CCW);
-    gl.enable(WebGL.CULL_FACE);
-    gl.enable(WebGL.DEPTH_TEST);
-    gl.depthMask(true);
-    gl.depthFunc(WebGL.LEQUAL);
-
-    gl.disable(WebGL.BLEND);
-    gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA); // WebGL.ONE
-
-    if (!options.debug.wireframe) {
-      // get scene program
-      final prog = getSceneProgram(scene);
-
-      // main context render pass
-      mainContext.renderColorPass(prog);
-
-      // reflection pass:
-      // 1. cubemap reflection (only if not using single-pass IBL)
-      // 2. planar reflection
-      mainContext.renderReflectionPass();
-
-      // post render water
-      scene.water?.render();
-    } else {
-      // wireframe
-      mainContext.renderWireframePass();
-      // water wireframe
-      scene.water?.render(fillMode: .wireframe);
     }
   }
 

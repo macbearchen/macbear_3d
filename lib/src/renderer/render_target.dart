@@ -7,15 +7,18 @@ class M3RenderTarget {
   /// get reflection pixel size
   int get width => texture.texW;
   int get height => texture.texH;
+  final int _colorFormat;
   M3Texture get texture => _framebuffer.colorTexture;
   double _renderScale;
 
-  M3RenderTarget(int width, int height, {double resolutionScale = 0.5}) : _renderScale = resolutionScale {
+  M3RenderTarget(int width, int height, {int format = WebGL.SRGB8_ALPHA8, double resolutionScale = 0.5})
+    : _colorFormat = format,
+      _renderScale = resolutionScale {
     assert(resolutionScale > 0 && resolutionScale <= 1.0);
     width = max((width * _renderScale).toInt(), 2);
     height = max((height * _renderScale).toInt(), 2);
     _framebuffer = M3Framebuffer(width, height)
-      ..createColorTexture()
+      ..createColorTexture(format: _colorFormat)
       ..createDepthRenderbuffer();
   }
 
@@ -34,7 +37,7 @@ class M3RenderTarget {
 
     dispose();
     _framebuffer = M3Framebuffer(width, height)
-      ..createColorTexture()
+      ..createColorTexture(format: _colorFormat)
       ..createDepthRenderbuffer();
   }
 
@@ -61,7 +64,7 @@ class M3RenderTargetManager {
     _viewportHeight = height;
 
     // 1. Scene Target (全解析度 HDR)
-    _getOrCreate('scene_hdr', width, height, hasDepth: true);
+    _getOrCreate('scene', width, height, hasDepth: true);
 
     // 2. Mirror/Reflection/Refraction Target (0.5x 降採樣)
     _getOrCreate('mirror', width, height, hasDepth: true, resolutionScale: 0.5);
@@ -71,6 +74,9 @@ class M3RenderTargetManager {
     // 3. Bloom Ping-Pong Targets (0.5x 降採樣)
     _getOrCreate('bloom_ping', width, height, hasDepth: false, resolutionScale: 0.5);
     _getOrCreate('bloom_pong', width, height, hasDepth: false, resolutionScale: 0.5);
+
+    // 4. Post Process Target (全解析度 HDR)
+    _getOrCreate('composite', width, height, hasDepth: false);
   }
 
   M3RenderTarget get(String key) {
@@ -79,11 +85,18 @@ class M3RenderTargetManager {
     return rt!;
   }
 
-  void _getOrCreate(String key, int w, int h, {required bool hasDepth, double resolutionScale = 0.5}) {
+  void _getOrCreate(
+    String key,
+    int w,
+    int h, {
+    required bool hasDepth,
+    int format = WebGL.SRGB8_ALPHA8,
+    double resolutionScale = 0.5,
+  }) {
     if (_targets.containsKey(key)) {
       _targets[key]!.resize(w, h);
     } else {
-      _targets[key] = M3RenderTarget(w, h, resolutionScale: resolutionScale);
+      _targets[key] = M3RenderTarget(w, h, format: format, resolutionScale: resolutionScale);
     }
   }
 
