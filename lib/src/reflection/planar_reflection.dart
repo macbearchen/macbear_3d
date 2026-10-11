@@ -63,8 +63,7 @@ class M3PlanarReflection {
 
     // Clear
     final bg = Vector3(0, 0, 0);
-    gl.clearColor(bg.r, bg.g, bg.b, 1.0);
-    gl.clear(WebGL.COLOR_BUFFER_BIT | WebGL.DEPTH_BUFFER_BIT);
+    renderEngine.clearBackground(bg);
 
     // draw skybox
     if (scene.skybox != null) {

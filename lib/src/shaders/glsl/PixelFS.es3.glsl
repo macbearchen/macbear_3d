@@ -66,13 +66,15 @@ mediump vec3 ComputeF0(mediump vec3 baseColor, mediump float metallic) {
 
 // ColorAmbient * texColor, in linear space.
 mediump vec3 ComputeAmbientLinear(lowp vec3 texColor) {
-    return pow(ColorAmbient, vec3(2.2)) * texColor;
+    // return pow(ColorAmbient, vec3(2.2)) * texColor;
+    return ColorAmbient * texColor;
 }
 
 // Shared tail: gamma-correct linear color back to sRGB. Alpha is never part
 // of the lighting math, so it's tracked separately and only combined at return.
 mediump vec3 FinalizePBRColor(mediump vec3 linearColor) {
-    return pow(max(linearColor, 0.0), vec3(1.0 / 2.2));
+    // return pow(max(linearColor, 0.0), vec3(1.0 / 2.2));
+    return linearColor;
 }
 #endif // ENABLE_PBR
 

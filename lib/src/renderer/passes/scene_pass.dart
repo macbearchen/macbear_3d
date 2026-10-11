@@ -1,6 +1,7 @@
 // Macbear3D engine
 import '../../m3_internal.dart';
 
+/// scene render pass
 class M3ScenePass {
   final renderEngine = M3AppEngine.instance.renderEngine;
 
@@ -13,14 +14,13 @@ class M3ScenePass {
     _target = renderEngine.renderTargets.get(keyRt);
   }
 
-  // main scene render
+  /// main scene render
   void render(M3Scene scene) {
-    // _target.bind();
+    _target.bind();
 
     final gl = renderEngine.gl;
     final bg = M3AppEngine.backgroundColor;
-    gl.clearColor(bg.r, bg.g, bg.b, 1.0);
-    gl.clear(WebGL.COLOR_BUFFER_BIT | WebGL.DEPTH_BUFFER_BIT);
+    renderEngine.clearBackground(bg);
 
     // draw skybox
     if (scene.skybox != null) {
@@ -60,6 +60,12 @@ class M3ScenePass {
 
     // helper
     _renderHelper(scene);
+
+    // bind default framebuffer
+    renderEngine.bindDefaultFramebuffer();
+
+    // draw fullscreen
+    M3PostProcess.drawFullscreen(_target.texture);
   }
 
   void _renderHelper(M3Scene scene) {

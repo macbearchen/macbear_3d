@@ -142,6 +142,17 @@ class M3RenderEngine {
     gl.lineWidth(dpr * 2.0);
   }
 
+  /// clear color buffer and depth buffer
+  ///
+  /// Use sRGB-linear conversion.
+  void clearBackground(Vector3 bgColor) {
+    final r = pow(bgColor.r, 2.2).toDouble();
+    final g = pow(bgColor.g, 2.2).toDouble();
+    final b = pow(bgColor.b, 2.2).toDouble();
+    gl.clearColor(r, g, b, 1.0);
+    gl.clear(WebGL.COLOR_BUFFER_BIT | WebGL.DEPTH_BUFFER_BIT);
+  }
+
   /// Render shadow map
   void renderShadowMap(M3Scene scene) {
     if (options.debug.wireframe || !options.useShadow) return;

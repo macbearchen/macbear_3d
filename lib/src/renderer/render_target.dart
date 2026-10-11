@@ -91,7 +91,7 @@ class M3RenderTargetManager {
     int h, {
     required bool hasDepth,
     int format = WebGL.SRGB8_ALPHA8,
-    double resolutionScale = 0.5,
+    double resolutionScale = 1.0,
   }) {
     if (_targets.containsKey(key)) {
       _targets[key]!.resize(w, h);

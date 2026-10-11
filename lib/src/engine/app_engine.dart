@@ -448,8 +448,7 @@ class M3AppEngine with ChangeNotifier {
     _sourceTexture.activate();
 
     final gl = renderEngine.gl;
-    gl.clearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, 1.0);
-    gl.clear(WebGL.COLOR_BUFFER_BIT | WebGL.DEPTH_BUFFER_BIT);
+    renderEngine.clearBackground(backgroundColor);
 
     // 2. render active scene
     if (scene != null) {

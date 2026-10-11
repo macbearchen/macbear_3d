@@ -19,6 +19,7 @@ class M3RenderContext {
   final M3RenderQueue planarReflection = M3RenderQueue();
   final M3RenderQueue reflectionProbe = M3RenderQueue();
 
+  /// prepare render queue: collect renderItems for opaque, masked, transparent...
   void prepareRenderQueue(
     M3Scene scene,
     M3Camera viewer, {

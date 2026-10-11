@@ -69,9 +69,7 @@ class M3ReflectionProbe {
       cubemapTexture.attachToFramebuffer(WebGL.COLOR_ATTACHMENT0, faces[i]);
 
       // Clear
-      final bg = M3AppEngine.backgroundColor;
-      gl.clearColor(bg.r, bg.g, bg.b, 1.0);
-      gl.clear(WebGL.COLOR_BUFFER_BIT | WebGL.DEPTH_BUFFER_BIT);
+      renderEngine.clearBackground(M3AppEngine.backgroundColor);
 
       // Setup camera
       _camCapture.setLookat(position, position + targets[i], ups[i]);

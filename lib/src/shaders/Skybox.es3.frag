@@ -13,6 +13,6 @@ void main(void)
     mediump float mipLevel = uParamPBR.y * uParamPBR.z; // Roughness * MaxMipLevel
     mediump vec4 linearColor = textureLod(SamplerEnvironment, TexCoordDirOut, mipLevel) * DestinationColor;
     // gamma correction
-    linearColor.rgb = pow(max(linearColor.rgb, 0.0), vec3(1.0 / 2.2));
+    // linearColor.rgb = pow(max(linearColor.rgb, 0.0), vec3(1.0 / 2.2));
     fragColor = linearColor;
 }

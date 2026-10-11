@@ -1,11 +1,9 @@
-// ignore_for_file: file_names
+// ignore_for_file: unused_local_variable, file_names
 import 'package:material_ui/material_ui.dart' as fm;
 import '../main_all.dart';
 
 // ignore: camel_case_types
 class CubeScene_01 extends DemoScene {
-  final M3LineGeom _line = M3LineGeom(Vector3(0, 0, 0), Vector3(1, 1, 1));
-
   @override
   Future<void> load() async {
     if (isLoaded) return;

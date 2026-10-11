@@ -20,7 +20,7 @@ class M3ExternalTexture extends M3Texture {
 
   // shared memory for native bridge
 
-  M3ExternalTexture(this.source, {bool? isUseNative}) : super(useMipmaps: false) {
+  M3ExternalTexture(this.source, {bool? isUseNative}) : super(useMipmaps: false, internalFormat: WebGL.SRGB8_ALPHA8) {
     name = "external_texture";
     if (isUseNative != null) {
       _isNativeCodec = isUseNative && _isNativeCodec;
