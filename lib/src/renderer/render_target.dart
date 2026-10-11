@@ -11,7 +11,7 @@ class M3RenderTarget {
   M3Texture get texture => _framebuffer.colorTexture;
   double _renderScale;
 
-  M3RenderTarget(int width, int height, {int format = WebGL.SRGB8_ALPHA8, double resolutionScale = 0.5})
+  M3RenderTarget(int width, int height, {int format = WebGL.RGBA8, double resolutionScale = 0.5})
     : _colorFormat = format,
       _renderScale = resolutionScale {
     assert(resolutionScale > 0 && resolutionScale <= 1.0);
@@ -90,7 +90,7 @@ class M3RenderTargetManager {
     int w,
     int h, {
     required bool hasDepth,
-    int format = WebGL.SRGB8_ALPHA8,
+    int format = WebGL.RGBA8,
     double resolutionScale = 1.0,
   }) {
     if (_targets.containsKey(key)) {
