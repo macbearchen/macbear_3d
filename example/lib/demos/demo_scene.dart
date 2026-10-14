@@ -30,7 +30,8 @@ class DemoScene extends M3Scene {
 
     double sec = totalTime;
     // rotate light
-    dirLight.lightViewer.setEuler(sec * pi / 18, -pi / 3, 0); // rotate light
+    final pitch = dirLight.lightViewer.euler.pitch;
+    dirLight.lightViewer.setEuler(sec * pi / 18, pitch, 0); // rotate light
     // M3Log.d('DemoScene', 'Light Direction: $dirLight');
 
     // move point lights

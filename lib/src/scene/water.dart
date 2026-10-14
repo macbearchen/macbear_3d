@@ -196,20 +196,13 @@ class M3Water extends M3Entity {
       gl.useProgram(prog.program);
       prog.applyFrameUniforms(viewer);
       prog.applyFog(scene.fog);
-      (prog as M3WaterShader).bindWater(this);
-
-      // water material: set reflection texture if enabled
-      if (reflectionPass.enable) {
-        waterMaterial.diffuseTexture = reflectionPass.texture;
-      } else {
-        waterMaterial.diffuseTexture = M3Resources.texWhite;
-      }
 
       final alpha = 1.0; //water!.waterMaterial.reflection;
       final waterMatrix = worldMatrix;
       prog.setMatrices(viewer, waterMatrix);
-      prog.setMaterial(waterMaterial, Vector4(0.0, 1.0, 0.8, alpha));
+      // prog.setMaterial(waterMaterial, Vector4(0.0, 1.0, 0.8, alpha));
       prog.setSkinning(null);
+      (prog as M3WaterShader).bindWater(this);
 
       // Call setLightTBN after setMatrices to set tangent-space uniforms and light position correctly
       final normal = (cameraState == .aboveWater) ? surfacePlane.normal : -surfacePlane.normal;

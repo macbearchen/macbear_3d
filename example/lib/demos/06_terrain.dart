@@ -76,7 +76,7 @@ class TerrainScene_06 extends DemoScene {
       final double posX = i * 10 - 50;
       final double posY = 5;
       // Place objects 5 units above the terrain surface at (posX, posY)
-      final double posZ = _terrainSurfaceZ(posX, posY) + 5;
+      final double posZ = _terrainSurfaceZ(posX, posY) + 10;
       final rot = i * pi / 15;
       // 06-2: sphere geometry
       final meshSphere = M3Mesh(geomSphere);

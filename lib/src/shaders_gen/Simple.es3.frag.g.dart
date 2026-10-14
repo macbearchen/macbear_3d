@@ -5,7 +5,7 @@ const String Simple_frag = r"""
 precision mediump float;
 // Simple frag-shader ES3 //////////
 
-in lowp vec4 DestinationColor;
+in mediump vec4 DestinationColor;
 out vec4 fragColor;
 
 void main(void)

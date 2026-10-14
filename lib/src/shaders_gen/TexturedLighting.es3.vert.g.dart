@@ -14,23 +14,23 @@ layout(location = 2) in mediump vec3 inNormal;
 
 layout(location = 3) in mediump vec2 inTexCoord;
 layout(location = 6) in mediump vec4 inTangent; // xyz=tangent, w=handedness
-uniform lowp vec4 uColor;
+uniform mediump vec4 uColor;
 
 out highp vec3 ObjectspaceV;    // Object space Vertex
 out mediump vec3 ObjectspaceN;  // Object space Normal
 
 #ifndef ENABLE_PIXEL_LIGHTING   // per-vertex lighting
-uniform lowp vec4 ColorDiffuse;
+uniform mediump vec4 ColorDiffuse;
 uniform mediump vec4 ColorSpecular;
-out lowp vec4 SpecularOut;
+out mediump vec4 SpecularOut;
 #endif // ENABLE_PIXEL_LIGHTING
 
-uniform lowp vec3 ColorAmbient;
+uniform mediump vec3 ColorAmbient;
 uniform mediump vec3 uEyePos;
 uniform mediump vec3 uLightDir;
 uniform mediump vec3 uInvObjScale;
 
-out lowp vec4 DestinationColor;
+out mediump vec4 DestinationColor;
 out mediump vec2 TextureCoordOut;
 out mediump vec4 vTangent;  // xyz=tangent, w=handedness
 

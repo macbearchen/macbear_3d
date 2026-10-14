@@ -3,7 +3,7 @@
 const String LightFS_glsl = r"""
 #version 300 es
 
-lowp float ComputeShadowPCF(highp sampler2DShadow sampler, highp vec2 texelSize, highp vec2 uv, highp float refZ);
+mediump float ComputeShadowPCF(highp sampler2DShadow sampler, highp vec2 texelSize, highp vec2 uv, highp float refZ);
 
 // UE4 windowed inverse-square attenuation (Karis 2013)
 // +1.0 避免光源近距離過曝/firefly，rangeFade 讓光照在 radius 邊界平滑歸零
@@ -70,7 +70,7 @@ vec3 calcPointLight(int i, SurfaceGeometry geo, bool castShadow) {
 }
 
 // point lights lighting in object space
-lowp vec3 CalculatePointLighting(SurfaceGeometry geo) {
+mediump vec3 CalculatePointLighting(SurfaceGeometry geo) {
     int lightCount = uPointLightCounts.x;
     if (lightCount == 0) return vec3(0.0);
 
@@ -106,7 +106,7 @@ uniform highp mat4 uMatrixSpotShadowAtlas[8];       // Bias * Projection * View 
 uniform highp float SpotShadowNormalBias;           // normal bias for spotlight shadow acne
 
 // Spot shadow with atlas: project biased fragment position using spotlight i's shadow matrix
-lowp float ComputeSpotShadow(int i, SurfaceGeometry geo) {
+mediump float ComputeSpotShadow(int i, SurfaceGeometry geo) {
     vec4 biasedPos = vec4(geo.Position + geo.Normal * SpotShadowNormalBias, 1.0);
     highp vec4 lightCoord = uMatrixSpotShadowAtlas[i] * biasedPos;
 
@@ -176,7 +176,7 @@ vec3 calcSpotLight(int i, SurfaceGeometry geo) {
 }
 
 // Spot lights lighting in object space
-lowp vec3 CalculateSpotLighting(SurfaceGeometry geo) {
+mediump vec3 CalculateSpotLighting(SurfaceGeometry geo) {
     int lightCount = uSpotLightCounts.x;
     if (lightCount == 0) return vec3(0.0);
 

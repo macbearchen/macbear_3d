@@ -3,7 +3,7 @@ precision mediump float;
 // Rect frag-shader ES3 //////////
 
 in mediump vec2 TextureCoordOut;
-in lowp vec4 DestinationColor;
+in mediump vec4 DestinationColor;
 
 uniform sampler2D SamplerDiffuse;	// GL_TEXTURE0
 out vec4 fragColor;

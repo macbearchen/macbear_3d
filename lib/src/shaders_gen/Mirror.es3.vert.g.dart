@@ -6,8 +6,8 @@ const String Mirror_vert = r"""
 layout(location = 0) in highp vec3 inVertex;		// vertex-data
 //in lowp vec4 inColor;		// for mirror-color
 
-uniform lowp vec4 uColor;
-out lowp vec4 DestinationColor;
+uniform mediump vec4 uColor;
+out mediump vec4 DestinationColor;
 
 // eye-space for camera-viewer
 //uniform mat4 Projection;

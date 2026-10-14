@@ -10,8 +10,8 @@ layout(location = 0) in highp vec3 inVertex;		// vertex-data
 
 layout(location = 3) in mediump vec2 inTexCoord;
 
-uniform lowp vec4 uColor;
-out lowp vec4 DestinationColor;
+uniform mediump vec4 uColor;
+out mediump vec4 DestinationColor;
 out mediump vec2 TextureCoordOut;
 
 // eye-space for camera-viewer

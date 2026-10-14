@@ -6,7 +6,7 @@ precision mediump float;
 // Simple frag-shader ES3 //////////
 
 in mediump vec2 TextureCoordOut;
-in lowp vec4 DestinationColor;
+in mediump vec4 DestinationColor;
 
 #ifdef ENABLE_EXTERNAL_OES
 uniform samplerExternalOES SamplerDiffuse;   // GL_TEXTURE0
@@ -22,7 +22,7 @@ out vec4 fragColor;
 
 void main(void)
 {
-    lowp vec4 texResult = texture(SamplerDiffuse, TextureCoordOut);	// tex-lookup
+    mediump vec4 texResult = texture(SamplerDiffuse, TextureCoordOut);	// tex-lookup
 #ifdef ENABLE_ALPHA_TEST
 	if (texResult.a < uAlphaCutoff)
 		discard;

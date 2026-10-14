@@ -12,9 +12,9 @@ layout(location = 2) in mediump vec3 inNormal;
 
 // object space
 uniform mediump vec3 uEyePos;	// eye as camera origin
-uniform lowp vec4 uColor;
+uniform mediump vec4 uColor;
 
-out lowp vec4 DestinationColor;
+out mediump vec4 DestinationColor;
 out mediump vec3 TexCoordDirOut;
 
 // space transformation

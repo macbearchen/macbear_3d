@@ -2,7 +2,7 @@
 precision mediump float;
 // Mirror frag-shader //////////
 
-in lowp vec4 DestinationColor;
+in mediump vec4 DestinationColor;
 
 uniform mediump vec4 uParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level, w: Occlusion-strength
 uniform sampler2D SamplerDiffuse; // GL_TEXTURE0

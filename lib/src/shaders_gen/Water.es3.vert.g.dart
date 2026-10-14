@@ -10,7 +10,7 @@ layout(location = 0) in highp vec3 inVertex;		// vertex-data
 // layout(location = 1) in lowp vec4 inColor;		// for water-color as fog in water
 layout(location = 3) in mediump vec2 inTexCoord;
 
-uniform lowp vec4 uColor;
+uniform mediump vec4 uColor;
 
 // eye-space for camera-viewer
 uniform highp mat4 ModelviewProjection;
@@ -32,7 +32,7 @@ out highp vec3 eyeToObj;		// interpolate from vert to frag: must be highp in iPa
 out highp float eyeToObjDist;
 out highp vec3 ObjectspaceV;    // Object space Vertex
 
-out lowp vec4 DestinationColor;
+out mediump vec4 DestinationColor;
 
 #ifdef ENABLE_FOG
 out highp float fogDist;   // distance: eye to obj-vertex

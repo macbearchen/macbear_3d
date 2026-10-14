@@ -137,7 +137,7 @@ class M3Texture {
 
   /// Create a solid color texture (2D) with specified color.
   static M3Texture createSolidColor(Vector4 color) {
-    return M3Texture(useMipmaps: false)
+    return M3Texture(useMipmaps: false, internalFormat: WebGL.SRGB8_ALPHA8)
       ..name = "solid_color"
       ..allocateStorage(1, 1)
       .._initColorPixel(color);
@@ -417,7 +417,7 @@ class M3Texture {
     final ktxW = ktxInfo.width;
     final ktxH = ktxInfo.height;
     M3Texture tex = M3Texture(target: target, useMipmaps: false, internalFormat: ktxInfo.glFormat)
-      ..name = "ktx(${ktxW}x${ktxH})"
+      ..name = "ktx($ktxW x $ktxH)"
       ..texW = ktxW
       ..texH = ktxH;
 

@@ -12,6 +12,14 @@ class M3Resources {
   static final texWhite = M3Texture.createSolidColor(Vector4(1, 1, 1, 1));
   // black color for default emissive or other purposes
   static final texBlack = M3Texture.createSolidColor(Vector4(0, 0, 0, 1));
+  // testing colors: red, green, blue, orange, purple, yellow
+  static final texRed = M3Texture.createSolidColor(Vector4(1, 0, 0, 1));
+  static final texGreen = M3Texture.createSolidColor(Vector4(0, 1, 0, 1));
+  static final texBlue = M3Texture.createSolidColor(Vector4(0, 0, 1, 1));
+  static final texOrange = M3Texture.createSolidColor(Vector4(1, 0.5, 0, 1));
+  static final texPurple = M3Texture.createSolidColor(Vector4(0.5, 0, 1, 1));
+  static final texYellow = M3Texture.createSolidColor(Vector4(1, 1, 0, 1));
+
   // normal map : (0.5, 0.5, 1.0) is up-direction
   static final texDefaultNormal = M3Texture.createSolidColor(Vector4(0.5, 0.5, 1, 1));
   // default IBL cubemap
@@ -89,6 +97,12 @@ class M3Resources {
     // Textures
     texWhite;
     texBlack;
+    texRed;
+    texGreen;
+    texBlue;
+    texOrange;
+    texPurple;
+    texYellow;
     texDefaultNormal;
     texDefaultCubemap;
     texDefaultORM;
@@ -135,6 +149,12 @@ class M3Resources {
     // Textures
     texWhite.dispose();
     texBlack.dispose();
+    texRed.dispose();
+    texGreen.dispose();
+    texBlue.dispose();
+    texOrange.dispose();
+    texPurple.dispose();
+    texYellow.dispose();
     texDefaultNormal.dispose();
     texDefaultCubemap.dispose();
     texDefaultORM.dispose();

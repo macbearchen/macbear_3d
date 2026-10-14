@@ -5,7 +5,7 @@ const String Skybox_frag = r"""
 precision mediump float;
 // Skybox frag-shader ES3 //////////
 
-in lowp vec4 DestinationColor;
+in mediump vec4 DestinationColor;
 in mediump vec3 TexCoordDirOut;
 uniform samplerCube SamplerEnvironment; // cubemap texture
 uniform mediump vec4 uParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level, w: Occlusion-strength

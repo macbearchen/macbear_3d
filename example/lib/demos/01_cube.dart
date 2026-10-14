@@ -10,6 +10,7 @@ class CubeScene_01 extends DemoScene {
     await super.load();
 
     camera.setEuler(-pi / 9, -pi / 4, 0, distance: 24);
+    skybox = await createCubemapLobby(); // nvlobby cubemap
 
     final num = 7;
     final spacingX = 2.5;
@@ -35,17 +36,22 @@ class CubeScene_01 extends DemoScene {
     final texName = "example/test_8x8.astc";
     final texName2 = "example/nvlobby_xneg.jpg";
     M3Texture texGround = M3Texture.createCheckerboard(
-      size: 8,
-      lightColor: Vector4(0.65, 0.45, 0.25, 1),
-      darkColor: Vector4(0.36, 0.22, 0.12, 1),
+      size: 4,
+      lightColor: Vector4(0.80, 0.60, 0.40, 1),
+      darkColor: Vector4(0.70, 0.5, 0.3, 1),
     );
     // ground plane
     final mtrGround = M3Material()
       // ..diffuseTexture = texTest
-      ..setMatte();
+      ..diffuseTexture = texGround
+      ..setMatte()
+      ..doubleSided = true;
 
     // final groundMesh = M3Mesh(M3PlaneGeom(100, 100, widthSegments: 4, heightSegments: 4), material: mtrGround);
     final groundMesh = M3TiledPlaneMesh(tilesX: 10, tilesY: 10, tileWidth: 5, tileHeight: 5);
+    for (final sub in groundMesh.subMeshes) {
+      sub.mtr = mtrGround;
+    }
     final entity = addMesh(groundMesh, Vector3(0, 0, -1));
     // entity.color = Vector4(1, 0.6, 0, 1);
   }

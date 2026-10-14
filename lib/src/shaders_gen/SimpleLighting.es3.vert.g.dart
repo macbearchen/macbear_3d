@@ -9,14 +9,14 @@ layout(location = 0) in highp vec3 inVertex;		// vertex-data
 layout(location = 2) in mediump vec3 inNormal;
 #endif // ENABLE_SKINNING
 
-uniform lowp vec4 uColor;
+uniform mediump vec4 uColor;
 
 // eye-space for camera-viewer
 uniform mat4 ModelviewProjection;
 
 // color combined by light and material
-uniform lowp vec3 ColorAmbient;		// ambient RGB 
-uniform lowp vec4 ColorDiffuse;		// diffuse RGBA
+uniform mediump vec3 ColorAmbient;	// ambient RGB 
+uniform mediump vec4 ColorDiffuse;	// diffuse RGBA
 uniform mediump vec4 ColorSpecular;	// specular RGB, w: shininess
 
 // object-space
@@ -24,7 +24,7 @@ uniform vec3 uEyePos;		// eye as camera origin
 uniform vec3 uLightDir;		// parallel light
 
 // shader variable: from vert to frag
-out lowp vec4 DestinationColor;
+out mediump vec4 DestinationColor;
 
 void main(void) {
 	highp vec4 objVert = vec4(inVertex, 1.0);
@@ -47,7 +47,7 @@ void main(void) {
 	float sf = max(0.0, dot(N, H));
 	sf = pow(sf, ColorSpecular.w);
 
-	lowp vec3 AmbientDiffuseSpecular = (ColorAmbient + ColorDiffuse.rgb * df) + ColorSpecular.rgb * sf;
+	mediump vec3 AmbientDiffuseSpecular = (ColorAmbient + ColorDiffuse.rgb * df) + ColorSpecular.rgb * sf;
 
 	DestinationColor = vec4(AmbientDiffuseSpecular, uColor.a);
 	gl_Position = ModelviewProjection * objVert;	// pre-compute Projection * Modelview

@@ -5,7 +5,7 @@ const String TexturedLighting_frag = r"""
 precision mediump float;
 // TexturedLighting frag-shader: ES3 //////////
 
-uniform lowp vec3 ColorAmbient;		// ambient RGB
+uniform mediump vec3 ColorAmbient;	// ambient RGB
 
 in mediump vec2 TextureCoordOut;
 uniform sampler2D SamplerDiffuse;	// GL_TEXTURE0
@@ -29,24 +29,32 @@ in mediump vec3 ObjectspaceN;	// Object space Normal
 #ifdef ENABLE_PIXEL_LIGHTING
 
 // per pixel lighting: "glsl/Pixel.es3.frag" must append on this shader
-lowp vec4 ShadeLit(in lowp vec4 texDiffuse, in SurfaceGeometry geo);
-lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse, in SurfaceGeometry geo);
+mediump vec4 ShadeLit(mediump vec4 texDiffuse, SurfaceGeometry geo);
+mediump vec4 ShadeLitFactor(mediump vec4 texDiffuse, SurfaceGeometry geo, mediump float litFactor);
+mediump vec4 ShadeUnlit(mediump vec4 texDiffuse, SurfaceGeometry geo);
 
 #else
 // per-vertex lighting
-in lowp vec4 SpecularOut;	// separate specular added
-in lowp vec4 DestinationColor;
+in mediump vec4 SpecularOut;	// separate specular added
+in mediump vec4 DestinationColor;
 
 // no pre-multiply alpha
 // lit result by per-vertex
-lowp vec4 ShadeLit(in lowp vec4 texDiffuse, in SurfaceGeometry geo)
+mediump vec4 ShadeLit(mediump vec4 texDiffuse, SurfaceGeometry geo)
 {
-	lowp vec4 result = texDiffuse * DestinationColor;
+	mediump vec4 result = texDiffuse * DestinationColor;
 	result.rgb += SpecularOut.rgb;
 	return result;
 }
 
-lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse, in SurfaceGeometry geo)
+mediump vec4 ShadeLitFactor(mediump vec4 texDiffuse, SurfaceGeometry geo, mediump float litFactor)
+{
+	mediump vec4 litColor = ShadeLit(texDiffuse, geo);
+	mediump vec4 unlitColor = ShadeUnlit(texDiffuse, geo);
+	return mix(unlitColor, litColor, litFactor);
+}
+
+mediump vec4 ShadeUnlit(mediump vec4 texDiffuse, SurfaceGeometry geo)
 {
 	// unlit = ambient 
 	return texDiffuse * vec4(ColorAmbient, DestinationColor.a);
@@ -54,11 +62,11 @@ lowp vec4 ShadeUnlit(in lowp vec4 texDiffuse, in SurfaceGeometry geo)
 #endif // ENABLE_PIXEL_LIGHTING
 
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS) || defined(ENABLE_SHADOW_CSM_FS)
-lowp vec4 ShadeLitShadowMix(in lowp vec4 color, in SurfaceGeometry geo);
+mediump vec4 ShadeLitShadowMix(mediump vec4 color, SurfaceGeometry geo);
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS or ENABLE_SHADOW_CSM_FS
 
 #ifdef ENABLE_FOG
-lowp vec4 ApplyFog(in lowp vec4 texResult);
+mediump vec4 ApplyFog(mediump vec4 texResult);
 #endif // ENABLE_FOG
 
 #ifdef ENABLE_ALPHA_TEST
@@ -69,7 +77,7 @@ out vec4 fragColor;
 
 void main(void)
 {
-	lowp vec4 texResult = texture(SamplerDiffuse, TextureCoordOut);	// tex-lookup
+	mediump vec4 texResult = texture(SamplerDiffuse, TextureCoordOut);	// tex-lookup
 #ifdef ENABLE_TEXTURE0_BGRA	// iOS, macOS: CVPixelBuffer is BGRA, not RGBA
 	texResult = texResult.bgra;
 #endif // ENABLE_TEXTURE0_BGRA

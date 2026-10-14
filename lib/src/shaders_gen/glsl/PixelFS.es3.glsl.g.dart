@@ -6,18 +6,18 @@ const String PixelFS_glsl = r"""
 // must append to "TexturedLighting.es3.frag"
 
 // color combined by light and material
-uniform lowp vec4 ColorDiffuse;		// diffuse RGBA
+uniform mediump vec4 ColorDiffuse;	// diffuse RGBA
 uniform mediump vec4 ColorSpecular;	// specular RGB, w: shininess
 
 uniform mediump vec3 uLightDir; // parallel light
-uniform lowp vec3 uLightColor;  // light color RGB
+uniform mediump vec3 uLightColor;  // light color RGB
 
 #ifdef ENABLE_POINT_LIGHTS  // multi-point-lights
-lowp vec3 CalculatePointLighting(SurfaceGeometry geo);
+mediump vec3 CalculatePointLighting(SurfaceGeometry geo);
 #endif // ENABLE_POINT_LIGHTS
 
 #ifdef ENABLE_SPOT_LIGHTS   // spot lights
-lowp vec3 CalculateSpotLighting(SurfaceGeometry geo);
+mediump vec3 CalculateSpotLighting(SurfaceGeometry geo);
 #endif // ENABLE_SPOT_LIGHTS
 
 #ifdef ENABLE_PBR
@@ -57,7 +57,7 @@ mediump float GeometrySmith(mediump float NdotV, mediump float NdotL, mediump fl
 
 // Schlick's approximation
 mediump vec3 fresnelSchlick(mediump float cosTheta, mediump vec3 F0) {
-    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+    return F0 + (1.0 - F0) * pow5(clamp(1.0 - cosTheta, 0.0, 1.0));
 }
 
 // ---- Shared PBR helpers ----
@@ -68,7 +68,7 @@ mediump vec3 ComputeF0(mediump vec3 baseColor, mediump float metallic) {
 }
 
 // ColorAmbient * texColor, in linear space.
-mediump vec3 ComputeAmbientLinear(lowp vec3 texColor) {
+mediump vec3 ComputeAmbientLinear(mediump vec3 texColor) {
     // return pow(ColorAmbient, vec3(2.2)) * texColor;
     return ColorAmbient * texColor;
 }
@@ -112,20 +112,29 @@ mediump vec3 ApplyIBL(mediump vec3 ambientDiffuse, mediump vec3 N, mediump vec3 
 }
 #endif // ENABLE_IBL
 
-// lit result by per-pixel: by lighting
-lowp vec4 ShadeLit(lowp vec4 texDiffuse, SurfaceGeometry geo)
+
+// ShadeLit / ShadeUnlit are thin wrappers — ShadeLitFactor is the single source of truth.
+// litFactor=1.0 (fully lit), litFactor=0.0 (fully in shadow / ambient only).
+mediump vec4 ShadeLit(mediump vec4 texDiffuse, SurfaceGeometry geo)
+{
+    return ShadeLitFactor(texDiffuse, geo, 1.0);
+}
+
+// ShadeLitFactor: single-pass shadow blend — ambient computed once, direct light scaled by litFactor.
+// This is the correct way to apply shadow factor and avoids the IBL/ambient halo at penumbra edges.
+mediump vec4 ShadeLitFactor(mediump vec4 texDiffuse, SurfaceGeometry geo, mediump float litFactor)
 {
     mediump vec4 diffuse = ColorDiffuse * texDiffuse;
-	lowp vec3 resultColor;
+    mediump vec3 resultColor;
     mediump vec3 N = geo.Normal;
-    mediump vec3 L = uLightDir;		// parallel light source
+    mediump vec3 L = uLightDir;     // parallel light source
     mediump vec3 V = safe_normalize(uEyePos - geo.Position); // View direction from surface to eye
     mediump vec3 H = safe_normalize(V + L);
     mediump float NdotL = max(dot(N, L), 0.0);
 
 #ifdef ENABLE_PBR
     mediump float NdotV = max(dot(N, V), 0.0);
-    
+
     // Sample ORM texture: R = Occlusion, G = Roughness, B = Metallic
     mediump vec3 orm = texture(SamplerORM, TextureCoordOut).rgb;
     mediump float occlusion = clamp(1.0 + uParamPBR.w * (orm.r - 1.0), 0.0, 1.0);
@@ -141,7 +150,6 @@ lowp vec4 ShadeLit(lowp vec4 texDiffuse, SurfaceGeometry geo)
     mediump float NDF = DistributionGGX(N, H, roughness);
     mediump float G = GeometrySmith(NdotV, NdotL, roughness);
     mediump vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
-
     mediump vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
 
     mediump vec3 numerator = NDF * G * F;
@@ -155,15 +163,13 @@ lowp vec4 ShadeLit(lowp vec4 texDiffuse, SurfaceGeometry geo)
     ambient = ApplyIBL(ambient, N, V, Fibl, roughness, metallic);
     #endif // ENABLE_IBL
 
-    // Lit: ambient + (diffuse + specular)
-    mediump vec3 color = ambient + (kD * baseColor + specular) * NdotL;
-
-    // HDR tone mapping removed as we use LDR lights; only keep Gamma Correction
+    // ambient is unaffected by shadow; only direct light is attenuated by litFactor
+    mediump vec3 color = ambient + (kD * baseColor + specular) * NdotL * litFactor;
     resultColor = FinalizePBRColor(color);
 #else // ENABLE_PBR
-    mediump float df = NdotL;
+    mediump float df = NdotL * litFactor;
     mediump float NdotH = max(0.0, dot(N, H));
-    mediump float sf = pow(NdotH, ColorSpecular.w);
+    mediump float sf = pow(NdotH, ColorSpecular.w) * litFactor;
 
 	#ifdef ENABLE_CARTOON
 	// segment: 0___0.1___0.3___0.7___1
@@ -173,7 +179,7 @@ lowp vec4 ShadeLit(lowp vec4 texDiffuse, SurfaceGeometry geo)
 	#endif // ENABLE_CARTOON
 
 	// lit = ambient + diffuse + specular * shininess
-	resultColor = texDiffuse.rgb * (ColorAmbient + ColorDiffuse.rgb * df);
+    resultColor = texDiffuse.rgb * (ColorAmbient + ColorDiffuse.rgb * df);
     resultColor = resultColor + ColorSpecular.rgb * sf;
 #endif // ENABLE_PBR
 
@@ -188,48 +194,9 @@ lowp vec4 ShadeLit(lowp vec4 texDiffuse, SurfaceGeometry geo)
 	return vec4(resultColor, diffuse.a);
 }
 
-// unlit result by per-pixel: in shadow
-lowp vec4 ShadeUnlit(lowp vec4 texDiffuse, SurfaceGeometry geo)
+mediump vec4 ShadeUnlit(mediump vec4 texDiffuse, SurfaceGeometry geo)
 {
-	lowp vec3 resultColor;
-    mediump vec4 diffuse = ColorDiffuse * texDiffuse;
-    mediump vec3 N = geo.Normal;
-
-#ifdef ENABLE_PBR
-    mediump vec3 V = safe_normalize(uEyePos - geo.Position); // View direction from surface to eye
-
-    // Sample ORM texture: R = Occlusion, G = Roughness, B = Metallic
-    mediump vec3 orm = texture(SamplerORM, TextureCoordOut).rgb;
-    mediump float occlusion = clamp(1.0 + uParamPBR.w * (orm.r - 1.0), 0.0, 1.0);
-    mediump float roughness = clamp(orm.g * uParamPBR.y, 0.04, 1.0);
-    mediump float metallic = clamp(orm.b * uParamPBR.x, 0.0, 1.0);
-
-    mediump vec3 ambient = ComputeAmbientLinear(texDiffuse.rgb) * occlusion;
-
-    #ifdef ENABLE_IBL
-    // PBR calculations for IBL (diffuse is already in linear space)
-    mediump vec3 baseColor = diffuse.rgb * uLightColor;
-    mediump vec3 F0 = ComputeF0(baseColor, metallic);
-    mediump vec3 F = fresnelSchlick(max(dot(N, V), 0.0), F0);
-
-    ambient = ApplyIBL(ambient, N, V, F, roughness, metallic);
-    #endif // ENABLE_IBL
-
-    resultColor = FinalizePBRColor(ambient);
-#else
-	// unlit = ambient
-	resultColor = texDiffuse.rgb * ColorAmbient;
-#endif // ENABLE_PBR
-
-#ifdef ENABLE_POINT_LIGHTS
-    resultColor += CalculatePointLighting(geo) * diffuse.rgb;
-#endif
-
-#ifdef ENABLE_SPOT_LIGHTS
-    resultColor += CalculateSpotLighting(geo) * diffuse.rgb;
-#endif
-
-	return vec4(resultColor, diffuse.a);
+    return ShadeLitFactor(texDiffuse, geo, 0.0);
 }
 
 """;

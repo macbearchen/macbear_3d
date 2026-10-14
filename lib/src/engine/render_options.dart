@@ -205,8 +205,8 @@ class M3RenderStats {
 frame${frames.toString().padLeft(6)}
 ecs:$entities/$totalEntities
 sub:$submeshes/$totalSubmeshes
-mask:$maskedSubmeshes nrm:$normalmapSubmeshes ao:$occlusionSubmeshes
-reflect:$reflection
+mask:$maskedSubmeshes nrm:$normalmapSubmeshes
+refl:$reflection ao:$occlusionSubmeshes
  tri:$triangles
 vert:$vertices''';
   }

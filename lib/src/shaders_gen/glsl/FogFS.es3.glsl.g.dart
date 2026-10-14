@@ -10,17 +10,17 @@ in highp float fogDist; // distance to camera
 
 // x: sphereStart, y: sphereDepth, z: planeHeight
 uniform mediump vec3 uFogParams;
-uniform lowp vec3 uFogColor;
+uniform mediump vec3 uFogColor;
 
 // plane fog
 uniform mediump vec4 uPlaneFog;
-uniform lowp vec3 uPlaneFogColor;
+uniform mediump vec3 uPlaneFogColor;
 
-lowp vec4 ApplyFog(lowp vec4 color)
+mediump vec4 ApplyFog(mediump vec4 color)
 {
     mediump float fogDensity;
     mediump float fogBlend;
-    lowp vec4 result = color;
+    mediump vec4 result = color;
     // 1/2: plane fog
     if (uFogParams.z > 0.0) {
         mediump float planeDist = dot(uPlaneFog.xyz, ObjectspaceV) + uPlaneFog.w;

@@ -2,8 +2,8 @@
 // Skybox vert-shader ES3 //////////
 layout(location = 0) in highp vec3 inVertex;		// vertex-data
 
-uniform lowp vec4 uColor;
-out lowp vec4 DestinationColor;
+uniform mediump vec4 uColor;
+out mediump vec4 DestinationColor;
 out mediump vec3 TexCoordDirOut;
 // eye-space for camera-viewer
 uniform highp mat4 ModelviewProjection;

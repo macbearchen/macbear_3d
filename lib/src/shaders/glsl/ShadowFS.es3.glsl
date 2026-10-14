@@ -12,13 +12,13 @@ uniform highp float ShadowNormalBias;			// normal bias (for shadow acne)
 // Shared PCF kernel — parameterized so both directional and spot shadows can reuse it.
 // uv:   projected texture coordinates (already in [0,1])
 // refZ: reference depth with depth bias already applied
-lowp float ComputeShadowPCF(highp sampler2DShadow sampler, highp vec2 texelSize, highp vec2 uv, highp float refZ)
+mediump float ComputeShadowPCF(highp sampler2DShadow sampler, highp vec2 texelSize, highp vec2 uv, highp float refZ)
 {
-    lowp float factorLit = 0.0;
+    mediump float factorLit = 0.0;
 
 ////////// PCF //////////
 #ifdef ENABLE_PCF
-    lowp vec4 factor;	// shadow factor by hardware-PCF
+    mediump vec4 factor;	// shadow factor by hardware-PCF
     factor.x = texture(sampler, vec3(uv + vec2( 1.0,  0.5) * texelSize, refZ));
     factor.y = texture(sampler, vec3(uv + vec2(-1.0, -0.5) * texelSize, refZ));
     factor.z = texture(sampler, vec3(uv + vec2(-0.5,  1.0) * texelSize, refZ));
@@ -67,9 +67,9 @@ uniform highp vec4 DepthCSM;        // depth clip-plane
 
 // compute litFactor with shadow
 #ifdef ENABLE_SHADOW_CSM_FS
-lowp float ComputeShadowLitFactor(SurfaceGeometry geo)
+mediump float ComputeShadowLitFactor(SurfaceGeometry geo)
 #else
-lowp float ComputeShadowLitFactor()
+mediump float ComputeShadowLitFactor()
 #endif
 {
 #ifdef ENABLE_SHADOW_MAP
@@ -113,21 +113,24 @@ lowp float ComputeShadowLitFactor()
 	}
 }
 
+mediump vec4 ShadeLit(mediump vec4 texDiffuse, SurfaceGeometry geo);
+mediump vec4 ShadeUnlit(mediump vec4 texDiffuse, SurfaceGeometry geo);
+// ShadeLitFactor: computes ambient once; only direct light is scaled by litFactor.
+// Avoids the shadow-edge halo that mix(ShadeUnlit, ShadeLit) causes when ambient/IBL
+// is evaluated differently on both sides of the penumbra blend.
+mediump vec4 ShadeLitFactor(mediump vec4 texDiffuse, SurfaceGeometry geo, mediump float litFactor);
+
 // shade lit/unlit to mix with shadow factor
-lowp vec4 ShadeLitShadowMix(lowp vec4 color, SurfaceGeometry geo) {
+mediump vec4 ShadeLitShadowMix(mediump vec4 color, SurfaceGeometry geo) {
 #ifdef ENABLE_SHADOW_CSM_FS
-	lowp float litFactor = ComputeShadowLitFactor(geo);
+	mediump float litFactor = ComputeShadowLitFactor(geo);
 #else
-	lowp float litFactor = ComputeShadowLitFactor();
+	mediump float litFactor = ComputeShadowLitFactor();
 #endif // ENABLE_SHADOW_CSM_FS
 
-	lowp vec4 result;
-	if (litFactor >= 1.0) {
-		result = ShadeLit(color, geo);
-	} else if (litFactor <= 0.0) {
-		result = ShadeUnlit(color, geo);
-	} else {
-		result = mix(ShadeUnlit(color, geo), ShadeLit(color, geo), litFactor);
-	}
-	return result;
+	// Use ShadeLitFactor instead of mix(ShadeUnlit, ShadeLit):
+	// ambient/IBL is evaluated once and unaffected by shadow,
+	// only the direct light contribution is attenuated by litFactor.
+	// This eliminates the bright halo ring at shadow edges on ORM/PBR materials.
+	return ShadeLitFactor(color, geo, litFactor);
 }
