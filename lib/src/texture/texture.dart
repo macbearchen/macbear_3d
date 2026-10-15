@@ -28,16 +28,16 @@ class M3Texture {
   String name = "noname";
   late WebGLTexture _texture;
   int get glId => _texture.id;
-  final bool useMipmaps;
+  final bool _useMipmaps;
   final int target; // GL_TEXTURE_2D, GL_TEXTURE_CUBE_MAP
   int texW = 32;
   int texH = 32;
 
   /// glTexStorage2D 的 levels 參數（完整 mip 鏈層數）
-  int get mipLevelCount => useMipmaps ? max(1, max(texW, texH).bitLength) : 1;
+  int get mipLevelCount => _useMipmaps ? max(1, max(texW, texH).bitLength) : 1;
 
   /// 最大 mip 層索引（GL_TEXTURE_MAX_LEVEL 用）
-  int get maxMipLevel => useMipmaps ? (mipLevelCount - 1) : 0;
+  int get maxMipLevel => _useMipmaps ? (mipLevelCount - 1) : 0;
 
   /// GPU 內部格式（texStorage2D 使用）。
   /// 未壓縮格式：[WebGL.RGBA8]（預設）、[WebGL.SRGB8_ALPHA8]。
@@ -50,8 +50,9 @@ class M3Texture {
       (_internalFormat >= M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR &&
           _internalFormat <= M3GL.COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR);
 
-  M3Texture({this.target = WebGL.TEXTURE_2D, this.useMipmaps = true, int internalFormat = WebGL.RGBA8, int? wrap})
-    : _internalFormat = internalFormat {
+  M3Texture({this.target = WebGL.TEXTURE_2D, bool mipmaps = true, int internalFormat = WebGL.RGBA8, int? wrap})
+    : _useMipmaps = mipmaps,
+      _internalFormat = internalFormat {
     _texture = gl.createTexture();
     setParameters(wrap: wrap);
   }
@@ -61,10 +62,11 @@ class M3Texture {
     this._texture, {
     required this.texW,
     required this.texH,
-    this.useMipmaps = false,
+    bool mipmaps = false,
     this.target = WebGL.TEXTURE_2D,
     int internalFormat = WebGL.RGBA8,
-  }) : _internalFormat = internalFormat;
+  }) : _useMipmaps = mipmaps,
+       _internalFormat = internalFormat;
 
   void setParameters({int? wrap}) {
     final bool isCubemap = target == WebGL.TEXTURE_CUBE_MAP;
@@ -78,12 +80,12 @@ class M3Texture {
       gl.texParameteri(target, WebGL.TEXTURE_WRAP_R, wrapMode);
     }
 
-    if (!useMipmaps) {
+    if (!_useMipmaps) {
       gl.texParameteri(target, WebGL.TEXTURE_MAX_LEVEL, 0);
     }
 
     // filter: (min, mag)
-    final minFilter = useMipmaps ? WebGL.LINEAR_MIPMAP_LINEAR : WebGL.LINEAR;
+    final minFilter = _useMipmaps ? WebGL.LINEAR_MIPMAP_LINEAR : WebGL.LINEAR;
     gl.texParameteri(target, WebGL.TEXTURE_MIN_FILTER, minFilter); // NEAREST, GL_LINEAR_MIPMAP_LINEAR
     gl.texParameteri(target, WebGL.TEXTURE_MAG_FILTER, WebGL.LINEAR); // NEAREST
     gl.pixelStorei(WebGL.UNPACK_ALIGNMENT, 1);
@@ -118,7 +120,7 @@ class M3Texture {
 
   /// Generate mipmaps for the texture.
   void generateMipmap() {
-    if (useMipmaps) {
+    if (_useMipmaps) {
       bind();
       gl.generateMipmap(target);
     }
@@ -137,7 +139,7 @@ class M3Texture {
 
   /// Create a solid color texture (2D) with specified color.
   static M3Texture createSolidColor(Vector4 color) {
-    return M3Texture(useMipmaps: false, internalFormat: WebGL.SRGB8_ALPHA8)
+    return M3Texture(mipmaps: false, internalFormat: WebGL.SRGB8_ALPHA8)
       ..name = "solid_color"
       ..allocateStorage(1, 1)
       .._initColorPixel(color);
@@ -145,7 +147,7 @@ class M3Texture {
 
   /// Create a solid color cubemap (cube) with specified color.
   static M3Texture createSolidColorCube(Vector4 color) {
-    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, useMipmaps: false, internalFormat: WebGL.SRGB8_ALPHA8)
+    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, mipmaps: false, internalFormat: WebGL.SRGB8_ALPHA8)
       ..name = "solid_color_cube"
       ..allocateStorage(1, 1);
 
@@ -158,7 +160,7 @@ class M3Texture {
   /// Create a default IBL cubemap with simple sky/ground gradient colors.
   static M3Texture createDefaultIBLCube() {
     const int size = 16;
-    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, useMipmaps: true, internalFormat: WebGL.SRGB8_ALPHA8)
+    M3Texture tex = M3Texture(target: WebGL.TEXTURE_CUBE_MAP, mipmaps: true, internalFormat: WebGL.SRGB8_ALPHA8)
       ..name = "default_ibl_cube"
       ..allocateStorage(size, size);
 
@@ -355,10 +357,10 @@ class M3Texture {
     return tex;
   }
 
-  static Future<M3Texture> fromImages(List<ui.Image> images, {bool useMipmaps = true, bool isSrgb = false}) async {
+  static Future<M3Texture> fromImages(List<ui.Image> images, {bool mipmaps = true, bool isSrgb = false}) async {
     final fmt = isSrgb ? WebGL.SRGB8_ALPHA8 : WebGL.RGBA8;
     final int target = (images.length == 6) ? WebGL.TEXTURE_CUBE_MAP : WebGL.TEXTURE_2D;
-    M3Texture tex = M3Texture(target: target, useMipmaps: useMipmaps, internalFormat: fmt)
+    M3Texture tex = M3Texture(target: target, mipmaps: mipmaps, internalFormat: fmt)
       ..name = "images(${images.length})"
       ..allocateStorage(images[0].width, images[0].height);
 
@@ -416,7 +418,7 @@ class M3Texture {
     final target = WebGL.TEXTURE_2D;
     final ktxW = ktxInfo.width;
     final ktxH = ktxInfo.height;
-    M3Texture tex = M3Texture(target: target, useMipmaps: false, internalFormat: ktxInfo.glFormat)
+    M3Texture tex = M3Texture(target: target, mipmaps: false, internalFormat: ktxInfo.glFormat)
       ..name = "ktx($ktxW x $ktxH)"
       ..texW = ktxW
       ..texH = ktxH;
@@ -455,7 +457,7 @@ class M3Texture {
 
   /// Create a procedural water normal map texture of a specified size and strength.
   static M3Texture createWaterNormalMap({int size = 256, double strength = 5.0}) {
-    M3Texture tex = M3Texture(useMipmaps: true)
+    M3Texture tex = M3Texture(mipmaps: true)
       ..name = "procedural_water_normal"
       ..allocateStorage(size, size);
 

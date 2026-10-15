@@ -6,7 +6,7 @@ class M3TextTexture extends M3Texture {
 
   static const TextStyle defaultStyle = TextStyle(color: Color(0xFFFFFFFF), fontSize: 32, fontFamily: 'Arial');
 
-  M3TextTexture._(this.text, {TextStyle? style}) : style = style ?? defaultStyle, super(useMipmaps: false) {
+  M3TextTexture._(this.text, {TextStyle? style}) : style = style ?? defaultStyle, super(mipmaps: false) {
     name = "font(${this.style.fontSize}, ${this.style.fontFamily}): [$text]";
   }
 

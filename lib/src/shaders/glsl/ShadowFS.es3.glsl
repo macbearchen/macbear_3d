@@ -113,13 +113,6 @@ mediump float ComputeShadowLitFactor()
 	}
 }
 
-mediump vec4 ShadeLit(mediump vec4 texDiffuse, SurfaceGeometry geo);
-mediump vec4 ShadeUnlit(mediump vec4 texDiffuse, SurfaceGeometry geo);
-// ShadeLitFactor: computes ambient once; only direct light is scaled by litFactor.
-// Avoids the shadow-edge halo that mix(ShadeUnlit, ShadeLit) causes when ambient/IBL
-// is evaluated differently on both sides of the penumbra blend.
-mediump vec4 ShadeLitFactor(mediump vec4 texDiffuse, SurfaceGeometry geo, mediump float litFactor);
-
 // shade lit/unlit to mix with shadow factor
 mediump vec4 ShadeLitShadowMix(mediump vec4 color, SurfaceGeometry geo) {
 #ifdef ENABLE_SHADOW_CSM_FS
@@ -128,9 +121,5 @@ mediump vec4 ShadeLitShadowMix(mediump vec4 color, SurfaceGeometry geo) {
 	mediump float litFactor = ComputeShadowLitFactor();
 #endif // ENABLE_SHADOW_CSM_FS
 
-	// Use ShadeLitFactor instead of mix(ShadeUnlit, ShadeLit):
-	// ambient/IBL is evaluated once and unaffected by shadow,
-	// only the direct light contribution is attenuated by litFactor.
-	// This eliminates the bright halo ring at shadow edges on ORM/PBR materials.
 	return ShadeLitFactor(color, geo, litFactor);
 }

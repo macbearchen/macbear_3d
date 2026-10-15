@@ -20,7 +20,7 @@ class M3ExternalTexture extends M3Texture {
 
   // shared memory for native bridge
 
-  M3ExternalTexture(this.source, {bool? isUseNative}) : super(useMipmaps: false, internalFormat: WebGL.SRGB8_ALPHA8) {
+  M3ExternalTexture(this.source, {bool? isUseNative}) : super(mipmaps: false, internalFormat: WebGL.SRGB8_ALPHA8) {
     name = "external_texture";
     if (isUseNative != null) {
       _isNativeCodec = isUseNative && _isNativeCodec;
@@ -31,7 +31,7 @@ class M3ExternalTexture extends M3Texture {
   /// Constructor to initialize from a video asset path or network URL.
   M3ExternalTexture.videoAsset(String assetPath, {bool? isUseNative})
     : source = createVideoElement(assetPath),
-      super(useMipmaps: false) {
+      super(mipmaps: false) {
     name = assetPath;
     if (isUseNative != null) {
       _isNativeCodec = isUseNative && _isNativeCodec;

@@ -179,6 +179,8 @@ class _MainPageState extends State<MainPage> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (_showSettings) ...[
+            getPostProcessWidget(),
+            const SizedBox(height: 8),
             getHelperWidget(),
             const SizedBox(height: 8),
             getFogWidget(),
@@ -390,6 +392,38 @@ class _MainPageState extends State<MainPage> {
             });
           },
           child: const Text('IBL'),
+        ),
+      ],
+    );
+  }
+
+  Widget getPostProcessWidget() {
+    final renderEngine = M3AppEngine.instance.renderEngine;
+    final postProcessOptions = renderEngine.options;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FloatingActionButton.small(
+          heroTag: 'fxaa',
+          backgroundColor: postProcessOptions.useFxaa ? Colors.amber : null,
+          onPressed: () {
+            setState(() {
+              postProcessOptions.useFxaa = !postProcessOptions.useFxaa;
+            });
+          },
+          child: const Text('fxaa', style: TextStyle(fontSize: 10)),
+        ),
+        separateWidget,
+        FloatingActionButton.small(
+          heroTag: 'bloom',
+          backgroundColor: postProcessOptions.useBloom ? Colors.amber : null,
+          onPressed: () {
+            setState(() {
+              postProcessOptions.useBloom = !postProcessOptions.useBloom;
+            });
+          },
+          child: const Text('bloom', style: TextStyle(fontSize: 10)),
         ),
       ],
     );

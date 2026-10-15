@@ -3,6 +3,9 @@ precision mediump float;
 // TexturedLighting frag-shader: ES3 //////////
 
 uniform mediump vec3 ColorAmbient;	// ambient RGB
+// material color: diffuse and specular
+uniform mediump vec4 ColorDiffuse;	// diffuse RGBA
+uniform mediump vec4 ColorSpecular;	// specular RGB, w: shininess
 
 in mediump vec2 TextureCoordOut;
 uniform sampler2D SamplerDiffuse;	// GL_TEXTURE0
@@ -26,9 +29,7 @@ in mediump vec3 ObjectspaceN;	// Object space Normal
 #ifdef ENABLE_PIXEL_LIGHTING
 
 // per pixel lighting: "glsl/Pixel.es3.frag" must append on this shader
-mediump vec4 ShadeLit(mediump vec4 texDiffuse, SurfaceGeometry geo);
-mediump vec4 ShadeLitFactor(mediump vec4 texDiffuse, SurfaceGeometry geo, mediump float litFactor);
-mediump vec4 ShadeUnlit(mediump vec4 texDiffuse, SurfaceGeometry geo);
+mediump vec4 ShadeLitFactor(mediump vec4 diffuse, SurfaceGeometry geo, mediump float litFactor);
 
 #else
 // per-vertex lighting
@@ -37,30 +38,28 @@ in mediump vec4 DestinationColor;
 
 // no pre-multiply alpha
 // lit result by per-vertex
-mediump vec4 ShadeLit(mediump vec4 texDiffuse, SurfaceGeometry geo)
+mediump vec4 ShadeLitFactor(mediump vec4 diffuse, SurfaceGeometry geo, mediump float litFactor)
 {
-	mediump vec4 result = texDiffuse * DestinationColor;
-	result.rgb += SpecularOut.rgb;
-	return result;
-}
-
-mediump vec4 ShadeLitFactor(mediump vec4 texDiffuse, SurfaceGeometry geo, mediump float litFactor)
-{
-	mediump vec4 litColor = ShadeLit(texDiffuse, geo);
-	mediump vec4 unlitColor = ShadeUnlit(texDiffuse, geo);
-	return mix(unlitColor, litColor, litFactor);
-}
-
-mediump vec4 ShadeUnlit(mediump vec4 texDiffuse, SurfaceGeometry geo)
-{
-	// unlit = ambient 
-	return texDiffuse * vec4(ColorAmbient, DestinationColor.a);
+	// unlit = ambient only
+	mediump vec4 ambient = diffuse * vec4(ColorAmbient, DestinationColor.a);
+	// lit = diffuse + specular
+	mediump vec4 resultLit = diffuse * DestinationColor;
+	resultLit.rgb += SpecularOut.rgb;
+	return mix(ambient, resultLit, litFactor);
 }
 #endif // ENABLE_PIXEL_LIGHTING
 
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS) || defined(ENABLE_SHADOW_CSM_FS)
 mediump vec4 ShadeLitShadowMix(mediump vec4 color, SurfaceGeometry geo);
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS or ENABLE_SHADOW_CSM_FS
+
+#ifdef ENABLE_POINT_LIGHTS  // multi-point-lights
+mediump vec3 CalculatePointLighting(SurfaceGeometry geo);
+#endif // ENABLE_POINT_LIGHTS
+
+#ifdef ENABLE_SPOT_LIGHTS   // spot lights
+mediump vec3 CalculateSpotLighting(SurfaceGeometry geo);
+#endif // ENABLE_SPOT_LIGHTS
 
 #ifdef ENABLE_FOG
 mediump vec4 ApplyFog(mediump vec4 texResult);
@@ -104,13 +103,22 @@ void main(void)
 #endif // ENABLE_NORMALMAP
 
 	SurfaceGeometry geo = SurfaceGeometry(ObjectspaceV, N);
+    mediump vec4 diffuse = ColorDiffuse * texResult;
 
 	////////// shadow map //////////
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS) || defined(ENABLE_SHADOW_CSM_FS)
-	texResult = ShadeLitShadowMix(texResult, geo);
+	texResult = ShadeLitShadowMix(diffuse, geo);
 #else // no shadow
-    texResult = ShadeLit(texResult, geo);
+    texResult = ShadeLitFactor(diffuse, geo, 1.0);
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS or ENABLE_SHADOW_CSM_FS
+
+#ifdef ENABLE_POINT_LIGHTS
+    texResult.rgb += CalculatePointLighting(geo) * diffuse.rgb;
+#endif
+
+#ifdef ENABLE_SPOT_LIGHTS
+    texResult.rgb += CalculateSpotLighting(geo) * diffuse.rgb;
+#endif
 
 #ifdef ENABLE_FOG
 	texResult = ApplyFog(texResult);

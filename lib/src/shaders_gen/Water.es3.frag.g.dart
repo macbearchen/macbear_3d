@@ -55,17 +55,8 @@ uniform mediump vec3 uLightDir; // parallel light
 uniform mediump vec3 uLightColor;  // light color RGB
 #endif // ENABLE_WATER_SPECULAR
 
-// shade lit/unlit functions
-mediump vec4 ShadeLit(mediump vec4 texDiffuse, SurfaceGeometry geo);
-mediump vec4 ShadeUnlit(mediump vec4 texDiffuse, SurfaceGeometry geo);
-mediump vec4 ShadeLitFactor(mediump vec4 texDiffuse, SurfaceGeometry geo, mediump float litFactor)
-{
-	mediump vec4 litColor = ShadeLit(texDiffuse, geo);
-	mediump vec4 unlitColor = ShadeUnlit(texDiffuse, geo);
-	return mix(unlitColor, litColor, litFactor);
-}
-
-mediump vec4 ShadeLit(mediump vec4 texDiffuse, SurfaceGeometry geo)
+// ShadeLitFactor for water: blend reflection/refraction + optional specular scaled by litFactor.
+mediump vec4 ShadeLitFactor(mediump vec4 diffuse, SurfaceGeometry geo, mediump float litFactor)
 {
 	mediump vec3 eyeToObjNormal = eyeToObj / eyeToObjDist; // as normalize: increase little FPS, but seem lost precision
 
@@ -73,28 +64,19 @@ mediump vec4 ShadeLit(mediump vec4 texDiffuse, SurfaceGeometry geo)
 	mediump vec4 resultColor;
 	resultColor = BlendReflectionRefraction(geo.Normal, eyeToObjNormal);
 
+	if (litFactor < 0.0) {
+		return resultColor;
+	}
+	
 #ifdef ENABLE_WATER_SPECULAR
 	// specular part:
 	mediump vec3 H = normalize(eyeToObjNormal + uLightDir);
 	highp float sf = clamp(dot(H, geo.Normal), 0.0, 1.0);
 	sf = pow(sf, 120.0);
 	
-	resultColor = vec4(resultColor.rgb + uLightColor * sf, 1.0);
+	resultColor = vec4(resultColor.rgb + uLightColor * (sf * litFactor), 1.0);
 	// resultColor = vec4(uLightColor, 1.0); // for debug
 #endif // ENABLE_WATER_SPECULAR
-
-	return resultColor;
-}
-
-mediump vec4 ShadeUnlit(mediump vec4 texDiffuse, SurfaceGeometry geo)
-{
-	// return ShadeLit(texDiffuse, geo);
-
-	mediump vec3 eyeToObjNormal = eyeToObj / eyeToObjDist; // as normalize: increase little FPS, but seem lost precision
-
-	// blend reflection and refraction
-	mediump vec4 resultColor;
-	resultColor = BlendReflectionRefraction(geo.Normal, eyeToObjNormal);
 
 	return resultColor;
 }
@@ -102,9 +84,6 @@ mediump vec4 ShadeUnlit(mediump vec4 texDiffuse, SurfaceGeometry geo)
 #if defined(ENABLE_SHADOW_MAP) || defined(ENABLE_SHADOW_CSM_VS) || defined(ENABLE_SHADOW_CSM_FS)
 mediump vec4 ShadeLitShadowMix(mediump vec4 color, SurfaceGeometry geo);
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS or ENABLE_SHADOW_CSM_FS
-#ifdef ENABLE_FOG
-mediump vec4 ApplyFog(mediump vec4 texResult);
-#endif // ENABLE_FOG
 
 #ifdef ENABLE_POINT_LIGHTS	// multi-point-lights
 mediump vec3 CalculatePointLighting(SurfaceGeometry geo);
@@ -113,6 +92,10 @@ mediump vec3 CalculatePointLighting(SurfaceGeometry geo);
 #ifdef ENABLE_SPOT_LIGHTS   // spot lights
 mediump vec3 CalculateSpotLighting(SurfaceGeometry geo);
 #endif // ENABLE_SPOT_LIGHTS
+
+#ifdef ENABLE_FOG
+mediump vec4 ApplyFog(mediump vec4 texResult);
+#endif // ENABLE_FOG
 
 // output color
 out vec4 fragColor;
@@ -129,7 +112,7 @@ void main(void)
 	// ObjectspaceV, vAccumulatedNormal
 	resultColor = ShadeLitShadowMix(resultColor, geo);
 #else
-	resultColor = ShadeLit(resultColor, geo);
+	resultColor = ShadeLitFactor(resultColor, geo, 1.0);
 #endif // ENABLE_SHADOW_MAP or ENABLE_SHADOW_CSM_VS or ENABLE_SHADOW_CSM_FS
 
 #ifdef ENABLE_POINT_LIGHTS

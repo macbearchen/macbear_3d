@@ -61,11 +61,24 @@ class M3ScenePass {
     // helper
     _renderHelper(scene);
 
-    // bind default framebuffer
-    renderEngine.bindDefaultFramebuffer();
+    if (renderEngine.options.useBloom) {
+      // 1. Run Bloom Pass (bright pass extraction + pingpong blur)
+      renderEngine.bloomPass.render(_target.texture);
 
-    // draw fullscreen
-    M3PostProcess.drawFullscreen(_target.texture);
+      // 2. Composite scene HDR texture + bloom texture directly to screen
+      renderEngine.compositePass.render(
+        // renderEngine.bloomPass.texture,  // Macbear: debug bloom
+        _target.texture,
+        renderEngine.bloomPass.texture,
+        toDefaultFramebuffer: true,
+      );
+    } else {
+      // bind default framebuffer
+      renderEngine.bindDefaultFramebuffer();
+
+      // draw fullscreen
+      M3PostProcess.drawFullscreen(_target.texture);
+    }
   }
 
   void _renderHelper(M3Scene scene) {

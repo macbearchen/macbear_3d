@@ -27,11 +27,15 @@ class M3Framebuffer {
   }
 
   /// Create color texture
-  M3Texture? createColorTexture({int target = WebGL.TEXTURE_2D, int format = WebGL.SRGB8_ALPHA8}) {
+  M3Texture? createColorTexture({
+    int target = WebGL.TEXTURE_2D,
+    required bool mipmaps,
+    int format = WebGL.SRGB8_ALPHA8,
+  }) {
     final isCubemap = target == WebGL.TEXTURE_CUBE_MAP;
     final texTarget = isCubemap ? WebGL.TEXTURE_CUBE_MAP_POSITIVE_X : WebGL.TEXTURE_2D;
     final texName = isCubemap ? 'RTT_Cube' : 'RTT_2d';
-    M3Texture tex = M3Texture(target: target, wrap: WebGL.CLAMP_TO_EDGE, internalFormat: format)
+    M3Texture tex = M3Texture(target: target, mipmaps: mipmaps, wrap: WebGL.CLAMP_TO_EDGE, internalFormat: format)
       ..name = "${texName}_${frameW}x$frameH"
       ..allocateStorage(frameW, frameH)
       ..attachToFramebuffer(WebGL.COLOR_ATTACHMENT0, texTarget);
@@ -50,7 +54,7 @@ class M3Framebuffer {
       _ => WebGL.DEPTH_ATTACHMENT,
     };
 
-    M3Texture tex = M3Texture(useMipmaps: false, wrap: WebGL.CLAMP_TO_EDGE, internalFormat: depthFormat)
+    M3Texture tex = M3Texture(mipmaps: false, wrap: WebGL.CLAMP_TO_EDGE, internalFormat: depthFormat)
       ..name = 'RT_depth_${frameW}x$frameH'
       ..allocateStorage(frameW, frameH)
       ..attachToFramebuffer(attachment, WebGL.TEXTURE_2D);
@@ -80,32 +84,17 @@ class M3Framebuffer {
   }
 
   void _checkStatus() {
-    assert(() {
-      final status = gl.checkFramebufferStatus(WebGL.FRAMEBUFFER);
-      if (status != WebGL.FRAMEBUFFER_COMPLETE) {
-        String msg = 'n/a';
-        switch (status) {
-          case WebGL.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-            msg = 'missing attachment';
-            break;
-          case WebGL.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-            msg = 'incomplete dimensions';
-            break;
-          case WebGL.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-            msg = 'incomplete missing attachment';
-            break;
-          case WebGL.FRAMEBUFFER_UNSUPPORTED:
-            msg = 'unsupported';
-            break;
-          default:
-            msg = '0x${status.toRadixString(16).toUpperCase()} unknown';
-            break;
-        }
-        M3Log.e('Framebuffer', 'FBO error: $msg');
-      }
-
-      return true;
-    }());
+    final status = gl.checkFramebufferStatus(WebGL.FRAMEBUFFER);
+    if (status != WebGL.FRAMEBUFFER_COMPLETE) {
+      final msg = switch (status) {
+        WebGL.FRAMEBUFFER_INCOMPLETE_ATTACHMENT => 'missing attachment',
+        WebGL.FRAMEBUFFER_INCOMPLETE_DIMENSIONS => 'incomplete dimensions',
+        WebGL.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT => 'incomplete missing attachment',
+        WebGL.FRAMEBUFFER_UNSUPPORTED => 'unsupported',
+        _ => '0x${status.toRadixString(16).toUpperCase()} unknown',
+      };
+      M3Log.e('Framebuffer', 'FBO error: $msg');
+    }
   }
 
   /// Bind this FBO and set viewport size
@@ -116,7 +105,6 @@ class M3Framebuffer {
     if (_colorTexture == null) {
       gl.drawBuffers(Uint32List.fromList([WebGL.NONE]));
     }
-    _checkStatus();
   }
 
   void dispose() {

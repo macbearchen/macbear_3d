@@ -181,6 +181,7 @@ class M3Water extends M3Entity {
   void render({M3FillMode fillMode = .solid}) {
     if (!visible) return;
 
+    final waterMatrix = worldMatrix;
     final viewer = scene.camera;
     if (fillMode == .solid) {
       RenderingContext gl = renderEngine.gl;
@@ -198,7 +199,6 @@ class M3Water extends M3Entity {
       prog.applyFog(scene.fog);
 
       final alpha = 1.0; //water!.waterMaterial.reflection;
-      final waterMatrix = worldMatrix;
       prog.setMatrices(viewer, waterMatrix);
       // prog.setMaterial(waterMaterial, Vector4(0.0, 1.0, 0.8, alpha));
       prog.setSkinning(null);
@@ -235,7 +235,6 @@ class M3Water extends M3Entity {
       }
 
       final progEdge = renderEngine.programs.programSimple;
-      final waterMatrix = worldMatrix;
       progEdge.setMatrices(viewer, waterMatrix);
       progEdge.setMaterial(waterMaterial, colorSurface);
       mesh.subMeshes[0].geom.draw(progEdge, fillMode: .wireframe);

@@ -91,8 +91,8 @@ class PbrTestScene_09 extends DemoScene {
     final entityNTest = addMesh(meshNormalTest, Vector3(5, 8, 0));
     entityNTest.rotation = Quaternion.euler(0, pi / 18, 0);
     entityNTest.scale = Vector3.all(6.0);
-    /*
-    final meshBox = await M3Mesh.load(testPathBox); // testUrl
+
+    /*    final meshBox = await M3Mesh.load(testPathBox); // testUrl
     final entityBox = addMesh(meshBox, Vector3(5, -2, 0));
     entityBox.rotation = Quaternion.euler(pi / 12, -pi / 18, 0);
     entityBox.scale = Vector3.all(3.0);

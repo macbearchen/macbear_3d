@@ -7,19 +7,30 @@ class M3RenderTarget {
   /// get reflection pixel size
   int get width => texture.texW;
   int get height => texture.texH;
+  final bool _useMipmaps;
   final int _colorFormat;
   M3Texture get texture => _framebuffer.colorTexture;
   double _renderScale;
 
-  M3RenderTarget(int width, int height, {int format = WebGL.RGBA8, double resolutionScale = 0.5})
-    : _colorFormat = format,
-      _renderScale = resolutionScale {
-    assert(resolutionScale > 0 && resolutionScale <= 1.0);
+  final bool hasDepth;
+
+  M3RenderTarget(
+    int width,
+    int height, {
+    required bool mipmaps,
+    int format = WebGL.RGBA8,
+    double renderScale = 0.5,
+    this.hasDepth = true,
+  }) : _useMipmaps = mipmaps,
+       _colorFormat = format,
+       _renderScale = renderScale {
+    assert(renderScale > 0 && renderScale <= 1.0);
     width = max((width * _renderScale).toInt(), 2);
     height = max((height * _renderScale).toInt(), 2);
-    _framebuffer = M3Framebuffer(width, height)
-      ..createColorTexture(format: _colorFormat)
-      ..createDepthRenderbuffer();
+    _framebuffer = M3Framebuffer(width, height)..createColorTexture(mipmaps: mipmaps, format: _colorFormat);
+    if (hasDepth) {
+      _framebuffer.createDepthRenderbuffer();
+    }
   }
 
   void setRenderScale(double scale) {
@@ -36,9 +47,10 @@ class M3RenderTarget {
     if (width == this.width && height == this.height) return;
 
     dispose();
-    _framebuffer = M3Framebuffer(width, height)
-      ..createColorTexture(format: _colorFormat)
-      ..createDepthRenderbuffer();
+    _framebuffer = M3Framebuffer(width, height)..createColorTexture(mipmaps: _useMipmaps, format: _colorFormat);
+    if (hasDepth) {
+      _framebuffer.createDepthRenderbuffer();
+    }
   }
 
   void bind() {
@@ -63,20 +75,21 @@ class M3RenderTargetManager {
     _viewportWidth = width;
     _viewportHeight = height;
 
-    // 1. Scene Target (全解析度 HDR)
-    _getOrCreate('scene', width, height, hasDepth: true);
+    // 1. Scene Target (全解析度 HDR): RGBA16F, R11F_G11F_B10F
+    const sceneFormat = WebGL.RGBA16F;
+    _getOrCreate('scene', width, height, mipmaps: false, hasDepth: true, format: sceneFormat);
 
     // 2. Mirror/Reflection/Refraction Target (0.5x 降採樣)
-    _getOrCreate('mirror', width, height, hasDepth: true, resolutionScale: 0.5);
-    _getOrCreate('reflection', width, height, hasDepth: true, resolutionScale: 0.5);
-    _getOrCreate('refraction', width, height, hasDepth: true, resolutionScale: 0.5);
+    _getOrCreate('mirror', width, height, mipmaps: true, hasDepth: true, renderScale: 0.5);
+    _getOrCreate('reflection', width, height, mipmaps: false, hasDepth: true, renderScale: 0.5);
+    _getOrCreate('refraction', width, height, mipmaps: false, hasDepth: true, renderScale: 0.5);
 
-    // 3. Bloom Ping-Pong Targets (0.5x 降採樣)
-    _getOrCreate('bloom_ping', width, height, hasDepth: false, resolutionScale: 0.5);
-    _getOrCreate('bloom_pong', width, height, hasDepth: false, resolutionScale: 0.5);
+    // 3. Bloom Ping-Pong Targets (0.5x 降採樣, HDR)
+    _getOrCreate('bloom_ping', width, height, mipmaps: false, hasDepth: false, format: sceneFormat, renderScale: 0.5);
+    _getOrCreate('bloom_pong', width, height, mipmaps: false, hasDepth: false, format: sceneFormat, renderScale: 0.5);
 
     // 4. Post Process Target (全解析度 HDR)
-    _getOrCreate('composite', width, height, hasDepth: false);
+    _getOrCreate('composite', width, height, mipmaps: false, hasDepth: false, format: sceneFormat);
   }
 
   M3RenderTarget get(String key) {
@@ -89,14 +102,22 @@ class M3RenderTargetManager {
     String key,
     int w,
     int h, {
+    required bool mipmaps,
     required bool hasDepth,
     int format = WebGL.RGBA8,
-    double resolutionScale = 1.0,
+    double renderScale = 1.0,
   }) {
     if (_targets.containsKey(key)) {
       _targets[key]!.resize(w, h);
     } else {
-      _targets[key] = M3RenderTarget(w, h, format: format, resolutionScale: resolutionScale);
+      _targets[key] = M3RenderTarget(
+        w,
+        h,
+        mipmaps: mipmaps,
+        format: format,
+        hasDepth: hasDepth,
+        renderScale: renderScale,
+      );
     }
   }
 

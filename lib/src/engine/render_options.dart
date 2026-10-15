@@ -18,6 +18,9 @@ class M3RenderOptions {
   bool useShadow = true; // shadow map
   bool useNormalMap = true; // normal map
   bool useOcclusion = true; // ambient occlusion (ORM R-channel)
+  // post process
+  bool useFxaa = false; // FXAA post-processing
+  bool useBloom = true; // bloom post-processing
   double dprScale = 1.0; // (0 ~ 1): 0 mean dpr = 1.0, 1 mean dpr = deviceDpr, in the middle is 0.5
   double getDpr(double deviceDpr) {
     return lerpDouble(1.0, deviceDpr, dprScale.clamp(0.0, 1.0))!;

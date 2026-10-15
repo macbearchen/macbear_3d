@@ -5,20 +5,8 @@ const String PixelFS_glsl = r"""
 // Per-pixel lighting shader ES3 //////////
 // must append to "TexturedLighting.es3.frag"
 
-// color combined by light and material
-uniform mediump vec4 ColorDiffuse;	// diffuse RGBA
-uniform mediump vec4 ColorSpecular;	// specular RGB, w: shininess
-
 uniform mediump vec3 uLightDir; // parallel light
 uniform mediump vec3 uLightColor;  // light color RGB
-
-#ifdef ENABLE_POINT_LIGHTS  // multi-point-lights
-mediump vec3 CalculatePointLighting(SurfaceGeometry geo);
-#endif // ENABLE_POINT_LIGHTS
-
-#ifdef ENABLE_SPOT_LIGHTS   // spot lights
-mediump vec3 CalculateSpotLighting(SurfaceGeometry geo);
-#endif // ENABLE_SPOT_LIGHTS
 
 #ifdef ENABLE_PBR
 uniform mediump vec4 uParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level, w: Occlusion-strength
@@ -67,18 +55,6 @@ mediump vec3 ComputeF0(mediump vec3 baseColor, mediump float metallic) {
     return mix(vec3(0.04), baseColor, metallic);
 }
 
-// ColorAmbient * texColor, in linear space.
-mediump vec3 ComputeAmbientLinear(mediump vec3 texColor) {
-    // return pow(ColorAmbient, vec3(2.2)) * texColor;
-    return ColorAmbient * texColor;
-}
-
-// Shared tail: gamma-correct linear color back to sRGB. Alpha is never part
-// of the lighting math, so it's tracked separately and only combined at return.
-mediump vec3 FinalizePBRColor(mediump vec3 linearColor) {
-    // return pow(max(linearColor, 0.0), vec3(1.0 / 2.2));
-    return linearColor;
-}
 #endif // ENABLE_PBR
 
 #ifdef ENABLE_IBL
@@ -112,19 +88,9 @@ mediump vec3 ApplyIBL(mediump vec3 ambientDiffuse, mediump vec3 N, mediump vec3 
 }
 #endif // ENABLE_IBL
 
-
-// ShadeLit / ShadeUnlit are thin wrappers — ShadeLitFactor is the single source of truth.
-// litFactor=1.0 (fully lit), litFactor=0.0 (fully in shadow / ambient only).
-mediump vec4 ShadeLit(mediump vec4 texDiffuse, SurfaceGeometry geo)
-{
-    return ShadeLitFactor(texDiffuse, geo, 1.0);
-}
-
 // ShadeLitFactor: single-pass shadow blend — ambient computed once, direct light scaled by litFactor.
-// This is the correct way to apply shadow factor and avoids the IBL/ambient halo at penumbra edges.
-mediump vec4 ShadeLitFactor(mediump vec4 texDiffuse, SurfaceGeometry geo, mediump float litFactor)
+mediump vec4 ShadeLitFactor(mediump vec4 diffuse, SurfaceGeometry geo, mediump float litFactor)
 {
-    mediump vec4 diffuse = ColorDiffuse * texDiffuse;
     mediump vec3 resultColor;
     mediump vec3 N = geo.Normal;
     mediump vec3 L = uLightDir;     // parallel light source
@@ -156,7 +122,7 @@ mediump vec4 ShadeLitFactor(mediump vec4 texDiffuse, SurfaceGeometry geo, medium
     mediump float denominator = 4.0 * NdotV * NdotL + 0.0001;
     mediump vec3 specular = numerator / denominator;
 
-    mediump vec3 ambient = ComputeAmbientLinear(texDiffuse.rgb) * occlusion;
+    mediump vec3 ambient = (ColorAmbient * diffuse.rgb) * occlusion;
 
     #ifdef ENABLE_IBL
     mediump vec3 Fibl = fresnelSchlick(NdotV, F0);
@@ -164,8 +130,7 @@ mediump vec4 ShadeLitFactor(mediump vec4 texDiffuse, SurfaceGeometry geo, medium
     #endif // ENABLE_IBL
 
     // ambient is unaffected by shadow; only direct light is attenuated by litFactor
-    mediump vec3 color = ambient + (kD * baseColor + specular) * NdotL * litFactor;
-    resultColor = FinalizePBRColor(color);
+    resultColor = ambient + (kD * baseColor + specular) * NdotL * litFactor;
 #else // ENABLE_PBR
     mediump float df = NdotL * litFactor;
     mediump float NdotH = max(0.0, dot(N, H));
@@ -179,24 +144,10 @@ mediump vec4 ShadeLitFactor(mediump vec4 texDiffuse, SurfaceGeometry geo, medium
 	#endif // ENABLE_CARTOON
 
 	// lit = ambient + diffuse + specular * shininess
-    resultColor = texDiffuse.rgb * (ColorAmbient + ColorDiffuse.rgb * df);
-    resultColor = resultColor + ColorSpecular.rgb * sf;
+    resultColor = diffuse.rgb * (ColorAmbient + vec3(df)) + ColorSpecular.rgb * sf;
 #endif // ENABLE_PBR
 
-#ifdef ENABLE_POINT_LIGHTS
-    resultColor += CalculatePointLighting(geo) * diffuse.rgb;
-#endif
-
-#ifdef ENABLE_SPOT_LIGHTS
-    resultColor += CalculateSpotLighting(geo) * diffuse.rgb;
-#endif
-
 	return vec4(resultColor, diffuse.a);
-}
-
-mediump vec4 ShadeUnlit(mediump vec4 texDiffuse, SurfaceGeometry geo)
-{
-    return ShadeLitFactor(texDiffuse, geo, 0.0);
 }
 
 """;

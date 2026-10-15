@@ -17,7 +17,7 @@ class M3ReflectionProbe {
     _camCapture.csmCount = 0;
     _camCapture.setViewport(0, 0, texSize, texSize, fovy: 90.0, near: near, far: far);
     _framebuffer = M3Framebuffer(texSize, texSize)
-      ..createColorTexture(target: WebGL.TEXTURE_CUBE_MAP)
+      ..createColorTexture(target: WebGL.TEXTURE_CUBE_MAP, mipmaps: true)
       ..createDepthRenderbuffer();
   }
 
