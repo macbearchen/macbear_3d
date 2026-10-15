@@ -1,5 +1,28 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
+## 0.12.0
+#### 2026-10-16
+* Add:
+  * **HDR Render Targets (RGBA16F)**: Scene, composite, and bloom ping-pong targets upgraded to `RGBA16F` for a full HDR rendering pipeline — all lighting calculations remain in linear space until the final composite pass.
+  * **Bloom Post-Processing**: Full physically-based bloom pipeline: `drawBrightPass` (UE4-style soft-knee luminance extraction via Rec. 709), `drawBlur` (5-tap linear-sampled 9-tap Gaussian separable blur), and `drawComposite` (additive scene + bloom merge with gamma encode to sRGB in a single pass).
+  * **New Post-Process Shaders** (GLSL ES 3.00):
+    * `post/BrightPass.es3.frag` — soft-knee high-pass filter with configurable threshold and knee.
+    * `post/Blur.es3.frag` — separable Gaussian blur with `uTexelSize` and `uDirection` uniforms.
+    * `post/Composite.es3.frag` — additive HDR composite + linear→sRGB gamma correction.
+  * **M3CompositePass**: New dedicated render pass class for the final scene + bloom composite and gamma correction stage.
+  * **Optional Depth Renderbuffer**: `M3RenderTarget` now accepts `hasDepth` (default `true`) to create depth-free targets for post-process ping-pong buffers, reducing GPU memory usage.
+  * **Mipmap Control on RenderTarget**: `M3RenderTarget` and `M3Framebuffer.createColorTexture` accept an explicit `mipmaps` flag — mirror targets keep mipmaps enabled; scene, reflection, refraction, and bloom targets opt out.
+
+* Optimize / Refactor:
+  * **Bloom Pass Refactor**: `M3BloomPass` now dispatches through the new `M3PostProcess` helpers (`drawBrightPass`, `drawBlur`, `drawComposite`) with HDR ping-pong targets.
+  * **`M3PostProcess` API extension**: `drawFullscreen` accepts an optional `M3Program?` override; three new programs (`programBrightPass`, `programBlur`, `programComposite`) are compiled, initialised (with explicit sampler unit bindings), and disposed alongside `programFullscreen`.
+  * **`M3RenderTarget` API**: Constructor parameter `resolutionScale` renamed to `renderScale`; `mipmaps` and `hasDepth` added as named parameters. `M3RenderTargetManager._getOrCreate` updated accordingly.
+  * **`M3Texture` API**: Public field `useMipmaps` encapsulated as private `_useMipmaps`; constructor parameter renamed `useMipmaps` → `mipmaps` across `M3Texture`, `M3ExternalTexture`, `M3TextTexture`, and all factory methods (`createSolidColor`, `createSolidColorCube`, `createDefaultIBLCube`, `fromImages`, `fromKTX`, `createWaterNormalMap`).
+  * **PBR Shader Cleanup**: Removed redundant `ShadeLit` / `ShadeUnlit` wrapper functions from `PixelFS.es3.glsl`; all callers use `ShadeLitFactor` directly. Tonemapping deferred to the Composite pass — `FinalizePBRColor` wrapper removed; raw linear `resultColor` is returned.
+  * **Ambient Lighting Fix**: PBR ambient replaced `ComputeAmbientLinear(texDiffuse.rgb)` with inline `ColorAmbient * diffuse.rgb` to eliminate a hidden double linear-space conversion.
+  * **Shadow Forward Declarations Removed**: `ShadowFS.es3.glsl` forward declarations for `ShadeLit`, `ShadeUnlit`, and `ShadeLitFactor` removed (resolved via include order).
+  * **Dead Code Removal**: `ENABLE_POINT_LIGHTS` / `ENABLE_SPOT_LIGHTS` branches removed from `ShadeLitFactor` (point/spot lighting handled in dedicated passes); unused local alias `waterMatrix` removed from `M3Water`.
+
 ## 0.11.0
 #### 2026-10-01
 * Add:
