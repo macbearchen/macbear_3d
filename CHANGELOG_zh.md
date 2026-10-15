@@ -1,5 +1,28 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
+## 0.12.0
+#### 2026-10-16
+* 新增功能 (Add):
+  * **HDR 渲染目標 (RGBA16F)**：場景、合成與 Bloom 乒乓緩衝區全面升級至 `RGBA16F`，實現完整的 HDR 渲染管線 — 所有光照計算均在線性色彩空間中進行，最終統一在 Composite Pass 進行色調映射。
+  * **Bloom 後處理 (Bloom Post-Processing)**：完整的物理基礎 Bloom 管線：`drawBrightPass`（UE4 風格 Soft-Knee 亮度萃取，採用 Rec. 709 亮度公式）、`drawBlur`（5-tap 線性取樣 9-tap 高斯可分離模糊）及 `drawComposite`（加法混合 Scene + Bloom 並在同一 Pass 中完成線性→sRGB Gamma 編碼）。
+  * **新增後處理著色器** (GLSL ES 3.00)：
+    * `post/BrightPass.es3.frag` — 具備可設定閥值與 Soft-Knee 的高通濾波器。
+    * `post/Blur.es3.frag` — 可分離高斯模糊，透過 `uTexelSize` 與 `uDirection` uniform 控制。
+    * `post/Composite.es3.frag` — HDR 加法合成 + 線性→sRGB Gamma 校正。
+  * **M3CompositePass**：新的專屬渲染通道類別，負責最終的 Scene + Bloom 合成與 Gamma 校正階段。
+  * **可選深度緩衝 (Optional Depth Renderbuffer)**：`M3RenderTarget` 新增 `hasDepth` 參數（預設為 `true`），可建立無深度緩衝的目標，用於後處理乒乓緩衝區，降低 GPU 記憶體佔用。
+  * **RenderTarget Mipmap 控制**：`M3RenderTarget` 與 `M3Framebuffer.createColorTexture` 新增明確的 `mipmaps` 旗標 — 鏡面目標保留 Mipmap；場景、反射、折射及 Bloom 目標則關閉 Mipmap。
+
+* 優化與重構 (Optimize / Refactor):
+  * **Bloom Pass 重構**：`M3BloomPass` 改由新的 `M3PostProcess` 輔助方法（`drawBrightPass`、`drawBlur`、`drawComposite`）搭配 HDR 乒乓緩衝區進行調度。
+  * **`M3PostProcess` API 擴充**：`drawFullscreen` 新增可選的 `M3Program?` 覆寫參數；三個新 Program（`programBrightPass`、`programBlur`、`programComposite`）在初始化時完成編譯、明確取樣器單元綁定，並與 `programFullscreen` 一同在 `dispose` 時釋放。
+  * **`M3RenderTarget` API 調整**：建構子參數 `resolutionScale` 重命名為 `renderScale`；新增 `mipmaps` 與 `hasDepth` 具名參數。`M3RenderTargetManager._getOrCreate` 同步更新。
+  * **`M3Texture` API 調整**：公開欄位 `useMipmaps` 封裝為私有 `_useMipmaps`；建構子參數統一由 `useMipmaps` 更名為 `mipmaps`，涵蓋 `M3Texture`、`M3ExternalTexture`、`M3TextTexture` 及所有工廠方法（`createSolidColor`、`createSolidColorCube`、`createDefaultIBLCube`、`fromImages`、`fromKTX`、`createWaterNormalMap`）。
+  * **PBR 著色器精簡**：移除 `PixelFS.es3.glsl` 中冗餘的 `ShadeLit` / `ShadeUnlit` 包裝函式，所有呼叫端改直接使用 `ShadeLitFactor`。色調映射延遲至 Composite Pass — 移除 `FinalizePBRColor` 包裝，直接回傳原始線性 `resultColor`。
+  * **環境光照修正 (Ambient Fix)**：PBR 環境光由 `ComputeAmbientLinear(texDiffuse.rgb)` 改為內聯 `ColorAmbient * diffuse.rgb`，消除隱藏的線性色彩空間重複轉換。
+  * **移除著色器前向宣告**：`ShadowFS.es3.glsl` 中 `ShadeLit`、`ShadeUnlit`、`ShadeLitFactor` 的前向宣告已移除（改由 include 順序解析）。
+  * **移除廢棄程式碼**：從 `ShadeLitFactor` 中移除 `ENABLE_POINT_LIGHTS` / `ENABLE_SPOT_LIGHTS` 分支（點光源/聚光燈光照已在專屬通道處理）；移除 `M3Water` 中未使用的局部變數別名 `waterMatrix`。
+
 ## 0.11.0
 #### 2026-10-01
 * 新增功能 (Add):
