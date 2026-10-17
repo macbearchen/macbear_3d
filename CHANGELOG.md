@@ -3,6 +3,20 @@
 ## 0.12.0
 #### 2026-10-16
 * Add:
+  * **FXAA Anti-Aliasing Pass (`M3FxaaPass`)**: Full implementation of Fast Approximate Anti-Aliasing (FXAA) post-processing with edge detection and sub-pixel antialiasing blending (`FXAA.es3.frag`).
+  * **Configurable Tonemapping Curves (`M3TonemapMode`)**: Extracted and unified tonemapping operators into `Tonemap.es3.glsl`:
+    * None (linear clamped)
+    * Reinhard
+    * ACES Filmic (Narkowicz fit)
+    * Uncharted 2 Filmic
+    * Grayscale
+    * Khronos PBR Neutral (`KHR_materials_pbrNeutral`)
+    * Added `exposure` multiplier and integrated tonemapping into both Fullscreen and Composite passes.
+  * **Example Control Widgets**: Modularized control panels into dedicated widgets under `example/lib/widgets/`:
+    * `fog_control_widget.dart`
+    * `helper_control_widget.dart`
+    * `post_process_control_widget.dart`
+    * `shader_control_widget.dart`
   * **HDR Render Targets (RGBA16F)**: Scene, composite, and bloom ping-pong targets upgraded to `RGBA16F` for a full HDR rendering pipeline — all lighting calculations remain in linear space until the final composite pass.
   * **Bloom Post-Processing**: Full physically-based bloom pipeline: `drawBrightPass` (UE4-style soft-knee luminance extraction via Rec. 709), `drawBlur` (5-tap linear-sampled 9-tap Gaussian separable blur), and `drawComposite` (additive scene + bloom merge with gamma encode to sRGB in a single pass).
   * **New Post-Process Shaders** (GLSL ES 3.00):
@@ -14,6 +28,9 @@
   * **Mipmap Control on RenderTarget**: `M3RenderTarget` and `M3Framebuffer.createColorTexture` accept an explicit `mipmaps` flag — mirror targets keep mipmaps enabled; scene, reflection, refraction, and bloom targets opt out.
 
 * Optimize / Refactor:
+  * **Post-Processing Pipeline**: Integrated FXAA pass and intermediate LDR target (`ldr_post`) into `M3ScenePass` and `M3PostProcess`.
+  * **Render Options**: Added `useFxaa`, `tonemapMode`, and `exposure` controls in `M3RenderOptions`.
+  * **Dependencies**: Upgraded `build` dependency to `^5.0.0` in package and example.
   * **Bloom Pass Refactor**: `M3BloomPass` now dispatches through the new `M3PostProcess` helpers (`drawBrightPass`, `drawBlur`, `drawComposite`) with HDR ping-pong targets.
   * **`M3PostProcess` API extension**: `drawFullscreen` accepts an optional `M3Program?` override; three new programs (`programBrightPass`, `programBlur`, `programComposite`) are compiled, initialised (with explicit sampler unit bindings), and disposed alongside `programFullscreen`.
   * **`M3RenderTarget` API**: Constructor parameter `resolutionScale` renamed to `renderScale`; `mipmaps` and `hasDepth` added as named parameters. `M3RenderTargetManager._getOrCreate` updated accordingly.

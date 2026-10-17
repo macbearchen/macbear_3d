@@ -3,6 +3,20 @@
 ## 0.12.0
 #### 2026-10-16
 * 新增功能 (Add):
+  * **FXAA 反鋸齒通道 (`M3FxaaPass`)**：實作 Fast Approximate Anti-Aliasing (FXAA) 後處理通道，具備邊緣檢測與次像素抗鋸齒平滑混合 (`FXAA.es3.frag`)。
+  * **多種色調映射模式 (`M3TonemapMode`)**：將色調映射演算法統一整理至 `Tonemap.es3.glsl`：
+    * None (線性截斷)
+    * Reinhard
+    * ACES Filmic (Narkowicz 擬合)
+    * Uncharted 2 Filmic
+    * Grayscale (灰階)
+    * Khronos PBR Neutral (`KHR_materials_pbrNeutral`)
+    * 新增 `exposure` 曝光倍率調節，並整合至 Fullscreen 與 Composite 後處理通道。
+  * **範例控制面板模組化 (Example Control Widgets)**：將範例控制選單重構為獨立 Widget（位於 `example/lib/widgets/`）：
+    * `fog_control_widget.dart`
+    * `helper_control_widget.dart`
+    * `post_process_control_widget.dart`
+    * `shader_control_widget.dart`
   * **HDR 渲染目標 (RGBA16F)**：場景、合成與 Bloom 乒乓緩衝區全面升級至 `RGBA16F`，實現完整的 HDR 渲染管線 — 所有光照計算均在線性色彩空間中進行，最終統一在 Composite Pass 進行色調映射。
   * **Bloom 後處理 (Bloom Post-Processing)**：完整的物理基礎 Bloom 管線：`drawBrightPass`（UE4 風格 Soft-Knee 亮度萃取，採用 Rec. 709 亮度公式）、`drawBlur`（5-tap 線性取樣 9-tap 高斯可分離模糊）及 `drawComposite`（加法混合 Scene + Bloom 並在同一 Pass 中完成線性→sRGB Gamma 編碼）。
   * **新增後處理著色器** (GLSL ES 3.00)：
@@ -14,6 +28,9 @@
   * **RenderTarget Mipmap 控制**：`M3RenderTarget` 與 `M3Framebuffer.createColorTexture` 新增明確的 `mipmaps` 旗標 — 鏡面目標保留 Mipmap；場景、反射、折射及 Bloom 目標則關閉 Mipmap。
 
 * 優化與重構 (Optimize / Refactor):
+  * **後處理管線整合 (Post-Processing Pipeline)**：在 `M3ScenePass` 與 `M3PostProcess` 中無縫串接 FXAA 通道與中間 LDR 渲染目標 (`ldr_post`)。
+  * **渲染選項擴充 (Render Options)**：在 `M3RenderOptions` 中新增 `useFxaa`、`tonemapMode` 與 `exposure` 選項。
+  * **依賴套件升級 (Dependencies)**：將套件及範例中的 `build` 依賴升級至 `^5.0.0`。
   * **Bloom Pass 重構**：`M3BloomPass` 改由新的 `M3PostProcess` 輔助方法（`drawBrightPass`、`drawBlur`、`drawComposite`）搭配 HDR 乒乓緩衝區進行調度。
   * **`M3PostProcess` API 擴充**：`drawFullscreen` 新增可選的 `M3Program?` 覆寫參數；三個新 Program（`programBrightPass`、`programBlur`、`programComposite`）在初始化時完成編譯、明確取樣器單元綁定，並與 `programFullscreen` 一同在 `dispose` 時釋放。
   * **`M3RenderTarget` API 調整**：建構子參數 `resolutionScale` 重命名為 `renderScale`；新增 `mipmaps` 與 `hasDepth` 具名參數。`M3RenderTargetManager._getOrCreate` 同步更新。

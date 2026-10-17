@@ -45,7 +45,9 @@
 - **動態反射探針**: 加入 `M3ReflectionProbe` 實作即時環境捕捉與動態反射。
 - **水面效果**: 使用 `M3Water` 實現即時水面渲染，支援雙層動態法線貼圖流動（支援在執行期使用 `M3Texture.createWaterNormalMap` 程序化生成水面法線貼圖）、平面反射與折射、可調波紋扭曲，以及水下霧色深度渲染。
 - **HDR 渲染管線 (HDR Rendering Pipeline)**：所有渲染目標（場景、Bloom、合成）均採用 `RGBA16F`，實現完整的 HDR 渲染管線 — 光照計算全程保持線性色彩空間，色調映射延遲至最終合成通道執行。
+- **色調映射模式 (Tonemapping Curves)**：內建多種可選的色調映射演算法 (`M3TonemapMode`)：Reinhard、ACES Filmic、Uncharted 2 Filmic、灰階 (Grayscale) 與 Khronos PBR Neutral (`KHR_materials_pbrNeutral`)，支援自定義曝光度 (`exposure`)。
 - **Bloom 後處理 (Bloom Post-Processing)**：物理基礎 Bloom 效果，包含 UE4 風格 Soft-Knee 亮通濾波（Rec. 709 亮度）、5-tap 高斯可分離模糊，以及加法合成通道配合線性→sRGB Gamma 校正（`M3BloomPass`、`M3CompositePass`）。
+- **FXAA 反鋸齒 (FXAA Anti-Aliasing)**：高效能 Fast Approximate Anti-Aliasing (`M3FxaaPass`, `FXAA.es3.frag`) 後處理通道，具備亮度邊緣檢測與次像素抗鋸齒平滑混合。
 - **地形系統**: 支援使用 Perlin Noise 程序化生成地形。支援細節層級 (LOD 32x32 -> 16x16 -> 8x8 -> 4x4) 邊界縫合以及分區瓦片地形渲染 (`M3TiledTerrain`, `M3TerrainTileGeom`)。亦支援 **`M3TiledPlaneMesh`** — 具有每格材質構建器及可選逐頂點高度回調 (`onVertex`) 的瓦片平面網格。
 - **霧化效果 (Fog Effect)**: 引入 **M3Fog** 支援深度場景霧化，具備相機深度衰減、自定義霧色，以及自定義裁剪平面（如用於水下霧化與深度顏色渲染）。
 - **渲染上下文 (RenderContext)**: `M3RenderContext` 封裝每幀 GPU 狀態（視口、矩陣、光源、陰影貼圖、反射/水面目標），讓多通道渲染架構更清晰。
@@ -126,7 +128,7 @@ class MyScene extends M3Scene {
 
 ## 路線圖
 
-- [x] 後處理特效 (Bloom, HDR) — `RGBA16F` HDR 管線、UE4 風格 Bloom（亮通濾波 + 高斯模糊 + 合成）
+- [x] 後處理特效 (Bloom, HDR, FXAA) — `RGBA16F` HDR 管線、UE4 風格 Bloom（亮通濾波 + 高斯模糊 + 合成）、FXAA 反鋸齒
 - [ ] 進階粒子系統
 - [x] 多光源支援 (已支援 1 盞方向光、8 盞點光源，以及最多 8 盞聚光燈含陰影圖集)
 

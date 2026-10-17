@@ -45,7 +45,9 @@ Preview the `main_all.dart` example live in your browser!
 - **Dynamic Reflection Probe**: Added `M3ReflectionProbe` for real-time cubemap capture and dynamic reflections.
 - **Water Effect**: Real-time water rendering with `M3Water` — dual-layer animated normal-map flow (supporting procedural water normal map generation at runtime via `M3Texture.createWaterNormalMap`), planar reflection & refraction, configurable wave distortion, and fog-depth underwater tinting.
 - **HDR Rendering Pipeline**: All render targets (scene, bloom, composite) use `RGBA16F` for a full HDR pipeline — lighting stays in linear space throughout and tonemapping is deferred to the final composite pass.
+- **Tonemapping Curves**: Built-in selectable tonemapping operators (`M3TonemapMode`): Reinhard, ACES Filmic, Uncharted 2 Filmic, Grayscale, and Khronos PBR Neutral (`KHR_materials_pbrNeutral`) with configurable exposure.
 - **Bloom Post-Processing**: Physically-based bloom with UE4-style soft-knee bright-pass (Rec. 709 luminance), 5-tap Gaussian separable blur, and an additive composite pass with linear→sRGB gamma correction (`M3BloomPass`, `M3CompositePass`).
+- **FXAA Anti-Aliasing**: High-performance Fast Approximate Anti-Aliasing (`M3FxaaPass`, `FXAA.es3.frag`) post-processing pass with luma edge detection and sub-pixel antialiasing blending.
 - **Terrain System**: Generate procedural terrain utilizing Perlin Noise. Supports Level of Detail (LOD 32x32 -> 16x16 -> 8x8 -> 4x4) with stitching and chunked/tiled terrain rendering (`M3TiledTerrain`, `M3TerrainTileGeom`). Also supports **`M3TiledPlaneMesh`** — a tiled plane mesh with per-tile material builder and optional per-vertex height callback (`onVertex`).
 - **Fog Effect**: Introduced **M3Fog** supporting depth-based scene fog with camera-facing depth attenuation, custom color settings, and optional custom clip planes (e.g., for underwater depth tinting).
 - **RenderContext**: `M3RenderContext` bundles per-frame GPU state (viewport, matrices, lights, shadow map, reflection/water targets) for clean multi-pass rendering.
@@ -159,7 +161,7 @@ output to uml/macbear_3d.puml
 
 ## Roadmap
 
-- [x] Post-processing effects (Bloom, HDR) — `RGBA16F` HDR pipeline, UE4-style bloom (BrightPass + Gaussian blur + Composite)
+- [x] Post-processing effects (Bloom, HDR, FXAA) — `RGBA16F` HDR pipeline, UE4-style bloom (BrightPass + Gaussian blur + Composite), FXAA anti-aliasing
 - [ ] Advanced Particle System
 - [x] Multiple lights support (1 directional light, 8 point lights, and up to 8 spotlights with shadow atlas)
 
