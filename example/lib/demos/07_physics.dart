@@ -1,5 +1,6 @@
 // ignore_for_file: file_names
-import '../main_all.dart';
+import 'demo_scene.dart';
+import '../rapier/rapier_physics_engine.dart';
 
 // ignore: camel_case_types
 class PhysicsScene_07 extends DemoScene {
@@ -36,35 +37,46 @@ class PhysicsScene_07 extends DemoScene {
       Vector3(0, -2, 0),
       Vector3(.5, .6, 3),
     ];
-    List<Vector4> arrayColor = [Colors.yellow, Colors.red, Colors.green, Colors.blue];
+    List<Vector3> arrayColor = [
+      M3Constants.colorRed,
+      M3Constants.colorGreen,
+      M3Constants.colorBlue,
+      M3Constants.colorYellow,
+    ];
 
     // 07-2: physics rigid box
     for (int i = 0; i < arrayPos.length; i++) {
+      final Vector3 rgb = arrayColor[i % 4];
       final pos = arrayPos[i].clone();
       pos.z += 1.5; // drop from sky
 
       // visual entity
-      final entity = addMesh(cubeMesh, pos)..color = arrayColor[i % 4];
+      final entity = addMesh(cubeMesh, pos);
+      entity.color.setValues(rgb.r, rgb.g, rgb.b, 1.0);
       final rb = physicsSystem.addBox(0.5, 0.5, 0.5, desc: M3RigidBodyDesc.dynamic()..position = pos);
       physicsSystem.attachEntity(entity, rb);
     }
 
     // 07-3: physics rigid ball
     for (int i = 0; i < arrayPos.length; i++) {
+      final Vector3 rgb = arrayColor[i % 4];
       // drop from sky
       final pos = arrayPos[i].clone() + Vector3(0.3, 0.6, 3.0);
 
-      final entity = addMesh(ballMesh, pos)..color = arrayColor[i % 4];
+      final entity = addMesh(ballMesh, pos);
+      entity.color.setValues(rgb.r, rgb.g, rgb.b, 1.0);
       final rb = physicsSystem.addSphere(0.5, desc: M3RigidBodyDesc.dynamic()..position = pos);
       physicsSystem.attachEntity(entity, rb);
     }
 
     // 07-4: physics rigid cylinder
     for (int i = 0; i < arrayPos.length; i++) {
+      final Vector3 rgb = arrayColor[i % 4];
       // drop from sky
       final pos = Vector3(-2 + i * 0.4, -2 + i * 0.2, i * 2 + 3);
 
-      final entity = addMesh(cylinderMesh, pos)..color = arrayColor[i % 4];
+      final entity = addMesh(cylinderMesh, pos);
+      entity.color.setValues(rgb.r, rgb.g, rgb.b, 1.0);
       final rb = physicsSystem.addCylinder(
         radius: 0.5,
         halfHeight: 0.5,

@@ -1,6 +1,5 @@
 // ignore_for_file: unused_local_variable, file_names
-import 'package:material_ui/material_ui.dart' as fm;
-import '../main_all.dart';
+import 'demo_scene.dart';
 
 // ignore: camel_case_types
 class CubeScene_01 extends DemoScene {
@@ -57,7 +56,7 @@ class CubeScene_01 extends DemoScene {
   }
 
   @override
-  fm.Widget buildUI(fm.BuildContext context) {
+  Widget buildUI(BuildContext context) {
     const String info =
         '''
 Welcome to 麥克熊 3D.
@@ -73,20 +72,20 @@ Click buttons to test examples.
   7. Physics scene
   8. Text 3D scene
   9. PBR Test scene''';
-    return fm.SafeArea(
+    return SafeArea(
       bottom: false,
-      child: fm.Container(
-        padding: const fm.EdgeInsets.all(12),
-        decoration: fm.BoxDecoration(color: fm.Colors.black54, borderRadius: fm.BorderRadius.circular(12)),
-        child: fm.Column(
-          mainAxisSize: fm.MainAxisSize.min,
-          crossAxisAlignment: fm.CrossAxisAlignment.start,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(12)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const fm.Text(
+            Text(
               info,
-              style: fm.TextStyle(color: fm.Colors.white, fontWeight: fm.FontWeight.bold),
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
-            const fm.SizedBox(height: 8),
+            const SizedBox(height: 8),
           ],
         ),
       ),

@@ -1,5 +1,5 @@
 // ignore_for_file: file_names
-import '../main_all.dart';
+import 'demo_scene.dart';
 
 // ignore: camel_case_types
 class PbrTestScene_09 extends DemoScene {
@@ -36,7 +36,7 @@ class PbrTestScene_09 extends DemoScene {
         double x = (i - (rows - 1) / 2) * spacing;
         double y = (j - (cols - 1) / 2) * spacing;
 
-        final ball = addMesh(mesh, Vector3(x, y, 7));
+        final ball = addMesh(mesh, Vector3(x, y, 0));
         ball.rotation.setEuler(i * pi / 10, j * pi / 20, 0);
         ball.scale = Vector3.all((i + 40) * 0.05);
       }
@@ -87,9 +87,10 @@ class PbrTestScene_09 extends DemoScene {
     final testPathN = 'glb/CompareNormal.glb';
     final testPathBox = 'glb/BoxTextured.gltf';
 
+    final entityZ = 6.0;
     final meshNormalTest = await M3Mesh.load(testPath2); // testUrl
-    final entityNTest = addMesh(meshNormalTest, Vector3(5, 8, 0));
-    entityNTest.rotation = Quaternion.euler(0, pi / 18, 0);
+    final entityNTest = addMesh(meshNormalTest, Vector3(5, 12, entityZ));
+    entityNTest.rotation = Quaternion.euler(0, pi * 0.45, 0);
     entityNTest.scale = Vector3.all(6.0);
 
     /*    final meshBox = await M3Mesh.load(testPathBox); // testUrl
@@ -98,17 +99,17 @@ class PbrTestScene_09 extends DemoScene {
     entityBox.scale = Vector3.all(3.0);
 */
     final meshNormal = await M3Mesh.load(testPathN); // testUrl
-    final entityN = addMesh(meshNormal, Vector3(-2, 2, 2));
+    final entityN = addMesh(meshNormal, Vector3(-2, 2, entityZ));
     entityN.rotation = Quaternion.euler(0, pi / 3, 0);
     entityN.scale = Vector3.all(3.0);
 
     final meshMetallic = await M3Mesh.load(testPathM);
-    final entityM = addMesh(meshMetallic, Vector3(-2, 5, 2));
+    final entityM = addMesh(meshMetallic, Vector3(-2, 5, entityZ));
     entityM.rotation = Quaternion.euler(0, pi / 3, 0);
     entityM.scale = Vector3.all(2.0);
 
     final meshRoughness = await M3Mesh.load(testPathR);
-    final entityR = addMesh(meshRoughness, Vector3(-2, 8, 2));
+    final entityR = addMesh(meshRoughness, Vector3(-2, 8, entityZ));
     entityR.rotation = Quaternion.euler(0, pi / 3, 0);
     entityR.scale = Vector3.all(2.0);
   }

@@ -1,6 +1,5 @@
 // ignore_for_file: file_names
-import 'package:material_ui/material_ui.dart' as fm;
-import '../main_all.dart';
+import 'demo_scene.dart';
 
 // ignore: camel_case_types
 class ObjTeapotScene_04 extends DemoScene {
@@ -155,23 +154,23 @@ class ObjTeapotScene_04 extends DemoScene {
   }
 
   @override
-  fm.Widget buildUI(fm.BuildContext context) {
-    if (mtrTeapot == null) return const fm.SizedBox.shrink();
+  Widget buildUI(BuildContext context) {
+    if (mtrTeapot == null) return const SizedBox.shrink();
 
-    return fm.SafeArea(
+    return SafeArea(
       bottom: false,
-      child: fm.Container(
-        padding: const fm.EdgeInsets.all(8),
-        decoration: fm.BoxDecoration(color: fm.Colors.black54, borderRadius: fm.BorderRadius.circular(12)),
-        child: fm.Column(
-          mainAxisSize: fm.MainAxisSize.min,
-          crossAxisAlignment: fm.CrossAxisAlignment.start,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(12)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const fm.Text(
+            const Text(
               "Teapot Material",
-              style: fm.TextStyle(color: fm.Colors.white, fontWeight: fm.FontWeight.bold),
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
-            const fm.SizedBox(height: 5),
+            const SizedBox(height: 5),
             _buildSlider("Metallic", () => mtrTeapot!.metallic, (val) {
               mtrTeapot!.metallic = val;
             }),
@@ -179,20 +178,20 @@ class ObjTeapotScene_04 extends DemoScene {
               mtrTeapot!.roughness = val;
               mtrTeapot!.reflection = 1.0 - val;
             }),
-            const fm.SizedBox(height: 10),
-            const fm.Text(
+            const SizedBox(height: 10),
+            const Text(
               "Reflection Probe",
-              style: fm.TextStyle(color: fm.Colors.white, fontWeight: fm.FontWeight.bold),
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
-            const fm.SizedBox(height: 5),
+            const SizedBox(height: 5),
             _buildToggle("Debug", () => isDebugDraw, (val) => isDebugDraw = val),
             _buildToggle("Enable", () => isEnableProbe, (val) => setReflectionProbe(val)),
-            const fm.SizedBox(height: 10),
-            const fm.Text(
+            const SizedBox(height: 10),
+            const Text(
               "Planar Reflection",
-              style: fm.TextStyle(color: fm.Colors.white, fontWeight: fm.FontWeight.bold),
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
-            const fm.SizedBox(height: 5),
+            const SizedBox(height: 5),
             _buildToggle("Enable", () => isEnablePlanar, (val) => setPlanarReflection(val)),
           ],
         ),
@@ -200,51 +199,51 @@ class ObjTeapotScene_04 extends DemoScene {
     );
   }
 
-  fm.Widget _buildToggle(String label, bool Function() getValue, fm.ValueChanged<bool> onChanged) {
-    return fm.StatefulBuilder(
+  Widget _buildToggle(String label, bool Function() getValue, ValueChanged<bool> onChanged) {
+    return StatefulBuilder(
       builder: (context, setState) {
         final bool value = getValue();
-        return fm.Row(
-          mainAxisSize: fm.MainAxisSize.min,
+        return Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            fm.SizedBox(
+            SizedBox(
               width: 80,
-              child: fm.Text(label, style: const fm.TextStyle(color: fm.Colors.white70, fontSize: 12)),
+              child: Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
             ),
-            fm.Switch(
+            Switch(
               value: value,
-              activeThumbColor: fm.Colors.lightGreen,
+              activeThumbColor: Colors.lightGreen,
               onChanged: (val) {
                 setState(() {
                   onChanged(val);
                 });
               },
             ),
-            fm.Text(value ? "ON" : "OFF", style: const fm.TextStyle(color: fm.Colors.white, fontSize: 12)),
+            Text(value ? "ON" : "OFF", style: const TextStyle(color: Colors.white, fontSize: 12)),
           ],
         );
       },
     );
   }
 
-  fm.Widget _buildSlider(String label, double Function() getValue, fm.ValueChanged<double> onChanged) {
-    return fm.StatefulBuilder(
+  Widget _buildSlider(String label, double Function() getValue, ValueChanged<double> onChanged) {
+    return StatefulBuilder(
       builder: (context, setState) {
         final double value = getValue();
-        return fm.Row(
-          mainAxisSize: fm.MainAxisSize.min,
+        return Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            fm.SizedBox(
+            SizedBox(
               width: 80,
-              child: fm.Text(label, style: const fm.TextStyle(color: fm.Colors.white70, fontSize: 12)),
+              child: Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
             ),
-            fm.SizedBox(
+            SizedBox(
               width: 150,
-              child: fm.Slider(
+              child: Slider(
                 value: value,
                 min: 0,
                 max: 1,
-                activeColor: fm.Colors.lightGreen,
+                activeColor: Colors.lightGreen,
                 onChanged: (val) {
                   setState(() {
                     onChanged(val);
@@ -252,7 +251,7 @@ class ObjTeapotScene_04 extends DemoScene {
                 },
               ),
             ),
-            fm.Text(value.toStringAsFixed(2), style: const fm.TextStyle(color: fm.Colors.white, fontSize: 12)),
+            Text(value.toStringAsFixed(2), style: const TextStyle(color: Colors.white, fontSize: 12)),
           ],
         );
       },

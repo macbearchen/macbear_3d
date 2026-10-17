@@ -47,7 +47,9 @@ class M3ScenePass {
       // reflection pass:
       // 1. cubemap reflection (only if not using single-pass IBL)
       // 2. planar reflection
-      renderEngine.mainContext.renderReflectionPass();
+      if (renderEngine.options.usePlanarReflection) {
+        renderEngine.mainContext.renderReflectionPass();
+      }
 
       // post render water
       scene.water?.render();
@@ -61,23 +63,53 @@ class M3ScenePass {
     // helper
     _renderHelper(scene);
 
-    if (renderEngine.options.useBloom) {
+    final useBloom = renderEngine.options.useBloom;
+    final useFxaa = renderEngine.options.useFxaa;
+
+    if (useBloom) {
       // 1. Run Bloom Pass (bright pass extraction + pingpong blur)
       renderEngine.bloomPass.render(_target.texture);
 
-      // 2. Composite scene HDR texture + bloom texture directly to screen
-      renderEngine.compositePass.render(
-        // renderEngine.bloomPass.texture,  // Macbear: debug bloom
-        _target.texture,
-        renderEngine.bloomPass.texture,
-        toDefaultFramebuffer: true,
-      );
-    } else {
-      // bind default framebuffer
-      renderEngine.bindDefaultFramebuffer();
+      if (useFxaa) {
+        // Composite to LDR intermediate target first
+        final ldrTarget = renderEngine.renderTargets.get('ldr_post');
+        ldrTarget.bind();
+        M3PostProcess.drawComposite(
+          _target.texture,
+          renderEngine.bloomPass.texture,
+          bloomIntensity: renderEngine.compositePass.bloomIntensity,
+          tonemapMode: renderEngine.options.tonemapMode,
+          exposure: renderEngine.options.exposure,
+        );
 
-      // draw fullscreen
-      M3PostProcess.drawFullscreen(_target.texture);
+        // Apply FXAA directly to default framebuffer
+        renderEngine.fxaaPass.render(ldrTarget.texture, toDefaultFramebuffer: true);
+      } else {
+        // Composite directly to screen
+        renderEngine.compositePass.render(_target.texture, renderEngine.bloomPass.texture, toDefaultFramebuffer: true);
+      }
+    } else {
+      if (useFxaa) {
+        // Tonemap to LDR intermediate target first
+        final ldrTarget = renderEngine.renderTargets.get('ldr_post');
+        ldrTarget.bind();
+        M3PostProcess.drawFullscreen(
+          _target.texture,
+          tonemapMode: renderEngine.options.tonemapMode,
+          exposure: renderEngine.options.exposure,
+        );
+
+        // Apply FXAA directly to default framebuffer
+        renderEngine.fxaaPass.render(ldrTarget.texture, toDefaultFramebuffer: true);
+      } else {
+        // Bind default framebuffer and draw fullscreen with tonemap directly to screen
+        renderEngine.bindDefaultFramebuffer();
+        M3PostProcess.drawFullscreen(
+          _target.texture,
+          tonemapMode: renderEngine.options.tonemapMode,
+          exposure: renderEngine.options.exposure,
+        );
+      }
     }
   }
 

@@ -26,7 +26,13 @@ class M3ReflectionProbe {
   }
 
   void setOwner(M3Entity? owner) {
+    if (this.owner != null && this.owner!.reflectionProbe == this) {
+      this.owner!.reflectionProbe = null;
+    }
     this.owner = owner;
+    if (owner != null) {
+      owner.reflectionProbe = this;
+    }
   }
 
   /// Capture the scene from the probe's position into a cubemap texture.

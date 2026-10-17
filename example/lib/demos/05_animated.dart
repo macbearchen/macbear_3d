@@ -1,5 +1,5 @@
 // ignore_for_file: file_names
-import '../main_all.dart';
+import 'demo_scene.dart';
 
 // ignore: camel_case_types
 class AnimatedScene_05 extends DemoScene {
@@ -47,7 +47,6 @@ class AnimatedScene_05 extends DemoScene {
     final meshGltf = await M3Mesh.load('example/CesiumMan.glb');
     meshGltf.animator?.play(0);
     _man = addMesh(meshGltf, Vector3(0, 2, 0));
-    _man!.color = Colors.white;
     _man!.rotation = Quaternion.euler(0, pi / 2, 0);
     _man!.scale = Vector3.all(2.0);
 

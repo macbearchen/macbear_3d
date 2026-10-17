@@ -1,4 +1,25 @@
-import '../main_all.dart';
+import 'dart:math';
+export 'dart:math';
+import 'package:vector_math/vector_math.dart' hide Colors;
+export 'package:vector_math/vector_math.dart' hide Colors;
+export 'package:material_ui/material_ui.dart' hide Matrix4;
+
+// Macbear3D engine
+import 'package:macbear_3d/macbear_3d.dart';
+export 'package:macbear_3d/macbear_3d.dart';
+
+export '00_starter.dart';
+export '01_cube.dart';
+export '02_skybox.dart';
+export '03_primitives.dart';
+export '04_obj_teapot.dart';
+export '05_animated.dart';
+export '06_terrain.dart';
+export '07_physics.dart';
+export '08_text_3d.dart';
+export '09_pbr_test.dart';
+export '11_bvh.dart';
+export '12_video_texture.dart';
 
 class DemoScene extends M3Scene {
   DemoScene({super.physics});

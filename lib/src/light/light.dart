@@ -45,7 +45,7 @@ abstract class M3Light extends M3Node {
 
 /// light manager
 class M3PointLightManager {
-  RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
+  RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
 
   static const int _maxPointLights = 8;
   static const int _maxShadow = 3;
@@ -118,7 +118,7 @@ class M3PointLightManager {
 
 /// Spotlight manager — packs up to 8 spotlights into `uSpotLights[8]` (1 mat4 each).
 class M3SpotLightManager {
-  RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
+  RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
 
   static const int _maxSpotLights = 8;
 

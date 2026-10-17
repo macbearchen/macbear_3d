@@ -2,7 +2,7 @@ part of '../program.dart';
 
 /// fog shader in program
 mixin M3FogShader {
-  RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
+  RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
 
   // sphere fog
   late UniformLocation uniformFogParams; // x: sphereStart, y: sphereDepth, z: planeHeight

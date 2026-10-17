@@ -1,5 +1,7 @@
 // ignore_for_file: file_names
-import '../main_all.dart';
+import 'package:flutter/foundation.dart';
+
+import 'demo_scene.dart';
 
 // ignore: camel_case_types
 class StarterScene_00 extends DemoScene {

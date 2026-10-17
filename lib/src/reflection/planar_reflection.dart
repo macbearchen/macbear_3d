@@ -62,8 +62,7 @@ class M3PlanarReflection {
     _target.bind();
 
     // Clear
-    final bg = Vector3(1, 1, 1);
-    renderEngine.clearBackground(bg);
+    renderEngine.clearBackground(M3AppEngine.backgroundColor);
 
     // draw skybox
     if (scene.skybox != null && pass == .reflection) {
@@ -75,7 +74,7 @@ class M3PlanarReflection {
     // refraction: clip geometry above the water, use negated plane
     final bool isReflection = pass == M3PlanarPass.reflection;
     final n = clipPlane.normal;
-    final bias = -0.1;
+    final bias = 0.0; //0.1; //-0.1;
     final d = clipPlane.constant - bias;
     final p = isReflection ? Plane.normalconstant(n, d) : Plane.normalconstant(-n, -d);
     _camera.setObliqueClipPlane(p);

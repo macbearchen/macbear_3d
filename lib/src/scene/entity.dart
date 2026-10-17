@@ -15,13 +15,10 @@ class M3Entity extends M3Node {
 
   M3Entity({required this.mesh});
 
-  M3ReflectionProbe? getProbe() {
-    final renderEngine = M3AppEngine.instance.renderEngine;
-    for (final probe in renderEngine.probes) {
-      if (probe.owner == this) return probe;
-    }
-    return null;
-  }
+  /// Optional reflection probe assigned to this entity
+  M3ReflectionProbe? reflectionProbe;
+
+  M3ReflectionProbe? getProbe() => reflectionProbe;
 
   /// Mark this entity as dirty, invalidating its world matrix and bounds.
   @override

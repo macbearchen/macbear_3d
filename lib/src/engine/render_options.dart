@@ -9,6 +9,18 @@ enum M3HelperType {
 }
 // dart format on
 
+enum M3TonemapMode {
+  none(0),
+  reinhard(1),
+  aces(2),
+  filmic(3),
+  grayscale(4),
+  khrPbrNeutral(5);
+
+  final int id;
+  const M3TonemapMode(this.id);
+}
+
 /// Rendering options for the engine (wireframe, helpers, shadows, FPS display).
 class M3RenderOptions {
   // debug options
@@ -18,9 +30,12 @@ class M3RenderOptions {
   bool useShadow = true; // shadow map
   bool useNormalMap = true; // normal map
   bool useOcclusion = true; // ambient occlusion (ORM R-channel)
+  bool usePlanarReflection = true; // planar reflection
   // post process
-  bool useFxaa = false; // FXAA post-processing
-  bool useBloom = true; // bloom post-processing
+  bool useFxaa = true; // FXAA post-processing
+  bool useBloom = false; // bloom post-processing
+  M3TonemapMode tonemapMode = M3TonemapMode.khrPbrNeutral; // Tonemapping mode
+  double exposure = 1.0; // Global exposure scalar
   double dprScale = 1.0; // (0 ~ 1): 0 mean dpr = 1.0, 1 mean dpr = deviceDpr, in the middle is 0.5
   double getDpr(double deviceDpr) {
     return lerpDouble(1.0, deviceDpr, dprScale.clamp(0.0, 1.0))!;

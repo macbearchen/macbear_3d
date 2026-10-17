@@ -4,8 +4,10 @@ import '../../m3_internal.dart';
 import '../../shaders_gen/post/Blur.es3.frag.g.dart';
 import '../../shaders_gen/post/BrightPass.es3.frag.g.dart';
 import '../../shaders_gen/post/Composite.es3.frag.g.dart';
+import '../../shaders_gen/post/FXAA.es3.frag.g.dart';
 import '../../shaders_gen/post/Fullscreen.es3.frag.g.dart';
 import '../../shaders_gen/post/Fullscreen.es3.vert.g.dart';
+import '../../shaders_gen/post/glsl/Tonemap.es3.glsl.g.dart';
 
 class M3PostProcess {
   static RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
@@ -13,10 +15,18 @@ class M3PostProcess {
   static VertexArrayObject emptyVao = gl.createVertexArray();
 
   // post processing programs
-  static M3Program programFullscreen = M3Program(Fullscreen_vert, Fullscreen_frag)..name = 'Fullscreen';
+  static M3Program programFullscreen = M3Program(Fullscreen_vert, Fullscreen_frag + Tonemap_glsl)..name = 'Fullscreen';
   static M3Program programBrightPass = M3Program(Fullscreen_vert, BrightPass_frag)..name = 'BrightPass';
   static M3Program programBlur = M3Program(Fullscreen_vert, Blur_frag)..name = 'Blur';
-  static M3Program programComposite = M3Program(Fullscreen_vert, Composite_frag)..name = 'Composite';
+  static M3Program programComposite = M3Program(Fullscreen_vert, Composite_frag + Tonemap_glsl)..name = 'Composite';
+  static M3Program programFxaa = M3Program(Fullscreen_vert, FXAA_frag)..name = 'FXAA';
+
+  // Uniform locations: Fullscreen
+  static late UniformLocation _uFullscreenTonemapMode;
+  static late UniformLocation _uFullscreenExposure;
+
+  // Uniform locations: FXAA
+  static late UniformLocation _uFxaaTexelSize;
 
   // Uniform locations: BrightPass
   static late UniformLocation _uBrightThreshold;
@@ -29,10 +39,16 @@ class M3PostProcess {
   // Uniform locations: Composite
   static late UniformLocation _uCompositeBloomIntensity;
   static late UniformLocation _uCompositeSamplerBloom;
+  static late UniformLocation _uCompositeTonemapMode;
+  static late UniformLocation _uCompositeExposure;
 
   static void init() {
     emptyVao;
     programFullscreen;
+
+    // Cache Fullscreen uniforms
+    _uFullscreenTonemapMode = gl.getUniformLocation(programFullscreen.program, 'uTonemapMode');
+    _uFullscreenExposure = gl.getUniformLocation(programFullscreen.program, 'uExposure');
 
     // Cache BrightPass uniforms
     _uBrightThreshold = gl.getUniformLocation(programBrightPass.program, 'uThreshold');
@@ -45,8 +61,25 @@ class M3PostProcess {
     // Cache Composite uniforms
     _uCompositeBloomIntensity = gl.getUniformLocation(programComposite.program, 'uBloomIntensity');
     _uCompositeSamplerBloom = gl.getUniformLocation(programComposite.program, 'SamplerBloom');
+    _uCompositeTonemapMode = gl.getUniformLocation(programComposite.program, 'uTonemapMode');
+    _uCompositeExposure = gl.getUniformLocation(programComposite.program, 'uExposure');
+
+    // Cache FXAA uniforms
+    _uFxaaTexelSize = gl.getUniformLocation(programFxaa.program, 'uTexelSize');
 
     // Explicitly configure SamplerDiffuse = 0 for programs
+    final uFullSampler = gl.getUniformLocation(programFullscreen.program, 'SamplerDiffuse');
+    if (M3Program.isLocationValid(uFullSampler)) {
+      gl.useProgram(programFullscreen.program);
+      gl.uniform1i(uFullSampler, 0);
+    }
+
+    final uFxaaSampler = gl.getUniformLocation(programFxaa.program, 'SamplerDiffuse');
+    if (M3Program.isLocationValid(uFxaaSampler)) {
+      gl.useProgram(programFxaa.program);
+      gl.uniform1i(uFxaaSampler, 0);
+    }
+
     final uBrightSampler = gl.getUniformLocation(programBrightPass.program, 'SamplerDiffuse');
     if (M3Program.isLocationValid(uBrightSampler)) {
       gl.useProgram(programBrightPass.program);
@@ -78,12 +111,27 @@ class M3PostProcess {
     programBrightPass.dispose();
     programBlur.dispose();
     programComposite.dispose();
+    programFxaa.dispose();
   }
 
   /// Draw a fullscreen pass with a given program and primary texture
-  static void drawFullscreen(M3Texture tex, {M3Program? program}) {
+  static void drawFullscreen(
+    M3Texture tex, {
+    M3Program? program,
+    M3TonemapMode tonemapMode = M3TonemapMode.aces,
+    double exposure = 1.0,
+  }) {
     final prog = program ?? programFullscreen;
     gl.useProgram(prog.program);
+
+    if (prog == programFullscreen) {
+      if (M3Program.isLocationValid(_uFullscreenTonemapMode)) {
+        gl.uniform1i(_uFullscreenTonemapMode, tonemapMode.id);
+      }
+      if (M3Program.isLocationValid(_uFullscreenExposure)) {
+        gl.uniform1f(_uFullscreenExposure, exposure);
+      }
+    }
 
     gl.activeTexture(WebGL.TEXTURE0);
     tex.bind();
@@ -126,10 +174,22 @@ class M3PostProcess {
   }
 
   /// Composite [sceneTex] with [bloomTex] and apply tonemapping/gamma to current FBO / default FBO
-  static void drawComposite(M3Texture sceneTex, M3Texture bloomTex, {double bloomIntensity = 0.8}) {
+  static void drawComposite(
+    M3Texture sceneTex,
+    M3Texture bloomTex, {
+    double bloomIntensity = 0.8,
+    M3TonemapMode tonemapMode = M3TonemapMode.aces,
+    double exposure = 1.0,
+  }) {
     gl.useProgram(programComposite.program);
 
     gl.uniform1f(_uCompositeBloomIntensity, bloomIntensity);
+    if (M3Program.isLocationValid(_uCompositeTonemapMode)) {
+      gl.uniform1i(_uCompositeTonemapMode, tonemapMode.id);
+    }
+    if (M3Program.isLocationValid(_uCompositeExposure)) {
+      gl.uniform1f(_uCompositeExposure, exposure);
+    }
 
     // Texture Unit 0: Scene HDR texture
     gl.activeTexture(WebGL.TEXTURE0);
@@ -148,4 +208,23 @@ class M3PostProcess {
     gl.activeTexture(WebGL.TEXTURE0);
     gl.bindBuffer(WebGL.ARRAY_BUFFER, null);
   }
+
+  /// Run FXAA antialiasing pass from [srcTex] into current FBO / default FBO
+  static void drawFxaa(M3Texture srcTex) {
+    gl.useProgram(programFxaa.program);
+
+    final texW = srcTex.texW > 0 ? srcTex.texW : 1;
+    final texH = srcTex.texH > 0 ? srcTex.texH : 1;
+    if (M3Program.isLocationValid(_uFxaaTexelSize)) {
+      gl.uniform2f(_uFxaaTexelSize, 1.0 / texW, 1.0 / texH);
+    }
+
+    gl.activeTexture(WebGL.TEXTURE0);
+    srcTex.bind();
+    gl.bindVertexArray(emptyVao);
+    gl.drawArrays(WebGL.TRIANGLES, 0, 3);
+
+    gl.bindBuffer(WebGL.ARRAY_BUFFER, null);
+  }
 }
+

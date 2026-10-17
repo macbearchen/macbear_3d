@@ -60,6 +60,15 @@ class M3Constants {
     ..shininess = 64
     ..reflection = 0.9;
 
+  static final Vector3 colorRed = Vector3(1, 0, 0);
+  static final Vector3 colorGreen = Vector3(0, 1, 0);
+  static final Vector3 colorBlue = Vector3(0, 0, 1);
+  static final Vector3 colorYellow = Vector3(1, 1, 0);
+  static final Vector3 colorCyan = Vector3(0, 1, 1);
+  static final Vector3 colorMagenta = Vector3(1, 0, 1);
+  static final Vector3 colorWhite = Vector3(1, 1, 1);
+  static final Vector3 colorBlack = Vector3(0, 0, 0);
+
   static final Vector3 colorLake = Vector3(0.30, 0.45, 0.40);
   static final Vector3 colorMountainLake = Vector3(0.35, 0.55, 0.60);
   static final Vector3 colorBeach = Vector3(0.31, 0.75, 0.78);

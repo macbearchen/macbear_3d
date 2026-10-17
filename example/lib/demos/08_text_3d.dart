@@ -1,6 +1,5 @@
 // ignore_for_file: file_names
-import 'package:material_ui/material_ui.dart';
-import '../main_all.dart' hide Colors;
+import 'demo_scene.dart';
 
 // ignore: camel_case_types
 class Text3DScene_08 extends DemoScene {

@@ -32,6 +32,7 @@ export 'src/renderer/render_target.dart';
 export 'src/renderer/shadow_map.dart';
 export 'src/renderer/passes/bloom_pass.dart';
 export 'src/renderer/passes/composite_pass.dart';
+export 'src/renderer/passes/fxaa_pass.dart';
 export 'src/renderer/passes/post_process.dart';
 export 'src/renderer/passes/scene_pass.dart';
 export 'src/scene/node.dart';

@@ -246,6 +246,7 @@ class M3RenderContext {
     // Restore depth state
     gl.depthMask(true);
     gl.depthFunc(WebGL.LEQUAL);
+    gl.disable(WebGL.BLEND);
   }
 
   /// execute queue with shader, switching among the 8 variant keys when [useVariant] is true.

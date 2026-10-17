@@ -1,10 +1,6 @@
 // ignore_for_file: unused_import, unused_local_variable
 import 'package:material_ui/material_ui.dart';
 
-// Macbear3D engine
-export 'package:macbear_3d/src/m3_internal.dart';
-// physics engine
-export 'rapier/rapier_physics_engine.dart';
 // rapier scenes
 import 'rapier/base_scene.dart' hide Colors;
 import 'rapier/physics_scene.dart';
@@ -13,21 +9,15 @@ import 'rapier/double_pendulum.dart';
 import 'rapier/newton_cradle.dart';
 import 'rapier/character_controller_scene.dart';
 import 'rapier/scene_query_scene.dart';
-import 'demos/demo_scene.dart';
-export 'demos/demo_scene.dart';
 
-import 'demos/00_starter.dart';
-import 'demos/01_cube.dart';
-import 'demos/02_skybox.dart';
-import 'demos/03_primitives.dart';
-import 'demos/04_obj_teapot.dart';
-import 'demos/05_animated.dart';
-import 'demos/06_terrain.dart';
-import 'demos/07_physics.dart';
-import 'demos/08_text_3d.dart';
-import 'demos/09_pbr_test.dart';
-import 'demos/11_bvh.dart';
-import 'demos/12_video_texture.dart';
+import 'demos/demo_scene.dart' hide Colors;
+export 'demos/demo_scene.dart' hide Colors;
+
+// widgets:
+import 'widgets/shader_control_widget.dart';
+import 'widgets/helper_control_widget.dart';
+import 'widgets/fog_control_widget.dart';
+import 'widgets/post_process_control_widget.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -265,401 +255,21 @@ class _MainPageState extends State<MainPage> {
 
   /// Shader Widget
   Widget getShaderWidget() {
-    final renderEngine = M3AppEngine.instance.renderEngine;
-    final shaderOptions = renderEngine.options.shader;
-    final scene = M3AppEngine.instance.activeScene;
-    final csmCount = scene?.camera.csmCount ?? 0;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (scene != null && renderEngine.options.useShadow) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-            decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text("CSM=", style: TextStyle(color: Colors.white70, fontSize: 9)),
-                Text(
-                  "$csmCount",
-                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(
-                  width: 50,
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 2,
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-                    ),
-                    child: Slider(
-                      value: csmCount.toDouble().clamp(0.0, 4.0),
-                      min: 0,
-                      max: 4,
-                      divisions: 4,
-                      activeColor: Colors.amber,
-                      inactiveColor: Colors.white24,
-                      onChanged: (val) {
-                        setState(() {
-                          setShadowMode(val.toInt());
-                        });
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          separateWidget,
-        ],
-        FloatingActionButton.small(
-          heroTag: 'shadow',
-          backgroundColor: renderEngine.options.useShadow ? Colors.tealAccent.shade700 : null,
-          onPressed: () {
-            setState(() {
-              if (renderEngine.options.useShadow) {
-                setShadowMode(-1); // turn off
-              } else {
-                setShadowMode(scene?.camera.csmCount ?? 4); // turn on with current or default csm
-              }
-            });
-          },
-          child: Icon(renderEngine.options.useShadow ? Icons.light_mode : Icons.light_mode_outlined),
-        ),
-        separateWidget,
-        FloatingActionButton.small(
-          heroTag: 'pcf',
-          backgroundColor: shaderOptions.pcf > 0 ? Colors.amber : null,
-          onPressed: () {
-            setState(() {
-              shaderOptions.pcf = (shaderOptions.pcf + 1) % 4;
-            });
-          },
-          child: Text('PCF ${shaderOptions.pcf}', style: const TextStyle(fontSize: 10)),
-        ),
-        separateWidget,
-        FloatingActionButton.small(
-          heroTag: 'csm_vs_fs',
-          backgroundColor: shaderOptions.csmOnFS ? Colors.amber : null,
-          onPressed: () {
-            setState(() {
-              shaderOptions.csmOnFS = !shaderOptions.csmOnFS;
-            });
-          },
-          child: Text(shaderOptions.csmOnFS ? 'CSM FS' : 'CSM VS', style: const TextStyle(fontSize: 10)),
-        ),
-        const SizedBox(width: 8),
-        FloatingActionButton.small(
-          heroTag: 'per_pixel',
-          backgroundColor: shaderOptions.perPixel ? Colors.amber : null,
-          onPressed: () {
-            setState(() {
-              shaderOptions.perPixel = !shaderOptions.perPixel;
-            });
-          },
-          child: const Icon(Icons.draw),
-        ),
-        separateWidget,
-        FloatingActionButton.small(
-          heroTag: 'cartoon',
-          backgroundColor: shaderOptions.cartoon ? Colors.amber : null,
-          onPressed: () {
-            setState(() {
-              shaderOptions.cartoon = !shaderOptions.cartoon;
-            });
-          },
-          child: const Text('toon'),
-        ),
-        separateWidget,
-        FloatingActionButton.small(
-          heroTag: 'pbr',
-          backgroundColor: shaderOptions.pbr ? Colors.amber : null,
-          onPressed: () {
-            setState(() {
-              shaderOptions.pbr = !shaderOptions.pbr;
-            });
-          },
-          child: const Text('PBR'),
-        ),
-        separateWidget,
-        FloatingActionButton.small(
-          heroTag: 'ibl',
-          backgroundColor: shaderOptions.ibl ? Colors.amber : null,
-          onPressed: () {
-            setState(() {
-              shaderOptions.ibl = !shaderOptions.ibl;
-            });
-          },
-          child: const Text('IBL'),
-        ),
-      ],
-    );
+    return M3ShaderControlWidget(onShadowModeChanged: setShadowMode);
   }
 
   Widget getPostProcessWidget() {
-    final renderEngine = M3AppEngine.instance.renderEngine;
-    final postProcessOptions = renderEngine.options;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        FloatingActionButton.small(
-          heroTag: 'fxaa',
-          backgroundColor: postProcessOptions.useFxaa ? Colors.amber : null,
-          onPressed: () {
-            setState(() {
-              postProcessOptions.useFxaa = !postProcessOptions.useFxaa;
-            });
-          },
-          child: const Text('fxaa', style: TextStyle(fontSize: 10)),
-        ),
-        separateWidget,
-        FloatingActionButton.small(
-          heroTag: 'bloom',
-          backgroundColor: postProcessOptions.useBloom ? Colors.amber : null,
-          onPressed: () {
-            setState(() {
-              postProcessOptions.useBloom = !postProcessOptions.useBloom;
-            });
-          },
-          child: const Text('bloom', style: TextStyle(fontSize: 10)),
-        ),
-      ],
-    );
+    return const M3PostProcessControlWidget();
   }
 
   /// Helper
   Widget getHelperWidget() {
-    final renderEngine = M3AppEngine.instance.renderEngine;
-    final debugOptions = renderEngine.options.debug;
-    final scene = M3AppEngine.instance.activeScene;
-    if (scene == null) {
-      return SizedBox.shrink();
-    }
-
-    final lightBrightness = ((scene.dirLight.color.x + scene.dirLight.color.y + scene.dirLight.color.z) / 3.0).clamp(
-      0.0,
-      1.0,
-    );
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        FloatingActionButton.small(
-          heroTag: 'wireframe',
-          backgroundColor: debugOptions.wireframe ? Colors.lightGreen : null,
-          onPressed: () {
-            setState(() {
-              debugOptions.wireframe = !debugOptions.wireframe;
-            });
-          },
-          child: const Icon(Icons.grid_4x4_sharp),
-        ),
-        separateWidget,
-        FloatingActionButton.small(
-          heroTag: 'map',
-          backgroundColor: debugOptions.showMaps ? Colors.lightGreen : null,
-          onPressed: () {
-            setState(() {
-              debugOptions.showMaps = !debugOptions.showMaps;
-            });
-          },
-          child: const Icon(Icons.map),
-        ),
-        separateWidget,
-        FloatingActionButton.small(
-          heroTag: 'info',
-          backgroundColor: debugOptions.showHelpers != M3HelperType.none ? Colors.cyan : null,
-          onPressed: () {
-            setState(() {
-              final current = debugOptions.showHelpers;
-              final next = M3HelperType.values[(current.index + 1) % M3HelperType.values.length];
-              debugOptions.showHelpers = next;
-            });
-          },
-          child: debugOptions.showHelpers == M3HelperType.none
-              ? const Icon(Icons.info)
-              : Text(
-                  debugOptions.showHelpers == M3HelperType.entity
-                      ? 'Ent'
-                      : (debugOptions.showHelpers == M3HelperType.subMesh ? 'Sub' : 'Both'),
-                  style: const TextStyle(fontSize: 10),
-                ),
-        ),
-        separateWidget,
-
-        FloatingActionButton.small(
-          heroTag: 'normalmap',
-          backgroundColor: renderEngine.options.useNormalMap ? Colors.tealAccent.shade700 : null,
-          onPressed: () {
-            setState(() {
-              renderEngine.options.useNormalMap = !renderEngine.options.useNormalMap;
-            });
-          },
-          child: const Text('NRM', style: TextStyle(fontSize: 10)),
-        ),
-        separateWidget,
-        FloatingActionButton.small(
-          heroTag: 'occlusion',
-          backgroundColor: renderEngine.options.useOcclusion ? Colors.tealAccent.shade700 : null,
-          onPressed: () {
-            setState(() {
-              renderEngine.options.useOcclusion = !renderEngine.options.useOcclusion;
-            });
-          },
-          child: const Text('AO', style: TextStyle(fontSize: 10)),
-        ),
-        separateWidget,
-        FloatingActionButton.small(
-          heroTag: 'camera',
-          backgroundColor: debugOptions.showCamera ? Colors.lightGreen : null,
-          onPressed: () {
-            setState(() {
-              debugOptions.showCamera = !debugOptions.showCamera;
-            });
-          },
-          child: const Icon(Icons.videocam_outlined),
-        ),
-        separateWidget,
-        FloatingActionButton.small(
-          heroTag: 'light',
-          backgroundColor: debugOptions.showLight ? Colors.lightGreen : null,
-          onPressed: () {
-            setState(() {
-              debugOptions.showLight = !debugOptions.showLight;
-            });
-          },
-          child: Icon(debugOptions.showLight ? Icons.lightbulb_sharp : Icons.lightbulb_outline),
-        ),
-        separateWidget,
-        // ── Directional light brightness slider ──
-        Container(
-          width: 50,
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-          decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(8)),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('\u2600', style: TextStyle(fontSize: 10, color: Colors.amber)),
-              SizedBox(
-                width: 50,
-                child: SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    trackHeight: 2,
-                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 4),
-                    overlayShape: const RoundSliderOverlayShape(overlayRadius: 8),
-                  ),
-                  child: Slider(
-                    value: lightBrightness,
-                    min: 0.0,
-                    max: 1.0,
-                    activeColor: Colors.amber,
-                    inactiveColor: Colors.white24,
-                    onChanged: (val) {
-                      setState(() {
-                        scene.dirLight.color = Vector3.all(val);
-                      });
-                    },
-                  ),
-                ),
-              ),
-              Text(lightBrightness.toStringAsFixed(2), style: const TextStyle(fontSize: 9, color: Colors.white70)),
-            ],
-          ),
-        ),
-      ],
-    );
+    return const M3HelperControlWidget();
   }
 
   /// Fog Widget
   Widget getFogWidget() {
-    final renderEngine = M3AppEngine.instance.renderEngine;
-    final shaderOptions = renderEngine.options.shader;
-    final scene = M3AppEngine.instance.activeScene;
-    if (scene == null) return const SizedBox.shrink();
-
-    final far = scene.camera.farClip;
-    final fogStartPct = far > 0 ? (scene.fog.start / far * 100.0).clamp(10.0, 95.0) : 10.0;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (shaderOptions.fog) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(16)),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text("fog: ", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                Text("${fogStartPct.toStringAsFixed(0)}%", style: const TextStyle(color: Colors.white, fontSize: 10)),
-                SizedBox(
-                  width: 50,
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 2,
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-                    ),
-                    child: Slider(
-                      value: fogStartPct,
-                      min: 10.0,
-                      max: 95.0,
-                      activeColor: Colors.lime,
-                      inactiveColor: Colors.white24,
-                      onChanged: (val) {
-                        setState(() {
-                          final far = scene.camera.farClip;
-                          final depthPct = min(100.0 - val, 25.0);
-                          scene.fog.start = far * (val / 100.0);
-                          scene.fog.depth = far * (depthPct / 100.0);
-                        });
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-        FloatingActionButton.small(
-          heroTag: 'fog',
-          backgroundColor: shaderOptions.fog ? Colors.lime : null,
-          onPressed: () {
-            setState(() {
-              shaderOptions.fog = !shaderOptions.fog;
-            });
-          },
-          child: Icon(shaderOptions.fog ? Icons.cloud : Icons.cloud_queue),
-        ),
-        separateWidget,
-        FloatingActionButton.small(
-          heroTag: 'point_lights',
-          backgroundColor: shaderOptions.pointLights ? Colors.amber : null,
-          onPressed: () {
-            setState(() {
-              shaderOptions.pointLights = !shaderOptions.pointLights;
-            });
-          },
-          child: const Icon(Icons.lightbulb_circle),
-        ),
-        separateWidget,
-        FloatingActionButton.small(
-          heroTag: 'spot_lights',
-          backgroundColor: shaderOptions.spotLights ? Colors.amber : null,
-          onPressed: () {
-            setState(() {
-              shaderOptions.spotLights = !shaderOptions.spotLights;
-            });
-          },
-          child: const Icon(Icons.highlight),
-        ),
-      ],
-    );
+    return const M3FogControlWidget();
   }
 
   /// Tutorial Scene

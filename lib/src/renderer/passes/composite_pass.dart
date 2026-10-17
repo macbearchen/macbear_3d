@@ -35,6 +35,8 @@ class M3CompositePass {
       sceneTex,
       bloomTex,
       bloomIntensity: bloomIntensity,
+      tonemapMode: renderEngine.options.tonemapMode,
+      exposure: renderEngine.options.exposure,
     );
   }
 }

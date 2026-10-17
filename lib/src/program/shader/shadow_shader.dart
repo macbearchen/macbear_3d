@@ -2,7 +2,7 @@ part of '../program.dart';
 
 /// shadow shader in program
 mixin M3ShadowShader {
-  RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
+  RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
 
   // texture sampler for shadowmap
   late UniformLocation uniformSamplerShadowmap;

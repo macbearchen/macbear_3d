@@ -11,6 +11,7 @@ class M3RenderEngine {
   late M3ScenePass scenePass;
   late M3BloomPass bloomPass;
   late M3CompositePass compositePass;
+  late M3FxaaPass fxaaPass;
 
   // render target manager
   final M3RenderTargetManager renderTargets = M3RenderTargetManager();
@@ -92,6 +93,7 @@ class M3RenderEngine {
     scenePass = M3ScenePass('scene');
     bloomPass = M3BloomPass('bloom_ping');
     compositePass = M3CompositePass('composite');
+    fxaaPass = M3FxaaPass('fxaa');
     planarReflection = M3PlanarReflection('mirror');
   }
 

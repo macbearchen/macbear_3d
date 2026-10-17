@@ -2,7 +2,7 @@ part of '../program.dart';
 
 /// water shader in program
 mixin M3WaterShader {
-  RenderingContext gl = M3AppEngine.instance.renderEngine.gl;
+  RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
 
   late UniformLocation uniformBumpTranslateScale0; // bump translation, scale
   late UniformLocation uniformBumpTranslateScale1; // bump translation, scale

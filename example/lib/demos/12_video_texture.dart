@@ -1,7 +1,7 @@
 // ignore_for_file: unused_local_variable, file_names
-import 'package:material_ui/material_ui.dart' as fm;
+import 'package:flutter/foundation.dart';
 import 'package:video_player/video_player.dart';
-import '../main_all.dart';
+import 'demo_scene.dart';
 
 // ignore: camel_case_types
 class VideoTextureScene_12 extends DemoScene {
@@ -10,9 +10,9 @@ class VideoTextureScene_12 extends DemoScene {
 
   M3Entity? videoEntity;
   M3Entity? videoEntity2;
-  final fm.GlobalKey repaintKey = fm.GlobalKey();
+  final GlobalKey repaintKey = GlobalKey();
 
-  final fm.ValueNotifier<double> _progress = fm.ValueNotifier(0.0);
+  final ValueNotifier<double> _progress = ValueNotifier(0.0);
   bool _isDragging = false;
 
   @override
@@ -58,41 +58,41 @@ class VideoTextureScene_12 extends DemoScene {
   }
 
   @override
-  fm.Widget buildUI(fm.BuildContext context) {
+  Widget buildUI(BuildContext context) {
     final videoElement = videoTexture?.source;
     final videoWidth = videoTexture?.texW ?? 480;
     final videoHeight = videoTexture?.texH ?? 270;
-    return fm.Stack(
+    return Stack(
       children: [
         if (!kIsWeb)
           // On Native platforms, we use a RepaintBoundary to capture video frames for the texture.
           // Important: The widget must be part of the layout tree to be captured by toImage().
           // We position it far off-screen so it's not visible to the user while still being painted.
-          fm.Positioned(
+          Positioned(
             left: -2000, // Move far off screen to avoid being visible
             top: 0,
-            child: fm.RepaintBoundary(
+            child: RepaintBoundary(
               key: repaintKey,
-              child: fm.SizedBox(
+              child: SizedBox(
                 width: videoWidth.toDouble(),
                 height: videoHeight.toDouble(),
-                child: videoElement is VideoPlayerController ? VideoPlayer(videoElement) : const fm.SizedBox.shrink(),
+                child: videoElement is VideoPlayerController ? VideoPlayer(videoElement) : const SizedBox.shrink(),
               ),
             ),
           ),
 
         // Video Controls UI (Visible on both Web and Native)
-        fm.Positioned(
+        Positioned(
           left: 20,
           top: 20, // Positioned above the scene switcher
-          child: fm.Row(
+          child: Row(
             children: [
-              fm.StatefulBuilder(
+              StatefulBuilder(
                 builder: (context, setState) {
                   final bool isPlaying = videoTexture?.isPlaying ?? false;
-                  return fm.FloatingActionButton(
+                  return FloatingActionButton(
                     heroTag: 'video_play_pause',
-                    backgroundColor: fm.Colors.black54,
+                    backgroundColor: Colors.black54,
                     onPressed: () {
                       if (isPlaying) {
                         videoTexture?.pause();
@@ -101,35 +101,35 @@ class VideoTextureScene_12 extends DemoScene {
                       }
                       setState(() {}); // Update local button state
                     },
-                    child: fm.Icon(isPlaying ? fm.Icons.pause : fm.Icons.play_arrow, color: fm.Colors.white),
+                    child: Icon(isPlaying ? Icons.pause : Icons.play_arrow, color: Colors.white),
                   );
                 },
               ),
-              const fm.SizedBox(width: 10),
-              fm.FloatingActionButton(
+              const SizedBox(width: 10),
+              FloatingActionButton(
                 heroTag: 'video_reset',
-                backgroundColor: fm.Colors.black54,
+                backgroundColor: Colors.black54,
                 onPressed: () {
                   videoTexture?.seekTo(Duration.zero);
                 },
-                child: const fm.Icon(fm.Icons.replay, color: fm.Colors.white),
+                child: const Icon(Icons.replay, color: Colors.white),
               ),
-              const fm.SizedBox(width: 10),
+              const SizedBox(width: 10),
               // Playback Slider
-              fm.SizedBox(
+              SizedBox(
                 width: 200,
-                child: fm.ValueListenableBuilder<double>(
+                child: ValueListenableBuilder<double>(
                   valueListenable: _progress,
                   builder: (context, value, child) {
-                    return fm.SliderTheme(
-                      data: fm.SliderTheme.of(context).copyWith(
+                    return SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
                         trackHeight: 4,
-                        thumbShape: const fm.RoundSliderThumbShape(enabledThumbRadius: 10),
-                        activeTrackColor: fm.Colors.lightGreen,
-                        inactiveTrackColor: fm.Colors.white24,
-                        thumbColor: fm.Colors.lightGreenAccent,
+                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+                        activeTrackColor: Colors.lightGreen,
+                        inactiveTrackColor: Colors.white24,
+                        thumbColor: Colors.lightGreenAccent,
                       ),
-                      child: fm.Slider(
+                      child: Slider(
                         value: value.clamp(0.0, 1.0),
                         onChanged: (newValue) {
                           _isDragging = true;

@@ -1,5 +1,5 @@
 // ignore_for_file: file_names
-import '../main_all.dart';
+import 'demo_scene.dart';
 
 // ignore: camel_case_types
 class BvhScene_11 extends DemoScene {
