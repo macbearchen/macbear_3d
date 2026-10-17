@@ -1,7 +1,7 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
 ## 0.12.0
-#### 2026-10-16
+#### 2026-10-17
 * 新增功能 (Add):
   * **FXAA 反鋸齒通道 (`M3FxaaPass`)**：實作 Fast Approximate Anti-Aliasing (FXAA) 後處理通道，具備邊緣檢測與次像素抗鋸齒平滑混合 (`FXAA.es3.frag`)。
   * **多種色調映射模式 (`M3TonemapMode`)**：將色調映射演算法統一整理至 `Tonemap.es3.glsl`：
@@ -50,13 +50,13 @@
   * **深度預通道支援 (Depth Pre-Pass)**：在 `M3RenderContext` 與 `M3RenderQueue` 中新增專屬深度通道渲染階段，啟用 Early-Z 遮擋剔除以降低過度繪製成本。
   * **雙面渲染 (Double-Sided Face Rendering)**：在 `M3Material` 中新增 `doubleSided` 屬性，並於 `M3RenderContext` 佇列繪製時自動管理 GL 面剔除狀態 (`gl.enable(CULL_FACE)` / `gl.disable(CULL_FACE)`)。原生支援 glTF 模型的 `doubleSided` 材質屬性解析。
   * **遮罩面 Alpha 測試 (Masked Face / Alpha Testing / Cutoff)**：完整支援 Masked 遮罩面繪製與可自訂的閥值 `uAlphaCutoff`（由 `material.alphaCutoff` 指定，預設為 0.5）。專屬著色器變體 `programTextureMasked`、`programShadowMasked` 與 `programUnlitMasked`（帶有 `#define ENABLE_ALPHA_TEST`），確保邊緣剔除正確且享有 Early-Z 深度排序優勢。
-  * **PBR 光源顏色獨立 (Separate Light Color)**：在 `PixelFS.es3.glsl` 與 `M3LightingShader` 中引入 `uLightColor` Uniform，將平行光顏色與表面 Diffuse 屬性解耦，以符合線性色彩空間與 PBR 能量守恆計算。
+  * **PBR 光源顏色獨立 (Separate Light Color)**：在 `PixelFS.es3.glsl` 與 `M3LightingShader` 中引入 `uLightColor` Uniform，將平行光顏色與表面 Diffuse 屬性分離，以符合線性色彩空間與 PBR 能量守恆計算。
   * **可自訂 CSM 級聯數量 (Configurable CSM Count)**：在 `M3ShaderOptions` 中新增 `csmCount` 屬性，支援動態設置 1 至 4 層級聯，並整合 `M3Resources` 中的陰影 Program 切換管理。
 
 * 優化與重構 (Optimize / Refactor):
   * **PBR 光照管線精煉 (PBR Lighting Pipeline Refinements)**：改進 `PixelFS.es3.glsl` 中的線性色彩空間計算，移除 sRGB 取樣後的冗餘 Gamma 解碼，修正 `TexturedLighting.es3.frag` 中的法線切線空間與雙面朝向處理，並擴展各著色器中的 `uParamPBR` Uniform 以支援環境遮蔽強度。
   * **陰影級聯計算拆分 (Shadow Cascades Calculation Split)**：將 `M3DirectionalLight.updateShadowCascades` 重構為清晰、易於維護的子方法：`_alignLightWithCamera`、`_computeGlobalDepthRange` 與 `_updateCascadeProjection`。
-  * **渲染佇列前置過濾 (Render Queue Pre-Filtering)**：優化 `M3RenderContext.prepareRenderQueue`，支援 `excludeEntities` 集合於收集階段即跳過排除實體，避免額外後置剔除遍歷。
+  * **渲染佇列前置過濾 (Render Queue Pre-Filtering)**：優化 `M3RenderContext.prepareRenderQueue`，支援 `excludeEntities` 集合於收集階段即跳過排除實體，避免額外後置剔除。
   * **動態著色器變體系統 (Dynamic Shader Variant System)**：在 `M3RenderContext` 中引入 8 位元著色器變體鍵值（alpha-test、normal-map、shadow-receive 標誌）。渲染佇列按變體鍵值預先排序，以最小化每幀 GPU Program 切換與狀態變更次數。
   * **批次佇列排序 (Batch Queue Sorting)**：`M3RenderContext` 現在在繪製不透明物件前按變體鍵值排序，減少冗餘的 `gl.useProgram` 呼叫並改善 CPU 端繪製呼叫批次效率。
   * **`M3Resources.lightingPrograms` 與 `attachAllProgramsLights`**：集中管理所有激活的光照著色器 Program，並以單一輔助函式在所有變體中傳播每幀光源 Uniform。
