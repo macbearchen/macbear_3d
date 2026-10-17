@@ -1,7 +1,7 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
 ## 0.12.0
-#### 2026-10-16
+#### 2026-10-17
 * Add:
   * **FXAA Anti-Aliasing Pass (`M3FxaaPass`)**: Full implementation of Fast Approximate Anti-Aliasing (FXAA) post-processing with edge detection and sub-pixel antialiasing blending (`FXAA.es3.frag`).
   * **Configurable Tonemapping Curves (`M3TonemapMode`)**: Extracted and unified tonemapping operators into `Tonemap.es3.glsl`:
