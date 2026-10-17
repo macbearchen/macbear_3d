@@ -198,7 +198,7 @@ class M3Water extends M3Entity {
       prog.applyFrameUniforms(viewer);
       prog.applyFog(scene.fog);
 
-      final alpha = 1.0; //water!.waterMaterial.reflection;
+      // final alpha = 1.0; //water!.waterMaterial.reflection;
       prog.setMatrices(viewer, waterMatrix);
       // prog.setMaterial(waterMaterial, Vector4(0.0, 1.0, 0.8, alpha));
       prog.setSkinning(null);
