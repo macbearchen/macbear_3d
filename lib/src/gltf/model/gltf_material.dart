@@ -46,6 +46,8 @@ class GltfMaterial {
   final int? metallicRoughnessTextureIndex; // index of metallic/roughness texture (G=roughness, B=metallic)
   final int? occlusionTextureIndex; // index of occlusion texture (R=AO)
   final double occlusionStrength;
+  final Vector3 emissiveFactor;
+  final int? emissiveTextureIndex; // index of emissive texture
   final double metallicFactor;
   final double roughnessFactor;
   final String alphaMode; // "OPAQUE", "MASK", "BLEND"
@@ -64,12 +66,14 @@ class GltfMaterial {
     this.metallicRoughnessTextureIndex,
     this.occlusionTextureIndex,
     this.occlusionStrength = 1.0,
+    Vector3? emissiveFactor,
+    this.emissiveTextureIndex,
     this.metallicFactor = 1.0,
     this.roughnessFactor = 1.0,
     this.alphaMode = 'OPAQUE',
     this.alphaCutoff = 0.5,
     this.doubleSided = false,
-  });
+  }) : emissiveFactor = emissiveFactor ?? Vector3.zero();
 
   static GltfMaterial parse(Map<String, dynamic> json) {
     final pbr = json['pbrMetallicRoughness'] as Map<String, dynamic>? ?? {};
@@ -119,6 +123,22 @@ class GltfMaterial {
       }
     }
 
+    // Emissive Factor
+    Vector3 emissiveFactor = Vector3.zero();
+    if (json.containsKey('emissiveFactor')) {
+      final list = (json['emissiveFactor'] as List<dynamic>).map((e) => (e as num).toDouble()).toList();
+      if (list.length >= 3) {
+        emissiveFactor = Vector3(list[0], list[1], list[2]);
+      }
+    }
+
+    // Emissive Texture
+    int? emissiveTexIndex;
+    if (json.containsKey('emissiveTexture')) {
+      final emTex = json['emissiveTexture'] as Map<String, dynamic>;
+      emissiveTexIndex = emTex['index'] as int?;
+    }
+
     // Metallic/Roughness
     double metallic = 1.0;
     double roughness = 1.0;
@@ -138,6 +158,8 @@ class GltfMaterial {
       metallicRoughnessTextureIndex: mrTexIndex,
       occlusionTextureIndex: occlusionTexIndex,
       occlusionStrength: occlusionStrength,
+      emissiveFactor: emissiveFactor,
+      emissiveTextureIndex: emissiveTexIndex,
       metallicFactor: metallic,
       roughnessFactor: roughness,
       alphaMode: json['alphaMode'] as String? ?? 'OPAQUE',

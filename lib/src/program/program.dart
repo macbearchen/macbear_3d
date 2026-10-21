@@ -29,6 +29,7 @@ part 'shader/water_shader.dart';
 // Slot  3 : Directional Shadow map
 // Slot  4 : Spot Light Shadow map
 // Slot  5 : ORM map (Occlusion, Roughness, Metallic)
+// Slot  6 : Emissive map
 // ────────────────────────────────────────────────────────
 // ── Texture Unit for Water ──────────────────────────────
 // Slot  0 : Water Reflection map
@@ -70,6 +71,8 @@ class M3Program {
   late UniformLocation uniformSamplerDiffuse; // texture "SamplerDiffuse"
   late UniformLocation uniformSamplerNormal; // texture "SamplerNormal"
   late UniformLocation uniformSamplerORM; // texture "SamplerORM"
+  late UniformLocation uniformSamplerEmissive; // texture "SamplerEmissive"
+  late UniformLocation uniformColorEmissive; // "ColorEmissive" for emissive factor
   late UniformLocation uniformNormalScale; // "uNormalScale" for normal-scale factor
   late UniformLocation uniformParamPBR; // x: Metallic, y: Roughness, z: Mipmap-level, w: Ambient-Occlusion-strength
   late UniformLocation uniformSamplerEnvironment;
@@ -213,6 +216,8 @@ class M3Program {
     uniformSamplerDiffuse = gl.getUniformLocation(program, "SamplerDiffuse");
     uniformSamplerNormal = gl.getUniformLocation(program, "SamplerNormal");
     uniformSamplerORM = gl.getUniformLocation(program, "SamplerORM");
+    uniformSamplerEmissive = gl.getUniformLocation(program, "SamplerEmissive");
+    uniformColorEmissive = gl.getUniformLocation(program, "ColorEmissive");
     uniformNormalScale = gl.getUniformLocation(program, "uNormalScale");
     uniformParamPBR = gl.getUniformLocation(program, "uParamPBR");
     uniformSamplerEnvironment = gl.getUniformLocation(program, "SamplerEnvironment");
@@ -226,6 +231,10 @@ class M3Program {
 
     if (M3Program.isLocationValid(uniformAlphaCutoff)) {
       gl.uniform1f(uniformAlphaCutoff, 0.5);
+    }
+
+    if (M3Program.isLocationValid(uniformColorEmissive)) {
+      gl.uniform3f(uniformColorEmissive, 0.0, 0.0, 0.0);
     }
 
     // vertex-attrib
@@ -258,6 +267,12 @@ class M3Program {
     if (isLocationValid(uniformSamplerORM)) {
       gl.activeTexture(WebGL.TEXTURE5);
       gl.uniform1i(uniformSamplerORM, 5); // GL_TEXTURE5 for ORM map
+      gl.activeTexture(WebGL.TEXTURE0);
+    }
+
+    if (isLocationValid(uniformSamplerEmissive)) {
+      gl.activeTexture(WebGL.TEXTURE6);
+      gl.uniform1i(uniformSamplerEmissive, 6); // GL_TEXTURE6 for emissive map
       gl.activeTexture(WebGL.TEXTURE0);
     }
   }
@@ -354,6 +369,16 @@ class M3Program {
       gl.activeTexture(WebGL.TEXTURE5);
       (mtr.ormTexture ?? M3Resources.texDefaultORM).bind();
       gl.activeTexture(WebGL.TEXTURE0);
+    }
+
+    // Emissive-texture: GL_TEXTURE6
+    if (isLocationValid(uniformSamplerEmissive)) {
+      gl.activeTexture(WebGL.TEXTURE6);
+      (mtr.emissiveTexture ?? M3Resources.texBlack).bind();
+      gl.activeTexture(WebGL.TEXTURE0);
+    }
+    if (isLocationValid(uniformColorEmissive)) {
+      gl.uniform3fv(uniformColorEmissive, mtr.emissive.storage);
     }
 
     // PBR

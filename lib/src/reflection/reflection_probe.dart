@@ -106,7 +106,5 @@ class M3ReflectionProbe {
       _context.renderColorPass(prog);
     }
     cubemapTexture.generateMipmap();
-    // Restore state
-    renderEngine.bindDefaultFramebuffer();
   }
 }

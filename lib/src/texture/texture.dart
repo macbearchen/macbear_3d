@@ -354,6 +354,7 @@ class M3Texture {
     final img = await M3ResourceManager.createImageFromBytes(bytes);
     M3Texture tex = await fromImages([img], isSrgb: isSrgb);
     tex.name = name;
+    M3Log.i('M3Texture', tex.toString());
     return tex;
   }
 
@@ -373,7 +374,6 @@ class M3Texture {
     }
 
     tex.generateMipmap();
-    M3Log.i('M3Texture', tex.toString());
     return tex;
   }
 

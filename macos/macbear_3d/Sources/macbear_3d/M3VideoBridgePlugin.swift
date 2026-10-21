@@ -297,7 +297,7 @@ class M3VideoPlayer: NSObject {
       cache,
       pixelBuffer,
       nil,
-      .bgra8Unorm,
+      .bgra8Unorm_srgb,
       width,
       height,
       0,

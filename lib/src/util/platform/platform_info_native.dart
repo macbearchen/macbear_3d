@@ -58,7 +58,22 @@ typedef EglGetCurrentDisplayDart = Pointer<Void> Function();
 
 typedef EglQueryStringC = Pointer<Uint8> Function(Pointer<Void> display, Int32 name);
 typedef EglQueryStringDart = Pointer<Uint8> Function(Pointer<Void> display, int name);
+/*
+typedef _ClipControlC = Void Function(Uint32, Uint32);
+typedef _ClipControlDart = void Function(int, int);
+_ClipControlDart? clipControl;
 
+void initClipControl(DynamicLibrary egl) {
+  final getProc = egl.lookupFunction<Pointer<Void> Function(Pointer<Utf8>), Pointer<Void> Function(Pointer<Utf8>)>(
+    'eglGetProcAddress',
+  );
+  // Use `using` so the native UTF-8 string is freed after the call.
+  final p = using((arena) => getProc('glClipControlEXT'.toNativeUtf8(allocator: arena)));
+  if (p != nullptr) {
+    clipControl = p.cast<NativeFunction<_ClipControlC>>().asFunction<_ClipControlDart>();
+  }
+}
+*/
 void getEGLExtensions() {
   final eglLib = _loadEGLLib();
   if (eglLib == null) {
@@ -75,7 +90,17 @@ void getEGLExtensions() {
     final EglQueryStringDart eglQueryString = eglLib
         .lookup<NativeFunction<EglQueryStringC>>('eglQueryString')
         .asFunction();
-
+    /*
+    // clip control — must be done before eglLib.close()
+    initClipControl(eglLib);
+    if (clipControl != null) {
+      // GL_LOWER_LEFT=0x8CA1, GL_ZERO_TO_ONE=0x935F (EXT_clip_control values)
+      clipControl!(0x8CA1, 0x935F);
+      M3Log.i('EGL', 'glClipControlEXT applied (lower-left, zero-to-one)');
+    } else {
+      M3Log.w('EGL', 'glClipControlEXT not found — clip control not applied');
+    }
+*/
     final display = eglGetCurrentDisplay();
     M3Log.i('EGL', 'EGL Display: $display');
 

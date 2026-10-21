@@ -16,7 +16,12 @@ class M3ScenePass {
 
   /// main scene render
   void render(M3Scene scene) {
-    _target.bind();
+    final options = renderEngine.options;
+    if (options.usePostProcess) {
+      _target.bind();
+    } else {
+      renderEngine.bindDefaultFramebuffer();
+    }
 
     final gl = renderEngine.gl;
     final bg = M3AppEngine.backgroundColor;
@@ -37,7 +42,7 @@ class M3ScenePass {
     gl.disable(WebGL.BLEND);
     gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA); // WebGL.ONE
 
-    if (!renderEngine.options.debug.wireframe) {
+    if (!options.debug.wireframe) {
       // get scene program
       final prog = renderEngine.getSceneProgram(scene);
 
@@ -47,7 +52,7 @@ class M3ScenePass {
       // reflection pass:
       // 1. cubemap reflection (only if not using single-pass IBL)
       // 2. planar reflection
-      if (renderEngine.options.usePlanarReflection) {
+      if (options.usePlanarReflection) {
         renderEngine.mainContext.renderReflectionPass();
       }
 
@@ -62,9 +67,13 @@ class M3ScenePass {
 
     // helper
     _renderHelper(scene);
+    if (!options.usePostProcess) {
+      return;
+    }
 
-    final useBloom = renderEngine.options.useBloom;
-    final useFxaa = renderEngine.options.useFxaa;
+    // apply post process effects
+    final useBloom = options.useBloom;
+    final useFxaa = options.useFxaa;
 
     if (useBloom) {
       // 1. Run Bloom Pass (bright pass extraction + pingpong blur)
@@ -78,8 +87,8 @@ class M3ScenePass {
           _target.texture,
           renderEngine.bloomPass.texture,
           bloomIntensity: renderEngine.compositePass.bloomIntensity,
-          tonemapMode: renderEngine.options.tonemapMode,
-          exposure: renderEngine.options.exposure,
+          tonemapMode: options.tonemapMode,
+          exposure: options.exposure,
         );
 
         // Apply FXAA directly to default framebuffer
@@ -95,8 +104,8 @@ class M3ScenePass {
         ldrTarget.bind();
         M3PostProcess.drawFullscreen(
           _target.texture,
-          tonemapMode: renderEngine.options.tonemapMode,
-          exposure: renderEngine.options.exposure,
+          tonemapMode: options.tonemapMode,
+          exposure: options.exposure,
         );
 
         // Apply FXAA directly to default framebuffer
@@ -106,8 +115,8 @@ class M3ScenePass {
         renderEngine.bindDefaultFramebuffer();
         M3PostProcess.drawFullscreen(
           _target.texture,
-          tonemapMode: renderEngine.options.tonemapMode,
-          exposure: renderEngine.options.exposure,
+          tonemapMode: options.tonemapMode,
+          exposure: options.exposure,
         );
       }
     }

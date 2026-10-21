@@ -34,6 +34,8 @@ class M3Material {
   double normalScale = 1.0;
   M3Texture? ormTexture; // AmbientOcclusion(R), Roughness(G), Metallic(B)
   double occlusionStrength = 1.0;
+  Vector3 emissive = Vector3.zero();
+  M3Texture? emissiveTexture;
   Matrix3 texMatrix = Matrix3.identity();
 
   M3PlanarReflection? planarReflection; // planar reflection
@@ -84,6 +86,8 @@ class M3Material {
     normalScale = other.normalScale;
     ormTexture = other.ormTexture;
     occlusionStrength = other.occlusionStrength;
+    emissive.setFrom(other.emissive);
+    emissiveTexture = other.emissiveTexture;
     texMatrix.setFrom(other.texMatrix);
     planarReflection = other.planarReflection;
   }
@@ -96,6 +100,7 @@ class M3Material {
     mtr.roughness = gltfMat.roughnessFactor;
     mtr.doubleSided = gltfMat.doubleSided;
     mtr.alphaCutoff = gltfMat.alphaCutoff;
+    mtr.emissive.setFrom(gltfMat.emissiveFactor);
     if (gltfMat.alphaMode == 'BLEND') {
       mtr.alphaMode = M3AlphaMode.blend;
     } else if (gltfMat.alphaMode == 'MASK') {
@@ -134,6 +139,17 @@ class M3Material {
         if (tex is M3Texture) {
           mtr.ormTexture = tex;
           mtr.occlusionStrength = gltfMat.occlusionStrength;
+        }
+      }
+    }
+
+    // Emissive Texture
+    if (gltfMat.emissiveTextureIndex != null) {
+      final texIndex = gltfMat.emissiveTextureIndex!;
+      if (texIndex < doc.runtimeTextures.length) {
+        final tex = doc.runtimeTextures[texIndex];
+        if (tex is M3Texture) {
+          mtr.emissiveTexture = tex;
         }
       }
     }

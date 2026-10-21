@@ -47,12 +47,9 @@ class M3ShadowMap {
 
   /// Restore default GL state and rebind the default framebuffer.
   void _endShadowPass() {
-    final renderEngine = M3AppEngine.instance.renderEngine;
-
     gl.polygonOffset(0, 0);
     gl.disable(WebGL.POLYGON_OFFSET_FILL);
     gl.enable(WebGL.BLEND);
-    renderEngine.bindDefaultFramebuffer();
   }
 
   // ---------------------------------------------------------------------------

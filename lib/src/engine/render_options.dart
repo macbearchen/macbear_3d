@@ -32,6 +32,7 @@ class M3RenderOptions {
   bool useOcclusion = true; // ambient occlusion (ORM R-channel)
   bool usePlanarReflection = true; // planar reflection
   // post process
+  bool usePostProcess = true; // for gamma 2.2 and post-processing
   bool useFxaa = true; // FXAA post-processing
   bool useBloom = false; // bloom post-processing
   M3TonemapMode tonemapMode = M3TonemapMode.khrPbrNeutral; // Tonemapping mode

@@ -142,4 +142,5 @@ void main() {
 
     fragColor = vec4(texture(SamplerDiffuse, finalUV).rgb, centerColor.a);
 }
+
 """;

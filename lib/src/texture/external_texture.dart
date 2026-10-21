@@ -31,7 +31,7 @@ class M3ExternalTexture extends M3Texture {
   /// Constructor to initialize from a video asset path or network URL.
   M3ExternalTexture.videoAsset(String assetPath, {bool? isUseNative})
     : source = createVideoElement(assetPath),
-      super(mipmaps: false) {
+      super(mipmaps: false, internalFormat: WebGL.SRGB8_ALPHA8) {
     name = assetPath;
     if (isUseNative != null) {
       _isNativeCodec = isUseNative && _isNativeCodec;

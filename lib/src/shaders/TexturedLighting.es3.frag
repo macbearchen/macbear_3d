@@ -6,9 +6,11 @@ uniform mediump vec3 ColorAmbient;	// ambient RGB
 // material color: diffuse and specular
 uniform mediump vec4 ColorDiffuse;	// diffuse RGBA
 uniform mediump vec4 ColorSpecular;	// specular RGB, w: shininess
+uniform mediump vec3 ColorEmissive;	// emissive factor RGB
 
 in mediump vec2 TextureCoordOut;
 uniform sampler2D SamplerDiffuse;	// GL_TEXTURE0
+uniform sampler2D SamplerEmissive;	// GL_TEXTURE6
 
 #ifdef ENABLE_NORMALMAP
 uniform sampler2D SamplerNormal;	// GL_TEXTURE1
@@ -119,6 +121,9 @@ void main(void)
 #ifdef ENABLE_SPOT_LIGHTS
     texResult.rgb += CalculateSpotLighting(geo) * diffuse.rgb;
 #endif
+
+	mediump vec3 emissive = ColorEmissive * texture(SamplerEmissive, TextureCoordOut).rgb;
+	texResult.rgb += emissive;
 
 #ifdef ENABLE_FOG
 	texResult = ApplyFog(texResult);

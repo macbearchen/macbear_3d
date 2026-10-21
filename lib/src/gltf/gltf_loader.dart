@@ -102,17 +102,21 @@ class M3GltfLoader {
     // Load and initialize textures defined in the document
     final dir = name.contains('/') ? name.substring(0, name.lastIndexOf('/') + 1) : '';
 
-    // Collect all texture indices used as baseColor (diffuse)
-    final baseColorTexIndices = <int>{};
+    // Collect all texture indices that should be decoded/sampled in sRGB
+    // ex: baseColor, emissive
+    final srgbTexIndices = <int>{};
     for (final mat in doc.materials) {
       if (mat.baseColorTextureIndex != null) {
-        baseColorTexIndices.add(mat.baseColorTextureIndex!);
+        srgbTexIndices.add(mat.baseColorTextureIndex!);
+      }
+      if (mat.emissiveTextureIndex != null) {
+        srgbTexIndices.add(mat.emissiveTextureIndex!);
       }
     }
 
     for (int texIndex = 0; texIndex < doc.textures.length; texIndex++) {
       final texDef = doc.textures[texIndex];
-      final isSrgb = baseColorTexIndices.contains(texIndex);
+      final isSrgb = srgbTexIndices.contains(texIndex);
       dynamic tex; // M3Texture?
       try {
         if (texDef.source != null && texDef.source! < doc.images.length) {
@@ -132,9 +136,9 @@ class M3GltfLoader {
               tex = await M3Texture.fromPath(path, isSrgb: isSrgb);
             } else {
               // Data URI format: data:[<media_type>][;base64],<data>
-              // Example: data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...  
+              // Example: data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...
               final dataUri = imgDef.uri!;
-              List<String> base64s = [ 'data:image/png;base64,','data:image/jpeg;base64,'];
+              List<String> base64s = ['data:image/png;base64,', 'data:image/jpeg;base64,'];
               for (final base64Prefix in base64s) {
                 if (dataUri.startsWith(base64Prefix)) {
                   final base64Data = dataUri.substring(base64Prefix.length);

@@ -42,16 +42,27 @@ class _M3PostProcessControlWidgetState extends State<M3PostProcessControlWidget>
         mainAxisSize: MainAxisSize.min,
         children: [
           FloatingActionButton.small(
+            heroTag: 'postprocess',
+            backgroundColor: options.usePostProcess ? Colors.yellow : null,
+            onPressed: () {
+              setState(() {
+                options.usePostProcess = !options.usePostProcess;
+              });
+            },
+            child: const Text('post', style: TextStyle(fontSize: 12)),
+          ),
+          SizedBox(width: 16, height: 8),
+          FloatingActionButton.small(
             heroTag: 'planar',
-            backgroundColor: options.usePlanarReflection ? Colors.amber : null,
+            backgroundColor: options.usePlanarReflection ? Colors.purpleAccent : null,
             onPressed: () {
               setState(() {
                 options.usePlanarReflection = !options.usePlanarReflection;
               });
             },
-            child: const Text('refl', style: TextStyle(fontSize: 10)),
+            child: const Text('reflect', style: TextStyle(fontSize: 8)),
           ),
-          SizedBox(width: 8, height: 8),
+          SizedBox(width: 8, height: 10),
           FloatingActionButton.small(
             heroTag: 'fxaa',
             backgroundColor: options.useFxaa ? Colors.amber : null,
@@ -60,7 +71,7 @@ class _M3PostProcessControlWidgetState extends State<M3PostProcessControlWidget>
                 options.useFxaa = !options.useFxaa;
               });
             },
-            child: const Text('fxaa', style: TextStyle(fontSize: 10)),
+            child: const Text('FXAA', style: TextStyle(fontSize: 10)),
           ),
           separateWidget,
           FloatingActionButton.small(

@@ -15,7 +15,7 @@ import '../input/keyboard.dart';
 // Modifying, hiding, or bypassing this notice violates the
 // license terms of Macbear 3D. See LICENSE for details.
 // ------------------------------------------------------------
-// Macbear 3D Engine — All Rights Reserved © 2026 MacBear Chen
+// Macbear 3D Engine — All Rights Reserved © 2026 Macbear Chen
 // ============================================================
 Widget _buildCopyrightWidget() {
   return Container(
@@ -33,7 +33,7 @@ Widget _buildCopyrightWidget() {
 class M3AppEngine with ChangeNotifier {
   static final M3AppEngine instance = M3AppEngine._internal();
 
-  static const String version = "macbear3d-lib v0.12.0 powered by ANGLE";
+  static const String version = "macbear3d-lib v0.12.1e powered by ANGLE";
   final FlutterAngle _angle = FlutterAngle();
   late FlutterAngleTexture _sourceTexture; // main framebuffer
   static Framebuffer get mainFbo => Framebuffer(kIsWeb ? null : instance._sourceTexture.fboId);
@@ -115,12 +115,13 @@ class M3AppEngine with ChangeNotifier {
     await M3Resources.init();
     renderEngine.init(width, height, dpr);
 
+    M3Log.s('AppEngine', 'render engine init done');
+
     _didInit = true;
     if (onDidInit != null) {
       await onDidInit!();
     }
     notifyListeners();
-    M3Log.i('AppEngine', 'initApp done');
   }
 
   void initKeyboard() {
@@ -340,6 +341,7 @@ class M3AppEngine with ChangeNotifier {
     } else {
       await _angle.resize(_sourceTexture, options);
     }
+    // await _angle.updateTexture(_sourceTexture);
 
     appWidth = width;
     appHeight = height;
@@ -444,11 +446,7 @@ class M3AppEngine with ChangeNotifier {
     }
 
     renderEngine.stats.frames++;
-
     _sourceTexture.activate();
-
-    final gl = renderEngine.gl;
-    renderEngine.clearBackground(backgroundColor);
 
     // 2. render active scene
     if (scene != null) {
@@ -457,8 +455,11 @@ class M3AppEngine with ChangeNotifier {
     // 3. render 2D: UI, text etc.
     renderEngine.render2D();
 
+    final gl = renderEngine.gl;
     gl.flush();
     // gl.finish(); // Macbear note: discard it
+
+    // await _angle.updateTexture(_sourceTexture);
 
     await _sourceTexture.signalNewFrameAvailable();
   }

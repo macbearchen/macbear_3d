@@ -15,7 +15,7 @@ dependencies:
   vector_math: ^2.4.2
   video_player: ^2.11.1
 
-  material_ui: ^1.1.1
+  material_ui: ^1.8.0
   build: ^5.0.0
 
 dev_dependencies:

@@ -27,6 +27,7 @@ class M3Skybox {
       images.add(img);
     }
 
+    M3Log.s('M3Skybox', urlPosX);
     final tex = await M3Texture.fromImages(images, isSrgb: true);
     return M3Skybox(tex);
   }

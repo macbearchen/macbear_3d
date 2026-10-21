@@ -68,12 +68,13 @@ class M3RenderEngine {
   }
 
   void init(int width, int height, double dpr) {
-
     if (kIsWeb) {
       //EXT_color_buffer_float, needed for float textures in bloom pass
       if (!PlatformInfo.enableWebGLExtension('EXT_color_buffer_float')) {
         M3Log.w('M3RenderEngine', 'EXT_color_buffer_float extension NOT SUPPORTED.');
-
+      }
+      if (!PlatformInfo.enableWebGLExtension('EXT_clip_control')) {
+        M3Log.w('M3RenderEngine', 'EXT_clip_control extension NOT SUPPORTED.');
       }
     }
 

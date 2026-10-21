@@ -64,8 +64,20 @@ class M3PlanarReflection {
     // Clear
     renderEngine.clearBackground(M3AppEngine.backgroundColor);
 
+    // above water with reflection or under water with refraction
+    bool isWaterSkybox = true;
+    if (pass == .refraction) {
+      if (scene.water?.cameraState == .aboveWater) {
+        isWaterSkybox = false;
+      }
+    } else {
+      if (scene.water?.cameraState == .underwater) {
+        isWaterSkybox = false;
+      }
+    }
+
     // draw skybox
-    if (scene.skybox != null && pass == .reflection) {
+    if (scene.skybox != null && isWaterSkybox) {
       scene.skybox!.drawSkybox(_camera);
     }
 
@@ -107,7 +119,6 @@ class M3PlanarReflection {
     gl.frontFace(WebGL.CCW); // Restore
     gl.polygonOffset(0, 0);
     gl.disable(WebGL.POLYGON_OFFSET_FILL);
-    renderEngine.bindDefaultFramebuffer();
   }
 
   /// draw reflection camera

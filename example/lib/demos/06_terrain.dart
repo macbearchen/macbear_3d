@@ -28,7 +28,7 @@ class TerrainScene_06 extends DemoScene {
 
     camera.farClip = 800;
     camera.refreshProjectionMatrix();
-    camera.setEuler(pi / 4, -pi / 9, 0, distance: 50);
+    camera.setEuler(pi * 0.8, -pi / 9, 0, distance: 80);
     M3Log.i('TerrainScene', 'Camera: $camera');
     // 2. Add Skybox
     skybox = M3Skybox(M3Texture.createDefaultIBLCube());
@@ -145,7 +145,7 @@ class TerrainScene_06 extends DemoScene {
     final terrainSegments = 512;
     final terrainSize = 512.0;
     final tileSegments = 32;
-    final maxHeight = 1024.0;
+    final maxHeight = 1500.0;
 
     if (_useHeightmap) {
       final buffer = await M3ResourceManager.loadBuffer('assets/example/Height16.png');
@@ -219,7 +219,7 @@ class TerrainScene_06 extends DemoScene {
       _tiledTerrain!.enableLod = _useLod;
     }
 
-    double terrainZ = _useHeightmap ? -21 : -9;
+    double terrainZ = _useHeightmap ? -36 : -12;
     _terrainZOffset = terrainZ;
     _terrainEntity = addMesh(terrainMesh, Vector3(0, 0, terrainZ));
     M3AppEngine.instance.resume();

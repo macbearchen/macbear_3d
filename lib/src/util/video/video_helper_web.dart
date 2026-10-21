@@ -35,22 +35,12 @@ void updateTextureFromVideo(dynamic gl, int target, dynamic video) {
   if (imageData == null) return;
 
   // WebGL constants
-  const rgba = 0x1908; 
-  const unsignedByte = 0x1401;
-  
+  const srgb = 0x8C43; // GL_SRGB8_ALPHA8
+  const rgba = 0x1908; // GL_RGBA
+  const unsignedByte = 0x1401; // GL_UNSIGNED_BYTE
   final pixels = Uint8List.fromList(imageData.data.toDart); // Convert to flutter_angle array
 
-  gl.texImage2D(
-    target,
-    0,
-    rgba,
-    v.videoWidth,
-    v.videoHeight,
-    0,
-    rgba,
-    unsignedByte,
-    pixels,
-  );
+  gl.texImage2D(target, 0, srgb, v.videoWidth, v.videoHeight, 0, rgba, unsignedByte, pixels);
 }
 
 void videoPlay(dynamic source) {
