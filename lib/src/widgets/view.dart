@@ -36,12 +36,11 @@ class _M3ViewState extends State<M3View> with SingleTickerProviderStateMixin, Wi
     final screenH = size.height.toInt();
     M3Log.i('M3View', 'initState addPostFrameCallback ($mounted) ($screenW x $screenH) dpr: $dpr');
 
-    // ticker to update and render (owned by this view; released via unmount())
-    engine.ticker = createTicker(engine.updateRender);
-
-    // init AppEngine (skipped internally when the engine is already initialised,
-    // e.g. when this M3View is a remount of a previously torn-down view)
+    // 1. Complete GL init first, then create the ticker.
     await engine.initApp(width: screenW, height: screenH, dpr: dpr);
+
+    // 2. Ticker to update and render (owned by this view; released via unmount())
+    engine.ticker = createTicker(engine.updateRender);
 
     // The view may have left the tree during the async init above; if so,
     // dispose() has already run unmount() and there is nothing to resume.

@@ -1,18 +1,52 @@
 // Macbear3D engine
 import '../m3_internal.dart';
 
+/// Controls how a depth attachment is created for an [M3RenderTarget].
+enum M3DepthMode {
+  /// No depth attachment.
+  ///
+  /// Use for post-process / bloom / compositing passes that only
+  /// need the colour texture and never test depth.
+  none,
+
+  /// Depth stored in a **Renderbuffer** (non-sampleable, fastest).
+  ///
+  /// The GPU can read/write depth for hidden-surface removal, but the
+  /// depth data **cannot** be sampled in a shader.  Ideal for normal
+  /// opaque scene passes, mirrors, reflections, and refractions.
+  renderBuffer,
+
+  /// Depth stored in a **Texture** (sampleable, RenderToTexture).
+  ///
+  /// Allows the depth buffer to be read as a sampler2D / sampler2DShadow
+  /// in subsequent shader passes.  Required for shadow maps, SSAO,
+  /// depth-of-field, and other effects that reconstruct position from depth.
+  renderTexture,
+}
+
 class M3RenderTarget {
   late M3Framebuffer _framebuffer;
 
-  /// get reflection pixel size
+  /// Width of the render target in pixels (after [renderScale] applied).
   int get width => texture.texW;
+
+  /// Height of the render target in pixels (after [renderScale] applied).
   int get height => texture.texH;
+
   final bool _useMipmaps;
   final int _colorFormat;
-  M3Texture get texture => _framebuffer.colorTexture;
   double _renderScale;
 
-  final bool hasDepth;
+  /// The colour texture written to by this render target.
+  M3Texture get texture => _framebuffer.colorTexture;
+
+  /// When [depthMode] is [M3DepthMode.renderTexture], the depth data is
+  /// also available as a sampleable texture; otherwise `null`.
+  M3Texture? get depthTexture => _framebuffer.depthTexture;
+
+  /// How the depth attachment is allocated for this target.
+  /// See [M3DepthMode] for the three options.
+  final M3DepthMode depthMode;
 
   M3RenderTarget(
     int width,
@@ -20,7 +54,7 @@ class M3RenderTarget {
     required bool mipmaps,
     int format = WebGL.RGBA8,
     double renderScale = 0.5,
-    this.hasDepth = true,
+    this.depthMode = M3DepthMode.renderBuffer,
   }) : _useMipmaps = mipmaps,
        _colorFormat = format,
        _renderScale = renderScale {
@@ -28,8 +62,17 @@ class M3RenderTarget {
     width = max((width * _renderScale).toInt(), 2);
     height = max((height * _renderScale).toInt(), 2);
     _framebuffer = M3Framebuffer(width, height)..createColorTexture(mipmaps: mipmaps, format: _colorFormat);
-    if (hasDepth) {
-      _framebuffer.createDepthRenderbuffer();
+    _attachDepth();
+  }
+
+  void _attachDepth() {
+    switch (depthMode) {
+      case M3DepthMode.renderBuffer:
+        _framebuffer.createDepthRenderbuffer();
+      case M3DepthMode.renderTexture:
+        _framebuffer.createDepthTexture();
+      case M3DepthMode.none:
+        break;
     }
   }
 
@@ -40,7 +83,9 @@ class M3RenderTarget {
     resize(M3AppEngine.instance.appWidth, M3AppEngine.instance.appHeight);
   }
 
-  /// Resize reflection image, size is based on display size
+  /// Recreates framebuffer attachments to match the new [width]/[height]
+  /// (before [renderScale] is applied).  No-ops if the resolved size is
+  /// unchanged.
   void resize(int width, int height) {
     width = max((width * _renderScale).toInt(), 2);
     height = max((height * _renderScale).toInt(), 2);
@@ -48,9 +93,7 @@ class M3RenderTarget {
 
     dispose();
     _framebuffer = M3Framebuffer(width, height)..createColorTexture(mipmaps: _useMipmaps, format: _colorFormat);
-    if (hasDepth) {
-      _framebuffer.createDepthRenderbuffer();
-    }
+    _attachDepth();
   }
 
   void bind() {
@@ -77,23 +120,23 @@ class M3RenderTargetManager {
 
     // 1. Scene Target (全解析度 HDR): RGBA16F, R11F_G11F_B10F
     const sceneFormat = WebGL.RGBA16F;
-    _getOrCreate('scene', width, height, mipmaps: false, hasDepth: true, format: sceneFormat);
+    _getOrCreate('scene', width, height, mipmaps: false, depthMode: .renderBuffer, format: sceneFormat);
 
     // 2. Mirror/Reflection/Refraction Target (0.5x 降採樣)
-    _getOrCreate('mirror', width, height, mipmaps: true, hasDepth: true, renderScale: 0.5);
-    _getOrCreate('reflection', width, height, mipmaps: false, hasDepth: true, renderScale: 0.5);
-    _getOrCreate('refraction', width, height, mipmaps: false, hasDepth: true, renderScale: 0.5);
+    _getOrCreate('mirror', width, height, mipmaps: true, depthMode: .renderBuffer, renderScale: 0.5);
+    _getOrCreate('reflection', width, height, mipmaps: false, depthMode: .renderBuffer, renderScale: 0.5);
+    _getOrCreate('refraction', width, height, mipmaps: false, depthMode: .renderBuffer, renderScale: 0.5);
 
     // 3. Bloom Ping-Pong Targets (0.5x 降採樣, HDR)
-    _getOrCreate('bloom_ping', width, height, mipmaps: false, hasDepth: false, format: sceneFormat, renderScale: 0.5);
-    _getOrCreate('bloom_pong', width, height, mipmaps: false, hasDepth: false, format: sceneFormat, renderScale: 0.5);
+    _getOrCreate('bloom_ping', width, height, mipmaps: false, depthMode: .none, format: sceneFormat, renderScale: 0.5);
+    _getOrCreate('bloom_pong', width, height, mipmaps: false, depthMode: .none, format: sceneFormat, renderScale: 0.5);
 
     // 4. Post Process Target (全解析度 HDR)
-    _getOrCreate('composite', width, height, mipmaps: false, hasDepth: false, format: sceneFormat);
+    _getOrCreate('composite', width, height, mipmaps: false, depthMode: .none, format: sceneFormat);
 
     // 5. Post Process LDR Target (for FXAA input/output: 全解析度 RGBA8)
-    _getOrCreate('ldr_post', width, height, mipmaps: false, hasDepth: false, format: WebGL.RGBA8);
-    _getOrCreate('fxaa', width, height, mipmaps: false, hasDepth: false, format: WebGL.RGBA8);
+    _getOrCreate('ldr_post', width, height, mipmaps: false, depthMode: .none, format: WebGL.RGBA8);
+    _getOrCreate('fxaa', width, height, mipmaps: false, depthMode: .none, format: WebGL.RGBA8);
   }
 
   M3RenderTarget get(String key) {
@@ -107,7 +150,7 @@ class M3RenderTargetManager {
     int w,
     int h, {
     required bool mipmaps,
-    required bool hasDepth,
+    required M3DepthMode depthMode,
     int format = WebGL.RGBA8,
     double renderScale = 1.0,
   }) {
@@ -119,7 +162,7 @@ class M3RenderTargetManager {
         h,
         mipmaps: mipmaps,
         format: format,
-        hasDepth: hasDepth,
+        depthMode: depthMode,
         renderScale: renderScale,
       );
     }

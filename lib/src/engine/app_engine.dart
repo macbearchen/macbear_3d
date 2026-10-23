@@ -33,7 +33,7 @@ Widget _buildCopyrightWidget() {
 class M3AppEngine with ChangeNotifier {
   static final M3AppEngine instance = M3AppEngine._internal();
 
-  static const String version = "macbear3d-lib v0.12.1e powered by ANGLE";
+  static const String version = "macbear3d-lib v0.12.1f powered by ANGLE";
   final FlutterAngle _angle = FlutterAngle();
   late FlutterAngleTexture _sourceTexture; // main framebuffer
   static Framebuffer get mainFbo => Framebuffer(kIsWeb ? null : instance._sourceTexture.fboId);
@@ -337,7 +337,11 @@ class M3AppEngine with ChangeNotifier {
     if (PlatformInfo.isAndroid) {
       await _angle.deleteTexture(_sourceTexture);
       _sourceTexture = await _angle.createTexture(options);
-      // M3RenderEngine.gl = _sourceTexture.getContext();
+      // Fix: after an Android resize the GL context may change, so we must
+      // update renderEngine.gl. Without this, all subsequent texture GL calls
+      // (texStorage2D, texSubImage2D, etc.) will operate on the stale context
+      // and silently fail, causing textures to appear missing.
+      renderEngine.gl = _sourceTexture.getContext();
     } else {
       await _angle.resize(_sourceTexture, options);
     }
@@ -451,6 +455,12 @@ class M3AppEngine with ChangeNotifier {
     // 2. render active scene
     if (scene != null) {
       renderEngine.scenePass.render(scene);
+    } else {
+      // Fix: when scene is null (e.g. during a scene transition), we still
+      // need to clear the FBO. Without this, the ANGLE FBO retains its
+      // uninitialized purple/magenta color and bleeds through to the screen.
+      renderEngine.bindDefaultFramebuffer();
+      renderEngine.clearBackground(M3AppEngine.backgroundColor);
     }
     // 3. render 2D: UI, text etc.
     renderEngine.render2D();
