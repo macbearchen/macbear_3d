@@ -240,6 +240,16 @@ class M3RenderEngine {
           x += width + 5;
         }
       }
+
+      // show scene depth texture
+      final targetScene = renderTargets.get('scene');
+      final texDepth = targetScene.depthTexture;
+      if (texDepth != null) {
+        final width = 200 / targetScene.height * targetScene.width;
+        final scale = Vector3(width / texDepth.texW, 200 / texDepth.texH, 1.0);
+        texDepth.debugDraw(0, 0, scale.x, scale.y);
+      }
+
       // show planar reflection
       if (mainContext.needsPlanarReflectionPass()) {
         final engine = M3AppEngine.instance;

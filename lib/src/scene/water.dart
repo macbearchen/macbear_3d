@@ -20,6 +20,15 @@ class M3Water extends M3Entity {
   M3Texture normalMap = M3Resources.texDefaultNormal; // normal-map for water wave distortion
   double waveDistortion = 10.0;
   double reflectionDepthBias = 0.8;
+
+  // Foam and edge distortion control
+  bool enableFoam = true;
+  double foamDistance = 1.2; // depth range where foam appears
+  double foamFalloff = 1.5; // sharpness / curve of foam fade
+  double foamIntensity = 0.85; // opacity / strength of foam
+  double edgeDistortionDistance = 2.5; // depth range where refraction distortion fades to 0
+  Vector4 foamColor = Vector4(1.0, 1.0, 1.0, 1.0); // foam color (RGB + max alpha)
+
   late M3Scene scene;
   // camera view state relative to water surface
   M3WaterCameraState cameraState = .aboveWater;
@@ -185,6 +194,8 @@ class M3Water extends M3Entity {
     final viewer = scene.camera;
     if (fillMode == .solid) {
       RenderingContext gl = renderEngine.gl;
+      gl.flush(); // flush to complete scene render
+
       gl.enable(WebGL.BLEND);
       gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA); // alpha blending
       gl.depthMask(false); // Don't write to depth buffer in blending pass

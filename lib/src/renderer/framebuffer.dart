@@ -48,7 +48,7 @@ class M3Framebuffer {
   /// Create depth texture
   /// internal format: DEPTH_COMPONENT16, (DEPTH_COMPONENT24), DEPTH_COMPONENT32F
   /// with stencil format: DEPTH24_STENCIL8
-  M3Texture createDepthTexture({int depthFormat = WebGL.DEPTH_COMPONENT24}) {
+  M3Texture createDepthTexture({int depthFormat = WebGL.DEPTH_COMPONENT24, bool isCompareRef = true}) {
     final attachment = switch (depthFormat) {
       WebGL.DEPTH24_STENCIL8 => WebGL.DEPTH_STENCIL_ATTACHMENT,
       _ => WebGL.DEPTH_ATTACHMENT,
@@ -59,9 +59,14 @@ class M3Framebuffer {
       ..allocateStorage(frameW, frameH)
       ..attachToFramebuffer(attachment, WebGL.TEXTURE_2D);
 
-    // depth-Z compare mode
-    gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_COMPARE_MODE, WebGL.COMPARE_REF_TO_TEXTURE);
-    gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_COMPARE_FUNC, WebGL.LESS);
+    if (isCompareRef) {
+      // depth-Z compare mode (for shadow maps)
+      gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_COMPARE_MODE, WebGL.COMPARE_REF_TO_TEXTURE);
+      gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_COMPARE_FUNC, WebGL.LESS);
+    } else {
+      // sampleable depth texture (e.g. for scene depth buffer / soft particles / water edge)
+      gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_COMPARE_MODE, WebGL.NONE);
+    }
 
     _depthTexture = tex;
     _checkStatus();

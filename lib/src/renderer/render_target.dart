@@ -70,7 +70,7 @@ class M3RenderTarget {
       case M3DepthMode.renderBuffer:
         _framebuffer.createDepthRenderbuffer();
       case M3DepthMode.renderTexture:
-        _framebuffer.createDepthTexture();
+        _framebuffer.createDepthTexture(isCompareRef: true);
       case M3DepthMode.none:
         break;
     }
@@ -120,7 +120,7 @@ class M3RenderTargetManager {
 
     // 1. Scene Target (全解析度 HDR): RGBA16F, R11F_G11F_B10F
     const sceneFormat = WebGL.RGBA16F;
-    _getOrCreate('scene', width, height, mipmaps: false, depthMode: .renderBuffer, format: sceneFormat);
+    _getOrCreate('scene', width, height, mipmaps: false, depthMode: .renderTexture, format: sceneFormat);
 
     // 2. Mirror/Reflection/Refraction Target (0.5x 降採樣)
     _getOrCreate('mirror', width, height, mipmaps: true, depthMode: .renderBuffer, renderScale: 0.5);

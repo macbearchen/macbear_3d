@@ -102,22 +102,14 @@ class M3ScenePass {
         // Tonemap to LDR intermediate target first
         final ldrTarget = renderEngine.renderTargets.get('ldr_post');
         ldrTarget.bind();
-        M3PostProcess.drawFullscreen(
-          _target.texture,
-          tonemapMode: options.tonemapMode,
-          exposure: options.exposure,
-        );
+        M3PostProcess.drawFullscreen(_target.texture, tonemapMode: options.tonemapMode, exposure: options.exposure);
 
         // Apply FXAA directly to default framebuffer
         renderEngine.fxaaPass.render(ldrTarget.texture, toDefaultFramebuffer: true);
       } else {
         // Bind default framebuffer and draw fullscreen with tonemap directly to screen
         renderEngine.bindDefaultFramebuffer();
-        M3PostProcess.drawFullscreen(
-          _target.texture,
-          tonemapMode: options.tonemapMode,
-          exposure: options.exposure,
-        );
+        M3PostProcess.drawFullscreen(_target.texture, tonemapMode: options.tonemapMode, exposure: options.exposure);
       }
     }
   }

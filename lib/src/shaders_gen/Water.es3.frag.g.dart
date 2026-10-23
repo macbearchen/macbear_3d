@@ -18,11 +18,20 @@ uniform mediump float WaveDistortion;
 uniform sampler2D SamplerDiffuse;	// GL_TEXTURE0: reflection as diffuse
 uniform sampler2D NormalTex;		// GL_TEXTURE1: normalmap (Normal map uses z-axis major)
 uniform sampler2D RefractionTex;	// GL_TEXTURE2: refraction
+uniform sampler2D SceneDepthTex;	// GL_TEXTURE7: scene depth texture
 uniform mediump vec4 CameraViewport; // xyzw for (x,y,width,height)
+uniform mediump vec2 CameraNearFar;  // xy: nearClip, farClip
+uniform mediump vec4 BumpTranslateScale0;	// xy: translate, zw: scale
+uniform mediump vec4 FoamParams;     // x: foamDistance, y: foamFalloff, z: foamIntensity, w: edgeDistortionDistance
+uniform mediump vec4 FoamColor;      // rgba: foam color
 
-// uniform lowp vec4 uColor;
+// Linearize standard 0~1 depth buffer value to eye-space distance
+highp float LinearizeDepth(highp float depth, highp float near, highp float far)
+{
+	return (near * far) / (far - depth * (far - near));
+}
 
-// blend reflection and refraction
+// blend reflection and refraction, with shoreline foam and edge distortion reduction
 mediump vec4 BlendReflectionRefraction(mediump vec3 vAccumulatedNormal, mediump vec3 eyeToObjNormal)
 {
 	// Calculate the Fresnel term to determine amount of reflection for each fragment
@@ -31,21 +40,62 @@ mediump vec4 BlendReflectionRefraction(mediump vec3 vAccumulatedNormal, mediump 
 	fresnel = pow5(fresnel);
 	fresnel = (0.9 * fresnel) + 0.1;	// R(0)-1 = ~0.98 , R(0)= ~0.02
 	
-	// Calculate the tex coords of the fragment (using it's position on the screen), normal map is z-axis major.
-	mediump vec2 vTexCoord = (gl_FragCoord.xy - CameraViewport.xy) / CameraViewport.zw;
+	// Calculate the screen-space tex coords of the fragment
+	mediump vec2 screenUV = (gl_FragCoord.xy - CameraViewport.xy) / CameraViewport.zw;
 
-	// Divide by eyeToObjDist to scale down the distortion
-	// of fragments based on their distance from the camera 
-	vTexCoord.xy -= vAccumulatedNormal.xy * (WaveDistortion / eyeToObjDist);
+	// Scene depth & water depth comparison for edge effects
+	highp float near = CameraNearFar.x;
+	highp float far = CameraNearFar.y;
+	highp float sceneDepthRaw = texture(SceneDepthTex, screenUV).r;
+	highp float sceneEyeZ = LinearizeDepth(sceneDepthRaw, near, far);
+	highp float waterEyeZ = LinearizeDepth(gl_FragCoord.z, near, far);
+	highp float waterDepth = max(0.0, sceneEyeZ - waterEyeZ);
 
-	// reflection, refraction
+	// Reduce distortion near edges / shorelines to prevent edge bleeding / ghosting
+	highp float edgeDistLimit = max(FoamParams.w, 0.001);
+	mediump float distortionFade = clamp(waterDepth / edgeDistLimit, 0.0, 1.0);
+
+	// Distort refraction UV
+	mediump vec2 vTexCoord = screenUV;
+	vTexCoord.xy -= vAccumulatedNormal.xy * (WaveDistortion / eyeToObjDist) * distortionFade;
+
+	// Sample reflection and refraction
 	mediump vec4 ReflectionColor = texture(SamplerDiffuse, vTexCoord);
 	mediump vec4 RefractionColor = texture(RefractionTex, vTexCoord);
 	// Blend reflection and refraction
-	mediump vec4 result;
-	result = mix(RefractionColor, ReflectionColor, fresnel);
-//	result = mix(ReflectionColor, RefractionColor, 0.4);	// Constant mix
-	// result = RefractionColor;			// ReflectionColor, RefractionColor only
+	mediump vec4 result = mix(RefractionColor, ReflectionColor, fresnel);
+
+	// Shoreline edge foam & dynamic wave wash/splash
+	highp float foamDist = FoamParams.x;
+	if (foamDist > 0.0) {
+		// Base depth gradient (1.0 at waterline, 0.0 at foamDist)
+		highp float shoreFactor = clamp(1.0 - (waterDepth / foamDist), 0.0, 1.0);
+
+		// Time progression derived strictly from uniform offset animation
+		highp float animTime = (BumpTranslateScale0.x - BumpTranslateScale0.y) * 35.0;
+
+		// 1. Static shoreline contact foam (right at the edge)
+		highp float edgeContact = pow(shoreFactor, 2.5);
+
+		// 2. Incoming wave surge: waves travel toward waterDepth = 0
+		highp float wavePhase = waterDepth * (6.0 / max(foamDist, 0.5)) - animTime;
+		// Sharp wave crest that steepens as it reaches shore
+		highp float waveCrest = clamp(sin(wavePhase) * 1.5 - 0.3, 0.0, 1.0);
+		// Waves break and expand in shallow water
+		highp float waveWash = waveCrest * shoreFactor;
+
+		// 3. Normal map perturbation for bubbly, ragged edges
+		highp float wavePerturb = (vAccumulatedNormal.x + vAccumulatedNormal.y) * 0.25;
+
+		// Combine contact foam + incoming surging waves
+		highp float foamShape = max(edgeContact, waveWash) + wavePerturb;
+		highp float foamAmount = clamp(foamShape, 0.0, 1.0);
+		foamAmount = pow(foamAmount, FoamParams.y) * FoamParams.z;
+
+		// Blend foam over water
+		result = mix(result, FoamColor, foamAmount);
+	}
+
 	return result;
 }
 

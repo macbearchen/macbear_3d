@@ -37,6 +37,7 @@ part 'shader/water_shader.dart';
 // Slot  2 : Water Refraction map
 // Slot  3 : Directional Shadow map
 // Slot  4 : Spot Light Shadow map
+// Slot  7 : Water Scene Depth map (edge foam & soft refraction)
 // ────────────────────────────────────────────────────────
 
 /// reflection type for render

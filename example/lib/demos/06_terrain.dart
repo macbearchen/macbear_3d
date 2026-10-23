@@ -5,6 +5,8 @@ import 'demo_scene.dart';
 // ignore: camel_case_types
 class TerrainScene_06 extends DemoScene {
   M3TiledTerrain? _tiledTerrain;
+  final _terrainSize = 512.0;
+
   M3Entity? _terrainEntity;
   M3HeightField? _heightField; // stored for height sampling
   double _terrainZOffset = 0.0; // world-Z offset applied to terrain mesh
@@ -42,14 +44,15 @@ class TerrainScene_06 extends DemoScene {
     // 5. Add Mesh List
     _initMeshList();
 
-    for (int i = 0; i <= 10; i++) {
+    for (int i = 0; i <= 3; i++) {
       final axisMesh = M3Resources.axisGizmoMesh.clone();
       addMesh(axisMesh, Vector3(0, 100.0 * i, 10));
     }
   }
 
   Future<void> addWater() async {
-    final water = M3Water();
+    final mesh = M3Water.createWaterSurface(width: _terrainSize, height: _terrainSize);
+    final water = M3Water(waterMesh: mesh);
     water.scene = this;
     water.normalMap = M3Texture.createWaterNormalMap(size: 256, strength: 3.0);
 
@@ -143,7 +146,6 @@ class TerrainScene_06 extends DemoScene {
     M3Mesh terrainMesh;
 
     final terrainSegments = 512;
-    final terrainSize = 512.0;
     final tileSegments = 32;
     final maxHeight = 1500.0;
 
@@ -156,8 +158,8 @@ class TerrainScene_06 extends DemoScene {
 
       final hf = M3HeightField.fromHeightmap(
         image,
-        terrainSize,
-        terrainSize,
+        _terrainSize,
+        _terrainSize,
         widthSegments: terrainSegments,
         heightSegments: terrainSegments,
         maxHeight: maxHeight,
@@ -168,8 +170,8 @@ class TerrainScene_06 extends DemoScene {
 
         _tiledTerrain = M3TiledTerrain.fromHeightField(
           hf,
-          terrainSize,
-          terrainSize,
+          _terrainSize,
+          _terrainSize,
           tileWidthSegments: tileSegments,
           tileHeightSegments: tileSegments,
           maxHeight: maxHeight,
@@ -179,7 +181,7 @@ class TerrainScene_06 extends DemoScene {
       } else {
         // Mode 2: Single Mesh + Heightmap
         _tiledTerrain = null;
-        final terrainGeom = M3TerrainGeom.fromHeightField(hf, terrainSize, terrainSize, maxHeight: maxHeight);
+        final terrainGeom = M3TerrainGeom.fromHeightField(hf, _terrainSize, _terrainSize, maxHeight: maxHeight);
         terrainMesh = M3Mesh(terrainGeom, material: terrainMtr);
       }
     } else {
@@ -189,8 +191,8 @@ class TerrainScene_06 extends DemoScene {
       if (_useTiled) {
         // Mode 3: Tiled + Procedural Noise
         _tiledTerrain = M3TiledTerrain.build(
-          terrainSize,
-          terrainSize,
+          _terrainSize,
+          _terrainSize,
           widthSegments: terrainSegments,
           heightSegments: terrainSegments,
           tileWidthSegments: tileSegments,
@@ -204,8 +206,8 @@ class TerrainScene_06 extends DemoScene {
         // Mode 4: Single Mesh + Procedural Noise
         _tiledTerrain = null;
         final terrainGeom = M3TerrainGeom(
-          terrainSize,
-          terrainSize,
+          _terrainSize,
+          _terrainSize,
           widthSegments: terrainSegments,
           heightSegments: terrainSegments,
           maxHeight: 16.0,
@@ -286,7 +288,7 @@ class TerrainScene_06 extends DemoScene {
                         M3AppEngine.instance.refresh();
                       },
                       child: Text(
-                        _useHeightmap ? "Heightmap" : "Noise",
+                        _useHeightmap ? "HtMap" : "Noise",
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -349,60 +351,71 @@ class TerrainScene_06 extends DemoScene {
                 ),
                 if (water?.visible ?? true) ...[
                   const SizedBox(height: 4),
-                  Text(
-                    "Water Height: ${_waterHeight.toStringAsFixed(1)}",
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                  const SizedBox(height: 4),
                   SizedBox(
                     width: 200,
-                    child: SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        trackHeight: 4,
-                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-                      ),
-                      child: Slider(
-                        value: _waterHeight.clamp(_minWaterHeight, _maxWaterHeight),
-                        min: _minWaterHeight,
-                        max: _maxWaterHeight,
-                        activeColor: Colors.lightGreen,
-                        inactiveColor: Colors.white24,
-                        onChanged: (value) {
-                          _waterHeight = value;
-                          water?.setSurfacePlane(constant: -_waterHeight);
-                          M3AppEngine.instance.refresh();
-                        },
-                      ),
+                    child: Row(
+                      children: [
+                        Text(
+                          "Height=${_waterHeight.toStringAsFixed(1)}",
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                        Expanded(
+                          child: SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              trackHeight: 4,
+                              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                              overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                            ),
+                            child: Slider(
+                              value: _waterHeight.clamp(_minWaterHeight, _maxWaterHeight),
+                              min: _minWaterHeight,
+                              max: _maxWaterHeight,
+                              activeColor: Colors.lightGreen,
+                              inactiveColor: Colors.white24,
+                              onChanged: (value) {
+                                _waterHeight = value;
+                                water?.setSurfacePlane(constant: -_waterHeight);
+                                setUIState(() {});
+                                M3AppEngine.instance.refresh();
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    "Wave Distortion: ${(water?.waveDistortion ?? 3.0).toStringAsFixed(1)}",
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                  const SizedBox(height: 4),
                   SizedBox(
                     width: 200,
-                    child: SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        trackHeight: 4,
-                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-                      ),
-                      child: Slider(
-                        value: (water?.waveDistortion ?? 3.0).clamp(0.0, 20.0),
-                        min: 0.0,
-                        max: 20.0,
-                        activeColor: Colors.lightGreen,
-                        inactiveColor: Colors.white24,
-                        onChanged: (value) {
-                          if (water != null) {
-                            water!.waveDistortion = value;
-                            M3AppEngine.instance.refresh();
-                          }
-                        },
-                      ),
+                    child: Row(
+                      children: [
+                        Text(
+                          "Distort=${(water?.waveDistortion ?? 3.0).toStringAsFixed(1)}",
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                        Expanded(
+                          child: SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              trackHeight: 4,
+                              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                              overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                            ),
+                            child: Slider(
+                              value: (water?.waveDistortion ?? 3.0).clamp(0.0, 20.0),
+                              min: 0.0,
+                              max: 20.0,
+                              activeColor: Colors.lightGreen,
+                              inactiveColor: Colors.white24,
+                              onChanged: (value) {
+                                if (water != null) {
+                                  water!.waveDistortion = value;
+                                  setUIState(() {});
+                                  M3AppEngine.instance.refresh();
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   SizedBox(
@@ -441,6 +454,135 @@ class TerrainScene_06 extends DemoScene {
                             water?.refractionEnabled = value;
                             M3AppEngine.instance.refresh();
                           },
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    width: 200,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Foam",
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        Switch(
+                          value: water?.enableFoam ?? false,
+                          activeThumbColor: Colors.lightGreen,
+                          onChanged: (value) {
+                            if (water != null) {
+                              water!.enableFoam = value;
+                              setUIState(() {});
+                              M3AppEngine.instance.refresh();
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (water?.enableFoam ?? false) ...[
+                    const SizedBox(height: 2),
+                    SizedBox(
+                      width: 200,
+                      child: Row(
+                        children: [
+                          Text(
+                            "Dist=${(water?.foamDistance ?? 1.2).toStringAsFixed(1)}",
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                          ),
+                          Expanded(
+                            child: SliderTheme(
+                              data: SliderTheme.of(context).copyWith(
+                                trackHeight: 4,
+                                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                              ),
+                              child: Slider(
+                                value: (water?.foamDistance ?? 1.2).clamp(0.1, 10.0),
+                                min: 0.1,
+                                max: 10.0,
+                                activeColor: Colors.lightGreen,
+                                inactiveColor: Colors.white24,
+                                onChanged: (value) {
+                                  if (water != null) {
+                                    water!.foamDistance = value;
+                                    setUIState(() {});
+                                    M3AppEngine.instance.refresh();
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      width: 200,
+                      child: Row(
+                        children: [
+                          Text(
+                            "Intensity=${(water?.foamIntensity ?? 0.85).toStringAsFixed(2)}",
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                          ),
+                          Expanded(
+                            child: SliderTheme(
+                              data: SliderTheme.of(context).copyWith(
+                                trackHeight: 4,
+                                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                              ),
+                              child: Slider(
+                                value: (water?.foamIntensity ?? 0.85).clamp(0.0, 1.0),
+                                min: 0.0,
+                                max: 1.0,
+                                activeColor: Colors.lightGreen,
+                                inactiveColor: Colors.white24,
+                                onChanged: (value) {
+                                  if (water != null) {
+                                    water!.foamIntensity = value;
+                                    setUIState(() {});
+                                    M3AppEngine.instance.refresh();
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 2),
+                  SizedBox(
+                    width: 200,
+                    child: Row(
+                      children: [
+                        Text(
+                          "Edge=${(water?.edgeDistortionDistance ?? 2.5).toStringAsFixed(1)}",
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                        Expanded(
+                          child: SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              trackHeight: 4,
+                              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                              overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                            ),
+                            child: Slider(
+                              value: (water?.edgeDistortionDistance ?? 2.5).clamp(0.1, 10.0),
+                              min: 0.1,
+                              max: 10.0,
+                              activeColor: Colors.lightGreen,
+                              inactiveColor: Colors.white24,
+                              onChanged: (value) {
+                                if (water != null) {
+                                  water!.edgeDistortionDistance = value;
+                                  setUIState(() {});
+                                  M3AppEngine.instance.refresh();
+                                }
+                              },
+                            ),
+                          ),
                         ),
                       ],
                     ),
