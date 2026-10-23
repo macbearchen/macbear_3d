@@ -89,8 +89,13 @@ class M3ResourceManager {
     } else {
       // Asset path normalization: Ensure it starts with 'assets/' for rootBundle
       final fullPath = path.startsWith('assets/') || path.startsWith('packages/') ? path : 'assets/$path';
-      final data = await rootBundle.load(fullPath);
-      return data.buffer;
+      try {
+        final data = await rootBundle.load(fullPath);
+        return data.buffer;
+      } catch (e) {
+        M3Log.e('M3ResourceManager', 'Asset not found: $path');
+        return ByteData(0).buffer;
+      }
     }
   }
 

@@ -8,12 +8,10 @@ class M3RenderContext {
   late M3Scene _scene;
   late M3Camera _viewer; // scene camera or light (light for shadow map)
 
-  // opaque, transparent, unlit
+  // opaque, masked, transparent
   final M3RenderQueue opaque = M3RenderQueue(); // M3AlphaMode.opaque
   final M3RenderQueue masked = M3RenderQueue(); // M3AlphaMode.mask
   final M3RenderQueue transparent = M3RenderQueue(); // M3AlphaMode.blend
-
-  final M3RenderQueue unlit = M3RenderQueue(); // external OES
 
   // reflection queue
   final M3RenderQueue planarReflection = M3RenderQueue();
@@ -31,7 +29,6 @@ class M3RenderContext {
     opaque.clear();
     masked.clear();
     transparent.clear();
-    unlit.clear();
 
     planarReflection.clear();
     reflectionProbe.clear();
@@ -100,10 +97,8 @@ class M3RenderContext {
         item.pointLights = scene.pointLights;
         item.spotLights = scene.spotLights;
 
-        // 1-1. Collect for unlit / opacity / masked / transparency
-        if (sub.mtr.diffuseTexture is M3ExternalTexture) {
-          unlit.add(item);
-        } else if (sub.mtr.alphaMode == M3AlphaMode.blend) {
+        // 1-1. Collect for opacity / masked / transparency
+        if (sub.mtr.alphaMode == M3AlphaMode.blend) {
           if (!bOnlyOpaque) {
             transparent.add(item);
           }
@@ -152,22 +147,18 @@ class M3RenderContext {
     gl.blendFunc(WebGL.ONE, WebGL.ONE);
     gl.depthMask(true);
 
-    // (1/4) Opaque objects
+    // (1/3) Opaque objects
     _executeQueue(opaque, defaultProg: fallbackProg);
 
-    // (2/4) Masked objects (alpha test / cutoff)
+    // (2/3) Masked objects (alpha test / cutoff)
     _executeQueue(masked, defaultProg: fallbackProg);
-
-    // (3/4) Unlit objects
-    final progUnlit = renderEngine.programs.programExternalOES;
-    _executeQueue(unlit, defaultProg: progUnlit, useVariant: false);
 
     // 2. Transparent objects: Enable alpha blending, disable depth writing
     if (!transparent.isEmpty) {
       gl.enable(WebGL.BLEND);
       gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA);
       gl.depthMask(false);
-      // (4/4) Transparent objects
+      // (3/3) Transparent objects
       _executeQueue(transparent, defaultProg: fallbackProg);
       gl.depthMask(true);
       gl.disable(WebGL.BLEND);
@@ -185,37 +176,34 @@ class M3RenderContext {
     gl.blendFunc(WebGL.ONE, WebGL.ONE);
     gl.depthMask(true);
 
-    // (1/4) Opaque objects
+    // (1/3) Opaque objects
     _executeQueue(opaque, defaultProg: prog, fillMode: .wireframe, useVariant: false);
 
-    // (2/4) Masked objects (alpha test / cutoff)
+    // (2/3) Masked objects (alpha test / cutoff)
     _executeQueue(masked, defaultProg: prog, fillMode: .wireframe, useVariant: false);
-
-    // (3/4) Unlit objects
-    _executeQueue(unlit, defaultProg: prog, fillMode: .wireframe, useVariant: false);
 
     // 2. Transparent objects: Enable alpha blending, disable depth writing
     gl.enable(WebGL.BLEND);
     gl.blendFunc(WebGL.SRC_ALPHA, WebGL.ONE_MINUS_SRC_ALPHA);
     gl.depthMask(false);
-    // (4/4) Transparent objects
+    // (3/3) Transparent objects
     _executeQueue(transparent, defaultProg: prog, fillMode: .wireframe, useVariant: false);
     gl.depthMask(true);
     gl.disable(WebGL.BLEND);
   }
 
   /// Depth-only pass: opaque + masked with skinning + alpha test.
-  /// Used by shadow map rendering — transparent and unlit objects are intentionally excluded.
+  /// Used by shadow map rendering — transparent objects are intentionally excluded.
   void renderDepthPass() {
     final progManager = M3AppEngine.instance.renderEngine.programs;
     // Opaque: write depth, no blending
     _executeQueue(opaque, defaultProg: progManager.programSimple, useVariant: false);
     // Masked: same depth shader but with alpha cutoff
-    final progMasked = progManager.programSimpleMasked;
+    final progMasked = progManager.programDepthMasked;
     if (!masked.isEmpty) {
       _executeQueue(masked, defaultProg: progMasked, useVariant: false);
     }
-    // transparent & unlit: intentionally skipped for shadow depth
+    // transparent: intentionally skipped for shadow depth
   }
 
   /// composited 2-pass reflection rendering

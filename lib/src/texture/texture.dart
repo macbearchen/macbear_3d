@@ -301,7 +301,7 @@ class M3Texture {
   }
 
   static M3Texture createWarningTexture() {
-    return createCheckerboard(size: 8, lightColor: Vector4(.9, .2, .1, 1), darkColor: Vector4(.7, .6, .5, 1));
+    return createCheckerboard(size: 4, lightColor: Vector4(.9, .2, .1, 1), darkColor: Vector4(.7, .6, .5, 1));
   }
 
   /// Create a checkerboard texture (2D) with specified size and colors.
@@ -382,30 +382,30 @@ class M3Texture {
   ///   - PNG/JPG：決定 internalFormat（SRGB8_ALPHA8 或 RGBA8）
   ///   - KTX/ASTC：傳給 parseKtx，決定 COMPRESSED_SRGB8_* 或 COMPRESSED_RGBA_*
   static Future<M3Texture> fromPath(String url, {bool isSrgb = false}) async {
-    final filename = url;
-    if (!await M3ResourceManager.isAssetExists(filename)) {
-      M3Log.e('M3Texture', 'assets: $filename');
+    final lowerName = url.toLowerCase();
+    M3Texture tex;
+
+    try {
+      if (lowerName.endsWith('.ktx') || lowerName.endsWith('.ktx2') || lowerName.endsWith('.astc')) {
+        if (kIsWeb) {
+          if (!PlatformInfo.enableWebGLExtension('WEBGL_compressed_texture_astc')) {
+            M3Log.w('M3Texture', 'ASTC extension NOT SUPPORTED, use checkerboard instead');
+            return M3Texture.createWarningTexture();
+          }
+        }
+        final ktxInfo = await KtxInfo.parseKtx(url, isSrgb: isSrgb);
+        tex = fromKtx(ktxInfo);
+        // } else if (lowerName.endsWith('.pvr')) {
+        // PVR compressed texture
+      } else {
+        final img = await M3ResourceManager.loadImage(url);
+        tex = await fromImages([img], isSrgb: isSrgb);
+      }
+    } catch (e) {
+      M3Log.e('M3Texture', 'Asset not found: $url');
       return M3Texture.createWarningTexture();
     }
 
-    final lowerName = filename.toLowerCase();
-    M3Texture tex;
-
-    if (lowerName.endsWith('.ktx') || lowerName.endsWith('.ktx2') || lowerName.endsWith('.astc')) {
-      if (kIsWeb) {
-        if (!PlatformInfo.enableWebGLExtension('WEBGL_compressed_texture_astc')) {
-          M3Log.w('M3Texture', 'ASTC extension NOT SUPPORTED, use checkerboard instead');
-          return M3Texture.createWarningTexture();
-        }
-      }
-      final ktxInfo = await KtxInfo.parseKtx(filename, isSrgb: isSrgb);
-      tex = fromKtx(ktxInfo);
-      // } else if (lowerName.endsWith('.pvr')) {
-      // PVR compressed texture
-    } else {
-      final img = await M3ResourceManager.loadImage(url);
-      tex = await fromImages([img], isSrgb: isSrgb);
-    }
     tex.name = url;
     M3Log.i('M3Texture', tex.toString());
     return tex;

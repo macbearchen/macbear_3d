@@ -1,6 +1,6 @@
 // Generated file – do not edit.
 // ignore: constant_identifier_names
-const String Unlit_vert = r"""
+const String DepthMasked_vert = r"""
 #version 300 es
 // Simple vert-shader ES3 //////////
 // NOTICE: "Skinning.es3.vert" must be added before this file

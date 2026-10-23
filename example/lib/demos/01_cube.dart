@@ -28,13 +28,13 @@ class CubeScene_01 extends DemoScene {
         }
       }
     }
-    /*
+
     final testPathHelmet = 'glb/DamagedHelmet.glb';
     final meshBox = await M3Mesh.load(testPathHelmet);
     final entityBox = addMesh(meshBox, Vector3(5, -2, 5));
     entityBox.rotation = Quaternion.euler(pi / 12, pi / 2, 0);
     entityBox.scale = Vector3.all(3.0);
-*/
+
     // axis gizmo
     addMesh(M3Resources.axisGizmoMesh, Vector3(0, 0, 0));
 

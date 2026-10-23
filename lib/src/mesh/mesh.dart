@@ -116,6 +116,11 @@ class M3Mesh {
   static Future<M3Mesh> load(String path) async {
     // Centrally fetch raw bytes via ResourceManager
     final buffer = await M3ResourceManager.loadBuffer(path);
+    if (buffer.lengthInBytes == 0) {
+      M3Log.e('M3Mesh', 'Failed to load model: $path');
+      final mtr = M3Material()..diffuseTexture = M3Texture.createWarningTexture();
+      return M3Mesh(M3Resources.unitCube, material: mtr);
+    }
 
     // Normalize extension for detection (ignoring URL query params)
     final ext = path.split('.').last.toLowerCase().split('?').first;

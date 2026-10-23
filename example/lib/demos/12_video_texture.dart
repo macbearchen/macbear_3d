@@ -41,9 +41,12 @@ class VideoTextureScene_12 extends DemoScene {
       planeMesh.subMeshes[0].mtr.diffuseTexture = videoTexture!;
     }
 
-    final planeMesh2 = M3Mesh(M3PlaneGeom(10.66, 6, uvScale: Vector2.all(1.0)));
+    final planeMesh2 = M3Mesh(M3PlaneGeom(8, 4.5, uvScale: Vector2.all(1.0)));
     if (videoTexture2 != null) {
-      planeMesh2.subMeshes[0].mtr.diffuseTexture = videoTexture2!;
+      planeMesh2.subMeshes[0].mtr
+        ..diffuse = Vector4(0, 0, 0, 1)
+        ..emissive = Vector3.all(1.0)
+        ..emissiveTexture = videoTexture2!;
     }
 
     // 01: box geometry
@@ -51,7 +54,7 @@ class VideoTextureScene_12 extends DemoScene {
 
     videoEntity = addMesh(planeMesh, Vector3.zero());
     videoEntity2 = addMesh(planeMesh2, Vector3(0, 3, 3));
-    videoEntity2!.rotation = Quaternion.axisAngle(Vector3(1, 0, 0), pi / 2);
+    videoEntity2!.rotation = Quaternion.axisAngle(Vector3(1, 0, 0), pi / 3);
     if (videoTexture == null) {
       videoEntity!.color = Vector4(0.8, 0.2, 0.2, 1); // Reddish if no video
     } else {}

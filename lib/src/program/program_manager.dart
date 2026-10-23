@@ -13,8 +13,8 @@ import '../shaders_gen/Skybox.es3.vert.g.dart';
 import '../shaders_gen/SkyboxReflect.es3.vert.g.dart';
 import '../shaders_gen/TexturedLighting.es3.frag.g.dart';
 import '../shaders_gen/TexturedLighting.es3.vert.g.dart';
-import '../shaders_gen/Unlit.es3.frag.g.dart';
-import '../shaders_gen/Unlit.es3.vert.g.dart';
+import '../shaders_gen/DepthMasked.es3.frag.g.dart';
+import '../shaders_gen/DepthMasked.es3.vert.g.dart';
 import '../shaders_gen/Water.es3.frag.g.dart';
 import '../shaders_gen/Water.es3.vert.g.dart';
 // GLSL functions include
@@ -40,9 +40,9 @@ class M3ProgramManager {
   late M3ProgramWater programWater; // water no shadow
   late M3ProgramWaterCSM programWaterCSM; // water shadow CSM
   late M3ProgramEye programSkyboxReflect;
-  late M3Program programExternalOES; // external texture: video streaming
+
   // depth-only masked: skinning + alpha test (for shadow depth pass)
-  late M3Program programSimpleMasked;
+  late M3Program programDepthMasked;
   // with lighting
   late M3ProgramLighting programSimpleLighting;
 
@@ -108,26 +108,9 @@ class M3ProgramManager {
     // programMirror = M3Program(Mirror_vert, Mirror_frag);
     programMirror = M3Program(SkinningVS_glsl + Simple_vert, Mirror_frag, reflectionType: M3ReflectionType.planar);
 
-    // external texture: video streaming
-    String fsUnlit = Unlit_frag;
-    if (PlatformInfo.isIOS || PlatformInfo.isMacOS) {
-      // iOS, macOS: format BGRA
-      // fsUnlit = '#define ENABLE_TEXTURE0_BGRA \n$fsUnlit';
-
-      // Android: external OES unable to use SurfaceTexture
-      // ANGLE use libEGL_angle.so, Android use libEGL.so
-      // so discard to use external OES
-      /* String fsExternalOES = '''
-#extension GL_OES_EGL_image_external_essl3 : require
-#define ENABLE_EXTERNAL_OES
-'''; */
-    }
-    programExternalOES = M3Program(Unlit_vert, fsUnlit);
-
     // depth-only masked: skinning + alpha test (for shadow depth pass)
-    final progSimpleMasked = M3Program(SkinningVS_glsl + Unlit_vert, '#define ENABLE_ALPHA_TEST \n$fsUnlit');
-    progSimpleMasked.name = 'SimpleMasked';
-    programSimpleMasked = progSimpleMasked;
+    programDepthMasked = M3Program(SkinningVS_glsl + DepthMasked_vert, '#define ENABLE_ALPHA_TEST \n$DepthMasked_frag');
+    programDepthMasked.name = 'DepthMasked';
 
     // lighting related programs
     setLightingProgram(M3ShaderOptions());
@@ -317,8 +300,7 @@ class M3ProgramManager {
     programWater.dispose();
     programWaterCSM.dispose();
     programSkyboxReflect.dispose();
-    programExternalOES.dispose();
-    programSimpleMasked.dispose();
+    programDepthMasked.dispose();
     programSimpleLighting.dispose();
 
     // lighting related programs
