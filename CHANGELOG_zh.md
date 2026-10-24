@@ -1,5 +1,26 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
+## 0.12.1
+#### 2026-10-24
+* 新增功能 (Add):
+  * **岸線泡沫與波浪濺起效果 (`M3Water`)**：實現水面邊緣即時接觸泡沫，以及由動態法線貼圖平移動畫衍生的澎湃波浪濺起效果。泡沫邊緣擾動與累積法線貼圖層疊混合。
+  * **深度型邊緣折射扭曲抑制**：利用 waterDepth 淡出減少岸線附近的折射扭曲，消除邊緣溢色與鬼影切割偽影（`edgeDistortionDistance` 屬性）。
+  * **水面 Uniform 與泡沫控制屬性**：`M3Water` 新增屬性 — `enableFoam`、`foamDistance`、`foamFalloff`、`foamIntensity`、`edgeDistortionDistance`、`foamColor` — 完整綁定 Uniform 並分配紋理單元 7（用於場景深度緩衝區）。
+  * **場景深度紋理綁定**：場景渲染通道的深度紋理現已從 `M3Framebuffer` 公開揭露，在水面渲染時綁定至紋理插槽 7，使 `Water.es3.frag` 能讀取岸線深度資料以產生泡沫效果。
+  * **自發光紋理支援 (Emissive Texture)**：`M3Material` 與 `M3GltfMaterial` 新增 `emissiveTexture`，完整整合至 PBR 著色器 — 從 `GL_TEXTURE6` 取樣，並在 `TexturedLighting.es3.frag` 中與 `emissive` 顏色因子合併。
+  * **sRGB 視訊 / 外部紋理**：`M3ExternalTexture` 與視訊紋理現在支援設定 sRGB 標記，確保線性色彩空間合成的正確性。
+  * **`M3DepthMode` 列舉**：三段式深度緩衝區控制模式 — `none`、`renderBuffer`（預設）、`renderDepth`（紋理）— 取代 `M3RenderTarget` 中原有的 boolean 旗標。
+
+* 修復 (Fix):
+  * **首幀閃爍問題 (First Frame Flicker)**：`initApp` 現在完整初始化完成後才建立 Flutter Ticker，根除了 `M3View` 在 GL Context 就緒前掛載所導致的黑幀閃爍問題。
+
+* 優化與重構 (Optimize / Refactor):
+  * **移除 Unlit 渲染管線**：專用 Unlit 渲染佇列與所有渲染通道中的 `programExternalOES` 依賴已移除。渲染通道數量從 4 減少至 3；`renderDepthPass` 注釋同步更新。
+  * **`Unlit` → `DepthMasked` 著色器更名**：`Unlit.es3.frag/.vert` 及產生的 `.g.dart` 檔案更名為 `DepthMasked.es3.frag/.vert.g.dart`；`ProgramManager` 中的 `programSimpleMasked` 更名為 `programDepthMasked`。
+  * **紋理載入穩定性提升**：以 `try/catch` 包覆完整載入路徑取代事先檢查 `M3ResourceManager.isAssetExists()`，任何例外均回退至 `createWarningTexture()`。警告棋盤格尺寸從 8 → 4 像素，視覺回饋更精細。
+  * **渲染管線重構**：`M3ScenePass` 與 `M3RenderEngine` 已更新為新三佇列管線；平面反射與反射探針捕捉路徑整理清爽。
+  * **`M3Framebuffer` 深度紋理揭露**：`depthTexture` 控制碼現已公開存取，供下游通道（如水面泡沫）使用。
+
 ## 0.12.0
 #### 2026-10-17
 * 新增功能 (Add):

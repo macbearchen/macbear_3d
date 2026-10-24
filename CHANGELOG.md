@@ -1,5 +1,26 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
+## 0.12.1
+#### 2026-10-24
+* Add:
+  * **Shoreline Foam & Wave Splash (`M3Water`)**: Real-time contact foam at water edges and dynamic surging wave splash derived from animated normal-map translation. Integrated bubbly edge perturbations blended with accumulated normal maps.
+  * **Depth-Based Edge Distortion Reduction**: Reduced refraction distortion near water shorelines using a waterDepth fade to eliminate edge bleeding / ghosting artifacts (`edgeDistortionDistance` property).
+  * **Water Uniforms & Foam Controls**: New `M3Water` properties — `enableFoam`, `foamDistance`, `foamFalloff`, `foamIntensity`, `edgeDistortionDistance`, `foamColor` — with full uniform bindings and texture unit 7 assignment for the scene depth buffer.
+  * **Scene Depth Texture Binding**: Scene-pass depth texture is now exposed from `M3Framebuffer` and bound to texture slot 7 during water rendering, enabling shore-contact foam depth reads in `Water.es3.frag`.
+  * **Emissive Texture Support**: Added `emissiveTexture` to `M3Material` and `M3GltfMaterial` with full PBR shader integration — sampled from `GL_TEXTURE6` and combined with the `emissive` color factor in `TexturedLighting.es3.frag`.
+  * **sRGB Video / External Textures**: `M3ExternalTexture` and video textures can now be flagged as sRGB for correct linear-space compositing.
+  * **`M3DepthMode` Enum**: Three-way depth renderbuffer control — `none`, `renderBuffer` (default), `renderDepth` (texture) — replacing the previous boolean flag in `M3RenderTarget`.
+
+* Fix:
+  * **Flicker on First Frame**: `initApp` now completes fully before the Flutter ticker is created, eliminating the black-frame flicker seen when `M3View` mounted before the GL context was ready.
+
+* Optimize / Refactor:
+  * **Unlit Pipeline Removal**: Dedicated unlit render queue and `programExternalOES` dependency removed from all render passes. Render pass count reduced from 4 to 3; `renderDepthPass` comment updated accordingly.
+  * **`Unlit` → `DepthMasked` Shader Rename**: `Unlit.es3.frag/.vert` and generated `.g.dart` files renamed to `DepthMasked.es3.frag/.vert.g.dart`; `programSimpleMasked` → `programDepthMasked` in `ProgramManager`.
+  * **Texture Loading Robustness**: Pre-flight `M3ResourceManager.isAssetExists()` check replaced with a `try/catch` around the full load path — on any exception the asset falls back to `createWarningTexture()`. Warning checkerboard tile size reduced from 8 → 4 pixels for finer visual feedback.
+  * **Render Pipeline Refactor**: `M3ScenePass` and `M3RenderEngine` updated for the new 3-queue pipeline; planar reflection and reflection probe capture paths cleaned up.
+  * **`M3Framebuffer` Depth Texture Exposure**: `depthTexture` handle now publicly accessible for use by downstream passes (e.g., water foam).
+
 ## 0.12.0
 #### 2026-10-17
 * Add:

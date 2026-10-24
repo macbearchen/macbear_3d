@@ -150,7 +150,6 @@ class "macbear_3d::src::renderer::render_context.dart::M3RenderContext" {
   +M3RenderQueue opaque
   +M3RenderQueue masked
   +M3RenderQueue transparent
-  +M3RenderQueue unlit
   +M3RenderQueue planarReflection
   +M3RenderQueue reflectionProbe
   +void prepareRenderQueue()
@@ -342,10 +341,12 @@ class "macbear_3d::src::renderer::render_target.dart::M3RenderTarget" {
   -bool _useMipmaps
   -int _colorFormat
   -double _renderScale
-  +bool hasDepth
+  +M3DepthMode depthMode
   +int width
   +int height
   +M3Texture texture
+  +M3Texture? depthTexture
+  -void _attachDepth()
   +void setRenderScale()
   +void resize()
   +void bind()
@@ -353,6 +354,7 @@ class "macbear_3d::src::renderer::render_target.dart::M3RenderTarget" {
 }
 
 "macbear_3d::src::renderer::render_target.dart::M3RenderTarget" o-- "macbear_3d::src::renderer::framebuffer.dart::M3Framebuffer"
+"macbear_3d::src::renderer::render_target.dart::M3RenderTarget" o-- "macbear_3d::src::renderer::render_target.dart::M3DepthMode"
 "macbear_3d::src::renderer::render_target.dart::M3RenderTarget" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
 
 class "macbear_3d::src::renderer::render_target.dart::M3RenderTargetManager" {
@@ -364,6 +366,17 @@ class "macbear_3d::src::renderer::render_target.dart::M3RenderTargetManager" {
   -void _getOrCreate()
   +void dispose()
 }
+
+class "macbear_3d::src::renderer::render_target.dart::M3DepthMode" {
+  +int index
+  {static} +List<M3DepthMode> values
+  {static} +M3DepthMode none
+  {static} +M3DepthMode renderBuffer
+  {static} +M3DepthMode renderTexture
+}
+
+"macbear_3d::src::renderer::render_target.dart::M3DepthMode" o-- "macbear_3d::src::renderer::render_target.dart::M3DepthMode"
+"dart::core::Enum" <|-- "macbear_3d::src::renderer::render_target.dart::M3DepthMode"
 
 class "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" {
   +RenderingContext gl
@@ -803,6 +816,8 @@ class "macbear_3d::src::gltf::model::gltf_material.dart::GltfMaterial" {
   +int? metallicRoughnessTextureIndex
   +int? occlusionTextureIndex
   +double occlusionStrength
+  +Vector3 emissiveFactor
+  +int? emissiveTextureIndex
   +double metallicFactor
   +double roughnessFactor
   +String alphaMode
@@ -813,6 +828,7 @@ class "macbear_3d::src::gltf::model::gltf_material.dart::GltfMaterial" {
 }
 
 "macbear_3d::src::gltf::model::gltf_material.dart::GltfMaterial" o-- "vector_math::vector_math.dart::Vector4"
+"macbear_3d::src::gltf::model::gltf_material.dart::GltfMaterial" o-- "vector_math::vector_math.dart::Vector3"
 
 class "macbear_3d::src::gltf::model::gltf_animation.dart::GltfAnimation" {
   +GltfDocument document
@@ -1207,6 +1223,8 @@ class "macbear_3d::src::program::program.dart::M3Program" {
   +UniformLocation uniformSamplerDiffuse
   +UniformLocation uniformSamplerNormal
   +UniformLocation uniformSamplerORM
+  +UniformLocation uniformSamplerEmissive
+  +UniformLocation uniformColorEmissive
   +UniformLocation uniformNormalScale
   +UniformLocation uniformParamPBR
   +UniformLocation uniformSamplerEnvironment
@@ -1376,6 +1394,9 @@ abstract class "macbear_3d::src::program::program.dart::M3WaterShader" {
   +UniformLocation uniformBumpTranslateScale0
   +UniformLocation uniformBumpTranslateScale1
   +UniformLocation uniformWaveDistortion
+  +UniformLocation uniformCameraNearFar
+  +UniformLocation uniformFoamParams
+  +UniformLocation uniformFoamColor
   +UniformLocation uniformAxisTangent
   +UniformLocation uniformAxisBinormal
   +UniformLocation uniformAxisNormal
@@ -1397,8 +1418,7 @@ class "macbear_3d::src::program::program_manager.dart::M3ProgramManager" {
   +M3ProgramWater programWater
   +M3ProgramWaterCSM programWaterCSM
   +M3ProgramEye programSkyboxReflect
-  +M3Program programExternalOES
-  +M3Program programSimpleMasked
+  +M3Program programDepthMasked
   +M3ProgramLighting programSimpleLighting
   +M3ProgramLighting programTexture
   +M3ProgramShadow programShadow
@@ -1443,6 +1463,8 @@ class "macbear_3d::src::texture::material.dart::M3Material" {
   +double normalScale
   +M3Texture? ormTexture
   +double occlusionStrength
+  +Vector3 emissive
+  +M3Texture? emissiveTexture
   +Matrix3 texMatrix
   +M3PlanarReflection? planarReflection
   +void setMatte()
@@ -1915,6 +1937,12 @@ class "macbear_3d::src::scene::water.dart::M3Water" {
   +M3Texture normalMap
   +double waveDistortion
   +double reflectionDepthBias
+  +bool enableFoam
+  +double foamDistance
+  +double foamFalloff
+  +double foamIntensity
+  +double edgeDistortionDistance
+  +Vector4 foamColor
   +M3Scene scene
   +M3WaterCameraState cameraState
   +bool visible
@@ -1943,6 +1971,7 @@ class "macbear_3d::src::scene::water.dart::M3Water" {
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "vector_math::vector_math.dart::Plane"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
+"macbear_3d::src::scene::water.dart::M3Water" o-- "vector_math::vector_math.dart::Vector4"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::scene::scene.dart::M3Scene"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::scene::water.dart::M3WaterCameraState"
 "macbear_3d::src::scene::water.dart::M3Water" o-- "macbear_3d::src::reflection::planar_reflection.dart::M3PlanarReflection"
@@ -2294,6 +2323,7 @@ class "macbear_3d::src::engine::render_options.dart::M3RenderOptions" {
   +bool useNormalMap
   +bool useOcclusion
   +bool usePlanarReflection
+  +bool usePostProcess
   +bool useFxaa
   +bool useBloom
   +M3TonemapMode tonemapMode
