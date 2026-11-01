@@ -70,7 +70,8 @@ class M3RenderTarget {
       case M3DepthMode.renderBuffer:
         _framebuffer.createDepthRenderbuffer();
       case M3DepthMode.renderTexture:
-        _framebuffer.createDepthTexture(isCompareRef: true);
+        // DEPTH_COMPONENT16, DEPTH_COMPONENT24 or DEPTH32F_STENCIL8
+        _framebuffer.createDepthTexture(depthFormat: WebGL.DEPTH_COMPONENT32F, isCompareRef: false);
       case M3DepthMode.none:
         break;
     }
@@ -121,6 +122,7 @@ class M3RenderTargetManager {
     // 1. Scene Target (全解析度 HDR): RGBA16F, R11F_G11F_B10F
     const sceneFormat = WebGL.RGBA16F;
     _getOrCreate('scene', width, height, mipmaps: false, depthMode: .renderTexture, format: sceneFormat);
+    _getOrCreate('sceneDepth', width, height, mipmaps: false, depthMode: .none, format: WebGL.R32F);
 
     // 2. Mirror/Reflection/Refraction Target (0.5x 降採樣)
     _getOrCreate('mirror', width, height, mipmaps: true, depthMode: .renderBuffer, renderScale: 0.5);
@@ -128,8 +130,9 @@ class M3RenderTargetManager {
     _getOrCreate('refraction', width, height, mipmaps: false, depthMode: .renderBuffer, renderScale: 0.5);
 
     // 3. Bloom Ping-Pong Targets (0.5x 降採樣, HDR)
-    _getOrCreate('bloom_ping', width, height, mipmaps: false, depthMode: .none, format: sceneFormat, renderScale: 0.5);
-    _getOrCreate('bloom_pong', width, height, mipmaps: false, depthMode: .none, format: sceneFormat, renderScale: 0.5);
+    const bloomFormat = WebGL.R11F_G11F_B10F;
+    _getOrCreate('bloom_ping', width, height, mipmaps: false, depthMode: .none, format: bloomFormat, renderScale: 0.5);
+    _getOrCreate('bloom_pong', width, height, mipmaps: false, depthMode: .none, format: bloomFormat, renderScale: 0.5);
 
     // 4. Post Process Target (全解析度 HDR)
     _getOrCreate('composite', width, height, mipmaps: false, depthMode: .none, format: sceneFormat);

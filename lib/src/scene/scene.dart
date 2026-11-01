@@ -23,6 +23,7 @@ abstract class M3Scene {
   final M3PhysicsSystem physicsSystem;
 
   // lights
+  Vector3 ambient = Vector3.all(0.3);
   final dirLight = M3DirectionalLight();
   final List<M3PointLight> pointLights = [];
   final List<M3SpotLight> spotLights = [];

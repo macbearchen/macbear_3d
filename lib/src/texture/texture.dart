@@ -84,10 +84,16 @@ class M3Texture {
       gl.texParameteri(target, WebGL.TEXTURE_MAX_LEVEL, 0);
     }
 
-    // filter: (min, mag)
-    final minFilter = _useMipmaps ? WebGL.LINEAR_MIPMAP_LINEAR : WebGL.LINEAR;
-    gl.texParameteri(target, WebGL.TEXTURE_MIN_FILTER, minFilter); // NEAREST, GL_LINEAR_MIPMAP_LINEAR
-    gl.texParameteri(target, WebGL.TEXTURE_MAG_FILTER, WebGL.LINEAR); // NEAREST
+    // filter: (min, mag) NEAREST, LINEAR, GL_LINEAR_MIPMAP_LINEAR
+    int minFilter = _useMipmaps ? WebGL.LINEAR_MIPMAP_LINEAR : WebGL.LINEAR;
+    int magFilter = WebGL.LINEAR;
+    if (_internalFormat == WebGL.R32F) {
+      // non-filter supported format : R32F
+      minFilter = WebGL.NEAREST;
+      magFilter = WebGL.NEAREST;
+    }
+    gl.texParameteri(target, WebGL.TEXTURE_MIN_FILTER, minFilter);
+    gl.texParameteri(target, WebGL.TEXTURE_MAG_FILTER, magFilter);
     gl.pixelStorei(WebGL.UNPACK_ALIGNMENT, 1);
   }
 

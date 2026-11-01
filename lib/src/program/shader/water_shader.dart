@@ -10,7 +10,7 @@ mixin M3WaterShader {
 
   // Foam and depth uniforms
   late UniformLocation uniformCameraNearFar; // x: near, y: far
-  late UniformLocation uniformFoamParams; // x: foamDistance, y: foamFalloff, z: foamIntensity, w: edgeDistortionDistance
+  late UniformLocation uniformFoamParams; // x: distance, y: falloff, z: intensity, w: edgeDistortionDistance
   late UniformLocation uniformFoamColor; // rgba foam color
 
   // tangent-space: tangent, binormal, normal
@@ -53,20 +53,15 @@ mixin M3WaterShader {
       M3Resources.texWhite.bind();
     }
 
+    // Bind scene depth texture (GL_TEXTURE7)
+    gl.activeTexture(WebGL.TEXTURE7);
+    final sceneDepthRt = M3AppEngine.instance.renderEngine.renderTargets.get('sceneDepth'); // scene
+    sceneDepthRt.texture.bind();
+
     // diffuse by reflection
     gl.activeTexture(WebGL.TEXTURE0);
     if (water.reflectionPass.enable) {
       water.reflectionPass.texture.bind();
-    } else {
-      M3Resources.texWhite.bind();
-    }
-
-    // Bind scene depth texture (GL_TEXTURE7)
-    gl.activeTexture(WebGL.TEXTURE7);
-    final sceneRt = M3AppEngine.instance.renderEngine.renderTargets.get('scene');
-    final depthTex = sceneRt.depthTexture;
-    if (depthTex != null) {
-      depthTex.bind();
     } else {
       M3Resources.texWhite.bind();
     }
@@ -87,13 +82,7 @@ mixin M3WaterShader {
     // Foam parameters
     if (M3Program.isLocationValid(uniformFoamParams)) {
       final foamDist = water.enableFoam ? water.foamDistance : 0.0;
-      gl.uniform4f(
-        uniformFoamParams,
-        foamDist,
-        water.foamFalloff,
-        water.foamIntensity,
-        water.edgeDistortionDistance,
-      );
+      gl.uniform4f(uniformFoamParams, foamDist, water.foamFalloff, water.foamIntensity, water.edgeDistortionDistance);
     }
 
     // Foam color

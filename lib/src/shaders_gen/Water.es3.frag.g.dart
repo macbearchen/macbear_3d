@@ -5,6 +5,9 @@ const String Water_frag = r"""
 precision mediump float;
 // Water frag-shader ES3 //////////
 
+// object-space (same as world-space here)
+uniform mediump vec3 uEyePos;	// eye as camera origin
+
 // water distortion (noise effect)
 in mediump vec2 BumpCoord0;
 in mediump vec2 BumpCoord1;
@@ -18,7 +21,7 @@ uniform mediump float WaveDistortion;
 uniform sampler2D SamplerDiffuse;	// GL_TEXTURE0: reflection as diffuse
 uniform sampler2D NormalTex;		// GL_TEXTURE1: normalmap (Normal map uses z-axis major)
 uniform sampler2D RefractionTex;	// GL_TEXTURE2: refraction
-uniform sampler2D SceneDepthTex;	// GL_TEXTURE7: scene depth texture
+uniform highp sampler2D SceneDepthTex;	// GL_TEXTURE7: scene depth texture
 uniform mediump vec4 CameraViewport; // xyzw for (x,y,width,height)
 uniform mediump vec2 CameraNearFar;  // xy: nearClip, farClip
 uniform mediump vec4 BumpTranslateScale0;	// xy: translate, zw: scale

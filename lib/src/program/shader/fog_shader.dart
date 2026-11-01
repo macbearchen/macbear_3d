@@ -24,18 +24,34 @@ mixin M3FogShader {
     uniformPlaneFogColor = gl.getUniformLocation(prog, "uPlaneFogColor");
   }
 
-  void applyFog(M3Fog fog) {
+  void applyFog(M3Scene scene) {
     bool fogEnabled = false;
+    final fog = scene.fog;
+
+    // Ambient + directional sunlight modulation factor:
+    // Fog base color reflects scene illumination:
+    // litColor = fog.color * (ambient + dirLight.color * 0.35)
+    final lightFactor = scene.ambient + (scene.dirLight.color * 0.35);
+    final sphereColor = Vector3(
+      (fog.color.x * lightFactor.x).clamp(0.0, 1.0),
+      (fog.color.y * lightFactor.y).clamp(0.0, 1.0),
+      (fog.color.z * lightFactor.z).clamp(0.0, 1.0),
+    );
+    final planeColor = Vector3(
+      (fog.planeColor.x * lightFactor.x).clamp(0.0, 1.0),
+      (fog.planeColor.y * lightFactor.y).clamp(0.0, 1.0),
+      (fog.planeColor.z * lightFactor.z).clamp(0.0, 1.0),
+    );
 
     // 1. set sphere fog
     if (M3Program.isLocationValid(uniformFogColor) && M3Program.isLocationValid(uniformFogParams)) {
       gl.uniform3f(uniformFogParams, fog.start, fog.depth, fog.planeHeight);
-      gl.uniform3fv(uniformFogColor, fog.color.storage);
+      gl.uniform3fv(uniformFogColor, sphereColor.storage);
       fogEnabled = true;
     }
     // 2. set plane fog
     if (M3Program.isLocationValid(uniformPlaneFogColor)) {
-      gl.uniform3fv(uniformPlaneFogColor, fog.planeColor.storage);
+      gl.uniform3fv(uniformPlaneFogColor, planeColor.storage);
       fogEnabled = true;
     }
     _fog = fogEnabled ? fog : null;

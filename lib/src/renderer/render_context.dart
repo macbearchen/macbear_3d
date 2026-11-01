@@ -259,7 +259,7 @@ class M3RenderContext {
       gl.useProgram(prog.program);
       prog.applyFrameUniforms(_viewer);
       if (prog is M3ProgramLighting) {
-        prog.applyFog(_scene.fog); // fog supported
+        prog.applyFog(_scene); // fog supported
       }
     }
 

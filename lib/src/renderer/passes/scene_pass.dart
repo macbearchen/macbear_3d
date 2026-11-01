@@ -9,9 +9,12 @@ class M3ScenePass {
   late M3RenderTarget _target;
   M3Texture get texture => _target.texture;
 
+  late M3RenderTarget _targetDepth;
+
   /// renderTarget from manager by key.
   M3ScenePass(String keyRt) {
     _target = renderEngine.renderTargets.get(keyRt);
+    _targetDepth = renderEngine.renderTargets.get('${keyRt}Depth');
   }
 
   /// main scene render
@@ -49,6 +52,17 @@ class M3ScenePass {
       // main context render pass
       renderEngine.mainContext.renderColorPass(prog);
 
+      // scene depth
+      final sceneDepth = _target.depthTexture;
+      if (sceneDepth != null) {
+        gl.disable(WebGL.DEPTH_TEST);
+        _targetDepth.bind();
+        renderEngine.clearBackground(M3AppEngine.backgroundColor);
+        M3PostProcess.drawFullscreen(sceneDepth, program: M3PostProcess.programSceneDepth, tonemapMode: .none);
+        gl.enable(WebGL.DEPTH_TEST);
+      }
+
+      _target.bind();
       // reflection pass:
       // 1. cubemap reflection (only if not using single-pass IBL)
       // 2. planar reflection

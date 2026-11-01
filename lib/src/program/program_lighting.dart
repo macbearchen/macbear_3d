@@ -46,7 +46,7 @@ class M3ProgramLighting extends M3ProgramEye with M3LightingShader, M3FogShader 
 
     // ambient: RGB
     if (M3Program.isLocationValid(uniformAmbient)) {
-      Vector3 outAmbient = M3Light.blendRGB(M3Light.ambient, outDiffuse.rgb);
+      Vector3 outAmbient = M3Light.blendRGB(_ambient, outDiffuse.rgb);
       gl.uniform3fv(uniformAmbient, outAmbient.storage);
     }
 

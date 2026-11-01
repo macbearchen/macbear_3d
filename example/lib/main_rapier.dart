@@ -9,10 +9,10 @@ import 'rapier/double_pendulum.dart';
 import 'rapier/newton_cradle.dart';
 import 'rapier/character_controller_scene.dart';
 import 'rapier/scene_query_scene.dart';
+import 'rapier/heightfield_scene.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   M3AppEngine.instance.onDidInit = onDidInit;
 
   runApp(MyApp());
@@ -21,10 +21,11 @@ void main() async {
 Future<void> onDidInit() async {
   M3Log.i('main.dart', 'onDidInit');
   final appEngine = M3AppEngine.instance;
+  appEngine.renderEngine.initShadowMap();
 
   final testScene = BaseScene.createPhysicsScene((physicsSystem) => PhysicsScene(physics: physicsSystem));
   // final testScene = BaseScene.createPhysicsScene((physicsSystem) => NewtonCradleScene(physics: physicsSystem));
-  // final testScene = BaseScene();
+  // final testScene = BaseScene.createPhysicsScene((physicsSystem) => HeightfieldScene(physics: physicsSystem));
   await appEngine.setScene(testScene);
 }
 
@@ -44,10 +45,11 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     final renderOptions = M3AppEngine.instance.renderEngine.options;
+    final rapierVersion = RapierPhysics.version;
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: Text(RapierPhysics.version),
+          title: Text(rapierVersion),
           actions: [
             IconButton(
               icon: renderOptions.debug.showHelpers == M3HelperType.none
@@ -142,8 +144,10 @@ class _PanelWidgetState extends State<PanelWidget> {
       scene = BaseScene.createPhysicsScene((physicsSystem) => CompoundScene(physics: physicsSystem));
     } else if (index == 4) {
       scene = BaseScene.createPhysicsScene((physicsSystem) => CharacterControllerScene(physics: physicsSystem));
-    } else {
+    } else if (index == 5) {
       scene = BaseScene.createPhysicsScene((physicsSystem) => SceneQueryScene(physics: physicsSystem));
+    } else {
+      scene = BaseScene.createPhysicsScene((physicsSystem) => HeightfieldScene(physics: physicsSystem));
     }
     await M3AppEngine.instance.setScene(scene);
   }
@@ -194,6 +198,13 @@ class _PanelWidgetState extends State<PanelWidget> {
           backgroundColor: _selectedIndex == 5 ? Colors.lightGreen : Colors.grey,
           onPressed: () => _loadScene(5),
           child: const Icon(Icons.filter_6),
+        ),
+        const SizedBox(width: 10),
+        FloatingActionButton(
+          heroTag: 'scene_07',
+          backgroundColor: _selectedIndex == 6 ? Colors.lightGreen : Colors.grey,
+          onPressed: () => _loadScene(6),
+          child: const Icon(Icons.filter_7),
         ),
       ],
     );

@@ -7,6 +7,7 @@ import '../../shaders_gen/post/Composite.es3.frag.g.dart';
 import '../../shaders_gen/post/FXAA.es3.frag.g.dart';
 import '../../shaders_gen/post/Fullscreen.es3.frag.g.dart';
 import '../../shaders_gen/post/Fullscreen.es3.vert.g.dart';
+import '../../shaders_gen/post/SceneDepth.es3.frag.g.dart';
 import '../../shaders_gen/post/glsl/Tonemap.es3.glsl.g.dart';
 
 class M3PostProcess {
@@ -16,6 +17,7 @@ class M3PostProcess {
 
   // post processing programs
   static M3Program programFullscreen = M3Program(Fullscreen_vert, Fullscreen_frag + Tonemap_glsl)..name = 'Fullscreen';
+  static M3Program programSceneDepth = M3Program(Fullscreen_vert, SceneDepth_frag)..name = 'SceneDepth';
   static M3Program programBrightPass = M3Program(Fullscreen_vert, BrightPass_frag)..name = 'BrightPass';
   static M3Program programBlur = M3Program(Fullscreen_vert, Blur_frag)..name = 'Blur';
   static M3Program programComposite = M3Program(Fullscreen_vert, Composite_frag + Tonemap_glsl)..name = 'Composite';
@@ -108,6 +110,7 @@ class M3PostProcess {
 
     // post processing programs
     programFullscreen.dispose();
+    programSceneDepth.dispose();
     programBrightPass.dispose();
     programBlur.dispose();
     programComposite.dispose();
@@ -227,4 +230,3 @@ class M3PostProcess {
     gl.bindBuffer(WebGL.ARRAY_BUFFER, null);
   }
 }
-

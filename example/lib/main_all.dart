@@ -9,6 +9,7 @@ import 'rapier/double_pendulum.dart';
 import 'rapier/newton_cradle.dart';
 import 'rapier/character_controller_scene.dart';
 import 'rapier/scene_query_scene.dart';
+import 'rapier/heightfield_scene.dart';
 
 import 'demos/demo_scene.dart' hide Colors;
 export 'demos/demo_scene.dart' hide Colors;
@@ -362,6 +363,9 @@ class _MainPageState extends State<MainPage> {
                   physicsScene = BaseScene.createPhysicsScene((p) => NewtonCradleScene(physics: p));
                 case 5:
                   physicsScene = BaseScene.createPhysicsScene((p) => CharacterControllerScene(physics: p));
+                case 6:
+                  physicsScene = BaseScene.createPhysicsScene((p) => HeightfieldScene(physics: p));
+
                 case _:
                   physicsScene = BaseScene.createPhysicsScene((p) => SceneQueryScene(physics: p));
               }

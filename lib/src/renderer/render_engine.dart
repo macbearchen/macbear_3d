@@ -73,6 +73,9 @@ class M3RenderEngine {
       if (!PlatformInfo.enableWebGLExtension('EXT_color_buffer_float')) {
         M3Log.w('M3RenderEngine', 'EXT_color_buffer_float extension NOT SUPPORTED.');
       }
+      // if (!PlatformInfo.enableWebGLExtension('OES_texture_float_linear')) {
+      //   M3Log.w('M3RenderEngine', 'OES_texture_float_linear extension NOT SUPPORTED.');
+      // }
       if (!PlatformInfo.enableWebGLExtension('EXT_clip_control')) {
         M3Log.w('M3RenderEngine', 'EXT_clip_control extension NOT SUPPORTED.');
       }
@@ -244,11 +247,20 @@ class M3RenderEngine {
       // show scene depth texture
       final targetScene = renderTargets.get('scene');
       final texDepth = targetScene.depthTexture;
+      double depthX = 0;
       if (texDepth != null) {
         final width = 200 / targetScene.height * targetScene.width;
         final scale = Vector3(width / texDepth.texW, 200 / texDepth.texH, 1.0);
-        texDepth.debugDraw(0, 0, scale.x, scale.y);
+        texDepth.debugDraw(depthX, 0, scale.x, scale.y);
+        depthX += width + 5;
       }
+
+      final targetDepth = renderTargets.get('sceneDepth');
+      final texSceneDepth = targetDepth.texture;
+      final width = 200 / targetDepth.height * targetDepth.width;
+      final scale = Vector3(width / texSceneDepth.texW, 200 / texSceneDepth.texH, 1.0);
+      texSceneDepth.debugDraw(depthX, 0, scale.x, scale.y);
+      depthX += width + 5;
 
       // show planar reflection
       if (mainContext.needsPlanarReflectionPass()) {

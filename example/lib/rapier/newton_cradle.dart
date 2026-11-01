@@ -75,7 +75,7 @@ class NewtonCradleScene extends BaseScene {
 
     // ── Visual-only frame (no physics body needed for a static frame) ─────────
     final frameMesh = _createFrameMesh(frameW, yOff, cradleZ);
-    addMesh(frameMesh, Vector3(0, yCenter, 0));
+    addMesh(frameMesh.clone(), Vector3(0, yCenter, 0));
 
     // ── Balls + hinge (revolute) joints ──────────────────────────────────────
     //
@@ -95,7 +95,7 @@ class NewtonCradleScene extends BaseScene {
       final x = (i - (count - 1) / 2.0) * spacing;
       final pos = Vector3(x, yCenter, restZ);
 
-      final entity = addMesh(ballMesh, pos)..color = Colors.skyBlue;
+      final entity = addMesh(ballMesh.clone(), pos)..color = Colors.skyBlue;
       final rb = physicsSystem.addSphere(0.5, desc: M3RigidBodyDesc.dynamic()..position = pos);
       physicsSystem.attachEntity(entity, rb);
 

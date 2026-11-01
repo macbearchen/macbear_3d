@@ -68,7 +68,6 @@ class PhysicsScene extends BaseScene {
     // walls, falling, fan, lift, rope
     addWalls(6);
     // addGridFall();
-    // addFalling();
     addFan(Vector3(0, -12, 4));
     addLift(Vector3(5, -12, 8));
     addRope(12, Vector3(12, 0, 8));
@@ -111,37 +110,7 @@ class PhysicsScene extends BaseScene {
         }
       }
     }
-  }
-
-  void addFalling() {
-    final cylGeom = M3CylinderGeom(topRadius: 0.5, bottomRadius: 0.5, height: 1.0, axis: M3Axis.y);
-    // vertical falling
-    final random = Random();
-    for (int i = 0; i < 30; i++) {
-      final ballPos = Vector3(random.nextDouble() * 3 - 4, random.nextDouble() * 3 - 4, 10 + i * 2.2);
-      final boxPos = Vector3(random.nextDouble() * 4, random.nextDouble() * 4, 10 + i * 1.5);
-      final cylPos = Vector3(random.nextDouble() * 3 - 4, random.nextDouble() * 3 + 1, 10 + i * 2);
-
-      // ball
-      final ball = addMesh(ballMesh.clone(), ballPos)..color = Colors.skyBlue;
-      final rbBall = physicsSystem.addSphere(0.5, desc: M3RigidBodyDesc.dynamic()..position = ballPos);
-      physicsSystem.attachEntity(ball, rbBall);
-
-      // box
-      final box = addMesh(M3Mesh(M3Resources.unitCube), boxPos)..color = Colors.yellow;
-      final rbBox = physicsSystem.addBox(0.5, 0.5, 0.5, desc: M3RigidBodyDesc.dynamic()..position = boxPos);
-      physicsSystem.attachEntity(box, rbBox);
-
-      // cylinder
-      final cylinder = addMesh(M3Mesh(cylGeom), cylPos)..color = Colors.lightGreen;
-      final rbCyl = physicsSystem.addCylinder(
-        radius: 0.5,
-        halfHeight: 0.5,
-        desc: M3RigidBodyDesc.dynamic()..position = cylPos,
-      );
-      physicsSystem.attachEntity(cylinder, rbCyl);
-    }
-  }
+  }  
 
   void addFan(Vector3 pos) {
     // Motorized Fan (Revolute)

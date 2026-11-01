@@ -207,7 +207,7 @@ class M3Water extends M3Entity {
 
       gl.useProgram(prog.program);
       prog.applyFrameUniforms(viewer);
-      prog.applyFog(scene.fog);
+      prog.applyFog(scene);
 
       // final alpha = 1.0; //water!.waterMaterial.reflection;
       prog.setMatrices(viewer, waterMatrix);

@@ -9,8 +9,7 @@ part 'spot_light.dart';
 ///
 /// Extends [M3Node] for scene-graph hierarchy and world matrix evaluation.
 abstract class M3Light extends M3Node {
-  static Vector3 ambient = Vector3.all(0.3);
-  Vector3 color = Colors.white.rgb - ambient;
+  Vector3 color = Colors.white.rgb;
 
   // shadow map
   bool castShadow = false;

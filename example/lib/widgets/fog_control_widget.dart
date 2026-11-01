@@ -45,7 +45,7 @@ class _M3FogControlWidgetState extends State<M3FogControlWidget> {
       0.0,
       1.0,
     );
-    final ambientBrightness = ((M3Light.ambient.x + M3Light.ambient.y + M3Light.ambient.z) / 3.0).clamp(0.0, 1.0);
+    final ambientBrightness = ((scene.ambient.x + scene.ambient.y + scene.ambient.z) / 3.0).clamp(0.0, 1.0);
     return Material(
       type: MaterialType.transparency,
       child: Row(
@@ -186,7 +186,7 @@ class _M3FogControlWidgetState extends State<M3FogControlWidget> {
                       inactiveColor: Colors.white24,
                       onChanged: (val) {
                         setState(() {
-                          M3Light.ambient = Vector3.all(val);
+                          scene.ambient.setValues(val, val, val);
                         });
                       },
                     ),

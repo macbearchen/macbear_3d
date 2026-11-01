@@ -17,6 +17,7 @@ mixin M3LightingShader {
 
   // scene lights:
   M3DirectionalLight? _dirLight; // directional light
+  Vector3 _ambient = Vector3.all(0.3); // scene ambient
 
   void initLightingLocation(Program prog) {
     uniformAmbient = gl.getUniformLocation(prog, "ColorAmbient");
@@ -34,6 +35,7 @@ mixin M3LightingShader {
   /// attach scene lights: directional light, point lights, spot lights
   void attachSceneLights(M3Scene scene) {
     _dirLight = scene.dirLight;
+    _ambient  = scene.ambient;
     pointLightManager.attachPointLights(scene.pointLights);
     spotLightManager.attachSpotLights(scene.spotLights);
   }
