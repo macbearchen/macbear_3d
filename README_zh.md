@@ -38,7 +38,10 @@
 - **glTF PBR ORM 與 sRGB 紋理 (glTF PBR ORM & sRGB Textures)**：打包式 ORM（遮蔽/粗糙度/金屬度）紋理支援 (`M3Material.ormTexture`)，搭配完整的 `M3GltfMaterial` 解析器整合。原生支援硬體級 sRGB 色彩空間轉換 (`isSrgb`、`WebGL.SRGB8_ALPHA8`) 支援 2D 與 ASTC 壓縮紋理，確保 PBR 光照在線性色彩空間中的能量守恆與精確渲染。
 - **雙面渲染與遮罩面 (Double-Sided & Masked Face)**：原生支援**雙面材質渲染** (`doubleSided`) 自動面剔除控制，以及具備可自訂閥值 (`alphaCutoff`) 與專屬著色器 (`programTextureMasked`、`programShadowMasked`、`programUnlitMasked`) 的 **Masked 遮罩面 Alpha 測試 (Cutout)**。
 - **骨架動畫**: 完整支援皮膚網格 (Skinned Mesh) 與基於骨骼的動畫系統 (包含 `M3OctahedralGeom` 骨骼視覺化)。
-- **進階光照與陰影**: 支援 **1 盞方向光、8 盞點光源與最多 8 盞聚光燈 (up to 8 spotlights)**，並提供共用垂直**聚光燈陰影圖集 (Spot Light Shadow Atlas)**、**級聯陰影貼圖 (CSM)**、**聚光燈陰影貼圖 (Spot Shadow Mapping)**、**PCF (百分比漸進過濾)** 以實現平滑陰影、**PBR (實體渲染)** 與 **IBL (環境光照)**。深度預通道 (Depth Pre-Pass) 啟用 Early-Z 遮擋剔除，降低過度繪製成本。優化 `RenderPipeline` 並增強對不透明與透明材質的支援。
+- **景深後處理 (Depth of Field, DoF)**：全螢幕散景模糊後處理通道（`M3DofPass`、`Dof.es3.frag`），採用 16 採樣點 Vogel Disk (費氏螺旋 Fibonacci spiral) 卷積與雙邊背景深度權重，防止前景產生失焦暈映溢色。可透過 `useDof`、`dofFocusDistance`、`dofFocusRange` 與 `dofBokehRadius` 靈活微調。
+- **進階光照、陰影與光源視錐剔除**: 支援 **1 盞方向光、8 盞點光源與最多 8 盞聚光燈 (up to 8 spotlights)**，並提供共用垂直**聚光燈陰影圖集 (Spot Light Shadow Atlas)**、**級聯陰影貼圖 (CSM)**、**聚光燈陰影貼圖 (Spot Shadow Mapping)**、**PCF (百分比漸進過濾)** 以實現平滑陰影、**PBR (實體渲染)** 與 **IBL (環境光照)**。加入**攝影機光源視錐剔除**（`isPointLightVisible`、`isSpotLightVisible`），在每幀送往 GPU 前預先剔除視野外的點光源與聚光燈。深度預通道 (Depth Pre-Pass) 啟用 Early-Z 遮擋剔除，降低過度繪製成本。
+- **大氣霧化與太陽光暈 (Atmospheric Fog & Sun Glow)**: 引入 **M3Fog** 支援深度場景霧化、自定義裁剪平面，以及基於視線與太陽方向的**前向散射高光光暈**（`FogFS.es3.glsl`、`water_shader.dart`），霧氣顏色即時受環境光與方向光照強度動態調變。
+- **自發光紋理與強度 (Emissive Texture & Strength)**：`M3Material` 與 `M3GltfMaterial` 支援 `emissiveTexture`（綁定至 `GL_TEXTURE6`）與 **`KHR_materials_emissive_strength`** 官方擴展（`emissiveStrength` 強度倍率），實現 HDR 高動態自發光細節。
 - **模組化著色器 (Modular Shaders)**: 重構著色器系統，使用乾淨的 `.glsl` 原始碼檔案以及專屬、型別安全的 Dart 著色器程式封裝（`M3FogShader`、`M3LightingShader`、`M3ShadowShader`、`M3WaterShader`），提供更方便的 uniform 變數綁定與封裝。
 - **天空盒與反射**: 支援天空盒背景以及透過 Cubemap 實現反射貼圖。
 - **平面反射**: 加入 `M3PlanarReflection` 與專屬 Mirror Shader 以實現高品質平面反射效果。
@@ -70,7 +73,7 @@
 
 ```yaml
 dependencies:
-  macbear_3d: ^0.12.1
+  macbear_3d: ^0.13.0
 ```
 
 ## 快速上手

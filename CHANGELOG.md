@@ -3,6 +3,9 @@
 ## 0.13.0
 #### 2026-11-04
 * Add:
+  * **Depth of Field (DoF) Post-Processing (`M3DofPass`)**: Fullscreen DoF post-processing pass using a 16-sample Vogel disk (Fibonacci spiral) bokeh blur convolution with bilateral background depth weighting (`Dof.es3.frag`). Added `useDof`, `dofFocusDistance`, `dofFocusRange`, and `dofBokehRadius` options and controls.
+  * **Light Frustum Culling**: Added `isPointLightVisible` (sphere test) and `isSpotLightVisible` (cone frustum corner plane separation test) in `M3Camera`. Pre-culls non-visible point and spot lights in `M3RenderContext.prepareRenderQueue` and records visible vs total light counts.
+  * **glTF Emissive Strength Extension (`KHR_materials_emissive_strength`)**: Added support for emissive strength multipliers in `GltfMaterial` and `M3Material`, allowing HDR glowing materials.
   * **Atmospheric Scattering & Forward Sun Glow (`FogFS`)**: Added forward sun scattering glow phase (`pow5(dot(V, uLightDir))`) to sphere and plane fog shaders. Fog colors now dynamically modulate based on scene ambient and directional light illumination (`scene.ambient + scene.dirLight.color * 0.35`).
   * **Shoreline Foam & Wave Splash (`M3Water`)**: Real-time contact foam at water edges and dynamic surging wave splash derived from animated normal-map translation. Integrated bubbly edge perturbations blended with accumulated normal maps.
   * **Depth-Based Edge Distortion Reduction**: Reduced refraction distortion near water shorelines using a waterDepth fade to eliminate edge bleeding / ghosting artifacts (`edgeDistortionDistance` property).
@@ -20,6 +23,7 @@
   * **Flicker on First Frame**: `initApp` now completes fully before the Flutter ticker is created, eliminating the black-frame flicker seen when `M3View` mounted before the GL context was ready.
 
 * Optimize / Refactor:
+  * **LightFS Uniform Consolidation**: Consolidated point and spot light counts into a unified `uLightCounts` uniform (passed via `uniform2iv` for WebGL/WASM support), pre-multiplied light color with intensity on CPU, and embedded atlas shadow slot into the alpha channel.
   * **Scene Ambient Decoupling**: Decoupled global static `M3Light.ambient` into per-scene `scene.ambient`, allowing flexible ambient lighting configuration across different scenes.
   * **Depth Texture Render Target Pass-through**: Enhanced `RenderTarget`, `PostProcessPass`, and `ScenePass` to properly handle and pass depth texture buffers.
   * **Unlit Pipeline Removal**: Dedicated unlit render queue and `programExternalOES` dependency removed from all render passes. Render pass count reduced from 4 to 3; `renderDepthPass` comment updated accordingly.

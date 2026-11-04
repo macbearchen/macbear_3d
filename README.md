@@ -38,7 +38,10 @@ Preview the `main_all.dart` example live in your browser!
 - **glTF PBR ORM & sRGB Textures**: Packed ORM (Occlusion/Roughness/Metallic) texture support (`M3Material.ormTexture`) with full `M3GltfMaterial` parser integration. Native hardware sRGB color-space conversion (`isSrgb`, `WebGL.SRGB8_ALPHA8`) for 2D and ASTC compressed textures, ensuring accurate linear lighting and energy conservation in PBR shading.
 - **Double-Sided & Masked Face**: Native support for **double-sided rendering** (`doubleSided`) with automatic cull-face management, and **masked face alpha testing / cutout** with configurable `alphaCutoff` threshold and dedicated masked shader programs (`programTextureMasked`, `programShadowMasked`, `programUnlitMasked`).
 - **Skeletal Animation**: Full support for skinned meshes and bone-based animations (including `M3OctahedralGeom` for bone visualization).
-- **Advanced Lighting & Shadows**: Dynamic lighting supporting **1 directional light, 8 point lights, and up to 8 spotlights** with a shared vertical **Spot Light Shadow Atlas**, **Cascaded Shadow Mapping (CSM)**, **Spot Light Shadow Mapping**, **PCF (Percentage Closer Filtering)** for smooth shadows, **PBR (Physically Based Rendering)** and **IBL (Image-Based Lighting)**. Depth pre-pass for Early-Z occlusion culling reduces overdraw. Improved `RenderPipeline` with enhanced support for opaque and transparency materials.
+- **Depth of Field (DoF) Post-Processing**: Fullscreen bokeh blur post-processing pass (`M3DofPass`, `Dof.es3.frag`) utilizing a 16-sample Vogel disk (Fibonacci spiral) convolution with bilateral background depth weighting to prevent foreground halo bleeding. Fully configurable via `useDof`, `dofFocusDistance`, `dofFocusRange`, and `dofBokehRadius`.
+- **Advanced Lighting, Shadows & Culling**: Dynamic lighting supporting **1 directional light, 8 point lights, and up to 8 spotlights** with a shared vertical **Spot Light Shadow Atlas**, **Cascaded Shadow Mapping (CSM)**, **Spot Light Shadow Mapping**, **PCF (Percentage Closer Filtering)** for smooth shadows, **PBR (Physically Based Rendering)** and **IBL (Image-Based Lighting)**. Includes **Camera Light Frustum Culling** (`isPointLightVisible`, `isSpotLightVisible`) to cull off-screen point/spot lights per frame before uploading to the GPU. Depth pre-pass for Early-Z occlusion culling reduces overdraw. Improved `RenderPipeline` with enhanced support for opaque and transparency materials.
+- **Atmospheric Fog & Sun Glow**: Depth-based scene fog with camera-facing depth attenuation, plane fog, and **forward sun scattering glow** (`FogFS.es3.glsl`, `water_shader.dart`) dynamically modulated by scene ambient and directional sunlight illumination.
+- **Emissive Texture & Strength**: `M3Material` and `M3GltfMaterial` support `emissiveTexture` (bound to `GL_TEXTURE6`) and the **`KHR_materials_emissive_strength`** extension with `emissiveStrength` multiplier for HDR glowing surface details.
 - **Modular Shaders**: Refactored shader system with clean `.glsl` source files and dedicated, type-safe Dart shader program wrappers (`M3FogShader`, `M3LightingShader`, `M3ShadowShader`, `M3WaterShader`) for easy uniform binding and encapsulation.
 - **Skybox & Environment**: Support for skybox environment backgrounds and reflection mapping via cubemaps.
 - **Planar Reflections**: Added support for planar reflections with `M3PlanarReflection` and Mirror shaders for high-quality reflective surfaces.
@@ -87,7 +90,7 @@ Add `macbear_3d` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  macbear_3d: ^0.12.1
+  macbear_3d: ^0.13.0
 ```
 
 ## Usage

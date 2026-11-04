@@ -3,6 +3,9 @@
 ## 0.13.0
 #### 2026-11-04
 * 新增功能 (Add):
+  * **景深後處理 (Depth of Field, DoF) (`M3DofPass`)**：採用 16 採樣點 Vogel Disk (費氏螺旋 Fibonacci spiral) 散景卷積並加入雙邊背景深度加權（`Dof.es3.frag`），提供全螢幕 HDR 景深後處理。新增 `useDof`、`dofFocusDistance`、`dofFocusRange` 與 `dofBokehRadius` 設定及控制面板滑桿。
+  * **光源視錐剔除 (Light Frustum Culling)**：在 `M3Camera` 中新增 `isPointLightVisible`（包圍球相交測試）與 `isSpotLightVisible`（聚光燈錐體 8 頂點平面分離測試）。在 `M3RenderContext.prepareRenderQueue` 預先剔除視錐外的點光源與聚光燈，並記錄即時統計數據。
+  * **glTF 自發光強度擴展 (`KHR_materials_emissive_strength`)**：在 `GltfMaterial` 與 `M3Material` 支援官方自發光強度倍率擴展，實現超越 LDR 的高動態自發光 PBR 材質。
   * **大氣前向日照散射與陽光光暈 (`FogFS`)**：在球形與平面霧氣著色器中新增太陽前向散射光暈相位計算（`pow5(dot(V, uLightDir))`）。霧氣顏色現已動態受場景環境光與方向光照強度調變（`scene.ambient + scene.dirLight.color * 0.35`）。
   * **岸線泡沫與波浪濺起效果 (`M3Water`)**：實現水面邊緣即時接觸泡沫，以及由動態法線貼圖平移動畫衍生的澎湃波浪濺起效果。泡沫邊緣擾動與累積法線貼圖層疊混合。
   * **深度型邊緣折射扭曲抑制**：利用 waterDepth 淡出減少岸線附近的折射扭曲，消除邊緣溢色與鬼影切割偽影（`edgeDistortionDistance` 屬性）。
@@ -20,6 +23,7 @@
   * **首幀閃爍問題 (First Frame Flicker)**：`initApp` 現在完整初始化完成後才建立 Flutter Ticker，根除了 `M3View` 在 GL Context 就緒前掛載所導致的黑幀閃爍問題。
 
 * 優化與重構 (Optimize / Refactor):
+  * **光照著色器 Uniform 整併 (`LightFS`)**：將點光源與聚光燈數量整併為單一 `uLightCounts` uniform（透過 `uniform2iv` 傳送相容 WebGL/WASM），CPU 端預先完成光色與強度相乘並將 Atlas 陰影槽位寫入 Alpha 通道。
   * **場景獨立環境光 (Scene Ambient)**：將全域靜態 `M3Light.ambient` 解耦為各場景獨立的 `scene.ambient`，支援多場景各自擁有不同環境光照配置。
   * **深度紋理渲染目標管線傳遞**：完善 `RenderTarget`、`PostProcessPass` 與 `ScenePass` 的深度紋理緩衝區傳遞與後處理處理邏輯。
   * **移除 Unlit 渲染管線**：專用 Unlit 渲染佇列與所有渲染通道中的 `programExternalOES` 依賴已移除。渲染通道數量從 4 減少至 3；`renderDepthPass` 注釋同步更新。
