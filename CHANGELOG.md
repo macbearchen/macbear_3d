@@ -1,5 +1,18 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
+## 0.13.0
+#### 2026-11-04
+* Add:
+  * **Atmospheric Scattering & Forward Sun Glow (`FogFS`)**: Added forward sun scattering glow phase (`pow5(dot(V, uLightDir))`) to sphere and plane fog shaders. Fog colors now dynamically modulate based on scene ambient and directional light illumination (`scene.ambient + scene.dirLight.color * 0.35`).
+  * **Scene Depth Post-Process Shader (`SceneDepth.es3.frag`)**: Fullscreen scene depth buffer copy shader and Dart bindings (`SceneDepth.es3.frag.g.dart`) for depth texture processing and downstream pass integration.
+  * **Heightfield & Raycast Vehicle Physics Demo (`HeightfieldScene`)**: Procedural heightfield terrain with trimesh physics collider, custom raycast vehicle suspension simulation, throttle/steering, and on-screen + keyboard controls.
+  * **Rapier Physics Upgrade**: Upgraded `rapier_physics` dependency to `^0.6.0` in examples.
+
+* Fix & Optimize:
+  * **R32F Texture Filter Safety**: Restricted 32-bit floating-point textures (`R32F`) to `GL_NEAREST` filtering to prevent rendering errors on platforms that do not support linear filtering on float textures.
+  * **Scene Ambient Decoupling**: Decoupled global static `M3Light.ambient` into per-scene `scene.ambient`, allowing flexible ambient lighting configuration across different scenes.
+  * **Depth Texture Render Target Pass-through**: Enhanced `RenderTarget`, `PostProcessPass`, and `ScenePass` to properly handle and pass depth texture buffers.
+
 ## 0.12.1
 #### 2026-10-24
 * Add:

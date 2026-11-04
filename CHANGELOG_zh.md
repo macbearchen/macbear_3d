@@ -1,5 +1,18 @@
 [English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh.md)
 
+## 0.13.0
+#### 2026-11-04
+* 新增功能 (Add):
+  * **大氣前向日照散射與陽光光暈 (`FogFS`)**：在球形與平面霧氣著色器中新增太陽前向散射光暈相位計算（`pow5(dot(V, uLightDir))`）。霧氣顏色現已動態受場景環境光與方向光照強度調變（`scene.ambient + scene.dirLight.color * 0.35`）。
+  * **場景深度後處理著色器 (`SceneDepth.es3.frag`)**：新增全螢幕場景深度緩衝區複製著色器及其 Dart 生成綁定檔（`SceneDepth.es3.frag.g.dart`），供深度紋理處理與下游渲染通道整合使用。
+  * **高度圖地形與射線車輛物理範例 (`HeightfieldScene`)**：基於程序化高度圖網格地形碰撞體（Trimesh），實作具備懸吊系統、油門/轉向控制與螢幕/鍵盤控制的自訂射線車輛物理（Raycast Vehicle）。
+  * **Rapier 物理引擎升級**：範例專案中的 `rapier_physics` 依賴升級至 `^0.6.0`。
+
+* 修復與優化 (Fix & Optimize):
+  * **R32F 紋理過濾安全限制**：針對 32 位元單精度浮點紋理（`R32F`）強制採用 `GL_NEAREST` 取樣過濾，避免在不支援浮點紋理線性過濾的平台上引發繪圖異常或崩潰。
+  * **場景獨立環境光 (Scene Ambient)**：將全域靜態 `M3Light.ambient` 解耦為各場景獨立的 `scene.ambient`，支援多場景各自擁有不同環境光照配置。
+  * **深度紋理渲染目標管線傳遞**：完善 `RenderTarget`、`PostProcessPass` 與 `ScenePass` 的深度紋理緩衝區傳遞與後處理處理邏輯。
+
 ## 0.12.1
 #### 2026-10-24
 * 新增功能 (Add):
