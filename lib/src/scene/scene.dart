@@ -135,6 +135,7 @@ abstract class M3Scene {
       spotLight.direction = dirs[i];
       spotLight.range = 16;
       spotLight.setShadowMap(sm);
+      spotLight.shadowIndex = i;
       spotLights.add(spotLight);
     }
   }

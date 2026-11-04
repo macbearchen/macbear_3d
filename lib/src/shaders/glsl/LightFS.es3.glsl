@@ -1,5 +1,7 @@
 #version 300 es
 
+uniform mediump ivec2 uLightCounts; // x=pointCount, y=spotCount
+
 mediump float ComputeShadowPCF(highp sampler2DShadow sampler, highp vec2 texelSize, highp vec2 uv, highp float refZ);
 
 // UE4 windowed inverse-square attenuation (Karis 2013)
@@ -16,16 +18,17 @@ float calcAttenuation(float distSq, float radiusSq) {
 #ifdef ENABLE_POINT_LIGHTS
 
 // uPointLights[0]：light0, light1
-// light0: col0: positionRange(xyz:pos,w:range), col1: colorIntensity(rgb:color,a:intensity)
-// light1: col2: positionRange(xyz:pos,w:range), col3: colorIntensity(rgb:color,a:intensity)
+// light0: col0: positionRange(xyz:pos, w:range)
+//         col1: colorIntensity(rgb:color * intensity, a: atlasShadowIndex)
+// light1: col2: positionRange(xyz:pos, w:range)
+//         col3: colorIntensity(rgb:color * intensity, a: atlasShadowIndex)
 // same for uPointLights[1,2,3]
 // uPointLights[1]：light2, light3
 // uPointLights[2]：light4, light5
 // uPointLights[3]：light6, light7
 uniform mediump mat4 uPointLights[4];
-uniform mediump ivec2 uPointLightCounts; // x=lightCount, y=shadowCastingCount
 
-vec3 calcPointLight(int i, SurfaceGeometry geo, bool castShadow) {
+mediump vec3 calcPointLight(int i, SurfaceGeometry geo) {
     int matIndex = i >> 1;      // i / 2 bit shift
     int localIndex = i & 1;     // i % 2 bitwise AND
 
@@ -38,7 +41,7 @@ vec3 calcPointLight(int i, SurfaceGeometry geo, bool castShadow) {
     vec3 L = (lightPos - geo.Position) * uInvObjScale;
     float distSq = dot(L, L);
 
-    // Early exit: 超出光源半徑直接略過所有計算
+    // Early exit: outside radius
     if (distSq >= radiusSq) {
         return vec3(0.0);
     }
@@ -51,13 +54,18 @@ vec3 calcPointLight(int i, SurfaceGeometry geo, bool castShadow) {
         return vec3(0.0);
     }
 
-    vec4 colorIntensity = (localIndex == 0) ? m[1] : m[3];
-    float atten = calcAttenuation(distSq, radiusSq);
+    // light factor
+    mediump float atten = calcAttenuation(distSq, radiusSq);
+    mediump float lightFactor = atten * NdotL; 
+    if (lightFactor <= 0.0) {
+        return vec3(0.0);
+    }
 
-    // colorIntensity: rgb -> lightColor, a -> lightIntensity
-    vec3 radiance = colorIntensity.rgb * (colorIntensity.a * atten * NdotL);
+    mediump vec4 colorIntensity = (localIndex == 0) ? m[1] : m[3]; // colorIntensity: rgb -> color * intensity
+    mediump vec3 radiance = colorIntensity.rgb * lightFactor;
 
-    if (castShadow) {
+    mediump int shadowIndex = int(colorIntensity.a); // a: atlasShadowIndex
+    if (shadowIndex < 3) {
         // TODO: DPSM shadow lookup 接進來
         // float shadow = sampleDPSMShadow(i, geo.Position, lightPos);
         // radiance *= shadow;
@@ -68,16 +76,9 @@ vec3 calcPointLight(int i, SurfaceGeometry geo, bool castShadow) {
 
 // point lights lighting in object space
 mediump vec3 CalculatePointLighting(SurfaceGeometry geo) {
-    int lightCount = uPointLightCounts.x;
-    if (lightCount == 0) return vec3(0.0);
-
-    vec3 result = vec3(0.0);
-    int shadowCount = uPointLightCounts.y;
-
-    for (int i = 0; i < 8; i++) {
-        if (i >= lightCount) break;
-        bool castShadow = (i < shadowCount);
-        result += calcPointLight(i, geo, castShadow);
+    mediump vec3 result = vec3(0.0);
+    for (int i = 0; i < uLightCounts.x; i++) {
+        result += calcPointLight(i, geo);
     }
     return result;
 }
@@ -90,11 +91,10 @@ mediump vec3 CalculatePointLighting(SurfaceGeometry geo) {
 
 // Packing: 1 mat4 per spotlight (4 vec4)
 //   m[0] xyz: object-space position,  w: range²
-//   m[1] rgb: color,                  a: intensity
+//   m[1] rgb: color * intensity       a: atlasShadowIndex
 //   m[2] xyz: object-space direction, w: 0
 //   m[3] x:   cos(innerAngle),        y: cos(outerAngle)
-uniform mediump mat4 uSpotLights[8];
-uniform mediump ivec2 uSpotLightCounts; // x=lightCount, y=shadowCastingBitwise
+uniform highp mat4 uSpotLights[8];
 
 #ifdef ENABLE_SPOT_SHADOW
 uniform highp sampler2DShadow SamplerSpotShadowmap; // GL_TEXTURE4
@@ -131,7 +131,7 @@ float calcConeAttenuation(float cosTheta, float cosInner, float cosOuter) {
     return t * t; // quadratic for smooth edge
 }
 
-vec3 calcSpotLight(int i, SurfaceGeometry geo) {
+mediump vec3 calcSpotLight(int i, SurfaceGeometry geo) {
     mat4 m = uSpotLights[i];
     vec4 posRangeSq = m[0]; // xyz: position, w: range²
     float radiusSq  = posRangeSq.w;
@@ -140,7 +140,7 @@ vec3 calcSpotLight(int i, SurfaceGeometry geo) {
     vec3 L = (lightPos - geo.Position) * uInvObjScale;
     float distSq = dot(L, L);
 
-    // Early exit: 距離超出半徑
+    // Early exit: outside radius
     if (distSq >= radiusSq) {
         return vec3(0.0);
     }
@@ -153,45 +153,42 @@ vec3 calcSpotLight(int i, SurfaceGeometry geo) {
     float cosTheta  = dot(-Lnorm, dir4.xyz); // dir4.xyz already normalised on CPU
     vec4 coneAngles = m[3]; // x: cos(inner), y: cos(outer)
 
-    // Early exit: 超出聚光錐 outer angle
+    // Early exit: outside cone
     if (cosTheta <= coneAngles.y) {
         return vec3(0.0);
     }
 
-    float NdotL = dot(geo.Normal, Lnorm);
+    mediump float NdotL = dot(geo.Normal, Lnorm);
     if (NdotL <= 0.0) {
         return vec3(0.0);
     }
 
-    vec4 colorInt = m[1]; // rgb: color, a: intensity
-    float atten = calcAttenuation(distSq, radiusSq);
-    float spot  = calcConeAttenuation(cosTheta, coneAngles.x, coneAngles.y);
+    // light factor
+    mediump float atten = calcAttenuation(distSq, radiusSq);
+    mediump float spot  = calcConeAttenuation(cosTheta, coneAngles.x, coneAngles.y);
+    mediump float lightFactor = atten * spot * NdotL; 
+    if (lightFactor <= 0.0) {
+        return vec3(0.0);
+    }
 
-    vec3 radiance = colorInt.rgb * (colorInt.a * atten * spot * NdotL);
+    mediump vec4 colorIntensity = m[1]; // rgb: color * intensity
+    mediump vec3 radiance = colorIntensity.rgb * lightFactor;
+
+#ifdef ENABLE_SPOT_SHADOW
+    mediump int shadowIndex = int(colorIntensity.a); // a: atlasShadowIndex
+    if (shadowIndex <= 7) {
+        radiance *= ComputeSpotShadow(shadowIndex, geo);
+    }
+#endif
 
     return radiance;
 }
 
 // Spot lights lighting in object space
 mediump vec3 CalculateSpotLighting(SurfaceGeometry geo) {
-    int lightCount = uSpotLightCounts.x;
-    if (lightCount == 0) return vec3(0.0);
-
-    vec3 result = vec3(0.0);
-    int shadowBitmask = uSpotLightCounts.y;
-    for (int i = 0; i < 8; i++) {
-        if (i >= lightCount) break;
-        vec3 radiance = calcSpotLight(i, geo);
-        if (radiance == vec3(0.0)) {
-            continue;
-        }
-#ifdef ENABLE_SPOT_SHADOW
-        bool castShadow = ((shadowBitmask & (1 << i)) != 0);
-        if (castShadow) {
-            radiance *= ComputeSpotShadow(i, geo);
-        }
-#endif
-        result += radiance;
+    mediump vec3 result = vec3(0.0);
+    for (int i = 0; i < uLightCounts.y; i++) {
+        result += calcSpotLight(i, geo);
     }
     return result;
 }

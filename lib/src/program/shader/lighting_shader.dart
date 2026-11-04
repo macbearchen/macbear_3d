@@ -12,6 +12,10 @@ mixin M3LightingShader {
   late UniformLocation uniformLightDirection; // light direction "uLightDir" (per object-space)
   late UniformLocation uniformLightColor; // light color "uLightColor"
 
+  // light counts: x=point, y=spot
+  late UniformLocation _uniformLightCounts;
+  final Int32List _counts = Int32List.fromList([0, 0]);
+
   M3PointLightManager pointLightManager = M3PointLightManager();
   M3SpotLightManager spotLightManager = M3SpotLightManager();
 
@@ -27,6 +31,8 @@ mixin M3LightingShader {
     uniformLightDirection = gl.getUniformLocation(prog, "uLightDir");
     uniformLightColor = gl.getUniformLocation(prog, "uLightColor");
 
+    _uniformLightCounts = gl.getUniformLocation(prog, "uLightCounts");
+
     // light managers
     pointLightManager.initLocation(prog);
     spotLightManager.initLocation(prog);
@@ -35,7 +41,7 @@ mixin M3LightingShader {
   /// attach scene lights: directional light, point lights, spot lights
   void attachSceneLights(M3Scene scene) {
     _dirLight = scene.dirLight;
-    _ambient  = scene.ambient;
+    _ambient = scene.ambient;
     pointLightManager.attachPointLights(scene.pointLights);
     spotLightManager.attachSpotLights(scene.spotLights);
   }
@@ -50,6 +56,14 @@ mixin M3LightingShader {
       Vector4 localDir = matInv * Vector4(lightDir.x, lightDir.y, lightDir.z, 0.0);
       localDir.normalize();
       gl.uniform3fv(uniformLightDirection, localDir.xyz.storage);
+    }
+
+    if (M3Program.isLocationValid(_uniformLightCounts)) {
+      _counts[0] = pointLightManager.pointCount;
+      _counts[1] = spotLightManager.spotCount;
+      // Macbear note: why use uniform2iv not uniform2i or uniform2ui?
+      // because flutter 0.4.2: wrapper_wasm.dart not support them, so walk around by using uniform2iv
+      gl.uniform2iv(_uniformLightCounts, _counts);
     }
 
     // point lights

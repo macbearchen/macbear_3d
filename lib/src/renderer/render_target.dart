@@ -136,6 +136,7 @@ class M3RenderTargetManager {
 
     // 4. Post Process Target (全解析度 HDR)
     _getOrCreate('composite', width, height, mipmaps: false, depthMode: .none, format: sceneFormat);
+    _getOrCreate('dof', width, height, mipmaps: false, depthMode: .none, format: sceneFormat);
 
     // 5. Post Process LDR Target (for FXAA input/output: 全解析度 RGBA8)
     _getOrCreate('ldr_post', width, height, mipmaps: false, depthMode: .none, format: WebGL.RGBA8);

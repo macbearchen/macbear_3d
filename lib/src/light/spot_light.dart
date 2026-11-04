@@ -4,7 +4,7 @@ part of 'light.dart';
 ///
 /// Packing layout per spotlight (1 mat4 = 4 × vec4):
 ///   `m[0]` xyz: object-space position,  w: range²
-///   `m[1]` rgb: color,                  a: intensity
+///   `m[1]` rgb: color * intensity,      a: atlasShadowIndex
 ///   `m[2]` xyz: object-space direction, w: 0
 ///   `m[3]` x:   cos(innerAngle),        y: cos(outerAngle), zw: 0
 ///
@@ -82,17 +82,17 @@ class M3SpotLight extends M3PointLight {
 
     final buffer = Float32List(16); // 4 vec4
 
-    // m[0] — positionRange
+    // m[0] — positionRange: xyz, range^2
     buffer[0] = localPos.x;
     buffer[1] = localPos.y;
     buffer[2] = localPos.z;
     buffer[3] = range * range;
 
-    // m[1] — colorIntensity
-    buffer[4] = color.x;
-    buffer[5] = color.y;
-    buffer[6] = color.z;
-    buffer[7] = intensity;
+    // m[1] — rgb: colorIntensity, a: atlasShadowIndex
+    buffer[4] = color.x * intensity;
+    buffer[5] = color.y * intensity;
+    buffer[6] = color.z * intensity;
+    buffer[7] = shadowIndex.toDouble();
 
     // m[2] — direction (object space)
     buffer[8] = d.x;

@@ -35,6 +35,9 @@ class M3Material {
   M3Texture? ormTexture; // AmbientOcclusion(R), Roughness(G), Metallic(B)
   double occlusionStrength = 1.0;
   Vector3 emissive = Vector3.zero();
+  /// KHR_materials_emissive_strength multiplier (default 1.0).
+  /// The final emissive value sent to the shader is [emissive] × [emissiveStrength].
+  double emissiveStrength = 1.0;
   M3Texture? emissiveTexture;
   Matrix3 texMatrix = Matrix3.identity();
 
@@ -87,6 +90,7 @@ class M3Material {
     ormTexture = other.ormTexture;
     occlusionStrength = other.occlusionStrength;
     emissive.setFrom(other.emissive);
+    emissiveStrength = other.emissiveStrength;
     emissiveTexture = other.emissiveTexture;
     texMatrix.setFrom(other.texMatrix);
     planarReflection = other.planarReflection;
@@ -101,6 +105,7 @@ class M3Material {
     mtr.doubleSided = gltfMat.doubleSided;
     mtr.alphaCutoff = gltfMat.alphaCutoff;
     mtr.emissive.setFrom(gltfMat.emissiveFactor);
+    mtr.emissiveStrength = gltfMat.emissiveStrength;
     if (gltfMat.alphaMode == 'BLEND') {
       mtr.alphaMode = M3AlphaMode.blend;
     } else if (gltfMat.alphaMode == 'MASK') {

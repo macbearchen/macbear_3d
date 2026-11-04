@@ -51,12 +51,9 @@ class M3PointLightManager {
   static const int _matCount = 4; // 8 點光源, 每 mat4 兩盞點光源
 
   final Float32List _pointMats = Float32List(_matCount * 16);
-  final Int32List _counts = Int32List.fromList([0, 0]);
-  int get pointCount => _counts[0];
-  int get shadowFlag => _counts[1];
+  int get pointCount => _pointLights.length;
 
   late UniformLocation _uniformPointLights;
-  late UniformLocation _uniformPointLightCounts;
 
   List<M3PointLight> _pointLights = [];
 
@@ -64,7 +61,6 @@ class M3PointLightManager {
 
   void initLocation(Program program) {
     _uniformPointLights = gl.getUniformLocation(program, 'uPointLights');
-    _uniformPointLightCounts = gl.getUniformLocation(program, 'uPointLightCounts');
   }
 
   void attachPointLights(List<M3PointLight> pointLights) {
@@ -84,19 +80,9 @@ class M3PointLightManager {
 
     final active = sorted.take(_maxPointLights).toList();
 
-    int shadowCount = 0;
-    for (final l in active) {
-      if (l.castShadow && shadowCount < _maxShadow) {
-        shadowCount++;
-      }
-    }
-
-    _counts[0] = active.length;
-    _counts[1] = shadowCount;
-
     _pointMats.fillRange(0, _pointMats.length, 0.0);
 
-    for (int i = 0; i < pointCount && i < _maxPointLights; i++) {
+    for (int i = 0; i < active.length; i++) {
       final packed = active[i].packBuffer(mMatrixInv);
       final matIndex = i ~/ 2;
       final localIndex = i % 2;
@@ -108,10 +94,6 @@ class M3PointLightManager {
     if (M3Program.isLocationValid(_uniformPointLights)) {
       gl.uniformMatrix4fv(_uniformPointLights, false, _pointMats);
     }
-
-    if (M3Program.isLocationValid(_uniformPointLightCounts)) {
-      gl.uniform2iv(_uniformPointLightCounts, _counts);
-    }
   }
 }
 
@@ -122,12 +104,9 @@ class M3SpotLightManager {
   static const int _maxSpotLights = 8;
 
   final Float32List _spotMats = Float32List(_maxSpotLights * 16);
-  final Int32List _counts = Int32List.fromList([0, 0]);
-  int get spotCount => _counts[0];
-  int get shadowFlag => _counts[1];
+  int get spotCount => _spotLights.length;
 
   late UniformLocation _uniformSpotLights;
-  late UniformLocation _uniformSpotLightCounts;
 
   // Spot shadow uniforms
   late UniformLocation _uniformSamplerSpotShadowmap;
@@ -143,7 +122,6 @@ class M3SpotLightManager {
 
   void initLocation(Program program) {
     _uniformSpotLights = gl.getUniformLocation(program, 'uSpotLights');
-    _uniformSpotLightCounts = gl.getUniformLocation(program, 'uSpotLightCounts');
 
     _uniformSamplerSpotShadowmap = gl.getUniformLocation(program, 'SamplerSpotShadowmap');
     _uniformSpotShadowmapTexelSize = gl.getUniformLocation(program, 'SpotShadowmapTexelSize');
@@ -161,28 +139,32 @@ class M3SpotLightManager {
 
   /// Upload spotlight uniforms for the current frame.
   ///
+  /// [shadowIndex] on each light is pre-assigned externally (by the frustum /
+  /// shadow-pass logic) and must not be modified here.
+  /// Shadow-casting lights (shadowIndex <= 7) are collected to build atlas
+  /// matrices; the loop is limited to those lights only — non-shadow lights
+  /// are skipped entirely.
+  ///
   /// [mMatrixInv] — inverse model matrix (world → object space), same convention
   /// as [M3PointLightManager.setLightUniforms].
   void setLightUniforms(Matrix4 mMatrixInv, [Matrix4? mMatrix]) {
     final active = _spotLights.take(_maxSpotLights).toList();
-    _counts[0] = active.length;
 
-    int shadowBitmask = 0;
+    // Collect shadow-map state from lights that have a valid atlas slot.
+    // shadowIndex is pre-assigned externally; <= 7 means active shadow caster.
     M3ShadowMap? shadowMap;
     double normalBias = 0.02;
 
-    for (int i = 0; i < active.length; i++) {
-      if (active[i].castShadow && active[i].shadowMap != null) {
-        shadowBitmask |= (1 << i);
-        shadowMap ??= active[i].shadowMap;
-        normalBias = active[i].shadowNormalBias;
+    for (final spot in active) {
+      if (spot.shadowIndex <= 7) {
+        shadowMap ??= spot.shadowMap;
+        normalBias = spot.shadowNormalBias;
       }
     }
-    _counts[1] = shadowBitmask;
 
+    // Pack all active lights (shadowIndex baked into buffer by packBuffer).
     _spotMats.fillRange(0, _spotMats.length, 0.0);
-
-    for (int i = 0; i < spotCount && i < _maxSpotLights; i++) {
+    for (int i = 0; i < active.length; i++) {
       final packed = active[i].packBuffer(mMatrixInv); // 16 floats
       final offset = i * 16;
       _spotMats.setRange(offset, offset + 16, packed);
@@ -192,12 +174,8 @@ class M3SpotLightManager {
       gl.uniformMatrix4fv(_uniformSpotLights, false, _spotMats);
     }
 
-    if (M3Program.isLocationValid(_uniformSpotLightCounts)) {
-      gl.uniform2iv(_uniformSpotLightCounts, _counts);
-    }
-
-    // Apply shadow map atlas if any spotlight casts shadow
-    if (shadowMap != null && shadowBitmask != 0) {
+    // Upload shadow atlas only if at least one light casts a shadow.
+    if (shadowMap != null) {
       final sm = shadowMap;
 
       if (M3Program.isLocationValid(_uniformSamplerSpotShadowmap)) {
@@ -219,24 +197,24 @@ class M3SpotLightManager {
         final matModel = mMatrix ?? Matrix4.inverted(mMatrixInv);
         _spotShadowMats.fillRange(0, _spotShadowMats.length, 0.0);
 
-        // Atlas has 8 vertical slots: slot i occupies Y [i/8, (i+1)/8]
+        // Atlas has 8 vertical slots: slot i occupies Y [i/8, (i+1)/8].
+        // Only upload matrices for shadow-casting lights (shadowIndex <= 7).
         const double scaleY = 0.5 / _maxSpotLights; // 0.5 / 8 = 0.0625
 
-        for (int i = 0; i < active.length; i++) {
-          if ((shadowBitmask & (1 << i)) == 0) continue;
-
-          final spot = active[i];
+        for (final spot in active) {
+          if (spot.shadowIndex > 7) continue;
+          final atlasSlot = spot.shadowIndex; // pre-assigned, == atlas row
           final viewer = spot.lightViewer;
           final Matrix4 lightMatrix = viewer.projectionMatrix * viewer.viewMatrix * matModel;
 
-          // Build atlas bias matrix for slot i
+          // Build atlas bias matrix for this slot.
           final Matrix4 biasMatrix = Matrix4.copy(M3Constants.biasMatrix);
-          final double biasY = (0.5 + i) / _maxSpotLights;
+          final double biasY = (0.5 + atlasSlot) / _maxSpotLights;
           biasMatrix.setEntry(1, 1, scaleY);
           biasMatrix.setEntry(1, 3, biasY);
 
           final Matrix4 shadowMatrix = biasMatrix * lightMatrix;
-          final int offset = i * 16;
+          final int offset = atlasSlot * 16;
           _spotShadowMats.setRange(offset, offset + 16, shadowMatrix.storage);
         }
 

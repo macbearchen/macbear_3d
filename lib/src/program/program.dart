@@ -379,7 +379,7 @@ class M3Program {
       gl.activeTexture(WebGL.TEXTURE0);
     }
     if (isLocationValid(uniformColorEmissive)) {
-      gl.uniform3fv(uniformColorEmissive, mtr.emissive.storage);
+      gl.uniform3fv(uniformColorEmissive, (mtr.emissive * mtr.emissiveStrength).storage);
     }
 
     // PBR

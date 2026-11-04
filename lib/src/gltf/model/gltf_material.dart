@@ -48,6 +48,8 @@ class GltfMaterial {
   final double occlusionStrength;
   final Vector3 emissiveFactor;
   final int? emissiveTextureIndex; // index of emissive texture
+  /// KHR_materials_emissive_strength: multiplier applied on top of emissiveFactor.
+  final double emissiveStrength;
   final double metallicFactor;
   final double roughnessFactor;
   final String alphaMode; // "OPAQUE", "MASK", "BLEND"
@@ -68,6 +70,7 @@ class GltfMaterial {
     this.occlusionStrength = 1.0,
     Vector3? emissiveFactor,
     this.emissiveTextureIndex,
+    this.emissiveStrength = 1.0,
     this.metallicFactor = 1.0,
     this.roughnessFactor = 1.0,
     this.alphaMode = 'OPAQUE',
@@ -149,6 +152,16 @@ class GltfMaterial {
       roughness = (pbr['roughnessFactor'] as num).toDouble();
     }
 
+    // KHR_materials_emissive_strength
+    double emissiveStrength = 1.0;
+    final extensions = json['extensions'] as Map<String, dynamic>?;
+    if (extensions != null && extensions.containsKey('KHR_materials_emissive_strength')) {
+      final ext = extensions['KHR_materials_emissive_strength'] as Map<String, dynamic>;
+      if (ext.containsKey('emissiveStrength')) {
+        emissiveStrength = (ext['emissiveStrength'] as num).toDouble();
+      }
+    }
+
     return GltfMaterial(
       name: json['name'] as String? ?? 'Material',
       baseColorFactor: color,
@@ -160,6 +173,7 @@ class GltfMaterial {
       occlusionStrength: occlusionStrength,
       emissiveFactor: emissiveFactor,
       emissiveTextureIndex: emissiveTexIndex,
+      emissiveStrength: emissiveStrength,
       metallicFactor: metallic,
       roughnessFactor: roughness,
       alphaMode: json['alphaMode'] as String? ?? 'OPAQUE',

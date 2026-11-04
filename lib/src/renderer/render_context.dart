@@ -17,6 +17,11 @@ class M3RenderContext {
   final M3RenderQueue planarReflection = M3RenderQueue();
   final M3RenderQueue reflectionProbe = M3RenderQueue();
 
+  /// Lights whose sphere of influence intersects the camera frustum.
+  /// Computed once per [prepareRenderQueue] call and shared by all render items.
+  List<M3PointLight> visiblePointLights = [];
+  List<M3SpotLight> visibleSpotLights = [];
+
   /// prepare render queue: collect renderItems for opaque, masked, transparent...
   void prepareRenderQueue(
     M3Scene scene,
@@ -37,7 +42,30 @@ class M3RenderContext {
     _scene = scene;
     _viewer = viewer;
 
+    // --- Light frustum culling ---
+    // Point lights: sphere test (center + range).
+    // Spot lights: cone frustum test via lightViewer — tighter than a sphere,
+    // correctly rejects narrow cones pointing away from the camera.
+    // The resulting lists are shared by every render item so the culling cost
+    // is paid only once per prepareRenderQueue call.
+    visiblePointLights = [
+      for (final light in scene.pointLights)
+        if (viewer.isPointLightVisible(light)) light,
+    ];
+    visibleSpotLights = [
+      for (final light in scene.spotLights)
+        if (viewer.isSpotLightVisible(light)) light,
+    ];
+
     final stats = M3AppEngine.instance.renderEngine.stats;
+
+    // statistics: light counts (visible = frustum-culled, total = scene list)
+    if (stats.enabled) {
+      stats.visiblePointLights = visiblePointLights.length;
+      stats.totalPointLights = scene.pointLights.length;
+      stats.visibleSpotLights = visibleSpotLights.length;
+      stats.totalSpotLights = scene.spotLights.length;
+    }
 
     // 1. Collect phase: Cull and categorize into queues
     for (final entity in scene.entities) {
@@ -94,8 +122,8 @@ class M3RenderContext {
 
         // Collects a sub-mesh into the appropriate queue based on its material.
         final item = M3RenderItem(entity: entity, subMesh: sub, worldMatrix: worldMat, depth: depth);
-        item.pointLights = scene.pointLights;
-        item.spotLights = scene.spotLights;
+        item.pointLights = visiblePointLights;
+        item.spotLights = visibleSpotLights;
 
         // 1-1. Collect for opacity / masked / transparency
         if (sub.mtr.alphaMode == M3AlphaMode.blend) {

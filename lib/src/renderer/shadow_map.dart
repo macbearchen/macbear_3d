@@ -102,9 +102,9 @@ class M3ShadowMap {
 
     for (int i = 0; i < active.length; i++) {
       final light = active[i];
-      if (!light.castShadow) continue;
+      if (!light.castShadow || light.shadowIndex > 7) continue;
 
-      gl.viewport(0, i * tileSize, mapW, tileSize);
+      gl.viewport(0, light.shadowIndex * tileSize, mapW, tileSize);
       light.updateLightViewer();
       final lightViewer = light.lightViewer;
       lightViewer.updateFrustum();

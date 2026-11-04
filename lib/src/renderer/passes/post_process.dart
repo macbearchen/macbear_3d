@@ -4,6 +4,7 @@ import '../../m3_internal.dart';
 import '../../shaders_gen/post/Blur.es3.frag.g.dart';
 import '../../shaders_gen/post/BrightPass.es3.frag.g.dart';
 import '../../shaders_gen/post/Composite.es3.frag.g.dart';
+import '../../shaders_gen/post/Dof.es3.frag.g.dart';
 import '../../shaders_gen/post/FXAA.es3.frag.g.dart';
 import '../../shaders_gen/post/Fullscreen.es3.frag.g.dart';
 import '../../shaders_gen/post/Fullscreen.es3.vert.g.dart';
@@ -22,6 +23,7 @@ class M3PostProcess {
   static M3Program programBlur = M3Program(Fullscreen_vert, Blur_frag)..name = 'Blur';
   static M3Program programComposite = M3Program(Fullscreen_vert, Composite_frag + Tonemap_glsl)..name = 'Composite';
   static M3Program programFxaa = M3Program(Fullscreen_vert, FXAA_frag)..name = 'FXAA';
+  static M3Program programDof = M3Program(Fullscreen_vert, Dof_frag)..name = 'DOF';
 
   // Uniform locations: Fullscreen
   static late UniformLocation _uFullscreenTonemapMode;
@@ -43,6 +45,12 @@ class M3PostProcess {
   static late UniformLocation _uCompositeSamplerBloom;
   static late UniformLocation _uCompositeTonemapMode;
   static late UniformLocation _uCompositeExposure;
+
+  // Uniform locations: DOF
+  static late UniformLocation _uDofSamplerDepth;
+  static late UniformLocation _uDofCameraNearFar;
+  static late UniformLocation _uDofParams;
+  static late UniformLocation _uDofTexelSize;
 
   static void init() {
     emptyVao;
@@ -69,11 +77,26 @@ class M3PostProcess {
     // Cache FXAA uniforms
     _uFxaaTexelSize = gl.getUniformLocation(programFxaa.program, 'uTexelSize');
 
+    // Cache DOF uniforms
+    _uDofSamplerDepth = gl.getUniformLocation(programDof.program, 'SamplerDepth');
+    _uDofCameraNearFar = gl.getUniformLocation(programDof.program, 'uCameraNearFar');
+    _uDofParams = gl.getUniformLocation(programDof.program, 'uDofParams');
+    _uDofTexelSize = gl.getUniformLocation(programDof.program, 'uTexelSize');
+
     // Explicitly configure SamplerDiffuse = 0 for programs
     final uFullSampler = gl.getUniformLocation(programFullscreen.program, 'SamplerDiffuse');
     if (M3Program.isLocationValid(uFullSampler)) {
       gl.useProgram(programFullscreen.program);
       gl.uniform1i(uFullSampler, 0);
+    }
+
+    final uDofSampler = gl.getUniformLocation(programDof.program, 'SamplerDiffuse');
+    gl.useProgram(programDof.program);
+    if (M3Program.isLocationValid(uDofSampler)) {
+      gl.uniform1i(uDofSampler, 0);
+    }
+    if (M3Program.isLocationValid(_uDofSamplerDepth)) {
+      gl.uniform1i(_uDofSamplerDepth, 1); // Depth texture on unit 1
     }
 
     final uFxaaSampler = gl.getUniformLocation(programFxaa.program, 'SamplerDiffuse');
@@ -115,6 +138,7 @@ class M3PostProcess {
     programBlur.dispose();
     programComposite.dispose();
     programFxaa.dispose();
+    programDof.dispose();
   }
 
   /// Draw a fullscreen pass with a given program and primary texture
@@ -227,6 +251,48 @@ class M3PostProcess {
     gl.bindVertexArray(emptyVao);
     gl.drawArrays(WebGL.TRIANGLES, 0, 3);
 
+    gl.bindBuffer(WebGL.ARRAY_BUFFER, null);
+  }
+
+  /// Run Depth of Field (DOF) pass reading [colorTex] and [depthTex]
+  static void drawDof(
+    M3Texture colorTex,
+    M3Texture depthTex, {
+    required double near,
+    required double far,
+    double focusDistance = 15.0,
+    double focusRange = 5.0,
+    double bokehRadius = 8.0,
+  }) {
+    gl.useProgram(programDof.program);
+
+    final texW = colorTex.texW > 0 ? colorTex.texW : 1;
+    final texH = colorTex.texH > 0 ? colorTex.texH : 1;
+    if (M3Program.isLocationValid(_uDofTexelSize)) {
+      gl.uniform2f(_uDofTexelSize, 1.0 / texW, 1.0 / texH);
+    }
+    if (M3Program.isLocationValid(_uDofCameraNearFar)) {
+      gl.uniform2f(_uDofCameraNearFar, near, far);
+    }
+    if (M3Program.isLocationValid(_uDofParams)) {
+      gl.uniform4f(_uDofParams, focusDistance, focusRange, bokehRadius, 0.0);
+    }
+
+    // Texture Unit 0: Color Texture
+    gl.activeTexture(WebGL.TEXTURE0);
+    colorTex.bind();
+
+    // Texture Unit 1: Depth Texture
+    gl.activeTexture(WebGL.TEXTURE1);
+    depthTex.bind();
+
+    gl.bindVertexArray(emptyVao);
+    gl.drawArrays(WebGL.TRIANGLES, 0, 3);
+
+    gl.activeTexture(WebGL.TEXTURE1);
+    gl.bindTexture(WebGL.TEXTURE_2D, null);
+
+    gl.activeTexture(WebGL.TEXTURE0);
     gl.bindBuffer(WebGL.ARRAY_BUFFER, null);
   }
 }

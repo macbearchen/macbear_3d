@@ -11,6 +11,7 @@ class M3RenderEngine {
   late M3ScenePass scenePass;
   late M3BloomPass bloomPass;
   late M3CompositePass compositePass;
+  late M3DofPass dofPass;
   late M3FxaaPass fxaaPass;
 
   // render target manager
@@ -97,6 +98,7 @@ class M3RenderEngine {
     scenePass = M3ScenePass('scene');
     bloomPass = M3BloomPass('bloom_ping');
     compositePass = M3CompositePass('composite');
+    dofPass = M3DofPass('dof');
     fxaaPass = M3FxaaPass('fxaa');
     planarReflection = M3PlanarReflection('mirror');
   }
@@ -282,10 +284,11 @@ class M3RenderEngine {
     // Render Statistics
     Matrix4 matStats = Matrix4.identity();
     if (options.debug.showStats) {
-      matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 110, 60, 0));
+      matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 110, 40, 0));
       matStats.scaleByVector3(Vector3.all(0.45));
-      // Render Stats
-      M3Resources.text2D.drawText(stats.toString(), matStats, color: Vector4(1, 1, 1, 1));
+      String strStats = '$stats\nprobes: ${probes.length}';
+      // Render Stats, reflection probes info
+      M3Resources.text2D.drawText(strStats, matStats, color: Vector4(1, 1, 1, 1));
 
       if (engine.activeScene != null) {
         final scene = engine.activeScene!;
@@ -295,22 +298,17 @@ class M3RenderEngine {
 shadow:${options.useShadow ? 'Y' : 'N'}
 $directionalShadowMap
 csm=${scene.camera.csmCount}''';
-        matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 160, 0));
+        matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 190, 0));
         // Shadow Info
         M3Resources.text2D.drawText(shadowText, matStats, color: Vector4(1, 1, 0, 1));
-
-        // reflection probes info
-        final probesText = 'probes: ${probes.length}';
-        matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 90, 205, 0));
-        M3Resources.text2D.drawText(probesText, matStats, color: Vector4(0, 1, 1, 1));
       }
 
       // FPS
       matStats.scaleByVector3(Vector3.all(1.4));
       final fpsText = engine.fps.toStringAsFixed(2);
-      matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 59, 221, 0));
+      matStats.setTranslation(Vector3(4, 51, 0));
       M3Resources.text2D.drawText(fpsText, matStats, color: Vector4(0, 0, 0, 1));
-      matStats.setTranslation(Vector3(M3AppEngine.instance.appWidth - 60, 220, 0));
+      matStats.setTranslation(Vector3(3, 50, 0));
       final fpsColor = engine.fps > 30 ? Vector4(0, 1, 0, 1) : Vector4(1, 0, 0, 1);
       M3Resources.text2D.drawText(fpsText, matStats, color: fpsColor);
     }

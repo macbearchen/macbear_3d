@@ -88,17 +88,34 @@ class M3ScenePass {
     // apply post process effects
     final useBloom = options.useBloom;
     final useFxaa = options.useFxaa;
+    final useDof = options.useDof && _target.depthTexture != null;
+
+    // Optional: Pre-composite / Pre-tonemap Depth of Field (DOF) in HDR space
+    M3Texture colorInput = _target.texture;
+    if (useDof) {
+      final cam = scene.camera;
+      renderEngine.dofPass.render(
+        colorInput,
+        _target.depthTexture!,
+        near: cam.nearClip,
+        far: cam.farClip,
+        focusDistance: options.dofFocusDistance,
+        focusRange: options.dofFocusRange,
+        bokehRadius: options.dofBokehRadius,
+      );
+      colorInput = renderEngine.dofPass.texture;
+    }
 
     if (useBloom) {
       // 1. Run Bloom Pass (bright pass extraction + pingpong blur)
-      renderEngine.bloomPass.render(_target.texture);
+      renderEngine.bloomPass.render(colorInput);
 
       if (useFxaa) {
         // Composite to LDR intermediate target first
         final ldrTarget = renderEngine.renderTargets.get('ldr_post');
         ldrTarget.bind();
         M3PostProcess.drawComposite(
-          _target.texture,
+          colorInput,
           renderEngine.bloomPass.texture,
           bloomIntensity: renderEngine.compositePass.bloomIntensity,
           tonemapMode: options.tonemapMode,
@@ -109,21 +126,21 @@ class M3ScenePass {
         renderEngine.fxaaPass.render(ldrTarget.texture, toDefaultFramebuffer: true);
       } else {
         // Composite directly to screen
-        renderEngine.compositePass.render(_target.texture, renderEngine.bloomPass.texture, toDefaultFramebuffer: true);
+        renderEngine.compositePass.render(colorInput, renderEngine.bloomPass.texture, toDefaultFramebuffer: true);
       }
     } else {
       if (useFxaa) {
         // Tonemap to LDR intermediate target first
         final ldrTarget = renderEngine.renderTargets.get('ldr_post');
         ldrTarget.bind();
-        M3PostProcess.drawFullscreen(_target.texture, tonemapMode: options.tonemapMode, exposure: options.exposure);
+        M3PostProcess.drawFullscreen(colorInput, tonemapMode: options.tonemapMode, exposure: options.exposure);
 
         // Apply FXAA directly to default framebuffer
         renderEngine.fxaaPass.render(ldrTarget.texture, toDefaultFramebuffer: true);
       } else {
         // Bind default framebuffer and draw fullscreen with tonemap directly to screen
         renderEngine.bindDefaultFramebuffer();
-        M3PostProcess.drawFullscreen(_target.texture, tonemapMode: options.tonemapMode, exposure: options.exposure);
+        M3PostProcess.drawFullscreen(colorInput, tonemapMode: options.tonemapMode, exposure: options.exposure);
       }
     }
   }

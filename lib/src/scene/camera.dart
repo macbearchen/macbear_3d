@@ -67,6 +67,65 @@ class M3Camera extends M3Projection {
     return _frustum.intersectsWithAabb3(bounds.aabb);
   }
 
+  /// Frustum-cull a point light by its world-space sphere (center + range).
+  /// Returns true if the sphere of influence intersects the camera frustum.
+  bool isPointLightVisible(M3PointLight light) {
+    final s = Sphere()
+      ..center.setFrom(light.worldMatrix.getTranslation())
+      ..radius = light.range;
+    return _frustum.intersectsWithSphere(s);
+  }
+
+  /// Frustum-cull a spot light using its cone frustum.
+  ///
+  /// 1. Cheap sphere pre-reject: uses the light's bounding sphere first.
+  /// 2. Tight cone frustum test: extracts the 8 world-space corners of the spot
+  ///    frustum and runs a separating-plane test against the camera frustum.
+  ///
+  /// This is tighter than a sphere test because a narrow cone that points
+  /// away from the camera is correctly rejected even when the apex is near.
+  bool isSpotLightVisible(M3SpotLight light) {
+    // 1. Cheap sphere pre-reject
+    if (!isPointLightVisible(light)) return false;
+
+    // 2. Tight cone frustum test
+    final c0 = Vector3.zero();
+    final c1 = Vector3.zero();
+    final c2 = Vector3.zero();
+    final c3 = Vector3.zero();
+    final c4 = Vector3.zero();
+    final c5 = Vector3.zero();
+    final c6 = Vector3.zero();
+    final c7 = Vector3.zero();
+
+    final spotFrustum = Frustum()
+      ..setFromMatrix(light.lightViewer.projectionMatrix * light.lightViewer.viewMatrix);
+    spotFrustum.calculateCorners(c0, c1, c2, c3, c4, c5, c6, c7);
+
+    // For each of the camera's 6 planes, check if ALL 8 spot corners are
+    // fully outside (negative side). If so, no overlap → cull.
+    for (final plane in [
+      _frustum.plane0,
+      _frustum.plane1,
+      _frustum.plane2,
+      _frustum.plane3,
+      _frustum.plane4,
+      _frustum.plane5,
+    ]) {
+      if (plane.distanceToVector3(c0) < 0 &&
+          plane.distanceToVector3(c1) < 0 &&
+          plane.distanceToVector3(c2) < 0 &&
+          plane.distanceToVector3(c3) < 0 &&
+          plane.distanceToVector3(c4) < 0 &&
+          plane.distanceToVector3(c5) < 0 &&
+          plane.distanceToVector3(c6) < 0 &&
+          plane.distanceToVector3(c7) < 0) {
+        return false; // all corners outside this plane → no intersection
+      }
+    }
+    return true;
+  }
+
   /// Get camera's forward vector in world space.
   Vector3 getForward() {
     final rot = cameraToWorldMatrix.getRotation();

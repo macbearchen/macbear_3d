@@ -35,6 +35,10 @@ class M3RenderOptions {
   bool usePostProcess = true; // for gamma 2.2 and post-processing
   bool useFxaa = true; // FXAA post-processing
   bool useBloom = false; // bloom post-processing
+  bool useDof = false; // depth of field (DOF) post-processing
+  double dofFocusDistance = 15.0; // Distance to focus plane (eye-space units)
+  double dofFocusRange = 5.0; // Sharp depth range around focus distance
+  double dofBokehRadius = 8.0; // Max blur radius (in pixels)
   M3TonemapMode tonemapMode = M3TonemapMode.khrPbrNeutral; // Tonemapping mode
   double exposure = 1.0; // Global exposure scalar
   double dprScale = 1.0; // (0 ~ 1): 0 mean dpr = 1.0, 1 mean dpr = deviceDpr, in the middle is 0.5
@@ -204,6 +208,12 @@ class M3RenderStats {
   int occlusionSubmeshes = 0;
   int reflection = 0;
 
+  // light counts: visible (frustum-culled, ≤ 8 active) / total in scene
+  int visiblePointLights = 0;
+  int totalPointLights = 0;
+  int visibleSpotLights = 0;
+  int totalSpotLights = 0;
+
   void reset() {
     if (!enabled) return;
     vertices = 0;
@@ -216,6 +226,10 @@ class M3RenderStats {
     normalmapSubmeshes = 0;
     occlusionSubmeshes = 0;
     reflection = 0;
+    visiblePointLights = 0;
+    totalPointLights = 0;
+    visibleSpotLights = 0;
+    totalSpotLights = 0;
   }
 
   @override
@@ -226,6 +240,8 @@ ecs:$entities/$totalEntities
 sub:$submeshes/$totalSubmeshes
 mask:$maskedSubmeshes nrm:$normalmapSubmeshes
 refl:$reflection ao:$occlusionSubmeshes
+ pt:$visiblePointLights/$totalPointLights
+ sp:$visibleSpotLights/$totalSpotLights
  tri:$triangles
 vert:$vertices''';
   }
