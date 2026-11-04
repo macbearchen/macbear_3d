@@ -152,6 +152,8 @@ class "macbear_3d::src::renderer::render_context.dart::M3RenderContext" {
   +M3RenderQueue transparent
   +M3RenderQueue planarReflection
   +M3RenderQueue reflectionProbe
+  +List<M3PointLight> visiblePointLights
+  +List<M3SpotLight> visibleSpotLights
   +void prepareRenderQueue()
   +bool needsPlanarReflectionPass()
   +bool needsReflectionProbePass()
@@ -214,10 +216,12 @@ class "macbear_3d::src::renderer::passes::composite_pass.dart::M3CompositePass" 
 class "macbear_3d::src::renderer::passes::post_process.dart::M3PostProcess" {
   {static} +VertexArrayObject emptyVao
   {static} +M3Program programFullscreen
+  {static} +M3Program programSceneDepth
   {static} +M3Program programBrightPass
   {static} +M3Program programBlur
   {static} +M3Program programComposite
   {static} +M3Program programFxaa
+  {static} +M3Program programDof
   {static} -UniformLocation _uFullscreenTonemapMode
   {static} -UniformLocation _uFullscreenExposure
   {static} -UniformLocation _uFxaaTexelSize
@@ -229,6 +233,10 @@ class "macbear_3d::src::renderer::passes::post_process.dart::M3PostProcess" {
   {static} -UniformLocation _uCompositeSamplerBloom
   {static} -UniformLocation _uCompositeTonemapMode
   {static} -UniformLocation _uCompositeExposure
+  {static} -UniformLocation _uDofSamplerDepth
+  {static} -UniformLocation _uDofCameraNearFar
+  {static} -UniformLocation _uDofParams
+  {static} -UniformLocation _uDofTexelSize
   {static} +RenderingContext gl
   {static} +void init()
   {static} +void dispose()
@@ -237,6 +245,7 @@ class "macbear_3d::src::renderer::passes::post_process.dart::M3PostProcess" {
   {static} +void drawBlur()
   {static} +void drawComposite()
   {static} +void drawFxaa()
+  {static} +void drawDof()
 }
 
 "macbear_3d::src::renderer::passes::post_process.dart::M3PostProcess" o-- "flutter_angle::shared::classes.dart::VertexArrayObject"
@@ -247,6 +256,7 @@ class "macbear_3d::src::renderer::passes::post_process.dart::M3PostProcess" {
 class "macbear_3d::src::renderer::passes::scene_pass.dart::M3ScenePass" {
   +M3RenderEngine renderEngine
   -M3RenderTarget _target
+  -M3RenderTarget _targetDepth
   +M3Texture texture
   +void render()
   -void _renderHelper()
@@ -281,6 +291,20 @@ class "macbear_3d::src::renderer::passes::fxaa_pass.dart::M3FxaaPass" {
 "macbear_3d::src::renderer::passes::fxaa_pass.dart::M3FxaaPass" o-- "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine"
 "macbear_3d::src::renderer::passes::fxaa_pass.dart::M3FxaaPass" o-- "macbear_3d::src::renderer::render_target.dart::M3RenderTarget"
 "macbear_3d::src::renderer::passes::fxaa_pass.dart::M3FxaaPass" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
+
+class "macbear_3d::src::renderer::passes::dof_pass.dart::M3DofPass" {
+  +M3RenderEngine renderEngine
+  -M3RenderTarget _target
+  +double focusDistance
+  +double focusRange
+  +double bokehRadius
+  +M3Texture texture
+  +void render()
+}
+
+"macbear_3d::src::renderer::passes::dof_pass.dart::M3DofPass" o-- "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine"
+"macbear_3d::src::renderer::passes::dof_pass.dart::M3DofPass" o-- "macbear_3d::src::renderer::render_target.dart::M3RenderTarget"
+"macbear_3d::src::renderer::passes::dof_pass.dart::M3DofPass" o-- "macbear_3d::src::texture::texture.dart::M3Texture"
 
 abstract class "macbear_3d::src::renderer::render_queue.dart::M3ShaderVariantBits" {
   {static} +int enableAlphaTest
@@ -383,6 +407,7 @@ class "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" {
   +M3ScenePass scenePass
   +M3BloomPass bloomPass
   +M3CompositePass compositePass
+  +M3DofPass dofPass
   +M3FxaaPass fxaaPass
   +M3RenderTargetManager renderTargets
   +M3ProgramManager programs
@@ -414,6 +439,7 @@ class "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" {
 "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::renderer::passes::scene_pass.dart::M3ScenePass"
 "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::renderer::passes::bloom_pass.dart::M3BloomPass"
 "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::renderer::passes::composite_pass.dart::M3CompositePass"
+"macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::renderer::passes::dof_pass.dart::M3DofPass"
 "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::renderer::passes::fxaa_pass.dart::M3FxaaPass"
 "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::renderer::render_target.dart::M3RenderTargetManager"
 "macbear_3d::src::renderer::render_engine.dart::M3RenderEngine" o-- "macbear_3d::src::program::program_manager.dart::M3ProgramManager"
@@ -818,6 +844,7 @@ class "macbear_3d::src::gltf::model::gltf_material.dart::GltfMaterial" {
   +double occlusionStrength
   +Vector3 emissiveFactor
   +int? emissiveTextureIndex
+  +double emissiveStrength
   +double metallicFactor
   +double roughnessFactor
   +String alphaMode
@@ -1364,9 +1391,12 @@ abstract class "macbear_3d::src::program::program.dart::M3LightingShader" {
   +UniformLocation uniformSpecular
   +UniformLocation uniformLightDirection
   +UniformLocation uniformLightColor
+  -UniformLocation _uniformLightCounts
+  -Int32List _counts
   +M3PointLightManager pointLightManager
   +M3SpotLightManager spotLightManager
   -M3DirectionalLight? _dirLight
+  -Vector3 _ambient
   +void initLightingLocation()
   +void attachSceneLights()
   +void setLightUniforms()
@@ -1374,9 +1404,11 @@ abstract class "macbear_3d::src::program::program.dart::M3LightingShader" {
 
 "macbear_3d::src::program::program.dart::M3LightingShader" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 "macbear_3d::src::program::program.dart::M3LightingShader" o-- "flutter_angle::shared::classes.dart::UniformLocation"
+"macbear_3d::src::program::program.dart::M3LightingShader" o-- "dart::typed_data::Int32List"
 "macbear_3d::src::program::program.dart::M3LightingShader" o-- "macbear_3d::src::light::light.dart::M3PointLightManager"
 "macbear_3d::src::program::program.dart::M3LightingShader" o-- "macbear_3d::src::light::light.dart::M3SpotLightManager"
 "macbear_3d::src::program::program.dart::M3LightingShader" o-- "macbear_3d::src::light::light.dart::M3DirectionalLight"
+"macbear_3d::src::program::program.dart::M3LightingShader" o-- "vector_math::vector_math.dart::Vector3"
 
 abstract class "macbear_3d::src::program::program.dart::M3ShadowShader" {
   +UniformLocation uniformSamplerShadowmap
@@ -1464,6 +1496,7 @@ class "macbear_3d::src::texture::material.dart::M3Material" {
   +M3Texture? ormTexture
   +double occlusionStrength
   +Vector3 emissive
+  +double emissiveStrength
   +M3Texture? emissiveTexture
   +Matrix3 texMatrix
   +M3PlanarReflection? planarReflection
@@ -1626,7 +1659,6 @@ class "macbear_3d::src::texture::external_texture.dart::M3ExternalTexture" {
 "macbear_3d::src::texture::texture.dart::M3Texture" <|-- "macbear_3d::src::texture::external_texture.dart::M3ExternalTexture"
 
 abstract class "macbear_3d::src::light::light.dart::M3Light" {
-  {static} +Vector3 ambient
   +Vector3 color
   +bool castShadow
   +M3ShadowMap? shadowMap
@@ -1642,32 +1674,25 @@ abstract class "macbear_3d::src::light::light.dart::M3Light" {
 
 class "macbear_3d::src::light::light.dart::M3PointLightManager" {
   {static} -int _maxPointLights
-  {static} -int _maxShadow
   {static} -int _matCount
   -Float32List _pointMats
-  -Int32List _counts
   -UniformLocation _uniformPointLights
-  -UniformLocation _uniformPointLightCounts
   -List<M3PointLight> _pointLights
   +RenderingContext gl
   +int pointCount
-  +int shadowFlag
   +void initLocation()
   +void attachPointLights()
   +void setLightUniforms()
 }
 
 "macbear_3d::src::light::light.dart::M3PointLightManager" o-- "dart::typed_data::Float32List"
-"macbear_3d::src::light::light.dart::M3PointLightManager" o-- "dart::typed_data::Int32List"
 "macbear_3d::src::light::light.dart::M3PointLightManager" o-- "flutter_angle::shared::classes.dart::UniformLocation"
 "macbear_3d::src::light::light.dart::M3PointLightManager" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 
 class "macbear_3d::src::light::light.dart::M3SpotLightManager" {
   {static} -int _maxSpotLights
   -Float32List _spotMats
-  -Int32List _counts
   -UniformLocation _uniformSpotLights
-  -UniformLocation _uniformSpotLightCounts
   -UniformLocation _uniformSamplerSpotShadowmap
   -UniformLocation _uniformSpotShadowmapTexelSize
   -UniformLocation _uniformMatrixSpotShadowAtlas
@@ -1676,14 +1701,12 @@ class "macbear_3d::src::light::light.dart::M3SpotLightManager" {
   -List<M3SpotLight> _spotLights
   +RenderingContext gl
   +int spotCount
-  +int shadowFlag
   +void initLocation()
   +void attachSpotLights()
   +void setLightUniforms()
 }
 
 "macbear_3d::src::light::light.dart::M3SpotLightManager" o-- "dart::typed_data::Float32List"
-"macbear_3d::src::light::light.dart::M3SpotLightManager" o-- "dart::typed_data::Int32List"
 "macbear_3d::src::light::light.dart::M3SpotLightManager" o-- "flutter_angle::shared::classes.dart::UniformLocation"
 "macbear_3d::src::light::light.dart::M3SpotLightManager" o-- "flutter_angle::src::desktop::wrapper.dart::RenderingContext"
 
@@ -1719,6 +1742,7 @@ class "macbear_3d::src::light::light.dart::M3DirectionalLight" {
 class "macbear_3d::src::light::light.dart::M3PointLight" {
   +double range
   +double intensity
+  +int shadowIndex
   +Float32List packBuffer()
   +void drawBulb()
   +void drawHelper()
@@ -1995,6 +2019,7 @@ class "macbear_3d::src::scene::water.dart::M3WaterCameraState" {
 abstract class "macbear_3d::src::scene::scene.dart::M3Scene" {
   +M3InputController? inputController
   +M3PhysicsSystem physicsSystem
+  +Vector3 ambient
   +M3DirectionalLight dirLight
   +List<M3PointLight> pointLights
   +List<M3SpotLight> spotLights
@@ -2030,6 +2055,7 @@ abstract class "macbear_3d::src::scene::scene.dart::M3Scene" {
 
 "macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::input::touch.dart::M3InputController"
 "macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::physics::physics_system.dart::M3PhysicsSystem"
+"macbear_3d::src::scene::scene.dart::M3Scene" o-- "vector_math::vector_math.dart::Vector3"
 "macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::light::light.dart::M3DirectionalLight"
 "macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::scene::camera.dart::M3Camera"
 "macbear_3d::src::scene::scene.dart::M3Scene" o-- "macbear_3d::src::scene::skybox.dart::M3Skybox"
@@ -2132,6 +2158,8 @@ class "macbear_3d::src::scene::camera.dart::M3Camera" {
   +void setFrom()
   +M3Camera clone()
   +bool isVisible()
+  +bool isPointLightVisible()
+  +bool isSpotLightVisible()
   +Vector3 getForward()
   +void updateFrustum()
   +void setViewport()
@@ -2326,6 +2354,10 @@ class "macbear_3d::src::engine::render_options.dart::M3RenderOptions" {
   +bool usePostProcess
   +bool useFxaa
   +bool useBloom
+  +bool useDof
+  +double dofFocusDistance
+  +double dofFocusRange
+  +double dofBokehRadius
   +M3TonemapMode tonemapMode
   +double exposure
   +double dprScale
@@ -2386,6 +2418,10 @@ class "macbear_3d::src::engine::render_options.dart::M3RenderStats" {
   +int normalmapSubmeshes
   +int occlusionSubmeshes
   +int reflection
+  +int visiblePointLights
+  +int totalPointLights
+  +int visibleSpotLights
+  +int totalSpotLights
   +void reset()
   +String toString()
 }

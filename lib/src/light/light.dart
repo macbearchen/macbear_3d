@@ -47,7 +47,7 @@ class M3PointLightManager {
   RenderingContext get gl => M3AppEngine.instance.renderEngine.gl;
 
   static const int _maxPointLights = 8;
-  static const int _maxShadow = 3;
+  // static const int _maxShadow = 3;
   static const int _matCount = 4; // 8 點光源, 每 mat4 兩盞點光源
 
   final Float32List _pointMats = Float32List(_matCount * 16);
