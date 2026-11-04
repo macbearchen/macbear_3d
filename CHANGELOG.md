@@ -4,30 +4,24 @@
 #### 2026-11-04
 * Add:
   * **Atmospheric Scattering & Forward Sun Glow (`FogFS`)**: Added forward sun scattering glow phase (`pow5(dot(V, uLightDir))`) to sphere and plane fog shaders. Fog colors now dynamically modulate based on scene ambient and directional light illumination (`scene.ambient + scene.dirLight.color * 0.35`).
-  * **Scene Depth Post-Process Shader (`SceneDepth.es3.frag`)**: Fullscreen scene depth buffer copy shader and Dart bindings (`SceneDepth.es3.frag.g.dart`) for depth texture processing and downstream pass integration.
-  * **Heightfield & Raycast Vehicle Physics Demo (`HeightfieldScene`)**: Procedural heightfield terrain with trimesh physics collider, custom raycast vehicle suspension simulation, throttle/steering, and on-screen + keyboard controls.
-  * **Rapier Physics Upgrade**: Upgraded `rapier_physics` dependency to `^0.6.0` in examples.
-
-* Fix & Optimize:
-  * **R32F Texture Filter Safety**: Restricted 32-bit floating-point textures (`R32F`) to `GL_NEAREST` filtering to prevent rendering errors on platforms that do not support linear filtering on float textures.
-  * **Scene Ambient Decoupling**: Decoupled global static `M3Light.ambient` into per-scene `scene.ambient`, allowing flexible ambient lighting configuration across different scenes.
-  * **Depth Texture Render Target Pass-through**: Enhanced `RenderTarget`, `PostProcessPass`, and `ScenePass` to properly handle and pass depth texture buffers.
-
-## 0.12.1
-#### 2026-10-24
-* Add:
   * **Shoreline Foam & Wave Splash (`M3Water`)**: Real-time contact foam at water edges and dynamic surging wave splash derived from animated normal-map translation. Integrated bubbly edge perturbations blended with accumulated normal maps.
   * **Depth-Based Edge Distortion Reduction**: Reduced refraction distortion near water shorelines using a waterDepth fade to eliminate edge bleeding / ghosting artifacts (`edgeDistortionDistance` property).
   * **Water Uniforms & Foam Controls**: New `M3Water` properties — `enableFoam`, `foamDistance`, `foamFalloff`, `foamIntensity`, `edgeDistortionDistance`, `foamColor` — with full uniform bindings and texture unit 7 assignment for the scene depth buffer.
+  * **Scene Depth Post-Process Shader (`SceneDepth.es3.frag`)**: Fullscreen scene depth buffer copy shader and Dart bindings (`SceneDepth.es3.frag.g.dart`) for depth texture processing and downstream pass integration.
   * **Scene Depth Texture Binding**: Scene-pass depth texture is now exposed from `M3Framebuffer` and bound to texture slot 7 during water rendering, enabling shore-contact foam depth reads in `Water.es3.frag`.
   * **Emissive Texture Support**: Added `emissiveTexture` to `M3Material` and `M3GltfMaterial` with full PBR shader integration — sampled from `GL_TEXTURE6` and combined with the `emissive` color factor in `TexturedLighting.es3.frag`.
   * **sRGB Video / External Textures**: `M3ExternalTexture` and video textures can now be flagged as sRGB for correct linear-space compositing.
   * **`M3DepthMode` Enum**: Three-way depth renderbuffer control — `none`, `renderBuffer` (default), `renderDepth` (texture) — replacing the previous boolean flag in `M3RenderTarget`.
+  * **Heightfield & Raycast Vehicle Physics Demo (`HeightfieldScene`)**: Procedural heightfield terrain with trimesh physics collider, custom raycast vehicle suspension simulation, throttle/steering, and on-screen + keyboard controls.
+  * **Rapier Physics Upgrade**: Upgraded `rapier_physics` dependency to `^0.6.0` in examples.
 
 * Fix:
+  * **R32F Texture Filter Safety**: Restricted 32-bit floating-point textures (`R32F`) to `GL_NEAREST` filtering to prevent rendering errors on platforms that do not support linear filtering on float textures.
   * **Flicker on First Frame**: `initApp` now completes fully before the Flutter ticker is created, eliminating the black-frame flicker seen when `M3View` mounted before the GL context was ready.
 
 * Optimize / Refactor:
+  * **Scene Ambient Decoupling**: Decoupled global static `M3Light.ambient` into per-scene `scene.ambient`, allowing flexible ambient lighting configuration across different scenes.
+  * **Depth Texture Render Target Pass-through**: Enhanced `RenderTarget`, `PostProcessPass`, and `ScenePass` to properly handle and pass depth texture buffers.
   * **Unlit Pipeline Removal**: Dedicated unlit render queue and `programExternalOES` dependency removed from all render passes. Render pass count reduced from 4 to 3; `renderDepthPass` comment updated accordingly.
   * **`Unlit` → `DepthMasked` Shader Rename**: `Unlit.es3.frag/.vert` and generated `.g.dart` files renamed to `DepthMasked.es3.frag/.vert.g.dart`; `programSimpleMasked` → `programDepthMasked` in `ProgramManager`.
   * **Texture Loading Robustness**: Pre-flight `M3ResourceManager.isAssetExists()` check replaced with a `try/catch` around the full load path — on any exception the asset falls back to `createWarningTexture()`. Warning checkerboard tile size reduced from 8 → 4 pixels for finer visual feedback.
